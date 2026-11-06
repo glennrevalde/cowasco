@@ -1,0 +1,53 @@
+G-SMaRT Integrated Cooperative System - version 38 (2027-02-14)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v9.xlsx. This package holds
+only the files added or changed since version 37. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Nothing to run: this version adds no migration and changes no table. The Delete
+right it uses on Interest on Share Capital and Patronage Refund is already given
+to the General Manager and the Branch Manager roles.
+
+database/accounting_system.sql and accounting_system_clean.sql are not changed.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files (assets/js/dist_batch.js is new).
+
+What changed (see docs/ADDITIONAL_MODULE_V9_CHECKLIST.md)
+---------------------------------------------------------
+- Interest on Share Capital and Patronage Refund, where each amount comes from:
+  point at a member's amount in the Basis column (or tap it on a phone, or Tab
+  onto it) and a window shows how it is worked out.
+    Average daily balance: each stretch of days the share capital balance stood
+    the same (dates, days, balance with what changed it, balance x days), the
+    total, and "2,421,400.00 / 302 days = 8,017.88".
+    Ending balance: the balance brought forward, each change, the balance at the
+    end of the period.
+    Patronage refund: the documents behind the amount (date, document no. that
+    opens it, amount), grouped by income account, and their total.
+  Then how the member's amount comes from it: the basis x the rate, or the amount
+  to distribute x the member's basis / the basis of the members on the list, the
+  rounding, the adjustment and the net. If an entry dated in the period was
+  recorded or voided after the batch was computed, the window says so (Recompute
+  takes it).
+- The totals under the list of members: Basis, Computed, Adjustment and Net of
+  the members on the list; the basis of the members removed; and, while Find a
+  member or "Only those with a past-due loan or on hold" narrows the list, the
+  totals of the members shown.
+- Deleting a computation never posted: Delete on the batch (title bar) and beside
+  each batch on Distribution Batches, for a batch in review, reviewed or approved.
+  A window names the batch and asks the reason; the batch and its list of members
+  are removed, the audit trail keeps them as they were with the reason, and the
+  batch number is not used again. A posted batch is reversed instead (as before).
+  Rights: Delete on the page (Interest on Share Capital or Patronage Refund); an
+  approved batch also needs Approve.
+
+Set-up after the upgrade
+------------------------
+Nothing is required. To let another role delete unposted batches, give it the
+Delete right on Interest on Share Capital and Patronage Refund (System
+Administration > User Role Configuration).

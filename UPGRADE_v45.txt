@@ -1,0 +1,26 @@
+G-SMaRT Integrated Cooperative System - version 45 (2026-11-02)
+=================================================================
+
+A correction of version 44. This package holds only the files changed since version 44.
+Copy the folder over your installation, keeping the folder structure. config/config.php
+is not included and is never changed. No migration: nothing to run on the database.
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed
+------------
+- A water-service account with no first name showed no name ("—") on Reading Entry
+  (Recorded Readings) and on several other water lists. Such an account is an
+  organization of the former water program (182 of them, e.g. a municipality or a
+  church), or the account of a joint account or an institution opened from Member
+  Information > Water Defaults: its whole name is in the last name. The lists joined
+  "last name, first name", and the database gives no name at all when one part is
+  missing. Every list now shows the last name alone when there is no first name:
+  Reading Entry, Reading History, Batch reading, Generate SOA / Post Billing, Billing
+  List, the Water Dashboard, Collections (Cashier) and its searches, Payment History,
+  One-Time, Installment and Recurring Billing, Discounted Members, the water search and
+  the water reports. The receipts and notices print the name without a stray comma.
+- "Acct#" on Reading Entry, "Acct:" on Reading History and on Generate SOA / Post
+  Billing, and "Account #" on the reading form showed the account's internal ID (37)
+  instead of its account number (50037). They show the account number. Reading History
+  also finds an account by its account number.

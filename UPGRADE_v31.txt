@@ -1,0 +1,104 @@
+G-SMaRT Integrated Cooperative System - version 31 (2026-12-27)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v3.xlsx. This package holds
+only the files added or changed since version 30. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File; or php tools/upgrade.php), after backing it up:
+
+    database/migrations/2026_12_27_member_defaults_savings_center.sql
+
+It adds:
+- the member's Water Defaults on the members table (zone, sequence, rate code,
+  pipe size, connection date, disconnection date, connection status and the
+  member's own water-service account) and water_accounts.connection_date;
+- on sav_txns: trans_no (the Savings Transaction Center number), the opposite
+  account, the cheque details, back entry, and the error-correction links;
+- sav_txn_codes.is_memo, roles.coop_cash_account_id (the profile cash account),
+  the passbook layout columns of passbook_types (header_json, cover_json,
+  skip_lines, dash_empty, footer_text), td_placements.accrued_paid and the table
+  td_interest_payouts;
+- the number series sav_trans; the error-correct codes ECSD, ECSW, ECM, EDM and one
+  ECK.. for each check deposit code; CAIW (cash accrued interest withdrawal) and
+  TDI (time deposit interest credited). CM and DM become memo codes;
+- the page Savings & Deposits > Savings Transaction Center, given to the roles
+  that open Savings Deposit / Withdrawal, which is now called Savings Account
+  Transaction; Time Deposits is now called Time Deposit Center.
+
+Nothing is deleted, no posted amount changes. Written for MySQL 5.5, safe to run
+twice. With several companies, run it on every company database (Super Admin:
+Companies > Database updates > Update all companies). Until it is run, the program
+shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files.
+
+Set-up after the upgrade
+------------------------
+1. Cash account of the tellers. A teller transacts with the drawer of the open
+   shift, else the cash account on System Administration > User Accounts, else the
+   Cash account of the user's role (System Administration > User Role
+   Configuration, new field). Set the role's cash account for tellers who have
+   none of their own.
+2. Savings & Deposits > Savings Transaction Codes. Check the codes: the Opposite
+   Account (GL Account, or User Account = the teller's cash), the Savings Entry
+   Side, Check Deposit with its Clearing Days, Is Error Correct with its Related
+   Trans Code. Add the codes of your former program (for example UBDD - Unionbank
+   Direct Deposit: GL Account = your Unionbank account, Credit; CHK3 if you keep
+   that mnemonic instead of CK3) and an error-correct code for each.
+   "Account closing codes" (same page) sets the codes Close Account posts:
+   CSW for the closing withdrawal and CF for the closing fee.
+3. Cooperative > Passbook Types, for your savings passbook:
+   - Column positions: Line no. (new), Date, Trans code, Deposits, Withdrawals,
+     Balance, Teller ID;
+   - Every page: the Top and Left of the Account Name and the Account Number;
+   - Inside cover: the Top and Left of Account Name, Account Number, Address,
+     Contact Number and Branch;
+   - Lines never printed on (the centre fold), for example 13;
+   - Footer text, and "A dash in the empty amount column";
+   - at the bottom, Deposit / withdrawal slip validation: where the machine
+     validation prints on the slip.
+   Print a test page on Passbook Printing and adjust until the lines fall on the
+   passbook rows.
+4. Members: the Water Defaults, Customer Defaults and Vendor Defaults tabs of
+   Member Information hold what Water Billing, the Customer Center and the Vendor
+   Center used separate forms for. A member's customer and supplier records are
+   made by the program (for members saved before the upgrade, when a customer or
+   vendor list is first opened).
+
+What changed (see docs/ADDITIONAL_MODULE_V3_CHECKLIST.md)
+--------------------------------------------------------
+- Water Billing > Bill Codes: the edit dialog is fully visible and shows the saved
+  accounts; every water dialog opens above the side menu.
+- General Ledger: the column is "Balance", on the account's normal side (Water
+  Sales shows a positive credit balance; a credit increases it).
+- Member Information: Water Defaults, Customer Defaults and Vendor Defaults tabs;
+  one name per member in every line of business (no member-customer, member-
+  vendor or water-consumer form); Find lists the member once.
+- Savings Account Center in the former program's layout: toolbar New, Edit,
+  Close, Restrict, Notes, Filter, Refresh; search as you type; right-click menu
+  Approve, Re-Open, Reset Passbook Print Line, Print Passbook Cover, Reprint
+  Passbook, Print Passbook Footer, Update Passbook, Close Account, Delete Account.
+  Closing an account posts its closing transaction.
+- Savings Transaction Center: every teller savings and time deposit transaction
+  in one number series; toolbar Savings, Time Deposit, Memo, Refund, Interest,
+  Dividend, R Check, View, Ledger, Filter, Print; Show Transactions Today/Custom.
+- Savings Account Transaction: the transaction code decides the journal entry;
+  Error Correct; cheque details; Print to Passbook; Show Preview (machine
+  validation on the slip); Back Entry; Update Passbook; Reprint Validation;
+  Delete; Clear; Save.
+- Time Deposit Center: Time Deposit, Rollover, Close, Withdraw Accrued (CAIW),
+  Ledger, Filter, Print; the accrued interest can be withdrawn during the term.
+- Passbook printing: line numbers, the account name and number on every page, the
+  inside cover, the fold left blank, error corrections printed negative, the
+  teller ID; reset of the print line.
+- Official Receipt: savings, share capital and loan payments are no longer taken
+  on it (Savings Account Transaction and Loan Collection take them).

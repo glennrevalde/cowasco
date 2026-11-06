@@ -1,0 +1,11 @@
+# runtime output of the program and its tools (never shipped)
+/storage/backups/*.sql
+/storage/backups/*.sql.gz
+/storage/migration/*
+!/storage/migration/.gitkeep
+/storage/water_migration/*
+!/storage/water_migration/.gitkeep
+/storage/receipts/inbox/*
+!/storage/receipts/inbox/.gitkeep
+/storage/platform/multi_company.json
+/water/files/*.csv

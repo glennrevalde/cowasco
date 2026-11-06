@@ -1,0 +1,85 @@
+G-SMaRT Integrated Cooperative System - version 32 (2027-01-03)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v4.xlsx. This package holds
+only the files added or changed since version 31. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File; or php tools/upgrade.php), after backing it up:
+
+    database/migrations/2027_01_03_loan_collection_error_correct.sql
+
+It adds two columns to loan_txns (the loan ledger): corrects_id (the loan payment
+an error correction negates) and corrected_by_id (the error correction that
+negated a payment), and an index on corrects_id. That is all: nothing is deleted,
+no posted amount changes. Written for MySQL 5.5, safe to run twice. With several
+companies, run it on every company database (Super Admin: Companies > Database
+updates > Update all companies). Until it is run, the program shows a page naming
+it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files.
+
+Set-up after the upgrade
+------------------------
+1. Cooperative > Passbook Types, at the bottom: "Slip validation: margins". Set
+   the Top, Right, Bottom and Left margin of the machine validation (inches,
+   measured from the edges of the slip), the distance between the two lines and
+   the font size, then Save the margins. The picture under the boxes shows the
+   slip. Until you save them, the positions of version 31 are used.
+2. Browser print settings for the passbook printer and the slip printer: Scale
+   100 %, Margins None (or Default), and untick "Headers and footers". The print
+   window reminds you of this; the reminder is not printed.
+3. Loan passbooks: a loan product prints its passbook with the passbook type set
+   on Loans > Loan Products (as before).
+
+What changed (see docs/ADDITIONAL_MODULE_V4_CHECKLIST.md)
+--------------------------------------------------------
+- Machine validation (deposit / withdrawal slip and loan payslip): only the two
+  validation lines print; the title "Validation 0000001", the address of the page
+  and the page number are no longer printed. New margins: top, right, bottom and
+  left.
+- Passbook printing (lines, reprint, footer, cover): one sheet per passbook page
+  with only the passbook lines; the browser's title ("Passbook 0110... - G-SMaRT
+  Integrated Cooperative System"), the heading "Passbook 01100013031" and the
+  address of the page on a second sheet are gone.
+- Savings Account Transaction: the transaction type starts empty, and Clear
+  empties every field (the account, the member and savings information, the
+  transaction type, the amount, the cheques and the memo). For a check deposit
+  the amount is the total of the cheques, filled in as they are typed.
+- Loan Collection is the Loan Collection Form of the former program:
+  - OR Entry: Official Receipt #, Receive from (the member), Payment Mode (Cash,
+    Check, Bank), Cash Account (the bank account for Bank), Cheque Payment
+    Details, Transaction Date, Cash Amount (the payment), Total Amount, Back
+    Entry;
+  - Open Loans: Loan Name, Date Released, Date Due, PN No., View Amortization
+    (the schedule) and View Subsidiary (the member's loan ledger);
+  - Amortization Due Details & Payments: for the principal, interest and
+    penalty, the Current Balance, the Amortization Due as of the date, the #of
+    Amort. and the Amount Paid; Last Payment Date; Override Payment; Full payment.
+    Payments are applied 1.) due penalties 2.) due interest 3.) due principal;
+  - Memo, Print to Passbook, Show Print Preview after saving (the machine
+    validation of the payslip), Error Correct (of an erroneous payslip), Update
+    Passbook, Clear, Save;
+  - Loan Collections: Date range (Custom Date, This Day, This Week, This Month),
+    From, To, Query and search as you type; Transaction Date, Trans. RefNo,
+    Member name, Loan Name, Amount Paid; Delete and Print; the Class of the entry
+    (in place of Branch, Division and Segment).
+- Error Correct of a loan payment: a line of its own on the loan ledger and in the
+  loan passbook (EC, the amounts negative); the receipt's journal entry reversed
+  line for line (a cash voucher from the teller's drawer for a cash payment, a
+  journal voucher for a check or bank payment); the loan's balances, schedule,
+  status and last payment date put back; a payoff corrected opens the loan again.
+- The "Pay off" box is now "Full payment"; "Excess to savings" and "Cash received /
+  Change" are no longer on the loan form (receive an excess as a savings deposit
+  on Savings Account Transaction). Paying a loan from savings stays for the
+  settlement of a member who has left.
+- An overridden application of payment is written to the audit trail.
+- Loan Accounts Center: "Collect" follows the Create right on Loan Collection.

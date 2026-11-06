@@ -1,0 +1,211 @@
+/* ==========================================================================
+   Water Billing — business-page responsive overrides
+   --------------------------------------------------------------------------
+   Loaded by common/navbar.php AFTER each page's own <style> and after
+   ui-consistency.css, so it wins by document order at equal specificity.
+   It is NOT loaded by the operator login, registration, forgot/reset-password
+   or account-setup screens; those keep their design and behaviour exactly.
+
+   Scope of every rule: only what the responsiveness review required.
+     1. no accidental body-level horizontal scrolling; wide data tables scroll
+        inside their own labelled, keyboard-focusable host instead;
+     2. grid/flex children can shrink (min-width:0), the fixed 260px sidebar is
+        accounted for at tablet/desktop widths;
+     3. forms, filters and action rows stack; long labels and messages wrap;
+     4. dialogs size to the viewport, scroll inside, keep their actions above
+        the on-screen keyboard, and keep a visible heading;
+     5. print output is left to each page's own print stylesheet.
+   Colours are never changed here.
+   ========================================================================== */
+
+/* ---------- 1. Page shell ------------------------------------------------- */
+html, body { max-width: 100%; }
+body { overflow-x: hidden; }                 /* stops the page itself from panning */
+.main-content { min-width: 0; max-width: 100%; }
+.main-content > main,
+.main-content > .page,
+.main-content > .container,
+.main-content > .content,
+.main-content > .wrapper,
+.main-content > .page-wrap { min-width: 0; max-width: 100%; box-sizing: border-box; }
+
+/* Every direct block inside the page can shrink below its content width. */
+.main-content :is(section, article, .card, .panel, .box, .grid, .form-grid, .summary-grid,
+    .stats-grid, .cards, .stat-grid, .kpi-grid, .filters, .filter-bar, .toolbar, .actions,
+    .form-row, .row, .split, .two-col, .columns) { min-width: 0; max-width: 100%; }
+.main-content :is(.grid, .form-grid, .summary-grid, .stats-grid, .cards, .stat-grid, .kpi-grid,
+    .module-grid, .requirement-guide, .content-grid, .dashboard-grid, .two-column, .layout-grid) > * { min-width: 0; }
+/* Any grid-like container: children may shrink below their content width. */
+.main-content [class*="grid"] > * { min-width: 0; }
+.main-content [class*="grid"] { max-width: 100%; }
+
+/* Images, embedded previews and long identifiers never push the layout. */
+.main-content img, .main-content svg:not(.icon) { max-width: 100%; height: auto; }
+.main-content :is(pre, code, .mono, .ref, .receipt-no, .account-no, .gl-code) { overflow-wrap: anywhere; }
+.main-content :is(p, li, td, th, label, .muted, .hint, .help, .alert, .notice, .error, .error-text,
+    .field-error, .validation-message, .invalid-feedback, .mapping-readiness, .issue) { overflow-wrap: anywhere; }
+
+/* ---------- 2. Tables: scroll inside a host, never the body ---------------- */
+/* Any table that is not already inside a scroll host gets its own scroll box
+   through business-ui-consistency.js (data-business-scroll). Both are styled
+   the same way and are keyboard-focusable so the scroll area is reachable
+   without a mouse. */
+.main-content .business-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    outline-offset: 2px;
+}
+.main-content .business-table-scroll:focus-visible { outline: 2px solid var(--accent, #1a1a2e); }
+.main-content .business-table-scroll > table { min-width: 100%; }
+.main-content :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+    .tablewrap, .batch-table-wrap, .card-table-wrap, .ui-table-scroll, .business-table-scroll, .hc-table-wrap) {
+    max-width: 100%;
+    overflow-x: auto;                 /* the host scrolls, never the page body */
+    -webkit-overflow-scrolling: touch;
+}
+/* Wide tables keep every column; the host above provides the scroll. */
+.main-content :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+    .tablewrap, .batch-table-wrap, .card-table-wrap, .ui-table-scroll, .business-table-scroll) > table { max-width: none; }
+/* Steppers / wizard headers wrap instead of overflowing on narrow screens. */
+.main-content :is(.stepper, .steps, .wizard-steps, .step-indicator) { flex-wrap: wrap; gap: 8px; max-width: 100%; }
+/* Totals rows stay readable when the table is narrower than the screen. */
+.main-content table tfoot td, .main-content table tr.total td, .main-content table tr.totals td { white-space: nowrap; }
+
+/* ---------- 3. Forms, filters, actions -------------------------------------- */
+.main-content :is(input, select, textarea) { max-width: 100%; min-width: 0; box-sizing: border-box; }
+.main-content .actions, .main-content .filter-actions, .main-content .form-actions,
+.main-content .modal-actions, .main-content .modal-footer, .main-content .btn-row, .main-content .button-row {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.main-content label { overflow-wrap: anywhere; }
+
+/* Hover/focus tooltips are absolutely positioned and, while invisible, still
+   widen the scrollable area of narrow screens. Keep them out of layout until
+   they are shown, and never wider than the viewport. */
+.main-content .help-tip::after, .main-content [data-tooltip]::after { display: none; max-width: calc(100vw - 32px); }
+.main-content .help-tip:hover::after, .main-content .help-tip:focus::after,
+.main-content [data-tooltip]:hover::after, .main-content [data-tooltip]:focus::after { display: block; }
+@media (max-width: 768px) {
+    .main-content .help-tip::after, .main-content [data-tooltip]::after { left: auto; right: 0; transform: translate(0, 4px); }
+    .main-content .help-tip:hover::after, .main-content .help-tip:focus::after { transform: translate(0, 0); }
+}
+
+/* Notice shown by business-request.js when an API answer is not usable. */
+.business-request-notice {
+    position: fixed; left: 50%; bottom: 18px; transform: translate(-50%, 24px);
+    z-index: 200000; width: min(560px, calc(100vw - 32px));
+    display: none; gap: 10px; align-items: flex-start; flex-wrap: wrap;
+    padding: 14px 16px; border: 1px solid var(--border, #e8eaed); border-radius: 12px;
+    background: var(--white, #fff); color: var(--text-primary, #0f0f1a);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .22); font-size: .85rem; line-height: 1.5;
+    opacity: 0; transition: opacity .18s ease, transform .18s ease;
+}
+.business-request-notice.is-visible { display: flex; opacity: 1; transform: translate(-50%, 0); }
+.business-request-notice-text { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
+.business-request-notice-link { font-weight: 700; color: var(--accent, #1a1a2e); text-decoration: underline; }
+.business-request-notice-close {
+    margin-left: auto; border: 0; background: transparent; color: var(--text-secondary, #6b7280);
+    font-size: 1.3rem; line-height: 1; cursor: pointer; padding: 0 4px;
+}
+
+/* ---------- 4. Dialogs -------------------------------------------------------- */
+.main-content ~ :is(.modal, .modal-overlay, .modal-bg, .overlay, .dialog-overlay),
+body > :is(.modal, .modal-overlay, .modal-bg, .overlay, .dialog-overlay) {
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+             max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    box-sizing: border-box;
+}
+:is(.modal, .modal-overlay, .modal-bg, .overlay, .dialog-overlay) > :is(.modal-box, .modal-content, .modal-card,
+    .modal-dialog, .box, .dialog, .card) {
+    max-width: min(100%, 960px);
+    max-height: calc(100dvh - 24px);
+    max-height: calc(100vh - 24px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+}
+@supports (height: 100dvh) {
+    :is(.modal, .modal-overlay, .modal-bg, .overlay, .dialog-overlay) > :is(.modal-box, .modal-content, .modal-card,
+        .modal-dialog, .box, .dialog, .card) { max-height: calc(100dvh - 24px); }
+}
+/* Dropdown lists inside dialogs must not be clipped by the dialog's scroll box. */
+:is(.modal, .modal-overlay, .modal-bg, .overlay, .dialog-overlay) .ds-select-dropdown { position: absolute; }
+
+/* ---------- 5. Breakpoints ----------------------------------------------------- */
+/* Tablet: the 260px sidebar is still fixed at > 768px, so the usable width is
+   the viewport minus the sidebar. Multi-column grids collapse to two. */
+@media (min-width: 769px) and (max-width: 1100px) {
+    .main-content :is(.grid, .form-grid, .summary-grid, .stats-grid, .cards, .stat-grid, .kpi-grid,
+        .requirement-guide, .module-grid) {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)) !important;
+    }
+    .main-content :is(main, .page) { padding-left: 20px; padding-right: 20px; }
+    .topbar { padding: 0 20px; }
+}
+
+/* Fixed multi-column form grids whose minimum widths exceed the content area
+   once the 260px sidebar is subtracted (installment details: six columns). */
+@media (max-width: 1500px) {
+    .main-content .installment-details-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)) !important; }
+}
+
+/* Phones and small tablets. */
+@media (max-width: 768px) {
+    .main-content :is(main, .page, .container, .content, .wrapper, .page-wrap) {
+        padding-left: 16px !important; padding-right: 16px !important;
+    }
+    .main-content :is(.grid, .form-grid, .form-grid.two-columns, .summary-grid, .stats-grid, .cards,
+        .stat-grid, .kpi-grid, .requirement-guide, .module-grid, .two-col, .columns, .split) {
+        grid-template-columns: 1fr !important;
+    }
+    .main-content :is(.form-row, .row, .filters, .filter-bar, .toolbar, .page-header, .panel-header,
+        .section-heading, .card-header, .header-row) {
+        flex-wrap: wrap;
+    }
+    .main-content :is(.form-row, .row, .filters, .filter-bar, .toolbar) > * { flex: 1 1 100%; min-width: 0; }
+    .main-content :is(.actions, .filter-actions, .form-actions, .modal-actions, .modal-footer, .btn-row, .button-row) > :is(.btn, button, a.btn, form) {
+        flex: 1 1 100%;
+    }
+    .main-content :is(.actions, .filter-actions, .form-actions, .modal-actions, .modal-footer) form > .btn { width: 100%; }
+    .topbar { gap: 8px; }
+    .topbar-breadcrumb span:first-child, .topbar-breadcrumb svg { display: none; }
+    .topbar-breadcrumb { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .topbar-right { flex-shrink: 0; gap: 6px; }
+    .topbar-divider { display: none; }
+    .topbar-chip-name { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    :is(.modal, .modal-overlay, .modal-bg, .overlay, .dialog-overlay) > :is(.modal-box, .modal-content, .modal-card,
+        .modal-dialog, .box, .dialog, .card) { width: 100%; max-width: 100%; border-radius: 12px; }
+    /* Sticky dialog actions stay reachable above the virtual keyboard. */
+    :is(.modal, .modal-overlay, .modal-bg, .overlay, .dialog-overlay) :is(.modal-actions, .modal-footer, .form-actions) {
+        position: sticky; bottom: 0; background: inherit; padding-top: 8px;
+    }
+    .business-request-notice { bottom: 10px; }
+}
+
+@media (max-width: 480px) {
+    .topbar-chip-name { display: none; }   /* the avatar initials remain; the full name stays on the profile page */
+    .topbar-user-chip { padding: 5px; }
+}
+
+@media (max-width: 400px) {
+    html { font-size: 15px; }
+    .main-content :is(main, .page, .container, .content, .wrapper, .page-wrap) {
+        padding-left: 12px !important; padding-right: 12px !important;
+    }
+    .main-content h1 { font-size: 1.25rem; }
+    .main-content .summary-value, .main-content .stat-value, .main-content .kpi-value { font-size: 1.3rem; }
+}
+
+/* Landscape phones: keep dialogs usable when the viewport is very short. */
+@media (max-height: 480px) {
+    :is(.modal, .modal-overlay, .modal-bg, .overlay, .dialog-overlay) > :is(.modal-box, .modal-content, .modal-card,
+        .modal-dialog, .box, .dialog, .card) { max-height: calc(100vh - 12px); }
+}
+
+/* ---------- 6. Print: hand everything back to the page ------------------------- */
+@media print {
+    body { overflow: visible; }
+    .business-request-notice, .setup-tutorial-overlay, .setup-tutorial-banner { display: none !important; }
+    .main-content .business-table-scroll { overflow: visible !important; }
+}

@@ -1,0 +1,9 @@
+# Not web-accessible: the water pages read these files from the server (the manuals are downloaded through
+# water/process/downloadUserManual.php, which checks the user's access first).
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

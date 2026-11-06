@@ -1,0 +1,11 @@
+# The PHP helpers of the water pages are included by the pages, never opened directly. The style sheets and scripts
+# in this folder stay reachable (the pages load them).
+<FilesMatch "\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

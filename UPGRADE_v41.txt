@@ -1,0 +1,79 @@
+G-SMaRT Integrated Cooperative System - version 41 (2026-11-01)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v12.xlsx (Water Billing). This
+package holds only the files added or changed since version 40. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is
+never changed.
+
+Database
+--------
+One migration, for MySQL 5.5 (back up the database first):
+
+  database/migrations/2027_03_07_water_ladder_billing.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         php tools/upgrade.php
+
+It adds one column, rate_code.billing_method (the computation of a rate code). Every
+rate code on file keeps Straight Rate Billing, so no bill changes until a rate code is
+set to Ladder Rate Billing. Nothing is deleted. Safe to run a second time. Until it is
+run, the program (the water pages too) stops after log-in with a page that names it.
+
+database/accounting_system.sql and accounting_system_clean.sql are written again with
+the column (a new installation needs nothing else).
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the changed
+water/common/ui-consistency.css.
+
+What changed (see docs/ADDITIONAL_MODULE_V12_CHECKLIST.md)
+----------------------------------------------------------
+- Bill Readings, individual: the member search answered "Member search failed" for
+  every search (the batch reading lists members by street and was not affected). It
+  finds the member again, by any part of the name in any order ("maria santos",
+  "santos, maria"), the account number, the account ID or the street, and shows the
+  account number and address. The same search on Generate Statement of Account
+  (members did not appear) is fixed with it.
+- Rate Codes: a Computation for each rate code, chosen when it is added or edited:
+    Straight Rate Billing  the whole consumption at the rate of the tier it falls in
+                           (250 m3 x 55.40 = 13,850.00), as before;
+    Ladder Rate Billing    each tier's own cubic meters at that tier's rate, added up
+                           (145.50 + 5 x 31.80 + 10 x 34.30 + 10 x 44.80 + 10 x 50.10
+                           + 210 x 55.40 = 13,230.50).
+  It applies to every water bill of the rate code's accounts: individual and batch
+  readings and their live preview, Post Billing, bill corrections and statements. The
+  list of rate codes shows each computation and what 30 m3 come to under both; Water
+  Meter Rates shows it beside the tiers. A posted bill keeps the computation it was
+  made with; a reading saved but not posted keeps its amount until it is saved again
+  (the message on saving the rate code says how many there are).
+- One-Time Billing, Issue Individual Charge: several charge categories on one form.
+  Tick each charge, type its amount (a material: its quantity, at its sales price),
+  find a charge by typing; the total is shown under the list. One bill and one
+  invoice is made for each charge, all or none.
+- One-Time Billing, Update Bill Record: the Charge Category and the Date Issued can be
+  changed. The bill is issued again: its invoice is voided (kept, marked replaced) and
+  the corrected invoice "<no>-R1" posted on the date issued with the new category's
+  accounts (a material's stock follows). Allowed while nothing is collected on the
+  bill (an amount lowered before is not a collection: its credit memo goes with the
+  invoice); a paid bill shows them locked and the server refuses them. It takes the
+  Edit right on One-Time Billing. The amount on the form is before the member
+  discount, which is applied again on saving.
+- Generate Official Receipt: the Paid Bill-Code Amounts and the Total Amount are
+  changed before printing only by a user whose role has the new special permission
+  "Water Billing: can change the paid bill-code amounts and the total on an official
+  receipt before printing it" (User Role Configuration; administrators
+  always). For the others they are read-only.
+- Collection Summary (Water Billing > Reports): From and To are a date and a time; only
+  the receipts recorded within that period are listed and totalled. The receipts show
+  the date and time they were recorded beside their business date. A period of whole
+  days (12:00 AM to 11:59 PM, and the presets) counts by business date, as before.
+- Disconnection Management: the page no longer slides under the menu.
+- Icons of the edit and delete buttons visible again on the water lists; a long choice
+  in a water drop-down is cut with "..." instead of pushing the field wider.
+
+Set-up after the upgrade
+------------------------
+- For a cooperative that bills by ladder: Water Billing > Rate Codes > edit the rate
+  code > Computation: Ladder Rate Billing.
+- To let a cashier change the printed receipt amounts: User Role Configuration > the
+  role > the special permission above.

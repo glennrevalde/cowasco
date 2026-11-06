@@ -1,0 +1,650 @@
+<p>A multipurpose cooperative deals with the same people in several ways. A member saves and borrows, buys at the store on credit, delivers produce, and may also work for the cooperative. This chapter explains how the program keeps one record for each person or organization, the party, with every role it holds, and how the lines of business of the cooperative (savings and credit, the consumer store, marketing and others) are kept apart in the one general ledger.</p>
+<p>The <strong>Parties</strong> menu holds the <a href="#pg-party-center">Party Center</a>, <a href="#pg-party-review">Identity Review</a>, the <a href="#pg-party-statement">Consolidated Party Statement</a> and three reports. <a href="#pg-coop-business_units">Lines of Business</a> and the <a href="#pg-rpt-sop_business_unit">Statement of Operations by Line of Business</a> are in the <strong>Cooperative</strong> menu. The chapter also covers the party choice on the member, customer, supplier and other-name forms, the names printed on documents, the lock on posted documents, and the line of business on forms and reports.</p>
+<h2 id="s-party-how">How parties work<a class="man-hash" href="#s-party-how" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>Each person or organization the cooperative deals with has one party record in the Party Master, with a Party ID that never changes: P-000001, P-000002 and so on. The party holds the legal name printed on documents, the name shown in lists, the TIN, the contact details, the address and the home branch.</p>
+<p>What the party does for the cooperative is a role. Each role keeps its own record, with its own number, terms, limits, status and history, and that record points at its party:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Role</th>
+<th>The role record</th>
+<th>Number shown on the Party Center</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Member</td><td>The member on the <a href="manual.php?c=cooperative#pg-coop-members">Member Center</a></td><td>The member no., for example 100001</td></tr>
+<tr><td>Customer</td><td>The customer on the <a href="manual.php?c=customers#pg-cust-center">Customer Center</a></td><td>C- and the record number, for example C-10</td></tr>
+<tr><td>Supplier</td><td>The vendor on the <a href="manual.php?c=vendors#pg-vend-center">Vendor Center</a></td><td>V- and the record number, for example V-9</td></tr>
+<tr><td>Employee</td><td>An employee on <a href="manual.php?c=chart-of-accounts#pg-coa-names">Employees &amp; Other Names</a></td><td>The employee no. when one is entered, otherwise N- and the record number, for example N-18</td></tr>
+<tr><td>Other name</td><td>Another name (a payee) on Employees &amp; Other Names</td><td>N- and the record number</td></tr>
+</tbody>
+</table></div>
+<p>A customer's jobs belong to the customer's party and are not roles of their own. A member's own ledger name on Employees &amp; Other Names belongs to the member's party and is not listed as a separate role.</p>
+<h4 id="s-party-how-rules">The rules the program keeps<a class="man-hash" href="#s-party-how-rules" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>Nothing is joined by name alone.</strong> A new member, customer, supplier or other name gets a new party unless you choose an existing one. When its details look like a party already on file, the program warns you before saving (see <a href="#s-party-forms">The party on member, customer, supplier and other-name forms</a>). Possible duplicates already on file are listed on <a href="#pg-party-review">Identity Review</a>, where a person decides.</li>
+<li><strong>Nothing is deleted.</strong> Giving, taking away, restoring or moving a role never deletes the role record or its documents. Taking a role away makes its record inactive; its number, open balance, documents and history stay.</li>
+<li><strong>Old numbers keep pointing to the party.</strong> The program keeps a crosswalk of every member, customer, supplier and other-name record and the party it belongs to. When two parties are linked, the party that is merged keeps its Party ID, which then points to the party kept.</li>
+<li><strong>Role history.</strong> Every role given, taken away, restored, linked or moved, every link of two parties and every change of the party's name is written to the party's role history, with the date, the user and the reason, and to the audit trail. The <a href="#pg-rpt-party_role_history">Party Role History</a> report lists it.</li>
+<li><strong>One membership.</strong> A person or organization holds one membership. Membership starts on Member Information and ends or is restored through the member's status (resignation, termination, reinstatement), not on the Party Center. A change of membership status is also written to the role history.</li>
+</ul>
+<h4 id="s-party-how-leads">Which record leads the details<a class="man-hash" href="#s-party-how-leads" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The party and its role records share details. Which one leads depends on the roles the party holds:</p>
+<ul>
+<li><strong>A member leads its party.</strong> Saving the member on <a href="manual.php?c=cooperative#pg-coop-member">Member Information</a> writes its details to the party: the kind of party, the legal name, the name in lists, the last, first and middle name and suffix, the date of birth, TIN, e-mail, mobile, address and home branch. A blank on the member does not erase a TIN, e-mail, mobile, address, date of birth or branch the party already has. On the Party Center these details of a member's party are read-only.</li>
+<li><strong>A party that is not a member and has one role follows that role record.</strong> When you change the customer, supplier or other name on its own page, the changes you make are written to the party.</li>
+<li><strong>A party with several roles is edited on the Party Center.</strong> The role records then only fill in details the party does not have yet: TIN, e-mail, mobile, phone, address, date of birth and home branch.</li>
+</ul>
+<p>For a member who is a person, the legal name is the first name, the middle initial, the last name and the suffix, for example "Maria R. Santos Jr.", while the lists keep the member's name as "Santos, Maria R.". For an institution or a joint account, the legal name is the member's name.</p>
+<p>Editing a party does not rename its customer, supplier or other-name records: each keeps the name it has in its own list. Documents print the party's legal name (see <a href="#s-party-documents">Names on documents, posted documents and reissues</a>).</p>
+<h4 id="s-party-how-kinds">Kinds of party<a class="man-hash" href="#s-party-how-kinds" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>A party is a <strong>Person</strong> or an <strong>Organization</strong>. An individual member or a joint account belongs to a person's party, and an institutional member to an organization's. The program refuses to attach a member to a party of the other kind, for example: "ABC Trading Corp. is an organization, and this member is an individual. Choose the party of the same kind, or none." Customers, suppliers and other names may belong to either kind.</p>
+<p>A party's status is <strong>Active</strong>, <strong>Inactive</strong> (no longer dealt with, set with <strong>Edit party</strong> on the Party Center) or <strong>Merged</strong> (linked into another party on Identity Review). See <a href="#s-party-center-status">Making a party inactive</a>.</p>
+<h4 id="s-party-how-upgrade">At the upgrade to this version<a class="man-hash" href="#s-party-how-upgrade" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>Every existing member, customer, supplier, employee and other name got a party of its own, numbered from P-000001. Nothing was merged, not even records with the same name. A customer's jobs took the customer's party, and a member's ledger name the member's party.</li>
+<li>Institutional members became organizations and the other members persons. A customer or supplier with a company name became an organization, with the company name as its legal name; the others became persons.</li>
+<li>The crosswalk records each record and the party it was given. The role history shows each role as "Granted" with the reason "Held at the upgrade".</li>
+<li>Every existing document was given its party and the name, address and TIN to print, taken from its record at the upgrade and marked as coming from the upgrade.</li>
+<li>Two lines of business were made, SC Savings and Credit and TR Consumer Store. The existing cooperative vouchers were given SC, and the sales, purchasing, POS and inventory documents TR; the other documents were left without a line of business (see <a href="#pg-coop-business_units">Lines of Business</a>).</li>
+</ul>
+<p>Because nothing was merged, a member who was also a store customer now has two parties. After the upgrade, click <strong>Look for duplicates now</strong> on <a href="#pg-party-review">Identity Review</a> and link the pairs that are the same person or organization.</p>
+<h2 id="pg-party-center">Party Center<a class="man-hash" href="#pg-party-center" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The Party Center lists every person and organization on file and shows everything about one of them: the details, what it owes and is owed, its roles, its documents and its role history. Here you create a party, give it a role, take a role away or restore it, and move a role that was attached to the wrong party.</p>
+<p><strong>Where to find it:</strong> Parties &gt; Party Center. The Party ID shown on a customer, supplier or other-name record, on Member Information and on a saved document also opens it.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/party_center__main.jpg" title="Click to enlarge"><img src="assets/manual/img/party_center__main.jpg" alt="The Party Center with party P-000001 Maria Santos, a member who is also a customer, a supplier and an employee" width="1094" height="1180" loading="lazy" decoding="async"></a><figcaption>The Party Center with party P-000001 Maria Santos, a member who is also a customer, a supplier and an employee</figcaption></figure>
+<h4 id="s-party-center-list">Finding a party<a class="man-hash" href="#s-party-center-list" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The list on the left shows each party's name in lists, its Party ID and its roles. "(inactive)" follows a role whose record is inactive, and "No role" marks a party without roles. A party that is not active shows its status after the roles, for example "Inactive".</p>
+<ul>
+<li>Type in the search box (<strong>Name, party no., member no., TIN, mobile</strong>) to narrow the list as you type. Press Enter to search the whole list: the search looks at the Party ID, the legal name and the name in lists, the TIN, mobile and e-mail, the member no. and member name, and the customer and supplier names.</li>
+<li><strong>Every role</strong> narrows the list to one role (Member, Customer, Supplier, Employee or Other name), to <strong>More than one role</strong> or to <strong>No role</strong>.</li>
+<li>The status choice shows the <strong>Active</strong> parties at first. Choose <strong>Inactive</strong>, <strong>Merged</strong> or <strong>All</strong> to see the others.</li>
+<li><strong>Every branch</strong>, shown when the cooperative has branches, narrows the list to the parties whose home branch, or whose member's branch, is the branch chosen.</li>
+</ul>
+<p>The line under the filters, for example "34 of 34 parties", counts the parties shown. The list shows 100 parties at a time, with <strong>Previous</strong> and <strong>Next</strong>. Click a party to open it on the right.</p>
+<h4 id="s-party-center-party">The selected party<a class="man-hash" href="#s-party-center-party" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The top of the right side shows the name in lists, the Party ID and the kind of party, for example "P-000001, person", and the line "Printed on documents as Maria Santos, with member no. 100001". Under it are the details on file: <strong>TIN</strong>, <strong>Date of birth</strong>, <strong>Registration no.</strong>, <strong>Mobile</strong>, <strong>Phone</strong>, <strong>E-mail</strong>, <strong>Address</strong> and <strong>Home branch</strong>. Only the details that are filled in are shown.</p>
+<p>Three tiles give the party's position over all dates up to today, taken from the <a href="#pg-party-statement">Consolidated Party Statement</a>:</p>
+<ul>
+<li><strong>Party owes the cooperative:</strong> its accounts receivable and loans.</li>
+<li><strong>Cooperative owes the party:</strong> its accounts payable, savings deposits, time deposits, and interest on share capital and patronage refund still payable.</li>
+<li><strong>Member equity interest:</strong> its share capital. Shown for a member only.</li>
+</ul>
+<p>The tiles are shown to users who may open the Consolidated Party Statement. In the screenshot, Maria Santos owes the cooperative ₱500.00, the cooperative owes her ₱4,130.31, and her share capital is ₱9,000.00.</p>
+<p>The buttons under the tiles:</p>
+<ul>
+<li><strong>Edit party</strong> opens the party form (see <a href="#s-party-center-form">New party and Edit party</a>).</li>
+<li><strong>Consolidated statement</strong> opens the party's statement.</li>
+<li><strong>Enroll as member</strong>, for a party that is not a member, opens a new member on Member Information with the party chosen and its details filled in. It is shown to users who may add members.</li>
+<li><strong>Give a role</strong> makes a customer, supplier, employee or other-name record for the party.</li>
+</ul>
+<p>For an inactive party the line under the name ends with ", inactive". <strong>Enroll as member</strong> and <strong>Give a role</strong> are shown for it too; giving it a role, or enrolling it as a member, makes it active again (see <a href="#s-party-center-status">Making a party inactive</a>).</p>
+<p>A party that was linked into another shows "This party was merged into" and the party kept, with a link: its records and documents are there now. A merged party cannot be edited or given roles.</p>
+<h4 id="s-party-center-roles">Roles<a class="man-hash" href="#s-party-center-roles" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Role</td><td>Member, Customer, Supplier, Employee or Other name.</td></tr>
+<tr><td>Number</td><td>The member no., C-10, V-9, N-18 or the employee no.</td></tr>
+<tr><td>Record</td><td>The name of the role record. Click it to open the record on its own page.</td></tr>
+<tr><td>Status</td><td>The member's status and branch, or Active or Inactive.</td></tr>
+<tr><td>Details</td><td>For a member, "Member since" and the date, and ", on hold" when the member is on hold. For a customer, the terms, credit limit, price level and number of jobs. For a supplier, the terms and "Our account no.". For an employee or other name, the position.</td></tr>
+</tbody>
+</table></div>
+<p>At the end of each row:</p>
+<ul>
+<li><strong>Take away</strong> (on an active record) or <strong>Restore</strong> (on an inactive one), for users with the Edit right on the page. Not on the member row.</li>
+<li><strong>Move</strong>, for users who also have the special permission "Parties: can link records found to be the same person or organization, and move a role to another party". Not on the member row.</li>
+<li><strong>Membership status</strong> on the member row opens the member's history on Member Information, where the status is changed.</li>
+</ul>
+<h4 id="s-party-center-documents">Documents, role history and possible matches<a class="man-hash" href="#s-party-center-documents" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>Documents</strong> lists the party's latest 25 documents, whatever role they were made in; the heading gives the count, for example "latest 22 of 22". The columns:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Date</td><td>The date of the document.</td></tr>
+<tr><td>Document</td><td>The kind and number of the document. Click the number to open it. A voided document is greyed and marked "(void)".</td></tr>
+<tr><td>As</td><td>What the party was on the document: Bill to, Customer, Received from, Supplier, Pay to or Name.</td></tr>
+<tr><td>Name printed</td><td>The name the document prints. "(reissued 1)" follows it when the printed name was corrected.</td></tr>
+<tr><td>Unit</td><td>The code of the document's line of business, for example SC or TR.</td></tr>
+<tr><td>Amount</td><td>The total of the document.</td></tr>
+</tbody>
+</table></div>
+<p><strong>Role history</strong> shows the latest 30 entries: what happened (Granted, Revoked, Restored, Moved in, Moved out, Merged, Edited or Linked), the role, the other party when there is one, the date and time, the user and the reason. "Revoked" is a role taken away.</p>
+<p><strong>May be the same as</strong>, for an active party, lists up to six other parties, active or inactive, that share a TIN, e-mail, mobile or phone number, name and date of birth, or name with this party, with what they share and their roles. Click a name to open it. <strong>Review and link on Identity Review</strong>, shown to users who may open Identity Review, records these possible pairs for review (pairs already on Identity Review are left as they are) and opens Identity Review on the pairs of this party, where they are decided. When nothing matches, the box reads "No other party with the same TIN, e-mail, mobile or name."</p>
+<h4 id="s-party-center-form">New party and Edit party<a class="man-hash" href="#s-party-center-form" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>New party</strong> at the top of the page opens an empty party form; <strong>Edit party</strong> opens the selected party.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/party_center__new.jpg" title="Click to enlarge"><img src="assets/manual/img/party_center__new.jpg" alt="The New party form" width="1094" height="509" loading="lazy" decoding="async"></a><figcaption>The New party form</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Kind of party</td><td>Person or Organization. For an organization, the name boxes and the date of birth are hidden.</td></tr>
+<tr><td>Legal name (printed on documents)</td><td>The full legal name, for example "Maria R. Santos" or "ABC Trading Corporation". For a person you may leave it blank and type the names below: the program then builds it from the first name, middle initial, last name and suffix.</td></tr>
+<tr><td>Name in lists</td><td>How the party is listed and searched, for example "Santos, Maria". Leave it blank to use the legal name.</td></tr>
+<tr><td>Last name, First name, Middle name, Suffix</td><td>The names of a person.</td></tr>
+<tr><td>Date of birth</td><td>For a person.</td></tr>
+<tr><td>TIN</td><td>The taxpayer identification number.</td></tr>
+<tr><td>SEC / CDA / DTI registration no.</td><td>The registration number of an organization.</td></tr>
+<tr><td>E-mail</td><td>Must be a valid e-mail address.</td></tr>
+<tr><td>Mobile, Phone</td><td>The contact numbers.</td></tr>
+<tr><td>Address</td><td>The address. Documents print it when the role record and the document have none.</td></tr>
+<tr><td>Home branch</td><td>Shown when the cooperative has branches.</td></tr>
+<tr><td>Notes</td><td>Anything worth keeping about the party.</td></tr>
+<tr><td>Status</td><td>On Edit party only. <strong>Active</strong>, or <strong>Inactive (no longer dealt with)</strong>; see <a href="#s-party-center-status">Making a party inactive</a>.</td></tr>
+<tr><td>Reason for the change (required when the legal name or the status changes)</td><td>On Edit party only. A change of the legal name or the name in lists is written to the role history with the old name and this reason; a change of status with "Made inactive" or "Made active" and this reason.</td></tr>
+</tbody>
+</table></div>
+<p>Click <strong>Create party</strong> (or <strong>Save party</strong>), or <strong>Cancel</strong>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/party_center__edit.jpg" title="Click to enlarge"><img src="assets/manual/img/party_center__edit.jpg" alt="Edit party for a member: the details that come from the member record are read-only" width="1094" height="644" loading="lazy" decoding="async"></a><figcaption>Edit party for a member: the details that come from the member record are read-only</figcaption></figure>
+<p>For a member's party, the form says "This party is member no. 100001. Its name, date of birth, TIN, mobile number, e-mail, address and branch come from the member record; change them on the Member Information page." The kind of party, the names, date of birth, TIN, e-mail, mobile, address and home branch are read-only; the phone, the registration no., the notes and the status can be changed here.</p>
+<p>A new legal name is printed on new documents. Documents already issued keep the name they were issued with; to change it on one of them, see <a href="#s-party-documents-reissue">Correcting the printed name</a>.</p>
+<h4 id="s-party-center-status">Making a party inactive<a class="man-hash" href="#s-party-center-status" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>A party the cooperative no longer deals with can be made inactive: on <strong>Edit party</strong>, choose <strong>Inactive (no longer dealt with)</strong> in <strong>Status</strong>, type the reason and click <strong>Save party</strong>. This is allowed only when none of its roles is active. Take its customer, supplier, employee and other-name roles away first, and end a membership through the member's status; otherwise the program says, for example, "Party P-000035 still has an active role. Take its roles away first (a membership ends through its status on the Member Center)." Without a reason it says "Enter the reason for making the party inactive."</p>
+<p>An inactive party is left out of the pick lists: <strong>Person or organization already on file</strong>, <strong>On file as</strong>, the <strong>Party</strong> of the Consolidated Party Statement, and the party lists of <strong>Move</strong> and <strong>Link two parties found another way</strong>. The one exception is <strong>Enroll as member</strong>, which opens <strong>On file as</strong> with the inactive party chosen. The party stays on the Party Center under <strong>Inactive</strong> or <strong>All</strong>, with its roles, documents and history. The possible-match warning and Identity Review still find it (see <a href="#s-party-forms-match">The possible-match warning</a>).</p>
+<p>The party becomes active again, with an entry in its role history, when:</p>
+<ul>
+<li>its <strong>Status</strong> is set back to <strong>Active</strong> on Edit party, with a reason;</li>
+<li>it is given a role with <strong>Give a role</strong>, or one of its roles is restored with <strong>Restore</strong>;</li>
+<li>it is enrolled as a member with <strong>Enroll as member</strong> and the new member is saved;</li>
+<li>one of its role records is saved as active on its own page, or its member is saved with an active, applicant or suspended membership;</li>
+<li>it is the party kept on Identity Review and has an active role after the link.</li>
+</ul>
+<h4 id="s-party-center-steps">Step by step<a class="man-hash" href="#s-party-center-steps" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To create a party and give it its roles:</strong></p>
+<ol>
+<li>Search the list first: the person or organization may already be on file.</li>
+<li>Click <strong>New party</strong>.</li>
+<li>Choose the <strong>Kind of party</strong>, then type the legal name (or, for a person, the names) and the details you have.</li>
+<li>Click <strong>Create party</strong>. If the details look like a party already on file, the program does not save and lists the possible parties. Open the existing party from the list instead, or, when it is really a different person or organization, tick <strong>This is a different person or organization</strong> and click <strong>Create party</strong> again.</li>
+<li>The new party opens with "Party created. Give it its roles below."</li>
+<li>Click <strong>Give a role</strong>, fill in the dialog (below) and click <strong>Give the role</strong>. The program names the record, for example "Supplier role given (V-12, Bright Minds Academy)." To make the party a member, click <strong>Enroll as member</strong> instead.</li>
+</ol>
+<p>The <strong>Give a role</strong> dialog:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Role</td><td>Customer (buys from the cooperative), Supplier (sells or delivers to the cooperative), Employee, or Other name (payee).</td></tr>
+<tr><td>Terms, Credit limit (0 = none), Price level, Can charge purchases at the POS</td><td>For a customer. Leave <strong>Price level</strong> at its blank choice, <strong>Member prices of the line of business (follows the membership)</strong> for a member's party or <strong>Nonmember prices of the line of business</strong> for others, and the customer gets no price level of its own: each sale then takes the member or nonmember prices of its line of business, according to the party's membership at the time (see <a href="#s-bu-prices">Member and nonmember prices</a>). Choose a level only for a customer who should always have it.</td></tr>
+<tr><td>Employee no., Position / relationship</td><td>For an employee or other name.</td></tr>
+<tr><td>Reason or reference (recorded with the role)</td><td>Optional, for example "Member buying on credit at the store". It goes to the role history.</td></tr>
+</tbody>
+</table></div>
+<p>The role record is made from the party: its name is the party's name in lists, an organization's legal name becomes its company name, and it takes the party's phone, mobile, e-mail, address and TIN. Its own number, terms and history start then. If the party had the same role before and it was taken away, the old record is restored instead, so its number and history continue. To give the customer role you also need the Create right on the Customer Center; for a supplier, on the Vendor Center; for an employee or other name, on Employees &amp; Other Names.</p>
+<p><strong>To take a role away, or restore it:</strong></p>
+<ol>
+<li>Click <strong>Take away</strong> (or <strong>Restore</strong>) on the role's row.</li>
+<li>Type the reason, which is required and goes to the role history and the audit trail.</li>
+<li>Click <strong>Confirm</strong>. The record becomes inactive (or active again); its number, open balance, documents and history stay. A customer's jobs follow the customer.</li>
+</ol>
+<p><strong>To move a role that was attached to the wrong party:</strong></p>
+<ol>
+<li>Click <strong>Move</strong> on the role's row.</li>
+<li>In <strong>To party</strong>, choose the party the record belongs to, or leave <strong>A new party made from the record</strong>.</li>
+<li>Type the reason, for example what shows the record belongs to the other party.</li>
+<li>Click <strong>Move</strong>. The record and its documents go to the other party (a customer with its jobs); the names printed on the documents stay as issued. The program opens the party the role went to. The role history of both parties shows "Moved out" and "Moved in".</li>
+</ol>
+<h4 id="s-party-center-confidential">Confidential member details<a class="man-hash" href="#s-party-center-confidential" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>For a party that is a member, users without the special permission "Cooperative: can see confidential member details (birth date, TIN, contact numbers, home address)" see the TIN, date of birth, e-mail, mobile, phone, address and registration no. with all but the last three characters replaced by asterisks (a value of four characters or fewer is all asterisks), and the line "Confidential member details are partly hidden." On Edit party those details are not shown at all: "The member's contact details and TIN are confidential and are not shown to you." The details of parties that are not members are shown in full. Identity Review, the Consolidated Party Statement and the Party List hide them the same way.</p>
+<p>The same permission applies on <a href="manual.php?c=cooperative#pg-coop-member">Member Information</a>. For an existing member, a user without it sees the date of birth, TIN, mobile, e-mail and the residence and provincial addresses partly hidden in locked boxes, and instead of the contact numbers the line "Hidden: you need the special permission to see confidential member details. Saving this page keeps the member's numbers as they are." When that user saves the member, these details stay as they were. The form of a new member is not hidden.</p>
+<p>The Customer Center and the Vendor Center show the contact details, billing address and TIN of the customer or supplier record itself. They belong to the role record and are shown to anyone who may open those pages: the hiding applies to the details of the member and of its party, not to these records.</p>
+<h4 id="s-party-center-good-to-know">Good to know<a class="man-hash" href="#s-party-center-good-to-know" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"Enter the legal name (or the first and last name of a person)."</li>
+<li>"The e-mail address is not valid." and "Enter a valid date of birth."</li>
+<li>"Enter the reason for changing the legal name (new documents print it; documents already issued keep the name they were issued with)."</li>
+<li>"Santos, Maria is already a customer (Maria Santos)." The party already has an active record of that role; open it from the Roles table. The same message is given for a supplier, and "is already on Employees &amp; Other Names" for an employee or other name.</li>
+<li>"You are not allowed to add customers." (or suppliers, or employees and other names): you have no Create right on the page of that role.</li>
+<li>"You are not allowed to move roles between parties (special permission: link or move parties)."</li>
+<li>"Party P-000035 still has an active role. Take its roles away first (a membership ends through its status on the Member Center)." and "Enter the reason for making the party inactive." (see <a href="#s-party-center-status">Making a party inactive</a>).</li>
+<li>"The role is already on that party."</li>
+<li>The member row has no <strong>Take away</strong> or <strong>Move</strong>: a membership is ended or restored through the member's status (resignation, termination, reinstatement), and a membership is never moved. If two parties are the same member, link them on Identity Review.</li>
+</ul>
+<h2 id="s-party-forms">The party on member, customer, supplier and other-name forms<a class="man-hash" href="#s-party-forms" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The forms that add a member, a customer, a supplier or an employee or other name ask whom the new record belongs to. A member who starts buying at the store, or a supplier who joins the cooperative, then stays one party with two roles.</p>
+<h4 id="s-party-forms-pick">Person or organization already on file<a class="man-hash" href="#s-party-forms-pick" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>On a new customer (<a href="manual.php?c=customers#pg-cust-center">Customer Center</a>), a new supplier (<a href="manual.php?c=vendors#pg-vend-center">Vendor Center</a>) and a new employee or other name (<a href="manual.php?c=chart-of-accounts#pg-coa-names">Employees &amp; Other Names</a>), the first field is <strong>Person or organization already on file</strong>. Type part of a name to search. Each active party is listed with its name in lists, Party ID and roles, for example "Santos, Maria (P-000001), Member, Customer, Supplier, Employee".</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/cust_center__party.jpg" title="Click to enlarge"><img src="assets/manual/img/cust_center__party.jpg" alt="The New customer or job form, with Person or organization already on file as its first field" width="1094" height="560" loading="lazy" decoding="async"></a><figcaption>The New customer or job form, with Person or organization already on file as its first field</figcaption></figure>
+<ul>
+<li><strong>Choose the party</strong> when the person or organization is already on file. The new record becomes a role of that party, and details the party does not have yet are filled in from the record. The role history shows "Linked" with "Linked to an existing party".</li>
+<li><strong>Leave it at "Not on file: a new party made from this customer"</strong> (or supplier, or name) for someone new. A new party is made from the record. The role history shows "Granted" with "New record".</li>
+</ul>
+<p>The field is on new records only. A job takes the party of the customer it belongs to, whatever is chosen.</p>
+<h4 id="s-party-forms-match">The possible-match warning<a class="man-hash" href="#s-party-forms-match" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>When no party is chosen, the program compares the new record's TIN, e-mail, mobile and phone numbers and name with the active and inactive parties before saving. If any look the same, the record is not saved and the form shows up to four of them, the closest first, for example:</p>
+<p>"This customer may already be on file: Cruz, Ana (P-000003, Member; same mobile number, same name). Choose the existing party, or tick "This is a different person or organization" to make a new one."</p>
+<p>The tick box <strong>This is a different person or organization</strong> then appears next to the field.</p>
+<p>An inactive party is marked ", inactive" after its Party ID, and the message adds after "Choose the existing party": "(an inactive party is made active again on the Party Center first, or by giving it the role there)". An inactive party is not in the pick list, so open it on the Party Center and either give it the role there with <strong>Give a role</strong> (for a new member, <strong>Enroll as member</strong>), or make it active with <strong>Edit party</strong> and then choose it on the form.</p>
+<p><strong>To answer the warning:</strong></p>
+<ol>
+<li>Check the parties named in the message, on the Party Center if you need to.</li>
+<li>If one of them is the same person or organization, choose it in <strong>Person or organization already on file</strong> and save again.</li>
+<li>If none is, tick <strong>This is a different person or organization</strong> and save again. A new party is made.</li>
+</ol>
+<h4 id="s-party-forms-note">The party line on saved records<a class="man-hash" href="#s-party-forms-note" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>On the edit form and the detail panel of a customer or supplier, and on the edit form of an employee or other name, a line names the party, for example: "Party P-000001, printed on documents as Maria Santos (member no. 100001). Also member, supplier, employee." The Party ID opens the Party Center for users who may open it. A saved record is not moved to another party from its own form; use <strong>Move</strong> on the <a href="#pg-party-center">Party Center</a>.</p>
+<h4 id="s-party-forms-member">Member Information<a class="man-hash" href="#s-party-forms-member" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>On a new member, the field above the tabs is <strong>On file as (a customer, supplier or other name joining the cooperative)</strong>. It lists the active parties that are not members yet. Choose the party when the new member is already on file, for example a store customer joining the cooperative; otherwise leave it at <strong>Not on file: a new party</strong>. <strong>Enroll as member</strong> on the Party Center opens the form with the party chosen and fills in the names, TIN, e-mail, mobile, date of birth and branch from the party. The party is chosen even when it is inactive; it is then listed with ", inactive" after its Party ID, for example "(P-000012, inactive)", and saving the member makes it active again. An organization is filled in as an institutional member, with its legal name as the name of the institution.</p>
+<p>When no party is chosen and the details look like a party that is not a member, the member is not saved and the form says, for example: "This person may already be on file: Ana M. Cruz (P-000035, Customer; same mobile number, same name). Choose the existing party, or tick "This is a different person" to make a new one. To use it, choose it under "On file as"." The tick box <strong>This is a different person</strong> appears next to <strong>Add member</strong>. Parties that are already members are left out of this check; the member check for the same name and date of birth covers them.</p>
+<p>The chosen party must be of the same kind as the member (see <a href="#s-party-how-kinds">Kinds of party</a>). Once the member is saved, the member record leads the party's details.</p>
+<p>On a saved member, the line next to <strong>Kind of member</strong> reads "Party P-000001: documents print the member's registered name." The Party ID opens the Party Center.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coop_member__party.jpg" title="Click to enlarge"><img src="assets/manual/img/coop_member__party.jpg" alt="Member Information of member 100001, with the line naming its party P-000001" width="1094" height="470" loading="lazy" decoding="async"></a><figcaption>Member Information of member 100001, with the line naming its party P-000001</figcaption></figure>
+<p><strong>To enroll a store customer as a member:</strong></p>
+<ol>
+<li>Open <strong>Parties &gt; Party Center</strong> and find the customer's party.</li>
+<li>Click <strong>Enroll as member</strong>. Member Information opens with the party chosen in <strong>On file as</strong> and its details filled in.</li>
+<li>Complete the member's details and membership on the tabs, as for any new member.</li>
+<li>Click <strong>Add member</strong>. The member joins the party; the role history shows "Linked" with "Enrolled as a member". The customer record, its number and its documents stay as they were.</li>
+</ol>
+<h2 id="pg-party-review">Identity Review<a class="man-hash" href="#pg-party-review" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>Identity Review lists pairs of parties that may be the same person or organization, and records what a person decides: the two are the same and are linked into one party, or they are different. The program never links parties on its own. As the page says: "Records are never joined by name alone."</p>
+<p><strong>Where to find it:</strong> Parties &gt; Identity Review. The <strong>Identity Review</strong> button on the Party Center also opens it and shows the number of pairs waiting, for example "Identity Review (2)". <strong>Review and link on Identity Review</strong> under <strong>May be the same as</strong> on the Party Center records that party's possible pairs and opens Identity Review on them.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/party_review__main.jpg" title="Click to enlarge"><img src="assets/manual/img/party_review__main.jpg" alt="Identity Review with two pairs to review and the form to link two parties found another way" width="1094" height="1122" loading="lazy" decoding="async"></a><figcaption>Identity Review with two pairs to review and the form to link two parties found another way</figcaption></figure>
+<h4 id="s-party-review-bases">How possible pairs are found<a class="man-hash" href="#s-party-review-bases" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>Look for duplicates now</strong> compares every party that is not merged. Two parties become a pair when they share at least one of the following. The pair's score is the sum of what they share; the higher the score, the more likely they are the same.</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Basis</th>
+<th>What is compared</th>
+<th>Score</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Same TIN</td><td>The first nine digits of the TIN, without dashes or spaces. A TIN of zeros does not count.</td><td>60</td></tr>
+<tr><td>Same name and date of birth</td><td>The name, as compared below, together with the date of birth.</td><td>50</td></tr>
+<tr><td>Same e-mail</td><td>The e-mail address, without regard to capitals.</td><td>30</td></tr>
+<tr><td>Same mobile number, Same phone number</td><td>The last ten digits of the mobile and phone numbers, with spaces, dashes, brackets and other characters left out. A phone number and a mobile number match each other, so a mobile number typed in the phone box of a customer or supplier is found. Numbers shorter than ten digits are not compared.</td><td>30</td></tr>
+<tr><td>Same name</td><td>The legal name or the name in lists, without capitals, punctuation, initials or word order: "Santos, Maria R." and "Maria Santos" are the same name.</td><td>20</td></tr>
+</tbody>
+</table></div>
+<p>A value shared by more than 40 parties, such as a placeholder TIN or e-mail, is not used. Pairs already decided stay decided; pairs still to review get their basis and score brought up to date. The program says how many new pairs it found: "2 new possible duplicates found." or "No new possible duplicates."</p>
+<h4 id="s-party-review-pairs">The pairs<a class="man-hash" href="#s-party-review-pairs" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The tabs <strong>To review</strong>, <strong>Linked</strong>, <strong>Different</strong> and <strong>All</strong> show the pairs by decision, with their counts. The pairs to review come first, the highest score first.</p>
+<p>Each pair's heading says what the two share, for example "Same mobile number, Same name", with "Score 50" on the right; a decided pair shows instead "Linked" or "Different", the date and time, the user and the reason. Each side shows the party's name (click it to open the Party Center), the Party ID and kind, the roles, and the <strong>Legal name</strong>, <strong>TIN</strong>, <strong>Date of birth</strong>, <strong>Mobile</strong>, <strong>Phone</strong> (when it differs from the mobile), <strong>E-mail</strong> and <strong>Address</strong>.</p>
+<p>Under a pair to review, when neither party is merged, are the buttons <strong>Same: keep P-000003</strong>, <strong>Same: keep P-000035</strong> (one for each party) and <strong>Different</strong>. This includes pairs with an inactive party. When the page was opened for one party, the line "Showing pairs with party" names it, and <strong>Show every pair</strong> shows them all again.</p>
+<h4 id="s-party-review-link">What linking does<a class="man-hash" href="#s-party-review-link" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>Every role record of the other party (its membership, customers with their jobs, suppliers, employees and other names) and every one of its documents moves to the party kept.</li>
+<li>Details the party kept does not have (TIN, e-mail, mobile, phone, address, date of birth, home branch) are filled in from the other party. When the membership came from the other party, the member's details then lead the party kept.</li>
+<li>The other party stays, with the status Merged, pointing to the party kept. Its Party ID still opens it on the Party Center, with the link to the party kept.</li>
+<li>When the party kept was inactive and now has an active role, it becomes active again.</li>
+<li>The names already printed on documents stay as issued.</li>
+<li>The role history of both parties shows "Merged" with the reason and who approved it, and the link is written to the audit trail.</li>
+<li>Pairs still to review that involve the merged party are removed; the next <strong>Look for duplicates now</strong> finds them again against the party kept.</li>
+</ul>
+<p>Two members are never linked: "Both parties are members (100003 and 100013). A person holds one membership: settle and close one membership first."</p>
+<h4 id="s-party-review-steps">Step by step<a class="man-hash" href="#s-party-review-steps" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To decide a pair:</strong></p>
+<ol>
+<li>Open <strong>Parties &gt; Identity Review</strong>. After adding or importing records, click <strong>Look for duplicates now</strong>.</li>
+<li>On <strong>To review</strong>, compare the two sides. Open a name to see the party's roles and documents on the Party Center.</li>
+<li>If they are different people or organizations, click <strong>Different</strong>, type the reason (what shows they are different) and click <strong>Record</strong>. The program says "Recorded as two different parties." The pair moves to <strong>Different</strong> and is not proposed again.</li>
+<li>If they are the same, click <strong>Same: keep</strong> on the party to keep, usually the member. In <strong>Link the parties</strong>, check the line that says which party is kept and which is moved into it, and type the reason (what shows they are the same).</li>
+<li>If you do not have the Approve right on the page, open <strong>Supervisor approval</strong> and have a supervisor type their username and password, or type a one-time approval code.</li>
+<li>Click <strong>Link</strong>. The program says "The parties were linked. The party kept has every role and document now." and opens the party kept on the Party Center.</li>
+</ol>
+<p><strong>To link two parties that were not proposed:</strong> under <strong>Link two parties found another way</strong>, choose the <strong>Party to keep</strong> and the <strong>Party to move into it</strong> (both lists hold the active parties), type the <strong>Reason (what shows they are the same)</strong>, have a supervisor approve if needed, and click <strong>Link the parties</strong>.</p>
+<div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>Ana M. Cruz (P-000035), a store customer, has the same mobile number as the member Cruz, Ana (P-000003). The membership officer confirms that they are the same person and clicks <strong>Same: keep P-000003</strong> with the reason "Same person, mobile number and address confirmed by phone on 10/12/2026". The customer record and its invoices move to P-000003, and P-000035 stays as a merged party pointing to it.</p></div>
+<h4 id="s-party-review-rights">Who may do what<a class="man-hash" href="#s-party-review-rights" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>Look for duplicates now:</strong> the Create right on Identity Review.</li>
+<li><strong>Review and link on Identity Review</strong> on the Party Center: any user who may open Identity Review. It only records possible pairs; nothing is linked.</li>
+<li><strong>Different:</strong> the Edit right on Identity Review.</li>
+<li><strong>Same: keep</strong> and <strong>Link two parties found another way:</strong> the Edit right and the special permission "Parties: can link records found to be the same person or organization, and move a role to another party", and the Approve right on Identity Review. A user without the Approve right needs a supervisor who has it to approve on the form, with their username and password or a one-time approval code from <a href="manual.php?c=point-of-sale#pg-pos-approval_codes">Approval Codes</a>. The approver is recorded in the role history.</li>
+</ul>
+<p>Messages you may meet:</p>
+<ul>
+<li>"Supervisor approval is required: link two parties into one. Ask a supervisor to enter their username and password below, or type a one-time approval code."</li>
+<li>"You are not allowed to link parties (special permission: link or move parties)."</li>
+<li>"Choose the two parties." and "Choose two different parties."</li>
+<li>"One of the parties was already merged."</li>
+<li>"This pair was already decided."</li>
+</ul>
+<h2 id="pg-party-statement">Consolidated Party Statement<a class="man-hash" href="#pg-party-statement" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The Consolidated Party Statement puts together everything one party has with the cooperative, in whatever role: receivables, loans, payables, savings, time deposits, distributions payable and share capital. Each balance keeps its own opening balance, activity and closing balance, taken from the subsidiary ledger of its role, and each line leads to its document. Nothing is offset: a member's savings are not used to pay a store account on the statement.</p>
+<p><strong>Where to find it:</strong> Parties &gt; Reports &gt; Consolidated Party Statement, or <strong>Consolidated statement</strong> on the Party Center. It is also in the Parties card of the <a href="manual.php?c=home-and-reports#pg-home-reports">Report Center</a>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/party_statement__main.jpg" title="Click to enlarge"><img src="assets/manual/img/party_statement__main.jpg" alt="The Consolidated Party Statement of Maria Santos for 01/01/2026 to 10/12/2026" width="1094" height="1230" loading="lazy" decoding="async"></a><figcaption>The Consolidated Party Statement of Maria Santos for 01/01/2026 to 10/12/2026</figcaption></figure>
+<h4 id="s-party-statement-filters">Filters<a class="man-hash" href="#s-party-statement-filters" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Party</td><td>Type part of the name to search. The active parties are listed with their Party ID and roles. Choosing one shows its statement.</td></tr>
+<tr><td>From, To</td><td>The period. At first, January 1 of this year to today.</td></tr>
+<tr><td>Line of business</td><td>Shown when there are active lines of business. <strong>All</strong>, or one line: only the entries of that line are counted.</td></tr>
+<tr><td>Branch / class</td><td>Shown when classes are in use. <strong>All</strong>, or one class: only the entries of that class are counted.</td></tr>
+<tr><td>Show</td><td><strong>Balances and activity</strong> lists every line; <strong>Balances only</strong> gives the opening and closing balance of each account.</td></tr>
+</tbody>
+</table></div>
+<p>Click <strong>Show</strong> after changing the dates or filters.</p>
+<h4 id="s-party-statement-read">How to read it<a class="man-hash" href="#s-party-statement-read" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The heading gives the period, when the statement was prepared and the filters used. On the left are the legal name, the Party ID ("Party ID P-000001, listed as Santos, Maria"), the address and the TIN; on the right, each role with its number, record name and status.</p>
+<p>Three tiles give the closing totals: <strong>Party owes the cooperative</strong> ("Receivables: what the party is to pay the cooperative."), <strong>Cooperative owes the party</strong> ("Payables, deposits and distributions due: what the cooperative is to pay or return to the party.") and <strong>Member equity interest</strong> ("Paid-up share capital: the member's equity in the cooperative, not a debt."). The equity tile is left out for a party that is not a member and has no share capital.</p>
+<p>The line under the tiles gives the net position, what the party owes less what it is owed, for information only. In the screenshot: "Net position for information only: (3,630.31) (the cooperative owes the party more than the party owes it). Nothing is offset: each balance is settled through its own documents, and share capital is equity, not part of this figure."</p>
+<p>The sections follow, under the three headings:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Section</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr><td colspan="2"><strong>Party owes the cooperative</strong></td></tr>
+<tr><td>Accounts receivable</td><td>One group for each customer record of the party, with its jobs, from the accounts receivable lines of the general ledger.</td></tr>
+<tr><td>Loans receivable</td><td>One group for each loan of the party's membership, with its status: the principal, interest and penalties owed. Its closing line gives the principal and the interest and penalties separately when there are charges.</td></tr>
+<tr><td colspan="2"><strong>Cooperative owes the party</strong></td></tr>
+<tr><td>Accounts payable</td><td>One group for each supplier record of the party.</td></tr>
+<tr><td>Savings deposits</td><td>Each savings account of the member.</td></tr>
+<tr><td>Time deposits</td><td>Each time deposit of the member.</td></tr>
+<tr><td>Interest on share capital and patronage refund payable</td><td>The amounts of distribution batches posted as payable, less what was paid out.</td></tr>
+<tr><td colspan="2"><strong>Member equity interest</strong></td></tr>
+<tr><td>Share capital</td><td>Each share capital account of the member.</td></tr>
+</tbody>
+</table></div>
+<p>Each section heading gives its totals, for example "Opening 13,752.00, increase 0.00, decrease 13,752.00, closing 0.00". Under it, each account starts with its name and opening balance, then its lines with the columns <strong>Date</strong>, <strong>Document</strong> (click it to open the document), <strong>Description</strong>, <strong>Unit</strong>, <strong>Increase</strong>, <strong>Decrease</strong> and <strong>Balance</strong>, and ends with <strong>Closing balance</strong>. An account with no activity and a zero balance is left out when its record is inactive, the account is closed or the loan is paid, renewed or written off, and whenever a line of business or class is chosen.</p>
+<p>Last comes <strong>Interest on share capital and patronage refund allocated in the period</strong>, with the columns <strong>Posted</strong>, <strong>Batch</strong>, <strong>Kind</strong>, <strong>Period</strong>, <strong>Basis</strong>, <strong>Amount</strong> and <strong>Settled</strong> (Credited to savings, Credited to share capital, or Payable with the date paid or "not yet paid").</p>
+<h4 id="s-party-statement-print">Printing and exporting<a class="man-hash" href="#s-party-statement-print" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>Print / PDF</strong> opens the statement with the company heading and the button <strong>Print or save as PDF</strong>; <strong>Back</strong> returns to the page.</li>
+<li><strong>Excel</strong> downloads the statement as a spreadsheet file: the summary, the net position, then each section and account with its lines.</li>
+<li><strong>CSV</strong> downloads the same as a CSV file.</li>
+</ul>
+<p>The three buttons need the Print right on the page. Each print and each export is written to the audit trail with the party and the period. <strong>Party Center</strong> returns to the party.</p>
+<div class="man-callout man-tip"><div class="man-callout-t"><i class="bi bi-lightbulb"></i>Tip</div><p>Before settling a member who is leaving, print the statement with <strong>From</strong> set to the date the member joined: it shows the store account, the supplier account, the loans, the deposits and the share capital together, each with its own balance to settle.</p></div>
+<h2 id="s-party-documents">Names on documents, posted documents and reissues<a class="man-hash" href="#s-party-documents" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<h4 id="s-party-documents-snapshot">The name printed on a document<a class="man-hash" href="#s-party-documents-snapshot" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>When a document is saved, the program takes what it will print about the counterparty from the party master at that moment, and keeps it on the document:</p>
+<ul>
+<li><strong>Name:</strong> the party's legal name.</li>
+<li><strong>Address:</strong> the address typed on the document, otherwise the address of the role record (the customer's billing address, or the customer's for a job; the supplier's or the other name's address), otherwise the party's address.</li>
+<li><strong>TIN:</strong> the TIN of the role record (or of the customer, for a job), otherwise the party's.</li>
+<li><strong>Member no.:</strong> the member no. of the party's membership, when it has one.</li>
+</ul>
+<p>These are taken again only when the customer, supplier, name or payee on the document is changed; any other edit keeps them. Renaming a member, customer or supplier later therefore does not change the documents already issued. A document made out to a name that is on no list prints that name. Documents saved before the upgrade print what was taken at the upgrade.</p>
+<p>The document's page shows what it prints as, for example, <strong>Bill to (printed)</strong>: the name, "Member no. 100001", "Reissued 1 time" after a correction, and a link to the party, such as "Party P-000001". It also shows the <strong>Line of business</strong>.</p>
+<h4 id="s-party-documents-labels">Labels and the member number<a class="man-hash" href="#s-party-documents-labels" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The label in front of the name follows the kind of document:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Label</th>
+<th>Documents</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Bill to</td><td>Invoices, statement charges, finance charges, estimates and sales orders</td></tr>
+<tr><td>Customer</td><td>Sales receipts, credit memos, POS sales and returns</td></tr>
+<tr><td>Received from</td><td>Customer payments and official receipts</td></tr>
+<tr><td>Supplier</td><td>Purchase orders, bills, supplier debit memos and item receipts</td></tr>
+<tr><td>Pay to</td><td>Checks, bill payments, customer refunds, advances to suppliers, cash vouchers, member disbursements and loan releases</td></tr>
+<tr><td>Name</td><td>Other documents, such as journal entries</td></tr>
+</tbody>
+</table></div>
+<p>With <strong>Print the member no. under the name of a member on invoices, receipts, checks and vouchers</strong> ticked on <a href="#pg-coop-business_units">Lines of Business</a>, the document of a member shows the member no. with the name, for example "Member no. 100001" under the name of an invoice, or "(member no. 100001)" after the payee on a check or voucher. Untick it and the number is not shown.</p>
+<h4 id="s-party-documents-locked">Posted documents are locked<a class="man-hash" href="#s-party-documents-locked" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>With <strong>Lock posted documents</strong> ticked on <a href="#pg-coop-business_units">Lines of Business</a> (the upgrade turns it on), the amounts, accounts, names, dates and lines of a posted document can be changed only by a user with the special permission "Can change or delete a posted document while posted documents are locked (with a reason)", and only with a reason. Nobody else can delete a posted document: they void it, or record a correcting document such as a credit memo, a supplier debit memo or a journal entry.</p>
+<ul>
+<li>A document is posted when it has general ledger entries and is not void, pending or suspended. Estimates, sales orders and purchase orders do not post and are not locked.</li>
+<li>The memo, the reference and similar details can still be changed by anyone with the Edit right.</li>
+<li>The page of a locked document shows "Posted. Changes to amounts, accounts, names, dates or lines need a reason and are kept in the audit trail." to users with the permission, and "Posted. Only the memo, reference and similar details can be changed; correct amounts with a void or a correcting document." to the others. <strong>Delete</strong> is not offered to users without the permission.</li>
+<li>On the form of a locked document, users with the permission get the box <strong>Reason for changing this posted document</strong>: "Needed when amounts, accounts, names, dates or lines change. The document as it was stays in the audit trail."</li>
+</ul>
+<p>Messages:</p>
+<ul>
+<li>"This document is posted, and posted documents are locked: amounts, accounts, names, dates and lines cannot be changed. Void it and record it again, record a correcting document (credit memo, vendor credit, journal entry), or ask a user who may change posted documents."</li>
+<li>"Enter the reason for changing this posted document (it is kept in the audit trail with the document as it was)."</li>
+<li>"Posted documents are locked and cannot be deleted. Void it instead: the document stays, marked void, with the reason."</li>
+</ul>
+<p>Cooperative vouchers (official receipts, member disbursements, loan releases and cooperative journal vouchers) are never edited or deleted in any case; they are voided.</p>
+<h4 id="s-party-documents-reissue">Correcting the printed name<a class="man-hash" href="#s-party-documents-reissue" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>When a document was issued with a wrong name, address or TIN, for example with the middle initial missing, <strong>Correct printed name</strong> on the document's page corrects only what is printed. The amounts, the accounts and the ledger do not change, and the document keeps its number. The correction is a reissue: it is numbered (Reissue no. 1, 2 and so on), kept with the old and new name, address and TIN, the reason and who approved it, listed in <a href="#pg-rpt-doc_reissues">Reissued Documents</a> and written to the audit trail. The print-out then shows "Reissue no. 1 of this document" with the date.</p>
+<p>The button is shown to users with the special permission "Can correct the name, address or TIN printed on an issued document (a reissue, with a reason)" and the Print right on the document's page. It is not offered on a voided document or on a document with no printed name.</p>
+<p>Each correction is approved. A user with the Approve right on the document's page approves their own correction. Anyone else needs a supervisor who has that right, who types their username and password under <strong>Supervisor approval</strong> in the dialog, or a one-time approval code from <a href="manual.php?c=point-of-sale#pg-pos-approval_codes">Approval Codes</a>. The dialog says so: "A user without the Approve right on this page needs a supervisor's approval." The approver is shown in the <strong>Approved by</strong> column of Reissued Documents.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/txn_view__reissued.jpg" title="Click to enlarge"><img src="assets/manual/img/txn_view__reissued.jpg" alt="Invoice INV-00015 after its printed name was corrected to Maria R. Santos" width="1094" height="450" loading="lazy" decoding="async"></a><figcaption>Invoice INV-00015 after its printed name was corrected to Maria R. Santos</figcaption></figure>
+<p><strong>To correct the name printed on a document:</strong></p>
+<ol>
+<li>If the name is wrong at its source, correct it there first: on Member Information for a member, otherwise with <strong>Edit party</strong> on the Party Center (or on the role record, for a party with one role).</li>
+<li>Open the document and click <strong>Correct printed name</strong>.</li>
+<li>The boxes <strong>Name to print</strong>, <strong>Address</strong> and <strong>TIN</strong> hold the party master's current details; the line under them gives the name printed now. Change them if needed. An address or TIN box left empty takes the party master's current detail.</li>
+<li>Type the reason, which is required and goes to the audit trail.</li>
+<li>If you do not have the Approve right on the document's page, open <strong>Supervisor approval</strong> and have a supervisor type their username and password, or type a one-time approval code.</li>
+<li>Click <strong>Correct printed name</strong>. The program says, for example, "Invoice INV-00015 reissued with the corrected name. The correction is kept in the audit trail."</li>
+</ol>
+<div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>Invoice INV-00015 of ₱500.00 was issued to Maria Santos. Her legal name is corrected to Maria R. Santos, then the invoice is reissued with the reason "Middle initial missing on the issued invoice". The invoice still owes ₱500.00 and posts the same entries; it now prints "Maria R. Santos" and "Reissue no. 1 of this document, 10/12/2026".</p></div>
+<p>When the correction is refused, the document's page shows the message and the dialog opens again by itself with the name, address, TIN and reason as you typed them; when a supervisor's approval is needed, <strong>Supervisor approval</strong> is open. Correct what the message asks and click <strong>Correct printed name</strong> again. The messages:</p>
+<ul>
+<li>"The name, address and TIN are the same as on the document."</li>
+<li>"Enter the reason for the correction."</li>
+<li>"Supervisor approval is required: correction of the name printed on Invoice INV-00015. Ask a supervisor to enter their username and password below, or type a one-time approval code."</li>
+<li>"Approval failed: the supervisor username or password is wrong."</li>
+<li>"You are not allowed to correct the name printed on an issued document (special permission: reissue documents)."</li>
+</ul>
+<h2 id="pg-coop-business_units">Lines of Business<a class="man-hash" href="#pg-coop-business_units" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>A multipurpose cooperative runs several lines of business: savings and credit, a consumer store, wholesale or member purchasing, marketing of members' produce, production, services. Each document carries one line of business, and so do its ledger lines, so the one general ledger can be reported for the whole cooperative or for one line at a time. A line sets who may transact in it, the price levels of members and nonmembers, and whether its member transactions count for patronage refund.</p>
+<p>The same page holds the default line of each kind of document, the lines of the program the cooperative runs, the member and nonmember prices, the document rules (the lock on posted documents and the member no. on documents), the goods and services that count for patronage refund, and the inter-unit accounts.</p>
+<p><strong>Where to find it:</strong> Members &amp; Others &gt; Lines of Business.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coop_business_units__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coop_business_units__main.jpg" alt="Lines of Business with three lines: SC Savings and Credit, TR Consumer Store and MK Marketing of Produce" width="1094" height="1706" loading="lazy" decoding="async"></a><figcaption>Lines of Business with three lines: SC Savings and Credit, TR Consumer Store and MK Marketing of Produce</figcaption></figure>
+<h4 id="s-bu-units">The lines of business<a class="man-hash" href="#s-bu-units" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The list shows each line with its <strong>Code</strong>, <strong>Line of business</strong> (the name and kind), <strong>Who may transact</strong>, <strong>Patronage</strong> (Counts or Does not count), <strong>Prices (member / nonmember)</strong> (the price levels that apply in the line: its own, otherwise the level set under <strong>Prices when the line of business has none</strong> followed by "(general)", otherwise "Standard") and the number of <strong>Documents</strong>. An inactive line is greyed. <strong>Edit</strong> opens a line in the form on the right.</p>
+<p>The form <strong>New line of business</strong> (or <strong>Edit</strong> and the line):</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Code</td><td>A short code of up to 10 letters, numbers and dashes, for example MK. It is saved in capitals and shown in lists and in the Unit column of documents.</td></tr>
+<tr><td>Name</td><td>For example Marketing of Produce.</td></tr>
+<tr><td>Kind</td><td>Savings and credit, Consumer store / retail, Wholesale / member purchasing, Marketing of members' produce, Production / processing, Services, or Other.</td></tr>
+<tr><td>Who may transact</td><td><strong>Members and nonmembers</strong>; <strong>Nonmembers need approval</strong> (a supervisor approves each sale to a nonmember); or <strong>Members only</strong> (sales to nonmembers and walk-in customers are refused). A marketing line applies the same rule to the suppliers of produce. See <a href="#s-bu-forms">The Line of business field on documents</a>.</td></tr>
+<tr><td>Price level of members, Price level of nonmembers</td><td>The price levels used in this line for customers who have no price level of their own. "The general one" uses the prices set under <strong>Prices when the line of business has none</strong>.</td></tr>
+<tr><td>Usual site</td><td>The inventory site where the line usually works, for example the store's warehouse. A new document whose default line of business is this line starts at this site, and choosing this line on a form moves the form's site to it (see <a href="#s-bu-forms">The Line of business field on documents</a>).</td></tr>
+<tr><td>Order in lists</td><td>The lines are listed by this number, then by code.</td></tr>
+<tr><td>Description</td><td>What the line does.</td></tr>
+<tr><td>Member transactions here count for patronage refund</td><td>Ticked, the member transactions of this line can count for patronage refund (see <a href="#s-bu-reports-patronage">The patronage refund basis</a>).</td></tr>
+<tr><td>Active</td><td>Untick to stop using the line. New documents can no longer choose it; its documents keep it.</td></tr>
+</tbody>
+</table></div>
+<p>Click <strong>Save</strong>. When editing, <strong>New</strong> returns to an empty form. A line of business cannot be deleted.</p>
+<h4 id="s-bu-settings">Defaults, lines run and document rules<a class="man-hash" href="#s-bu-settings" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>"The line of business a new document takes when its form does not choose one. Forms show the choice while two or more lines are active." Choose a line, or <strong>None</strong>, for each kind of document:</p>
+<ul>
+<li>Cooperative vouchers (receipts, disbursements, loan releases, journal vouchers)</li>
+<li>Sales (estimates, orders, invoices, sales receipts, payments, credit memos, refunds)</li>
+<li>Purchasing (purchase orders, receipts, bills, bill payments, vendor credits, advances)</li>
+<li>Point of sale (sales, returns, over and short)</li>
+<li>Inventory (adjustments, transfers, builds, processing)</li>
+<li>Banking (checks, deposits, transfers, cash vouchers, bank charges and interest)</li>
+<li>General journal, depreciation, asset disposals and opening balances</li>
+</ul>
+<p>The upgrade set SC Savings and Credit for the cooperative vouchers, TR Consumer Store for sales, purchasing, point of sale and inventory, and None for banking and the general journal. While only one line is active, every new document takes that line.</p>
+<p><strong>Lines the cooperative runs</strong> lists the parts of the program that can be switched off: Point of Sale, Inventory, Savings &amp; Deposits, Loans, Teller and Fixed Assets. Untick one the cooperative does not run. "A line switched off closes its entry pages for everybody. Its reports stay, so its history can be read." Its entry pages leave the menu for every user, administrators included.</p>
+<p><strong>Prices when the line of business has none</strong>: the price level of <strong>Members</strong> and of <strong>Nonmembers and walk-in customers</strong>, or <strong>Standard prices</strong> (see <a href="#s-bu-prices">Member and nonmember prices</a>).</p>
+<p><strong>Documents</strong>:</p>
+<ul>
+<li><strong>Lock posted documents</strong> (see <a href="#s-party-documents-locked">Posted documents are locked</a>). Turning it on or off needs the Approve right on this page: "Turning the lock of posted documents on or off needs the Approve right on this page."</li>
+<li><strong>Print the member no. under the name of a member on invoices, receipts, checks and vouchers</strong> (see <a href="#s-party-documents-labels">Labels and the member number</a>).</li>
+</ul>
+<p>Click <strong>Save settings</strong>. It needs the Edit right on the page; the changes are written to the audit trail.</p>
+<h4 id="s-bu-prices">Member and nonmember prices<a class="man-hash" href="#s-bu-prices" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>When a sale is entered, the price of an item comes from the first price level found in this order:</p>
+<ol>
+<li>The customer's own price level, on the customer record. "A customer's own price level always comes first."</li>
+<li>The line of business's price level of members, when the customer's party is an active member (an applicant or a suspended member counts as a member), or its price level of nonmembers otherwise. A walk-in sale with no customer uses the nonmember level.</li>
+<li>The level set under <strong>Prices when the line of business has none</strong>, for members or for nonmembers and walk-in customers.</li>
+<li>Otherwise, the standard price of the item.</li>
+</ol>
+<p>A price level can have dates. On <a href="manual.php?c=chart-of-accounts#pg-coa-lists">Terms, Tax Codes &amp; Other Lists</a>, the <strong>Price levels</strong> list has <strong>Valid from</strong> and <strong>Valid until</strong>: a level with dates applies only to documents dated within them, for example a promotion for one month; a level without dates always applies. Outside its dates, or when it is inactive, the level is not used and the standard price applies.</p>
+<h4 id="s-bu-assign">Documents without a line of business<a class="man-hash" href="#s-bu-assign" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>This box is shown to users with the Edit right while some documents have no line of business. It counts them by kind, for example "General journal, depreciation, asset disposals and opening balances: 3".</p>
+<p><strong>To give older documents a line of business:</strong></p>
+<ol>
+<li>In <strong>Documents</strong>, choose the kind of documents.</li>
+<li>In <strong>Give them</strong>, choose the line of business.</li>
+<li>Type the <strong>Reason</strong>.</li>
+<li>Click <strong>Assign</strong>. Every document of that kind without a line of business gets it, for example "3 document(s) given SC Savings and Credit." "Only the line of business is recorded on the documents and their ledger lines; amounts, numbers and dates do not change." The assignment is written to the audit trail.</li>
+</ol>
+<h4 id="s-bu-patronage">Goods and services that count for patronage refund<a class="man-hash" href="#s-bu-patronage" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>"Not every member sale qualifies: only these items, in lines of business that count." The goods and services are the items of the types Inventory part, Non-inventory part, Inventory assembly and Service. The box says how many of the active ones count, for example "19 of 19 active goods and services count."</p>
+<p>To mark many items at once, choose a <strong>Category</strong> (or <strong>Every good and service</strong>), choose <strong>Count</strong> or <strong>Do not count</strong> in <strong>They</strong>, and click <strong>Apply</strong>. Only the goods and services of the category are changed; other charges, discounts and the other item types are left as they are. The program says how many items were updated. One item at a time, tick <strong>Counts for patronage refund</strong> on the item in <a href="manual.php?c=inventory#pg-inv-items">Item List</a>. New items do not count until they are marked.</p>
+<h4 id="s-bu-interunit">Inter-unit accounts<a class="man-hash" href="#s-bu-interunit" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>When one line of business lends to, sells to or charges another, the books use accounts kept only for these dealings: a due-to and due-from account between the lines, and, for sales and charges between them, an inter-unit sales account and the matching cost account. In <strong>Due to / due from, inter-unit sales and charges, and their cost</strong>, tick these accounts among the asset, liability, income and expense accounts, and click <strong>Save</strong>. The program says "Inter-unit accounts saved."</p>
+<p>"Accounts used only for dealings between lines of business, such as Due from Consumer Store and Due to Savings and Credit, or Inter-unit Sales and Inter-unit Purchases. They show on each unit's statements and are eliminated (left out) when the whole cooperative is reported: what the units owe each other nets out, and what they sold or charged each other nets out against its cost, so nothing is counted twice."</p>
+<p>Elimination means that, on the statements of the whole cooperative, the inter-unit accounts are left out, because what one line owes, sells or charges another is not a dealing with anyone outside the cooperative. The asset and liability accounts are netted together, and the income and expense accounts together, each group on its own. See <a href="#s-bu-reports-elim">Eliminations</a>.</p>
+<h4 id="s-bu-forms">The Line of business field on documents<a class="man-hash" href="#s-bu-forms" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>While two or more lines are active, the document forms of Customers and Vendors (estimates, orders, invoices, sales receipts, payments, credit memos, purchase orders, item receipts, bills, bill payments, advances), and Write Checks, Make Deposits, Cash Voucher and Make Journal Entries show a <strong>Line of business</strong> field. It starts with the default line for that kind of document; a saved document shows its own line. Leave it blank and the document has no line of business. Documents entered without the field, such as cooperative vouchers, POS sales and inventory documents, take the default of their kind.</p>
+<p>The forms with an inventory site follow the usual site of the line of business. A new sales order, invoice, sales receipt, credit memo, purchase order, bill, supplier debit memo or check, and a new receipt on Receive Items (when it does not come from a purchase order), starts at the usual site of its default line of business, or at the first site when the line has none. Choosing on the form a line of business that has a usual site moves the form's site to it; you can still change the site afterwards.</p>
+<p>When a sale (an invoice, sales receipt, sales order, statement charge or POS sale) is saved for the first time, and again when an edit changes its customer or its line of business, the program checks who may transact in its line of business. The customer counts as a member when its party has an active membership; an applicant or a suspended member counts too. In a marketing line, the same check applies to the supplier of a purchase order, item receipt or bill, when it is first saved and when an edit changes the supplier or the line of business.</p>
+<ul>
+<li><strong>Members only:</strong> a document made out to a nonmember or a walk-in customer is refused, for example "Savings and Credit serves members only, and this invoice is made out to a nonmember. Choose a member, or record it under another line of business."</li>
+<li><strong>Nonmembers need approval:</strong> a user with the Approve right on the document's page saves the document as usual; others need a supervisor's approval on the form, for example "Supervisor approval is required: buy from a nonmember in Marketing of Produce. Ask a supervisor to enter their username and password below, or type a one-time approval code." The supervisor is recorded as the approver of the document.</li>
+<li><strong>Members and nonmembers:</strong> nothing is checked.</li>
+</ul>
+<h4 id="s-bu-steps">Step by step<a class="man-hash" href="#s-bu-steps" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To add a line of business:</strong></p>
+<ol>
+<li>Open <strong>Members &amp; Others &gt; Lines of Business</strong>.</li>
+<li>In <strong>New line of business</strong>, type the <strong>Code</strong>, for example MK, and the <strong>Name</strong>, for example Marketing of Produce.</li>
+<li>Choose the <strong>Kind</strong>, for example Marketing of members' produce, and <strong>Who may transact</strong>, for example Nonmembers need approval.</li>
+<li>Choose the price levels of members and nonmembers, if the line has its own.</li>
+<li>Tick or untick <strong>Member transactions here count for patronage refund</strong>.</li>
+<li>Click <strong>Save</strong>. The program says "Line of business saved."</li>
+<li>If the line should be the default for a kind of document, choose it under <strong>Defaults, lines run and document rules</strong> and click <strong>Save settings</strong>.</li>
+</ol>
+<h4 id="s-bu-good-to-know">Good to know<a class="man-hash" href="#s-bu-good-to-know" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"Enter the code and the name of the line of business."</li>
+<li>"The code uses letters, numbers and dashes only."</li>
+<li>"Code MK is already used."</li>
+<li>A line that is the default of a kind of document cannot be made inactive: "This line of business is the default of Sales (estimates, orders, invoices, sales receipts, payments, credit memos, refunds). Choose another default first."</li>
+<li>Adding or changing a line needs the Create or Edit right on the page; the settings, the assignment of older documents, the patronage items and the inter-unit accounts need the Edit right. Every change is written to the audit trail.</li>
+<li><strong>Statement of Operations by Line of Business</strong> at the top of the page opens <a href="#pg-rpt-sop_business_unit">that report</a>.</li>
+</ul>
+<h2 id="s-bu-reports">Reporting by line of business<a class="man-hash" href="#s-bu-reports" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<h4 id="s-bu-reports-filter">The Line of business filter<a class="man-hash" href="#s-bu-reports-filter" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Every report with a <strong>Class</strong> filter gets a <strong>Line of business</strong> filter next to it while two or more lines of business are active, for example the <a href="manual.php?c=chart-of-accounts#pg-rpt-trial_balance">Trial Balance</a>, the <a href="manual.php?c=chart-of-accounts#pg-rpt-balance_sheet">Balance Sheet</a>, the <a href="manual.php?c=chart-of-accounts#pg-rpt-income_statement">Income Statement</a> and the <a href="manual.php?c=chart-of-accounts#pg-rpt-general_ledger">General Ledger</a>. The cooperative <a href="manual.php?c=cooperative#pg-rpt-coop_sfc">Statement of Financial Condition</a> and <a href="manual.php?c=cooperative#pg-rpt-coop_sop">Statement of Operations</a> always have it.</p>
+<p>Choose a line and the report counts only the ledger lines of that line's documents; the note above the report reads, for example, "Line of business: SC Savings and Credit only." Leave it at <strong>All</strong> for the whole cooperative.</p>
+<h4 id="s-bu-reports-elim">Eliminations<a class="man-hash" href="#s-bu-reports-elim" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>When the whole cooperative is reported and inter-unit accounts are marked on Lines of Business, the financial statements eliminate the dealings between lines of business: the <a href="manual.php?c=chart-of-accounts#pg-rpt-trial_balance">Trial Balance</a>, the <a href="manual.php?c=chart-of-accounts#pg-rpt-balance_sheet">Balance Sheet</a>, the <a href="manual.php?c=chart-of-accounts#pg-rpt-income_statement">Income Statement</a>, the <a href="manual.php?c=chart-of-accounts#pg-rpt-cash_flow">Statement of Cash Flows</a>, and the cooperative <a href="manual.php?c=cooperative#pg-rpt-coop_sfc">Statement of Financial Condition</a> and <a href="manual.php?c=cooperative#pg-rpt-coop_sop">Statement of Operations</a>. Their note reads "Whole cooperative; balances and charges between lines of business are eliminated."</p>
+<ul>
+<li>The inter-unit asset and liability accounts are netted together: what the lines owe each other.</li>
+<li>The inter-unit income and expense accounts are netted together: what the lines sold or charged each other, against its cost.</li>
+<li>Only a difference that does not net to zero, such as an entry recorded on one side only, stays, on the first account of its group that has a balance, so the statements still balance and show it.</li>
+</ul>
+<p>The <a href="manual.php?c=chart-of-accounts#pg-rpt-general_ledger">General Ledger</a>, the <a href="manual.php?c=chart-of-accounts#pg-rpt-journal">Journal</a>, the <a href="manual.php?c=chart-of-accounts#pg-rpt-trial_balance_range">Trial Balance by Date Range</a>, the <a href="manual.php?c=chart-of-accounts#pg-rpt-trial_balance_totals">Trial Balance of Totals</a> and the <a href="manual.php?c=chart-of-accounts#pg-rpt-balance_sheet_range">Balance Sheet by Date Range</a> show every entry as it was booked, and their note reads "Whole cooperative; entries between lines of business are listed as booked (they are eliminated only on the financial statements)." Run for one line of business, every report shows the inter-unit accounts as they are.</p>
+<p>The <a href="#pg-rpt-sop_business_unit">Statement of Operations by Line of Business</a> shows each line side by side, with the elimination of the inter-unit income and expense accounts in a column of its own.</p>
+<h4 id="s-bu-reports-recon">Accounts receivable and payable in the reconciliation<a class="man-hash" href="#s-bu-reports-recon" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The <a href="manual.php?c=cooperative#pg-rpt-coop_sl_gl">Subsidiary vs General Ledger Reconciliation</a> now also has the lines <strong>Accounts receivable (customers)</strong> and <strong>Accounts payable (suppliers)</strong>. Each compares the open balances of the documents on the date (invoices, statement charges and finance charges less unapplied payments and credit memos; bills less supplier debit memos) with the accounts receivable or accounts payable control accounts. When they differ, the customers or suppliers whose open documents differ from their ledger balance are listed under the line, with their C- or V- number; click one to open it on the Customer Center or Vendor Center. "(no name on the ledger line)" collects entries made to a control account with no customer or supplier. A journal entry posted to a control account without a document shows as a difference.</p>
+<h4 id="s-bu-reports-patronage">The patronage refund basis<a class="man-hash" href="#s-bu-reports-patronage" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>On a <a href="manual.php?c=cooperative#pg-dist-pr">Patronage Refund</a> batch, <strong>Patronage measured by</strong> chooses the basis of each member's share, between the dates in <strong>Patronage from</strong> and <strong>to</strong>:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Choice</th>
+<th>What is counted for each member</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Income earned from the member (the income accounts chosen)</td><td>The credits less the debits on the <strong>Income accounts (patronage)</strong> you choose, on ledger lines that carry the member's name or are made out to a customer record of the member's party. A line of an item counts only when the item counts for patronage refund.</td></tr>
+<tr><td>Member's purchases of goods and services that count</td><td>The item lines of the invoices, sales receipts, POS sales and statement charges made out to a customer record of the member's party, less credit memos and POS returns, for the items that count. Voided, pending and suspended documents are left out.</td></tr>
+<tr><td>Member's deliveries (produce sold to the cooperative) that count</td><td>The item lines of the bills, item receipts and checks from a supplier record of the member's party, less supplier debit memos, for the items that count. Voided and pending documents are left out.</td></tr>
+</tbody>
+</table></div>
+<p>With each basis, only documents in lines of business whose member transactions count (or with no line of business) are taken. "A member is recognized through the party, also when buying or selling as a customer or supplier." The rest of the batch (method, credit, approval, posting) is as described under <a href="manual.php?c=cooperative#pg-dist-isc">Interest on Share Capital and Patronage Refund</a>.</p>
+<h2 id="s-party-reports">Reports<a class="man-hash" href="#s-party-reports" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The party reports are listed under <strong>Parties &gt; Reports</strong> in the sidebar and in the Parties card of the <a href="manual.php?c=home-and-reports#pg-home-reports">Report Center</a>; the Statement of Operations by Line of Business is under <strong>Members &amp; Others &gt; Reports</strong>. The common report tools (<strong>Refresh</strong>, <strong>Print / PDF</strong>, <strong>Excel</strong>, <strong>CSV</strong>, <strong>Email link</strong>, <strong>Modify Report</strong>, <strong>Memorize</strong> and <strong>Columns</strong>) are explained in <a href="manual.php?c=home-and-reports#sec-reports">Working with reports</a>.</p>
+<h3 id="pg-rpt-party_list">Party List<a class="man-hash" href="#pg-rpt-party_list" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>Every party on file with its roles, member no., TIN and status: a list of the people and organizations the cooperative deals with.</p>
+<p><strong>Where to find it:</strong> Parties &gt; Reports &gt; Party List.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_party_list__main.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_party_list__main.jpg" alt="The Party List of the sample cooperative" width="1094" height="900" loading="lazy" decoding="async"></a><figcaption>The Party List of the sample cooperative</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Role</strong> (Member, Customer, Supplier, Employee, Other name, More than one role or No role), <strong>Status</strong> (Active, Inactive or Merged), <strong>Kind</strong> (Person or Organization), <strong>Home branch</strong> (the party's home branch, or its member's branch) and <strong>Search</strong> (Party ID, legal name, name in lists or TIN).</p>
+<p><strong>The columns:</strong> <strong>Party ID</strong> and <strong>Name</strong> (click either to open the Party Center), <strong>Legal name (printed)</strong>, <strong>Roles</strong>, <strong>Member no.</strong>, <strong>TIN</strong> and <strong>Status</strong>. <strong>Kind</strong>, <strong>Mobile</strong>, <strong>E-mail</strong>, <strong>Home branch</strong> and <strong>On file since</strong> can be added with <strong>Columns</strong>. The note gives the number of parties. For users without the permission to see confidential member details, the TIN, mobile and e-mail of members are partly hidden, and the note says "Members' TIN and contact details are partly hidden."</p>
+<h3 id="pg-rpt-party_role_history">Party Role History<a class="man-hash" href="#pg-rpt-party_role_history" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>Every role given, taken away, restored, linked and moved, every link of two parties and every change of a party's name, with the reason and the user: the full history behind the Role history box of the Party Center.</p>
+<p><strong>Where to find it:</strong> Parties &gt; Reports &gt; Party Role History.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_party_role_history__main.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_party_role_history__main.jpg" alt="The Party Role History for this fiscal year, starting with the roles held at the upgrade" width="1094" height="900" loading="lazy" decoding="async"></a><figcaption>The Party Role History for this fiscal year, starting with the roles held at the upgrade</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> (this fiscal year at first), <strong>Role</strong> (Member, Customer, Supplier, Employee, Other name, or The party itself), <strong>What happened</strong> (Granted, Revoked, Restored, Moved in, Moved out, Merged, Edited or Linked) and <strong>Search</strong> (Party ID, party name or reason).</p>
+<p><strong>The columns:</strong> <strong>When</strong>, <strong>Party ID</strong> (click it to open the Party Center), <strong>Party</strong>, <strong>Role</strong> ("Party" for an entry about the party itself, such as a name change or a link), <strong>What happened</strong>, <strong>Other party</strong> (the party a role moved to or from, or the party linked), <strong>Reason</strong> and <strong>By</strong>. <strong>Record</strong> and <strong>Approved by</strong> can be added with <strong>Columns</strong>. The entries made by the upgrade show "Held at the upgrade" and no user. "Membership status changes are also on the member's status history."</p>
+<h3 id="pg-rpt-doc_reissues">Reissued Documents<a class="man-hash" href="#pg-rpt-doc_reissues" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>Every correction of the name, address or TIN printed on an issued document (see <a href="#s-party-documents-reissue">Correcting the printed name</a>). "Amounts and the ledger did not change."</p>
+<p><strong>Where to find it:</strong> Parties &gt; Reports &gt; Reissued Documents.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_doc_reissues__main.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_doc_reissues__main.jpg" alt="Reissued Documents with the correction of invoice INV-00015" width="1094" height="496" loading="lazy" decoding="async"></a><figcaption>Reissued Documents with the correction of invoice INV-00015</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> of the correction (this fiscal year at first) and <strong>Search</strong> (document number, name before or name now).</p>
+<p><strong>The columns:</strong> <strong>When</strong> the correction was made, <strong>Document</strong> (click it to open the document), <strong>Dated</strong> (the date of the document), <strong>Reissue no.</strong>, <strong>Name before</strong>, <strong>Name now</strong>, <strong>Reason</strong> and <strong>By</strong>. <strong>Address before</strong>, <strong>Address now</strong>, <strong>TIN before</strong>, <strong>TIN now</strong> and <strong>Approved by</strong> can be added with <strong>Columns</strong>.</p>
+<h3 id="pg-rpt-sop_business_unit">Statement of Operations by Line of Business<a class="man-hash" href="#pg-rpt-sop_business_unit" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The income and expenses of each line of business side by side, with the whole cooperative in the last column, from the one general ledger. Each line of business is the ledger lines of its documents.</p>
+<p><strong>Where to find it:</strong> Members &amp; Others &gt; Reports &gt; Statement of Operations by Line of Business, or the button at the top of <a href="#pg-coop-business_units">Lines of Business</a>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_sop_business_unit__main.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_sop_business_unit__main.jpg" alt="The Statement of Operations by Line of Business, fiscal year to date" width="1094" height="1300" loading="lazy" decoding="async"></a><figcaption>The Statement of Operations by Line of Business, fiscal year to date</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> (fiscal year to date at first) and <strong>Class</strong>. There is no Line of business filter: every line is a column.</p>
+<p><strong>How to read it:</strong> there is a column for each active line of business, and for an inactive line with activity in the period, then <strong>No line of business</strong> when some ledger lines have none, <strong>Eliminations</strong> when inter-unit income or expense accounts are marked, and <strong>Whole cooperative</strong>. The rows are the income accounts under <strong>REVENUES</strong> with <strong>Total revenues</strong>, the expense accounts under <strong>EXPENSES</strong> with <strong>Total expenses</strong>, and <strong>NET SURPLUS (LOSS)</strong>. Expenses are shown as positive amounts; sales returns and discounts show as negative revenues. Click an account to open its General Ledger for the period.</p>
+<p>The note above the table says how the lines are taken from the one general ledger. With inter-unit income or expense accounts marked it reads "Sales and charges between lines of business (the inter-unit income and expense accounts) net out in the Eliminations column; a difference that does not net shows on the whole-cooperative column."; without them, "No inter-unit income or expense accounts are set, so nothing is eliminated (set them on Members &amp; Others &gt; Lines of Business)." When some documents have no line of business, it adds "Documents without a line of business are shown apart; give them one on Members &amp; Others &gt; Lines of Business."</p>
+<div class="man-callout man-tip"><div class="man-callout-t"><i class="bi bi-lightbulb"></i>Tip</div><p>In the sample cooperative, the depreciation expense of ₱113,950.00 falls under <strong>No line of business</strong> because the default line for the general journal and depreciation is None. Assign those documents on <a href="#s-bu-assign">Documents without a line of business</a>, or set a default for them, so that each line carries its own costs.</p></div>
+<h2 id="s-party-rights">Rights and special permissions<a class="man-hash" href="#s-party-rights" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The new pages are given to roles on <a href="manual.php?c=administration#pg-admin-roles">User Role Configuration</a> or <a href="manual.php?c=administration#pg-admin-page_access">Page Access Configuration</a> like any other page. The Administrator role and the Company Owner have every right and every special permission. The upgrade gave the standard roles this access:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Role</th>
+<th>Pages</th>
+<th>Rights</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>General Manager</td><td>Party Center, Identity Review, Consolidated Party Statement, Party List, Party Role History, Reissued Documents, Statement of Operations by Line of Business, Lines of Business</td><td>Create, Edit, Print/Export and Approve</td></tr>
+<tr><td>Branch Manager</td><td>The same pages, except Lines of Business</td><td>Create, Edit, Print/Export and Approve</td></tr>
+<tr><td>Bookkeeper, Accountant</td><td>The same pages, except Lines of Business</td><td>Create and Edit on the Party Center only; Print/Export on all</td></tr>
+<tr><td>Membership Officer, Loan Officer, A/R Clerk, A/P Clerk</td><td>Party Center, Consolidated Party Statement, Party List</td><td>Create and Edit on the Party Center; Print/Export on all</td></tr>
+<tr><td>Teller, Credit Committee, Collector</td><td>Party Center, Consolidated Party Statement</td><td>Print/Export (they read the pages)</td></tr>
+<tr><td>Auditor</td><td>Every page above, Lines of Business included</td><td>Print/Export (reads them)</td></tr>
+</tbody>
+</table></div>
+<p>The four special permissions of this version, set for each role on User Role Configuration:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Special permission</th>
+<th>What it allows</th>
+<th>Given by the upgrade to</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Cooperative: can see confidential member details (birth date, TIN, contact numbers, home address)</td><td>See in full the TIN, date of birth, contact numbers, e-mail, address and registration no. of a member's party on the party pages and the Party List; the date of birth, TIN, mobile, e-mail, addresses and contact numbers of an existing member on Member Information; and the age, mobile and address on the Member Master List. Without it they are partly hidden or left out (see <a href="#s-party-center-confidential">Confidential member details</a>).</td><td>General Manager, Branch Manager, Membership Officer, Loan Officer, Credit Committee</td></tr>
+<tr><td>Parties: can link records found to be the same person or organization, and move a role to another party</td><td><strong>Same: keep</strong> and <strong>Link two parties found another way</strong> on Identity Review, and <strong>Move</strong> on the Party Center.</td><td>General Manager, Branch Manager</td></tr>
+<tr><td>Can correct the name, address or TIN printed on an issued document (a reissue, with a reason)</td><td><strong>Correct printed name</strong> on a document, together with the Print right on the document's page. Each correction is also approved (see below).</td><td>General Manager, Bookkeeper, Accountant</td></tr>
+<tr><td>Can change or delete a posted document while posted documents are locked (with a reason)</td><td>Change the amounts, accounts, names, dates and lines of a posted document, with a reason, and delete it, while <strong>Lock posted documents</strong> is on.</td><td>General Manager, Accountant</td></tr>
+</tbody>
+</table></div>
+<p>The Approve right is used on these pages:</p>
+<ul>
+<li><strong>Identity Review:</strong> linking two parties needs the Approve right on the page, or a supervisor who has it approves on the form.</li>
+<li><strong>Correct printed name:</strong> a correction is approved by the user's own Approve right on the document's page, or by a supervisor who has it.</li>
+<li><strong>Lines of Business:</strong> turning <strong>Lock posted documents</strong> on or off needs the Approve right on the page. There is no supervisor approval for this.</li>
+<li><strong>Documents in a line of business with "Nonmembers need approval":</strong> a sale to a nonmember (or, in a marketing line, a purchase from a nonmember), when it is first saved or when an edit changes the customer, supplier or line of business, needs the Approve right on the document's page, or a supervisor who has it approves on the form.</li>
+</ul>

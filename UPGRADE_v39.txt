@@ -1,0 +1,87 @@
+G-SMaRT Integrated Cooperative System - version 39 (2027-02-21)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v10.xlsx. This package holds
+only the files added or changed since version 38. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File; or php tools/upgrade.php), after backing it up:
+
+    database/migrations/2027_02_21_menus_imports_codes.sql
+
+It gives the access pages (User Role Configuration, Page Access Configuration, the
+Audit Trail filters) the new menu names and order, takes Member Disbursement (Cash
+Voucher) and Cooperative Vouchers out of the menu, and adds the savings transaction
+code INI "Initial Savings Import" (a deposit against Opening Balance Equity) used by
+Import Savings and Import Time Deposit, when the code INI is not taken yet. No table
+or column is added, nothing is deleted and no amount changes. Written for MySQL 5.5,
+safe to run twice. With several companies, run it on every company database (Super
+Admin: Companies > Database updates > Update all companies). Until it is run, the
+program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files (assets/js/csv_review.js is new).
+
+What changed (see docs/ADDITIONAL_MODULE_V10_CHECKLIST.md)
+----------------------------------------------------------
+- The menu: "Chart of Accounts" is now "Financial" and "Cooperative" is now
+  "Members & Others", and the menus are in this order: Home, Financial, Members &
+  Others, Teller, Savings & Deposits, Loans, Water Billing, Banking, Company,
+  Customers, Point of Sale, Vendors, Inventory, Fixed Assets, Parties, BIR Reports,
+  Year-end Distribution, CDA Compliance, System Administration. The pages inside
+  are the same.
+- Import Member (Member Center title bar), Import Savings (Savings Account Center
+  toolbar, after Refresh) and Import Time Deposit (Time Deposit Center toolbar,
+  after Accrual), for the move from the former system. Each has a downloadable CSV
+  template. The file is first shown as a grid for review: every row is checked,
+  the problems are named on the row, and rows can be corrected in place or removed
+  (and put back) before Upload; the upload saves every row or none.
+    Members are created Active (required: last, first and middle name, date of
+    birth, member type, membership date, barangay, municipality / city, province).
+    Savings and share capital accounts are opened Active and their balances are
+    entered on the cut-off date with the savings transaction code chosen; its GL
+    account takes the other side (one voucher per cut-off date and code).
+    Time deposits are placed Active with their term (days, months or years), rate,
+    date opened, maturity date and certificate, the principal entered the same way.
+  Reading and checking a file needs the Create right; uploading needs Approve
+  (on Member Information, the Savings Account Center, the Time Deposit Center).
+  An upload (or a batch) is sent once: a refresh, Back or a second tab does not
+  send it again.
+- Batch Deposit and Batch Withdrawal (Savings Account Transaction title bar): a CSV
+  file of account numbers and amounts, reviewed the same way, each row posted as a
+  transaction of the Savings Transaction Center with the code, date, class and memo
+  chosen. The rows are checked with the rules of the posting (withdrawable balance,
+  minimum balance, holds, restriction, lock-in ...), counting the rows above on the
+  same account.
+- Hold and Unhold (Savings Account Center toolbar and right-click menu, and on the
+  account's page): an amount of the balance earmarked so it cannot be withdrawn,
+  the rest staying withdrawable; Unhold releases one hold or every hold. The list
+  shows the amount on hold under the balance.
+- Import items (Item List and the new-item form): items of every type from a CSV
+  file, reviewed the same way before the upload. It needs Create on the Item List;
+  updating an item already on the list also needs Edit, and an opening quantity
+  Create on Adjust Quantity/Value on Hand.
+- Savings Transaction Code Setup: the GL Account box opens as soon as GL Account is
+  chosen on a new code.
+- Official Receipt, Fees and other items: every GL account is offered except those
+  of the savings, share capital and time deposits, the loans receivable and the
+  receivables and inventory of sales (they are kept by their own ledgers).
+- Member Disbursement (Cash Voucher) and Cooperative Vouchers are out of the menu.
+  The vouchers already made still open from their links (Find, the ledgers, the
+  Official Receipt List). A member who has left and still has a balance is paid out
+  with "Settle the accounts" on the member's page; an unclaimed distribution from
+  the Unclaimed Distributions report.
+
+Set-up after the upgrade
+------------------------
+Nothing is required. For an import against another account than Opening Balance
+Equity, add a deposit code with that GL account on Savings Transaction Codes. For a
+batch deposit or withdrawal against a payroll account, add a code with that GL
+account; a code on the teller's cash needs the teller's shift open.

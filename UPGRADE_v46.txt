@@ -1,0 +1,99 @@
+G-SMaRT Integrated Cooperative System - version 46 (2026-11-02)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v16.xlsx. This package holds only
+the files added or changed since version 45. Copy the folder over your installation,
+keeping the folder structure. config/config.php is not included and is never changed.
+
+Database
+--------
+One migration, for MySQL 5.5 (back up the database first). It needs the migrations of
+the earlier versions first (the last one: 2027_03_21_share_capital_terms_batch.sql):
+
+  database/migrations/2027_03_28_regular_joint_subgroups_receipts.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         php tools/upgrade.php
+
+It adds, and changes nothing else:
+
+  member_types       the member type "Regular - Joint" (code RGJ) for joint accounts, a
+                     regular member, beside Associate - Joint (not added again when a type
+                     of that code or name is on file)
+  pages              Water Billing > Service & Materials > Address Sub-groups, given to the
+                     roles that have Water Service Accounts, with the same rights;
+                     Water Billing > Setup > Receipt Layout Setup, given to the roles that
+                     have Water Settings, with the same rights
+
+No column or table is added. Nothing is deleted and no amount changes. Safe to run a
+second time. Until it is run, the program stops after log-in with a page that names it.
+
+database/accounting_system.sql and accounting_system_clean.sql are written again with
+it (a new installation needs nothing else).
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed (see docs/ADDITIONAL_MODULE_V16_CHECKLIST.md)
+----------------------------------------------------------
+- Member Information, Kind of member Joint account: the Type list has "Regular - Joint"
+  beside "Associate - Joint". It is the same Joint/Institution Details and Membership
+  Information form; the member is a regular member (Member Types, Clusters & Other Lists
+  shows it and its minimum share capital).
+
+- Address sub-groups can be added, renamed, sorted, switched off and deleted where they
+  are chosen: the "Add, edit or delete sub-groups" link under the Address sub-group box
+  of the member form (Water Defaults and Loan and savings grouping) and of Water Service
+  Accounts (the filter, Set for Selected, Add account) opens the list in a window; the
+  boxes on the page take the change at once. Water Billing > Service & Materials >
+  Address Sub-groups has the same list on a page. A new name is carried to every member
+  and water-service account that has the old one; a sub-group in use cannot be deleted
+  (switch it off so it is no longer offered). Every change is in the audit trail.
+
+- Reading Entry > Recorded Readings: Edit and Delete on each unposted reading. Edit opens
+  the reading with its previous and present reading, recomputes the consumption and the
+  amount as you type, and saves it the way the entry form does. Delete asks for a reason
+  (kept in the audit log) and the account can then be read again for the period. A posted
+  (billed) or paid reading shows "Posted, locked" and is corrected through Billing
+  Adjustments, as before; a reading followed by a reading of a later period also stays.
+  Edit needs the Create or Edit right on Reading Entry; Delete needs that and the Delete
+  right.
+
+- Incremental searching on Water Billing. Every list box with a search on the Water
+  Billing pages (the Consumer Account of Installment, One-Time and Recurring Billing, the
+  accounts, the bill codes and every other long list) narrows as you type: one letter is
+  enough, the names that
+  start with what is typed come first, the letters typed are marked, Up and Down move,
+  Enter takes the highlighted one (Tab takes a match only when one is left), Escape
+  closes; typing on the closed box opens it with the letters. The member searches of Reading Entry, Generate SOA / Post Billing and
+  Collections (Cashier) search from the first letter and are moved with the arrow keys.
+  The searches of Water Service Accounts, Billing List, Billing Adjustments, Disconnection
+  Management, Collection Corrections and Discounted Members show their results as you type,
+  without pressing Search; Payment History and the Installment ledger narrow the table as
+  you type; Customer Ledger finds an account by any words of its name.
+
+- Time deposits: the accrued interest a member withdrew before maturity (Withdraw accrued
+  interest, CAIW) is now deducted from the accrued interest. The Subsidiary vs General
+  Ledger Reconciliation compared the accrued interest of the deposits, without the
+  withdrawals, with account 2320, which the withdrawals had debited: the 500.00 of
+  Bautista, Pedro showed as a difference. The subsidiary ledger is now the accrued interest
+  less what was withdrawn of it, for each accrued-interest account of the products, and
+  the member list behind it agrees. The time deposit's Interest accruals lists each
+  accrual and each withdrawal with the balance (997.26 accrued, 500.00 withdrawn: 497.26),
+  and the Time Deposit Register and the Accrued Interest report show the payable.
+  Nothing in the books changes: the journal entries were right.
+
+- Printed or Pre-Printed receipts. Company, Security & Closing Date > Water Billing:
+  "Collection: print receipt type" and "Official receipt type", each Printed (the whole
+  receipt on plain paper, as before) or Pre-Printed (only the entries, on the
+  cooperative's own printed forms). Water Billing > Setup > Receipt Layout Setup sets up
+  each form as a passbook type is set up: the paper (water bill 22 x 10 cm with two
+  copies, the official receipt 9 x 5.5 in, or your own), the top, bottom, left and right
+  margins, the font and its size and pitch, and for the header, the lines and the totals
+  where each entry prints (Left, Top, Width, alignment, format, size), dragged on the
+  drawing of the form or typed in the table. Print a test page prints the saved layout
+  with sample entries. The water bill / collection receipt and the official receipt then
+  print only their entries on the form; a link on each switches to the other kind for one
+  print. The default layouts were measured from the printed receipts of the program.
+
+- Generate Official Receipt: the values panel no longer cuts off the amount boxes and the
+  buttons; the pre-printed form is shown whole on a phone.

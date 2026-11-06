@@ -1,0 +1,365 @@
+/* ==========================================================================
+   Water Billing — shared UI consistency layer
+   --------------------------------------------------------------------------
+   Loaded after each page's own <style> block, so equal-specificity rules here
+   win by document order. Presentation only: no layout logic, no behaviour, and
+   no new colours — every value below reuses a token already defined by the
+   pages, with a fallback equal to the hex those pages already hard-code.
+
+   Fixes, in order:
+     1. Native <select> — custom arrow, room for it, ellipsis instead of
+        text running under the arrow.
+     2. Tables — a real horizontal scroll container with a visible scrollbar,
+        and a readable minimum density.
+     3. Buttons — one size system across 229 ad-hoc .btn rules.
+     4. Scrollbars — visible rather than overlay-thin.
+
+   Print sheets (receipts, SOA, disconnection notices, ledgers) are deliberately
+   excluded: their small type is there to fit paper. Opt any element out with
+   data-ui-dense="keep".
+   ========================================================================== */
+
+:root {
+    --ui-control-h: 40px;
+    --ui-btn-h: 38px;
+    --ui-btn-h-sm: 32px;
+    --ui-btn-radius: 8px;
+    --ui-focus-ring: 0 0 0 3px rgba(26, 26, 46, .14);
+}
+
+/* --------------------------------------------------------------------------
+   1. NATIVE SELECTS
+   The overlap comes from the browser drawing its arrow on top of the selected
+   option text: the control has no reserved gutter, and a <select> does not
+   ellipsis on its own. Draw our own arrow, reserve 38px for it, and clip.
+   The enhanced .ds-select-* component in navbar.php already handles this, so
+   it is left alone apart from height alignment.
+   -------------------------------------------------------------------------- */
+select:not(.ds-native-select-hidden):not([multiple]):not([size]) {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 14px 14px;
+    padding-right: 38px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+    min-height: var(--ui-control-h);
+    line-height: 1.3;
+    cursor: pointer;
+}
+
+/* A disabled control should look inert without inventing a new grey. */
+select:disabled,
+select[readonly] {
+    background-color: var(--off-white, #f8f9fb);
+    color: var(--text-muted, #9ca3af);
+    cursor: not-allowed;
+}
+
+/* Long option labels are common here (account names, member names). Give the
+   open list room to breathe in the browsers that honour it. */
+select option {
+    padding: 6px 8px;
+    line-height: 1.5;
+}
+
+/* Keep text inputs on the same rhythm as the selects beside them. */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="tel"] {
+    min-height: var(--ui-control-h);
+}
+
+/* One focus treatment for every control, replacing the mix of none / blue / dark. */
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a.btn:focus-visible {
+    outline: 2px solid var(--accent, #1a1a2e);
+    outline-offset: 1px;
+    box-shadow: var(--ui-focus-ring);
+}
+
+/* Align the enhanced dropdown with the native ones so mixed rows sit flush. */
+.ds-select-control {
+    min-height: var(--ui-control-h);
+}
+
+/* --------------------------------------------------------------------------
+   2. TABLES
+   Two separate faults: containers that never scroll, and tables that squash
+   their columns instead of overflowing. Fix both, and make the scrollbar
+   visible so it is discoverable.
+   -------------------------------------------------------------------------- */
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+/* A table only scrolls if it is allowed to be wider than its container. */
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) > table {
+    min-width: 100%;
+    width: max-content;
+    max-width: none;
+}
+
+/* Headers must never wrap into two cramped lines. */
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) th {
+    white-space: nowrap;
+}
+
+/* Readable density, screen only. Paper layouts (SOA, receipts, ledger sheets,
+   disconnection notices) are excluded by class: their small type is deliberate,
+   sized to fit the page, and must not be inflated here. */
+@media screen {
+    :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) > table:not([class*="soa-"]):not(.print-table):not(.ledger-table):not([data-ui-dense="keep"]) td {
+        padding: 12px 14px;
+        font-size: .82rem;
+        line-height: 1.45;
+    }
+
+    :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) > table:not([class*="soa-"]):not(.print-table):not(.ledger-table):not([data-ui-dense="keep"]) th {
+        padding: 11px 14px;
+        font-size: .7rem;
+        letter-spacing: .04em;
+        line-height: 1.4;
+    }
+
+    /* Secondary lines inside a cell were the worst offenders at .62-.65rem. */
+    :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) > table:not([class*="soa-"]):not(.print-table):not(.ledger-table):not([data-ui-dense="keep"]) td :is(small, .muted, .mini-muted, .line-code, .sub) {
+        font-size: .72rem;
+        line-height: 1.4;
+    }
+
+    :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) > table:not([class*="soa-"]):not(.print-table):not(.ledger-table):not([data-ui-dense="keep"]) td .badge,
+    :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) > table:not([class*="soa-"]):not(.print-table):not(.ledger-table):not([data-ui-dense="keep"]) th .badge {
+        font-size: .68rem;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. BUTTONS
+   The audit found 11 heights, 32 paddings, 14 font sizes and 10 radii. One
+   system, applied to every button-ish element these views use. Colours are
+   left to the page so each action keeps its meaning.
+   -------------------------------------------------------------------------- */
+.btn,
+button.btn,
+a.btn,
+.ledger-btn,
+.receipt-btn,
+.pager-links a,
+input[type="submit"],
+input[type="button"],
+button[type="submit"]:not(.plain):not(.icon-only):not(.icon-btn) {
+    box-sizing: border-box;
+    min-height: var(--ui-btn-h);
+    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: var(--ui-btn-radius);
+    font-family: inherit;
+    font-size: .8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: .01em;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+
+/* The tactile part: a hairline top highlight and a real press, no colour change. */
+.btn:not(.light):not(:disabled),
+button.btn:not(.light):not(:disabled),
+a.btn:not(.light) {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 1px 2px rgba(15, 23, 42, .16);
+}
+
+.btn:hover:not(:disabled),
+.ledger-btn:hover,
+.receipt-btn:hover,
+input[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 4px 10px rgba(15, 23, 42, .18);
+}
+
+.btn:active:not(:disabled),
+.ledger-btn:active,
+.receipt-btn:active,
+input[type="submit"]:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: inset 0 2px 4px rgba(15, 23, 42, .22);
+}
+
+.btn:disabled,
+button:disabled,
+input[type="submit"]:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn.small,
+.btn.btn-sm,
+.btn-small {
+    min-height: var(--ui-btn-h-sm);
+    padding: 0 11px;
+    font-size: .73rem;
+}
+
+.btn.light,
+.btn.btn-light {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 1px 2px rgba(15, 23, 42, .07);
+}
+
+/* An icon sitting inside a button should never stretch the row. */
+.btn svg,
+.ledger-btn svg,
+.receipt-btn svg {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+}
+
+/* Buttons sitting in a data row stay compact so the row does not grow wider
+   than it needs to be. Page-level buttons keep the full size. */
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) td .btn,
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) td button,
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) td .ledger-btn {
+    min-height: var(--ui-btn-h-sm);
+    padding: 0 11px;
+    font-size: .73rem;
+}
+
+/* A square icon button (.icon-btn) keeps its square: the text padding of the buttons above would leave its icon no
+   room (the edit and delete icons of Rate Codes shrank to nothing). */
+.icon-btn,
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) td .icon-btn {
+    padding: 0;
+    flex-shrink: 0;
+}
+.icon-btn svg { flex-shrink: 0; }
+
+/* Rows of actions in a table cell line up instead of stair-stepping. */
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+/* Buttons stay full-width on phones, matching what most pages already did. */
+@media (max-width: 720px) {
+    .actions .btn,
+    .filter-actions .btn {
+        width: 100%;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   4. SCROLLBARS AND THE "MORE TO THE RIGHT" CUE
+   "No side scrollbar" has two causes. On Windows/Linux Chrome the bar exists
+   but is hairline and easy to miss, so it is styled below. On macOS, and
+   anywhere overlay scrollbars are on, the bar is invisible until you already
+   drag - so styling alone is not enough. The edge shadow does not depend on
+   the scrollbar at all: it appears only while there is more content that way
+   and disappears when you reach the end, using background-attachment: local.
+   -------------------------------------------------------------------------- */
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) {
+    scrollbar-color: #cbd0d8 var(--off-white, #f8f9fb);
+    background-image:
+        linear-gradient(to right, var(--white, #ffffff) 32%, rgba(255, 255, 255, 0)),
+        linear-gradient(to left,  var(--white, #ffffff) 32%, rgba(255, 255, 255, 0)),
+        radial-gradient(farthest-side at 0 50%,   rgba(15, 23, 42, .13), rgba(15, 23, 42, 0)),
+        radial-gradient(farthest-side at 100% 50%, rgba(15, 23, 42, .13), rgba(15, 23, 42, 0));
+    background-position: left center, right center, left center, right center;
+    background-repeat: no-repeat;
+    background-size: 44px 100%, 44px 100%, 15px 100%, 15px 100%;
+    background-attachment: local, local, scroll, scroll;
+}
+
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll)::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll)::-webkit-scrollbar-track {
+    background: var(--off-white, #f8f9fb);
+    border-radius: 8px;
+}
+
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll)::-webkit-scrollbar-thumb {
+    background: #cbd0d8;
+    border: 3px solid var(--off-white, #f8f9fb);
+    border-radius: 8px;
+}
+
+:is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap,
+     .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll)::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted, #9ca3af);
+}
+
+/* Container added by this update to tables that previously had no scroll host. */
+.ui-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   5. PRINT — hand everything back to the page's own print rules.
+   -------------------------------------------------------------------------- */
+@media print {
+    :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap, .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll)  {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    :is(.table-wrap, .table-container, .table-scroll, .table-responsive, .data-table-wrap, .tablewrap, .batch-table-wrap, .card-table-wrap, div.table, .ui-table-scroll) > table {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .btn,
+    .ledger-btn,
+    .receipt-btn {
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    select {
+        background-image: none;
+        padding-right: 10px !important;
+    }
+}

@@ -1,0 +1,113 @@
+G-SMaRT Integrated Cooperative System - version 27 (2026-11-15)
+=================================================================
+
+The program is renamed G-SMaRT Integrated Cooperative System (formerly G-SMaRT
+Accounting). This package holds only the files that were added or changed since
+version 26. Copy the cooperative_system folder over your installation, keeping the
+folder structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File), after backing it up:
+
+    database/migrations/2026_11_15_multipurpose_party.sql
+
+It adds the Party Master and the lines of business:
+- new tables: parties, party_crosswalk, party_role_log, party_match_reviews,
+  business_units, document_reissues;
+- new columns, empty or zero at first: party_id on customers, vendors, members and
+  other_names; party_id, business_unit_id and the printed-name snapshot (cp_role,
+  cp_name, cp_address, cp_tin, cp_member_no, cp_source, cp_issued_at,
+  cp_reissue_no) on transactions; business_unit_id on journal_lines;
+  accounts.is_interunit; items.patronage_eligible; price_levels.valid_from and
+  valid_to;
+- the backfill: every member, customer, vendor and other name gets a party of its
+  own (a customer's jobs and a member's ledger name join it); nothing is merged by
+  name; the old IDs are kept in the crosswalk; every document gets its party and the
+  name it prints, taken from its master as it is now;
+- two lines of business, SC Savings and Credit (the cooperative vouchers) and TR
+  Consumer Store (sales, purchasing, POS and inventory); banking documents and
+  journal entries stay without a line of business until you assign them;
+- the Parties menu, the Lines of Business page and the Statement of Operations by
+  Line of Business, page rights for the cooperative roles, and four special
+  permissions (see the manual, chapter 14, Rights and special permissions).
+
+Nothing is deleted, no posted amount changes and no document number changes.
+Written for MySQL 5.5, safe to run twice. With several companies, run it on every
+company database (Super Admin: Companies > Database updates > Update all
+companies). Until it is run, the program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change and now create the database `cooperative_system`, the name in
+config/config.php. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/app.js and assets/css/app.css.
+
+After the upgrade
+-----------------
+1. Cooperative > Lines of Business: rename or add the lines the cooperative runs,
+   choose who may transact in each (everyone, members only, nonmembers with
+   approval), the member and nonmember price levels, the default line of each kind
+   of document, and switch off the modules the cooperative does not use.
+2. Mark the goods and services whose member purchases or deliveries count for
+   patronage refund (Lines of Business, or Inventory > Item List). After the
+   upgrade no item counts until it is marked.
+3. Parties > Identity Review > Look for duplicates now: decide each possible pair
+   (Same or Different). A person recorded as both a member and a store customer is
+   linked here, by a user with the permission to link parties, with a reason.
+4. If the units lend to or charge each other, mark the inter-unit accounts on Lines
+   of Business so the whole-cooperative statements leave them out.
+
+What is new (the requests of "Multipurpose_Cooperative_Accounting_Improvement_Prompt")
+---------------------------------------------------------------------------------------
+ 1. Party Master: one record and one Party ID for each person or organization,
+    with its roles (member, customer, supplier, employee, other name), each role
+    keeping its own number, terms, limits and status. Party Center, role history,
+    give, take away, restore and move a role, make a party inactive.
+ 2. Possible duplicates are caught when a customer, supplier, member or party is
+    added (same TIN, e-mail, mobile or phone number, name and date of birth, or
+    name) and reviewed on Identity Review. Nothing is linked by name alone; linking
+    needs the permission and a reason, and the old Party ID keeps pointing to the
+    party kept.
+ 3. Member Information: "On file as" enrolls a customer or supplier already on file
+    as a member on its own party. Customer, supplier and other-name forms pick the
+    person or organization already on file.
+ 4. Names on documents: every document keeps the name, address, TIN and member
+    number it was issued with, from the Party Master; the label follows the role
+    (Bill to, Supplier, Pay to, Received from). "Correct printed name" reissues a
+    document with a reason and an approval; Reissued Documents report.
+ 5. Posted documents are locked: changing their amounts, accounts, names, dates or
+    lines needs the permission to edit posted documents and a reason; deleting a
+    posted document is refused (void it instead).
+ 6. Lines of business on every document and ledger line; member and nonmember
+    rules and prices; dated price levels; the usual inventory site of each line;
+    modules switched off by line.
+ 7. Reports by line of business (the Line of business filter on the financial
+    statements, ledgers and cooperative reports), eliminations of inter-unit
+    balances and charges for the whole cooperative, the Statement of Operations by
+    Line of Business, and receivables and payables in the Subsidiary vs General
+    Ledger Reconciliation.
+ 8. Consolidated Party Statement: everything one party has with the cooperative,
+    by role, under "Party owes the cooperative", "Cooperative owes the party" and
+    "Member equity interest", each with opening, activity and closing balances and
+    a link to every document; nothing is offset. Print or save as PDF, Excel, CSV.
+ 9. Patronage refund measured by income earned, by purchases or by deliveries,
+    counting only the items and lines of business that count.
+10. Excel export (.xlsx) on every report, next to CSV.
+11. Confidential member details are masked for users without the permission on the
+    party pages, Member Information and the member and party lists.
+12. A modern layout that works on a phone: a one-row top bar, lists and tables that
+    turn into cards, report tables whose amounts stay on screen.
+
+Documentation and tests
+-----------------------
+- The built-in User's Manual has a new chapter 14, Parties and Lines of Business;
+  the Help button of every new page opens its section. Chapter 13 (patronage
+  refund) and chapter 1 (the modules) were updated.
+- docs/MULTIPURPOSE_INSPECTION.md: the codebase inspection made before the change.
+- docs/MULTIPURPOSE_IMPLEMENTATION.md: verified features, backfill mapping,
+  assumptions and unresolved issues.
+- tests/coop/cases_party.php: ten new automated cases, including the acceptance
+  scenario of the prompt; results in tests/coop/RESULTS.md and RESULTS_pure_php.md.

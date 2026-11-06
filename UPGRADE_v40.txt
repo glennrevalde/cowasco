@@ -1,0 +1,68 @@
+G-SMaRT Integrated Cooperative System - version 40 (2027-02-28)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v11.xlsx, and the checker
+asked for with it (the rows of an upload in red). This package holds only the files
+added or changed since version 39. Copy the folder over your installation, keeping
+the folder structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Nothing to run: this version adds no migration, no table and no column (it runs on
+MySQL 5.5 as before). database/accounting_system.sql and
+accounting_system_clean.sql of version 39 are still current.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/csv_review.js and assets/css/app.css.
+
+What changed (see docs/ADDITIONAL_MODULE_V11_CHECKLIST.md)
+----------------------------------------------------------
+- Import Loans (Loan Accounts Center title bar), for the move from the former
+  system. The file has one row per loan as it was released: Member Code, Member
+  Name, Loan Name, Principal Loan, Terms (months or days), Mode of Payment,
+  Amortization Type, Interest Rate, Release Date, Principal Amount Paid, Interest
+  Paid, Penalties Paid, Cut-off Date, and if wished Past Due Interest and Overdue
+  Penalties (and the first due date, the loan no., the PN no., the accrued
+  interest). A CSV template is downloadable. On the page: the Balancing GL account
+  (the other side of the loans' journal entry, normally Opening Balance Equity)
+  and the cut-off date.
+    Each loan is rebuilt from its release: its amortization schedule, then the
+    totals paid laid on it as if paid on the due dates of the amortizations, in
+    order. When the file does not give them, the past due interest of a loan that
+    has matured by the cut-off date (on the principal unpaid, from the maturity
+    date, at the loan's rate) and the overdue penalties (by the product's penalty
+    terms on the past-due amortizations, less the penalties paid) are worked out.
+    The rows are reviewed before the upload as on the other imports. The upload
+    makes every loan Active (Current or Past due), with its schedule, a loan ledger
+    from its release (the payments of the former system on their due dates, the
+    past due interest and penalties at the cut-off date) and one journal voucher
+    per cut-off date and balancing account: Dr the loan receivable of each
+    product for the principal balances (and Loan Interest Receivable for an
+    accrued interest given), Cr the balancing account. The payments of the former
+    system are not collections: they are not on Loan Collection, the Loan
+    Collections report or Home's "collected today".
+  Reading and checking a file needs the Create right on Loan Accounts Center;
+  uploading needs Approve.
+- Import Member: "Full template (every detail)" gives a template with every other
+  detail of the member too (53 more columns: salutation, place of birth, the
+  provincial and office addresses, education and work, PMES date, subscribed
+  shares, cluster, account officer and the other groupings, landline, alert and
+  notes, the spouse, two beneficiaries). Keep only the columns you have; the
+  review shows only those the file fills.
+- The checker on every upload page (Import Member, Import Savings, Import Time
+  Deposit, Import Loans, Batch Deposit and Withdrawal, Import items): a row with a
+  problem is shown in red, with its messages and the cells they name outlined; it
+  is checked again by itself as it is corrected, and "Remove the rows with a
+  problem" takes every red row out at once (Put back the last brings them back).
+- Loan numbers: a number already on file (a loan of the former system imported
+  with its own number) is passed over when a loan is numbered.
+- Loan ledger: the entries are named as on the other loan pages ("Interest
+  accrual", "Write-off", "Error correction", "Past due interest" ...) on the loan
+  page, the Statement of Account, the Member Statement and the voucher's member
+  ledgers.
+
+Set-up after the upgrade
+------------------------
+Nothing is required. Before importing loans: the loan products of the former
+system on Loan Products (with their penalty terms and "Additional interest when
+past due"), and the members imported.

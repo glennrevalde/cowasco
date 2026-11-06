@@ -1,0 +1,42 @@
+# Apache settings (XAMPP / WAMP / shared hosting). For nginx, see README.md.
+Options -Indexes
+DirectoryIndex index.php
+
+# Only index.php, login.php, assets/ and the water pages (water/views, water/process and the styles, scripts and
+# images they load) are meant to be opened from a browser. The patterns are anchored at this folder: the program's
+# own folders are closed, while water/views/ (the water pages) stays open.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(app|config|database|modules|storage|tests|tools|views|docs)(/|$) - [F,L]
+    RewriteRule ^water/(database|storage|resources/manuals|files)(/|$) - [F,L]
+    RewriteRule ^water/common/[^/]+\.php$ - [F,L]
+    RewriteRule (^|/)\.(?!well-known) - [F,L]
+</IfModule>
+
+<FilesMatch "\.(sql|md|log|ini|sh)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "same-origin"
+</IfModule>
+
+# Data Import Management accepts source files up to 50 MB (the former program's Billing Master is about 12 MB).
+# PHP's own defaults (2 MB upload, 8 MB post) would refuse it; XAMPP already allows 40 MB. Applied only where PHP
+# runs as an Apache module; with PHP-FPM / CGI the .user.ini file next to this one does the same.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 60M
+    php_value post_max_size 64M
+</IfModule>
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 60M
+    php_value post_max_size 64M
+</IfModule>

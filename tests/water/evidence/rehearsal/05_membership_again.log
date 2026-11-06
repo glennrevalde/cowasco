@@ -1,0 +1,38 @@
+Water-billing data migration  run 20261014-081939-47bb
+  source: mnssmc_src   target: coop_water_rehearsal   cutover: 2026-10-13   acting as user #1
+
+== Phase membership
+   savingstranscode                   -> legacy_savingstranscode                  read      7  written      0  skipped      7
+   savingsaccounts                    -> legacy_savingsaccounts                   read    364  written      0  skipped    364
+   savaccnttransaction                -> legacy_savaccnttransaction               read   7872  written      0  skipped   7872
+   savingsinterest                    -> legacy_savingsinterest                   read      1  written      0  skipped      1
+   savingsaccount_param               -> legacy_savingsaccount_param              read      0  written      0  skipped      0
+   savingsrestrictions                -> legacy_savingsrestrictions               read      0  written      0  skipped      0
+   savrestrictiontype                 -> legacy_savrestrictiontype                read      0  written      0  skipped      0
+   legacy register: 361 member(s) (346 active, 15 other status), 335 savings account(s) with 28,713,513.24 at 2026-10-13 (29 closed at zero left out)
+   files for review: /home/claude/gsmart_coop_water/storage/water_migration/20261014-081939-47bb-legacy_members.csv, /home/claude/gsmart_coop_water/storage/water_migration/20261014-081939-47bb-legacy_savings.csv
+   members: imported 0, already imported by an earlier run 361, matched by member no. and name 0
+   savings opening balances already imported (transaction #1)
+   done: read 8244, written 0, skipped 8605  (0.1s)
+
+EXCEPTIONS (review after the run)
+-- legacy membership (18)
+   Member 100002 Abing, Silveria ..: legacy membership type 1 taken as an associate member (ASI). Confirm on Member Information.
+   Member 100005 Agtag, Wilma S.: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100017 Armilla, Ma. Sahlee ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100044 Cahiyang, Maureen C.: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100106 "MNHS, . ..": no first name in the former register; imported with "-" as first name. Correct it on Member Information.
+   Member 100148 Suliano, Candelaria ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100165 Ycong, Fe ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100171 Ando, Cherry A.: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100179 Tangoan, Luisa ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100180 Dungog, Joan ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100183 Badoy, Nancy ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100188 Guanizon, Emmalinda M.: legacy membership status code 0 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100194 Limpangug, Allana V.: legacy membership status code 0 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100199 Dela Cruz, Sheryla Marie Rosento: legacy membership status code 2 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100223 DINOPOL, SHEILA ESPINOSA: legacy membership status code 0 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100319 OCHEA, VIA  MANIANITA: legacy membership status code 2 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100327 YUMOL, CRISTINA MONTERO: legacy membership type 1 taken as an associate member (ASI). Confirm on Member Information.
+   Member 100328 Mendez, Juvilyn Vivas: legacy membership status code 0 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+Full exceptions list: /home/claude/gsmart_coop_water/storage/water_migration/20261014-081939-47bb-exceptions.txt

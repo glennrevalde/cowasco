@@ -1,0 +1,112 @@
+G-SMaRT Integrated Cooperative System - version 33 (2027-01-10)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v5.xlsx. This package holds
+only the files added or changed since version 32. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File; or php tools/upgrade.php), after backing it up:
+
+    database/migrations/2027_01_10_teller_menu_loan_release_vouchers.sql
+
+It:
+- moves Loan Collection and the Savings Transaction Center to the Teller menu
+  (their page keys and the rights of every role stay as they are);
+- adds the page Loans > Loan Release Vouchers, with the rights the roles have on
+  Loans > Loan Release;
+- adds loan_accounts.voucher_no (the voucher ID of a loan release, LR- series),
+  filled in for the loans released before, and an index on release_txn_id;
+- adds loan_products.addl_interest (how the Internal Ledger computes additional
+  interest on a past-due loan; "auto" for every product);
+- adds the number series "Loan release voucher ID" (LR-000001) if it is missing.
+
+Nothing is deleted, no posted amount changes. Written for MySQL 5.5, safe to run
+twice. With several companies, run it on every company database (Super Admin:
+Companies > Database updates > Update all companies). Until it is run, the
+program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files.
+
+Set-up after the upgrade
+------------------------
+1. Chart of Accounts: the Cash/bank Account of the Loan Release Form lists the
+   active accounts of type Bank. An account with its bank account no. filled in,
+   or "Bank" in its name (Cash in Bank - BDO Checking), is offered for a Cheque
+   release; the others (Cash on Hand, Revolving Fund) for a Cash release. If your
+   chart does not tell them apart, every Bank-type account is offered for both.
+2. Class List: every loan release voucher carries a class, chosen on the form
+   (the class of the loan application is proposed). Make sure the classes exist.
+3. Cooperative > Document Numbering: "Loan release voucher ID" gives the voucher
+   ID printed on the Cash / Check Voucher (LR-000001 onwards; the next number
+   continues after the loans already released). Change the prefix if needed.
+4. Loans > Loan Products, each product: "Additional interest when past due
+   (Internal Ledger)": By the interest method (the default), On the principal of
+   each missed amortization, On the principal balance after maturity, or None.
+5. User Role Configuration: Loans > Loan Release Vouchers has the rights of Loan
+   Release. Give View to the cashier and the bookkeeper if they should see the
+   list.
+6. A teller who releases a loan in cash from his own drawer must have his shift
+   open; the release is then a cash-out of the shift. A release from another cash
+   account (Revolving Fund) needs no shift.
+
+What changed (see docs/ADDITIONAL_MODULE_V5_CHECKLIST.md)
+--------------------------------------------------------
+- Teller menu: Loan Collection and the Savings Transaction Center are now under
+  Teller (no longer under Loans and Savings & Deposits).
+- Daily Collection & Disbursement Summary: every transaction of the teller on
+  Loan Collection (payments and their error corrections) and on the Savings
+  Transaction Center (deposits, withdrawals and their error corrections), the
+  official receipts, the loan releases paid from the drawer and the member
+  disbursements, by date and teller, with the Cash, Check and Other columns, the
+  cash paid out and the net cash; "One line per day and teller" summarises.
+- Member Disbursement: choosing a member works again (the member's details show).
+- Loans > Loan Release opens the Loan Release Form of the former program: Member
+  Code and Name, Loan Code, P.N No, Loan Name, Payment Details (Installment Mode
+  Fixed Principal / Equal Loan, Term, Mode of Payment, Interest Rate, Start Payment
+  Date, Due Date), Release Date, Net Proceeds (Approved Amount), Release Type
+  (Cash or Cheque, the Cheque No.), Cash/bank Account, Co-Makers and the Loan
+  Charges grid (Charge Name, Charge Account, Rate/Amount, Calculated Amount, Total
+  Charges). Add deduction / delete a row; a rate or an amount can be changed; the
+  net proceeds follow as you type. After the release the same form shows the loan
+  with Print To Passbook, Disbursement, Promissory, Disclosure, Amortization,
+  Co-Maker and Loan Release Stmt.
+- The release is a Banking transaction: a Cash release is a Cash Voucher of
+  Banking > Cash Voucher, a Cheque release a check of Banking > Write Checks
+  numbered with the cheque no., both with the class and the voucher ID. They are
+  not edited or deleted in Banking: void the release (the loan is cancelled with
+  it). The voucher prints in the format of the former program (Voucher ID, Date,
+  Paid to, Check no., Account ID, Account Name, Description, SL Code, Debit,
+  Credit, Prepared / Paid / Received / Approved / Checked by).
+- Loans > Loan Release Vouchers: every voucher of a loan release (Cash Voucher,
+  Check Voucher and the loan release vouchers of before), with filters, search,
+  print, export and Open in Banking.
+- Loan Release Statement: the format of the former program, without the
+  amortization schedule: the cooperative's name, address and contact number; the
+  member, address, loan type, mode of payment, date released, P.B. No. (the
+  member's passbook no.), terms, interest rate, total interest, date due; the loan
+  release less the deductions and the net loan proceeds; the amortization by year
+  (principal, interest, total); Prepared By (who processed the release), Approved
+  By (who approved it) and Loan Proceeds Received By.
+- Loans > Loan Accounts Center is the center of the former program: Collection,
+  Ledger, Internal Ledger, View Schedule, Update Passbook, Refresh, Filter, Print
+  and Search; the columns Account No., Member name, Loan Name, Release Date, Due
+  Date, Principal Loan, Principal Balance, Interest Balance, Current Balance.
+- Loan Ledger Form (Ledger): Date, Reference No, Release, Prin. Payments, Prin.
+  Balance, Int. Payments, Fines/Surc. and the totals; Passbook View or View All;
+  printable.
+- Internal Ledger Form: the ledger by principal, interest and penalty (Release /
+  Additional Charges, Payments, Balances) with the additional interest and the
+  penalty the loan has earned to a date when it is past due or an amortization is
+  missed, by the loan product's set-up; printable. These computed rows are shown,
+  not posted: to collect them, raise the interest with Loans > Loan Adjustments
+  and use Override Payment on Loan Collection; the penalty is charged when the
+  loan is collected, as before.
+- Loans > Loan Products: "Additional interest when past due (Internal Ledger)".

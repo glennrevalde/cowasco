@@ -1,0 +1,68 @@
+G-SMaRT Integrated Cooperative System - version 30 (2026-12-20)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v2.xlsx. This package holds
+only the files added or changed since version 29. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File; or php tools/upgrade.php), after backing it up:
+
+    database/migrations/2026_12_20_member_lists_class_je_changes.sql
+
+It adds:
+- water_accounts.address_subgroup (the member's Address sub-group, shown and set on
+  the Water Billing member list);
+- class_id, empty at first, on sav_batches, loan_waivers, loan_applications,
+  bill_readings, one_time_bills, installment_bills, recurring_bills,
+  payment_transactions and water_postings;
+- the table journal_edit_requests and the page Chart of Accounts > Journal Entry
+  Changes, given to the roles that open Make Journal Entries;
+- Water Billing > Organization Units leaves the menu (the page still opens).
+
+Nothing is deleted, no posted amount changes. Written for MySQL 5.5, safe to run
+twice. With several companies, run it on every company database (Super Admin:
+Companies > Database updates > Update all companies). Until it is run, the program
+shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files.
+
+Before the first transaction after the upgrade
+----------------------------------------------
+1. Chart of Accounts > Class List: the classes must be there (for example one per
+   branch and one for the water utility). The cooperative teller, savings, loan
+   and water billing forms are not saved without a class.
+2. Cooperative > Member Types, Clusters & Other Lists: fill the Savings groups,
+   Address sub-groups, Account groups and Account classes.
+3. Give the Approve right on Make Journal Entries (Page Access) to the users who
+   approve changes to saved journal entries.
+4. A scheduled recurring-billing run can name the class:
+       php water/process/runRecurringBilling.php --operator=1 --class=CLASS_ID
+
+What changed (see docs/ADDITIONAL_MODULE_V2_CHECKLIST.md)
+--------------------------------------------------------
+- Dates can be typed as numbers (07182025, 7/18/2025) in every date box.
+- Add, rename, switch off and delete the Savings groups, Address sub-groups,
+  Account groups and Account classes; the Address sub-group is seen in Water
+  Billing.
+- The confirmation questions are asked once, when the button is pressed, in the
+  system's own dialog (no more question on every field click, no browser boxes).
+- Changes to saved journal entries need an explanation and the approval of an
+  authorized user (on the spot or later on Journal Entry Changes).
+- Members are described by their type on every name list (Regular Member,
+  Associate - Joint Member, Aflatoun (youth) Member ...) and are on the customer
+  lists (Write Checks Customer:Job, POS).
+- Savings Deposit / Withdrawal finds the accounts as the member's name is typed.
+- Class required on the savings, time deposit, batch, loan and teller forms, on
+  the waivers, restructures and penalty / accrual runs, and on every Water Billing
+  form that posts (Branch, Segment and Division are no longer asked).
+- A long Data Import no longer ends the session at the next click: every water
+  action (saving, posting, each import chunk) counts as activity for the
+  inactivity time-out.

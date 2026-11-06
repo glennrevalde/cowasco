@@ -1,0 +1,61 @@
+G-SMaRT Accounting - version 20 (2026-10-04)
+=============================================
+
+This package holds only the files that were added or changed since version 19.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No database change in this version: there is no migration to run. Do NOT import
+database/accounting_system.sql or accounting_system_clean.sql over a live database.
+(If the version 19 migration 2026_10_03_categories_reports_shift_corrections.sql has
+not been run yet, run it first; the system names it after log-in until it is.)
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/app.js and assets/css/app.css.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v20.xlsx")
+--------------------------------------------------------------------------
+ 1. Lines lost on long bills. Cause: PHP reads only the first max_input_vars fields of
+    a form (1,000 in a standard php.ini). Every item line has about 12 fields, so a bill
+    of 122 lines (1,400+ fields) arrived with only its first 82 lines; saving the edit
+    then dropped the other 40 lines, and the last line kept arrived without its cost.
+    Fix: a long form is now sent as one packed field and unpacked on the server, so
+    there is no longer a line limit from PHP (only post_max_size, 8 MB in XAMPP: several
+    thousand lines). A page opened before the update that is still too long is refused
+    with a message and nothing is saved, instead of being saved short. This applies to
+    every form: bills, invoices, sales receipts, orders, journals, adjustments, etc.
+ 2. Insert a line in between: each line has a small square plus button that inserts an
+    empty line above it. The order on the screen is the order saved.
+ 3. The "Default site for items" (bills, item receipts, purchase orders) and the
+    "Inventory site" (sales forms) are copied onto the Site of every line, including
+    lines added later. A line set by hand keeps its own site; changing the site at the
+    top moves the lines that still had the old one.
+ 4. "Add 5 lines" and "Add 10 lines" beside "Add line" on Create Estimates, Sales Orders,
+    Invoices, Batch Invoices, Sales Receipts, Statement Charges, Credit Memos, Enter Bills,
+    Purchase Orders, Receive Items, Receive Items and Enter Bills, Enter Bill for Received
+    Items, Supplier Debit Memos, Write Checks, Cash Vouchers, Journal Entries, Transfer
+    Inventory, Adjust Quantity/Value on Hand (Per Item), Disassemble / Process Items,
+    Processing Formulas and Asset Maintenance (parts and labor).
+ 5. Stock below zero: with "Allow selling or moving stock below zero" switched on, POS
+    Complete sale (and Charge to account), Sales Receipts, Sales Invoices, Batch Invoices,
+    Inventory Adjustments (Per Item and Per Batch) and Inventory Transfers ask "Saving the
+    transaction will lead the inventory to a negative balance. Do you want to continue?"
+    with the items, their quantity on hand and what would be left. Yes saves (with the
+    same button that was pressed: Save & New stays Save & New); No goes back to the form
+    with nothing saved, to be edited or cancelled. The POS asks before the sale is sent,
+    and keeps the payment typed in. With the setting off, the save is refused as before.
+ 6. Inventory Center with a site chosen (for example Gabi KMF): the last column of the
+    transaction history is now that site's own quantity after each transaction
+    ("Gabi KMF after"), not the total of all sites.
+
+Also: when a supervisor typed their password for a discount or price change before the
+stock question came up, the approval is kept for the Yes (once, for ten minutes), so it
+need not be typed again. The Billable tick box on bill lines is no longer stretched into
+a wide empty box; a button reached with the Tab key no longer shows white text on a white
+face; and on a phone each line of Transfer Inventory shows the item across the line with
+the quantity on hand and the quantity to move under it.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v20.docx) are updated for all of the above.

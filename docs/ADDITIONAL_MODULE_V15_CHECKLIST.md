@@ -1,0 +1,42 @@
+# Additional module for the Water + Coop systems (v15): requirements checklist
+
+This maps every request of `ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v15.xlsx` (version 44) to the code that implements
+it and the test that exercised it. Its only sheet, **Sheet6**, holds six screenshots with two notes:
+
+| Image | Where | What it shows |
+|---|---|---|
+| 1 (A2) | this program, `index.php?p=coop.member&kind=institutional` | the New member form with Kind of member Institutional: the individual's form (salutation, names, birth, sex ...) and its eight tabs |
+| 2 to 5 (O2, O18, O44, O71, arrows from image 1) | the former program, "Joint/Institutional Member Information" | Joint/Institution Details (empty; filled for a family and for a hospital) and Membership Information |
+| 6 (A30, arrows from C56 to the tabs) | this program, Family and beneficiaries of the same form | the tabs Family and beneficiaries, Financial, Loan and savings grouping |
+
+Notes: C24-C26 and C58-C59. The text in A2-A12 sits under image 1 and is about another system (G-SMaRT Shipping System,
+a diagnostic clinic system); it is not a request of this workbook and was left aside.
+
+Status: **Done** means built, reachable from the menu, and run in the tests and in a browser on the sample database.
+
+Version 44 has no migration (`UPGRADE_v44.txt`).
+
+## 1. Requests
+
+| # | Request | What was done | Where | Evidence | Status |
+|---|---|---|---|---|---|
+| 1 | "Claude, please revised the Joint Account or Institutional form, studying the format of my old system because the design for the current form is for the Individual Member and not for the Joint Account or the Institutional." (C24-C26; images 1 to 5) | A joint account and an institution have the form of the former program. **Joint/Institution Details**: the Member ID, the status and the type in large letters on the right (NEW / ASSOCIATE - JOINT, then the status of the saved member, e.g. ACTIVE / ASSOCIATE - INSTITUTIONAL); **Membership name** (the account's name: "Lim, Teresa or Victor or Paolo", "San Isidro Community Hospital"); **Authorized representatives**: Authorized representative name, Position / relation (Wife, Husband, Son; President, Vice President, Treasurer, Secretary) and Member (if a member); **Residence address** (House / bldg no., Postal code, Street, Barangay, City / municipality, Province); **Office / business address** (House / bldg no., Postal code, Street, City / municipality, Province); **Contact details**: the Contact list (Type, Country, Area code, Number, Primary), E-mail address, TIN (optional) and the specimen signatures of the representatives. **Membership Information**: **Passbook number** with **Get passbook number**, **Membership date**, **Type** (the member types of the kind), **Status** (New, an applicant until activated; for a saved member its status and date), **PMES date**, **Cluster**, **Segmentation**; then Branch, Subscribed shares, Par value per share, Account officer, and the alert at the counter and notes. The individual's boxes (salutation, names, birth, sex, civil status, nationality, education and work, photo) are not on it. Choosing the Kind of member switches the form at once; the boxes of the other kind are hidden and switched off, and the server reads only the boxes of the kind chosen. A new joint account or institution starts with the first member type of its kind (Associate - Joint, Associate - Institutional). Phones: one column, the representatives and the contact list as cards. | `modules/coop/member.php`, `app/Members.php` (`postedForKind`, `nextPassbook`), `assets/css/app.css` (joint account / institution form), `tools/coop_demo.php` (`coop_demo_joint_members`), `database/accounting_system.sql` | harness "The joint account / institution form: its boxes are read in place of the individual's" and "A joint account and an institution saved with their representatives ..." (12 checks) and "Get passbook number: the next number of the Passbook series that no member has" (6 checks); HTTP e2e 7.7 (13 checks: the joint form's tabs and boxes, NEW ASSOCIATE - JOINT, a joint account added with three representatives, its addresses, contact list and passbook number, the individual's boxes sent with it ignored, opened again on its own form, saved again; a refused save showing the joint boxes as typed; a member type of individuals refused for an institution; the institution's form); browser at 1366 and 390 px: a joint account (Carmela, Antonio and Paolo Reyes: Wife, Husband, Son) and an institution (San Isidro Community Hospital: President, Vice President, Treasurer, Secretary) added, opened again and saved again | Done |
+| 2 | "Claude, please remove the Family and Beneficiaries, Financial and Loan and Savings grouping for the Join Account and Institutiona member." (C58-C59; image 6) | A joint account or an institution has the tabs **Joint/Institution Details**, **Membership Information**, then Water Defaults, Customer Defaults and Vendor Defaults; Family and beneficiaries, Financial and Loan and savings grouping are not shown and nothing of them is read when it is saved (what a record had there from before is kept). The passbook number, the alert at the counter and the notes of Loan and savings grouping are on Membership Information; the authorized representatives moved from Family and beneficiaries to Joint/Institution Details. An individual keeps all eight tabs. | `modules/coop/member.php`, `app/Members.php` (`postedForKind`) | harness: the individual's lists not read for a joint account, a joint record's beneficiaries and person's name kept when saved again; e2e: the three tabs hidden for a joint account, all shown for an individual; browser: switching an individual to Joint account leaves Personal for Joint/Institution Details and back | Done |
+| — | "Make sure to make the UI of ALL PAGES very modern and professional AND MOBILE RESPONSIVE" | The joint form in the look of the program (raised boxes with a title and an icon, the large status and type in plain text, the palette kept, no capsules); one column on a phone, the grids as cards. | as above | browser at 1366 and 390 px (no sideways scroll, no console error); crawl of every page at both widths | Done |
+
+## 2. Decisions
+
+| # | Decision | Reason |
+|---|---|---|
+| D1 | One page for every kind, the form switching with the Kind of member; the joint boxes are named `j_*` and read in place of the individual's. | A member's kind can be changed; the two forms never send the same box twice, and a form sent without its script still saves only the kind chosen. |
+| D2 | Water Defaults, Customer Defaults and Vendor Defaults stay for a joint account and an institution. | They were not asked to be removed, and a joint account or a hospital can have a water service and buy from or sell to the cooperative. |
+| D3 | Barangay, an optional TIN and the specimen signatures were kept on the joint form; the photo was left out. | Water Billing and the statements use the barangay; an institution has a TIN; the representatives' signatures are kept with the member (shown on the member page, printed on the ID card). |
+| D4 | The Status is shown, not chosen, on Membership Information; a new joint account is an Applicant until activated on History and notes. | The membership status follows the program's approval (the Board, the share capital minimum), as for an individual. |
+| D5 | Get passbook number shows the next number of Document Numbering > Passbook that no member has and takes it from the series when the member is saved; a number typed by hand that another member has is refused, checked under the lock of the series. | No number is used up by a form that is never saved, and the form never gives one number to two members (numbers already on file twice keep theirs until they are changed). |
+| D6 | The Delete and Clear buttons of the former program were not copied. | A member is never deleted (resigned, terminated, deceased keep the history); Cancel leaves the form. |
+| D7 | The sample database has a joint account and an institution. | The new form can be seen filled in. |
+| D8 | A joint account or an institution takes a member type of its kind; its mobile is the first mobile of its contact list. | The type and the mobile shown elsewhere (the member panel, Find) follow its own form. |
+
+## 3. Files
+
+See `docs/FILE_CHANGE_INVENTORY.md` for every file added or changed since version 43.

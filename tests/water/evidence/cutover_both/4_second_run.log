@@ -1,0 +1,257 @@
+Water-billing data migration  run 20261014-082043-1fd5
+  source: mnssmc_src   target: coop_water_cut   cutover: 2026-10-14   acting as user #1
+
+== Phase reference
+   cities                             -> cities                                   read    145  written      0  skipped    145
+   addresstype                        -> addresstype                              read      3  written      0  skipped      3
+   addresses                          -> addresses                                read   6888  written      0  skipped   6888
+   memberaddress                      -> memberaddress                            read   6888  written      0  skipped   6888
+   contactchannels                    -> contactchannels                          read      4  written      0  skipped      4
+   membercontactchannels              -> membercontactchannels                    read   1956  written      0  skipped   1956
+   bussinessprofile                   -> bussinessprofile                         read      1  written      0  skipped      1
+   companyofficers                    -> companyofficers                          read      0  written      0  skipped      0
+   branches                           -> branches                                 read      1  written      0  skipped      1
+   ic_divisions                       -> ic_divisions                             read      1  written      0  skipped      1
+   ic_segments                        -> ic_segments                              read      1  written      0  skipped      1
+   rate_code                          -> rate_code                                read      4  written      0  skipped      4
+   water_pipe_sizes                   -> water_pipe_sizes                         read      7  written      0  skipped      7
+   water_meter_discounts              -> water_meter_discounts                    read      1  written      0  skipped      1
+   discounts                          -> discounts                                read      3  written      0  skipped      3
+   discount_privilege_rules           -> discount_privilege_rules                 read      1  written      0  skipped      1
+   water_rates                        -> water_rates                              read      0  written      0  skipped      0
+   water_meter_members                -> water_meter_members                      read     52  written      0  skipped     52
+   syssequence                        -> syssequence                              read     19  written      0  skipped     19
+   global_billing_sequence            -> global_billing_sequence                  read      0  written      0  skipped      0
+   jointmember                        -> jointmember                              read      0  written      0  skipped      0
+   membershipinfo                     -> membershipinfo                           read    361  written      0  skipped    361
+   done: read 16336, written 0, skipped 16336  (0.1s)
+== Phase coa
+   chart of accounts crosswalk for review: /home/claude/gsmart_coop_water/storage/water_migration/20261014-082043-1fd5-coa_crosswalk.csv
+   done: read 361, written 0, skipped 361  (0.0s)
+== Phase users
+   done: read 7, written 0, skipped 7  (0.0s)
+== Phase bill_codes
+   bill_codes                         -> bill_codes                               read      3  written      0  skipped      3
+   bill_periods                       -> bill_periods                             read      1  written      0  skipped      1
+   data_import_batches                -> data_import_batches                      read      1  written      0  skipped      1
+   data_import_mapping_profiles       -> data_import_mapping_profiles             read      0  written      0  skipped      0
+   data_import_mapping_rules          -> data_import_mapping_rules                read     21  written      0  skipped     21
+   data_import_rows                   -> data_import_rows                         read   6888  written      0  skipped   6888
+   setup_tutorial_progress            -> setup_tutorial_progress                  read      0  written      0  skipped      0
+   operator_notification_reads        -> operator_notification_reads              read      0  written      0  skipped      0
+   water_billing_settings             -> water_billing_settings                   read     21  written      0  skipped     21
+   done: read 6935, written 0, skipped 6935  (0.0s)
+== Phase accounts
+   members                            -> water_accounts                           read   6888  written      0  skipped   6888
+   discounted_members                 -> discounted_members                       read     37  written      0  skipped     37
+   water_meter_discounted_members     -> water_meter_discounted_members           read      0  written      0  skipped      0
+   manual_disconnection_logs          -> manual_disconnection_logs                read      0  written      0  skipped      0
+   parties: created 0, linked to existing 0
+   done: read 6925, written 0, skipped 6925  (0.0s)
+== Phase suppliers
+   done: read 4, written 0, skipped 4  (0.0s)
+== Phase membership
+   savingstranscode                   -> legacy_savingstranscode                  read      7  written      0  skipped      7
+   savingsaccounts                    -> legacy_savingsaccounts                   read    364  written      0  skipped    364
+   savaccnttransaction                -> legacy_savaccnttransaction               read   7872  written      0  skipped   7872
+   savingsinterest                    -> legacy_savingsinterest                   read      1  written      0  skipped      1
+   savingsaccount_param               -> legacy_savingsaccount_param              read      0  written      0  skipped      0
+   savingsrestrictions                -> legacy_savingsrestrictions               read      0  written      0  skipped      0
+   savrestrictiontype                 -> legacy_savrestrictiontype                read      0  written      0  skipped      0
+   legacy register: 361 member(s) (346 active, 15 other status), 335 savings account(s) with 28,713,513.24 at 2026-10-14 (29 closed at zero left out)
+   files for review: /home/claude/gsmart_coop_water/storage/water_migration/20261014-082043-1fd5-legacy_members.csv, /home/claude/gsmart_coop_water/storage/water_migration/20261014-082043-1fd5-legacy_savings.csv
+   done: read 8244, written 0, skipped 8244  (0.1s)
+== Phase history
+   bill_readings                      -> bill_readings                            read      0  written      0  skipped      0
+   one_time_bills                     -> one_time_bills                           read      0  written      0  skipped      0
+   installment_bills                  -> installment_bills                        read      0  written      0  skipped      0
+   installment_schedules              -> installment_schedules                    read      0  written      0  skipped      0
+   recurring_plans                    -> recurring_plans                          read      0  written      0  skipped      0
+   recurring_subscriptions            -> recurring_subscriptions                  read      0  written      0  skipped      0
+   recurring_bills                    -> recurring_bills                          read      0  written      0  skipped      0
+   recurring_bill_payments            -> recurring_bill_payments                  read      0  written      0  skipped      0
+   payment_transactions               -> payment_transactions                     read      0  written      0  skipped      0
+   payment_transaction_items          -> payment_transaction_items                read      0  written      0  skipped      0
+   payment_adjustments                -> payment_adjustments                      read      0  written      0  skipped      0
+   bill_adjustments                   -> bill_adjustments                         read      0  written      0  skipped      0
+   inventory_issuances                -> inventory_issuances                      read      0  written      0  skipped      0
+   inventory_issuance_items           -> inventory_issuance_items                 read      0  written      0  skipped      0
+   journalentries_copy1               -> legacy_journalentries                    read      0  written      0  skipped      0
+   journalvoucher_copy1               -> legacy_journalvoucher                    read      0  written      0  skipped      0
+   journal_voucher_voids              -> legacy_journal_voucher_voids             read      0  written      0  skipped      0
+   subsidiaryledger                   -> legacy_subsidiaryledger                  read   6930  written      0  skipped   6930
+   postingmethod                      -> legacy_postingmethod                     read      4  written      0  skipped      4
+   book_types                         -> legacy_book_types                        read      9  written      0  skipped      9
+   accounts_payable                   -> legacy_accounts_payable                  read      0  written      0  skipped      0
+   accounts_payable_payments          -> legacy_accounts_payable_payments         read      0  written      0  skipped      0
+   inventory_purchases                -> legacy_inventory_purchases               read      0  written      0  skipped      0
+   inventory_purchase_items           -> legacy_inventory_purchase_items          read      0  written      0  skipped      0
+   inventory_stock_movements          -> legacy_inventory_stock_movements         read      0  written      0  skipped      0
+   inventory_adjustments              -> legacy_inventory_adjustments             read      0  written      0  skipped      0
+   inventory_reorder_levels           -> legacy_inventory_reorder_levels          read      0  written      0  skipped      0
+   suppliers                          -> legacy_suppliers                         read      4  written      0  skipped      4
+   operator                           -> legacy_operator                          read      7  written      0  skipped      7
+   profile                            -> legacy_profile                           read     18  written      0  skipped     18
+   operator_profile                   -> legacy_operator_profile                  read     19  written      0  skipped     19
+   operator_profile_page_permissions  -> legacy_operator_profile_page_permissions read    375  written      0  skipped    375
+   access_control_pages               -> legacy_access_control_pages              read     66  written      0  skipped     66
+   access_control_presets             -> legacy_access_control_presets            read      8  written      0  skipped      8
+   access_control_preset_pages        -> legacy_access_control_preset_pages       read    180  written      0  skipped    180
+   chartofaccntstbl                   -> legacy_chartofaccntstbl                  read    361  written      0  skipped    361
+   audit_logs                         -> water_audit_logs                         read   6891  written      0  skipped   6891
+   open water             0 bill(s)              0.00
+   open one_time          0 bill(s)              0.00
+   open installment       0 bill(s)              0.00
+   open recurring         0 bill(s)              0.00
+   open invoices posted this run: 0 for 0.00 (A/R subledger total of all runs: 0.00)
+   opening balance journal: nothing to post (no legacy ledger balances at 2026-10-14)
+   done: read 14872, written 0, skipped 14872  (0.1s)
+== Phase verify
+
+VERIFICATION  (source mnssmc_src -> target coop_water_cut, cutover 2026-10-14, run 20261014-082043-1fd5)
+| Check                                                                              | Expected | Actual | Result |
+|------------------------------------------------------------------------------------|----------|--------|--------|
+| rows cities -> cities                                                              |      145 |    145 | PASS   |
+| rows addresstype -> addresstype                                                    |        3 |      3 | PASS   |
+| rows addresses -> addresses                                                        |     6888 |   6888 | PASS   |
+| rows memberaddress -> memberaddress                                                |     6888 |   6888 | PASS   |
+| rows contactchannels -> contactchannels                                            |        4 |      4 | PASS   |
+| rows membercontactchannels -> membercontactchannels                                |     1956 |   1956 | PASS   |
+| rows bussinessprofile -> bussinessprofile                                          |        1 |      1 | PASS   |
+| rows companyofficers -> companyofficers                                            |        0 |      0 | PASS   |
+| rows branches -> branches                                                          |        1 |      1 | PASS   |
+| rows ic_divisions -> ic_divisions                                                  |        1 |      1 | PASS   |
+| rows ic_segments -> ic_segments                                                    |        1 |      1 | PASS   |
+| rows rate_code -> rate_code                                                        |        4 |      4 | PASS   |
+| rows water_pipe_sizes -> water_pipe_sizes                                          |        7 |      7 | PASS   |
+| rows water_meter_discounts -> water_meter_discounts                                |        1 |      1 | PASS   |
+| rows discounts -> discounts                                                        |        3 |      3 | PASS   |
+| rows discount_privilege_rules -> discount_privilege_rules                          |        1 |      1 | PASS   |
+| rows water_rates -> water_rates                                                    |        0 |      0 | PASS   |
+| rows water_meter_members -> water_meter_members                                    |       52 |     52 | PASS   |
+| rows syssequence -> syssequence                                                    |       19 |     19 | PASS   |
+| rows global_billing_sequence -> global_billing_sequence                            |        0 |      0 | PASS   |
+| rows jointmember -> jointmember                                                    |        0 |      0 | PASS   |
+| rows membershipinfo -> membershipinfo                                              |      361 |    361 | PASS   |
+| rows bill_codes -> bill_codes                                                      |        3 |      3 | PASS   |
+| rows water_billing_settings -> water_billing_settings                              |       21 |     21 | PASS   |
+| rows bill_periods -> bill_periods                                                  |        1 |      1 | PASS   |
+| rows data_import_batches -> data_import_batches                                    |        1 |      1 | PASS   |
+| rows data_import_mapping_profiles -> data_import_mapping_profiles                  |        0 |      0 | PASS   |
+| rows data_import_mapping_rules -> data_import_mapping_rules                        |       21 |     21 | PASS   |
+| rows data_import_rows -> data_import_rows                                          |     6888 |   6888 | PASS   |
+| rows setup_tutorial_progress -> setup_tutorial_progress                            |        0 |      0 | PASS   |
+| rows operator_notification_reads -> operator_notification_reads                    |        0 |      0 | PASS   |
+| rows members -> water_accounts                                                     |     6888 |   6888 | PASS   |
+| rows discounted_members -> discounted_members                                      |       37 |     37 | PASS   |
+| rows water_meter_discounted_members -> water_meter_discounted_members              |        0 |      0 | PASS   |
+| rows manual_disconnection_logs -> manual_disconnection_logs                        |        0 |      0 | PASS   |
+| rows savingstranscode -> legacy_savingstranscode                                   |        7 |      7 | PASS   |
+| rows savingsaccounts -> legacy_savingsaccounts                                     |      364 |    364 | PASS   |
+| rows savaccnttransaction -> legacy_savaccnttransaction                             |     7872 |   7872 | PASS   |
+| rows savingsinterest -> legacy_savingsinterest                                     |        1 |      1 | PASS   |
+| rows savingsaccount_param -> legacy_savingsaccount_param                           |        0 |      0 | PASS   |
+| rows savingsrestrictions -> legacy_savingsrestrictions                             |        0 |      0 | PASS   |
+| rows savrestrictiontype -> legacy_savrestrictiontype                               |        0 |      0 | PASS   |
+| rows bill_readings -> bill_readings                                                |        0 |      0 | PASS   |
+| rows one_time_bills -> one_time_bills                                              |        0 |      0 | PASS   |
+| rows installment_bills -> installment_bills                                        |        0 |      0 | PASS   |
+| rows installment_schedules -> installment_schedules                                |        0 |      0 | PASS   |
+| rows recurring_plans -> recurring_plans                                            |        0 |      0 | PASS   |
+| rows recurring_subscriptions -> recurring_subscriptions                            |        0 |      0 | PASS   |
+| rows recurring_bills -> recurring_bills                                            |        0 |      0 | PASS   |
+| rows recurring_bill_payments -> recurring_bill_payments                            |        0 |      0 | PASS   |
+| rows payment_transactions -> payment_transactions                                  |        0 |      0 | PASS   |
+| rows payment_transaction_items -> payment_transaction_items                        |        0 |      0 | PASS   |
+| rows payment_adjustments -> payment_adjustments                                    |        0 |      0 | PASS   |
+| rows bill_adjustments -> bill_adjustments                                          |        0 |      0 | PASS   |
+| rows inventory_issuances -> inventory_issuances                                    |        0 |      0 | PASS   |
+| rows inventory_issuance_items -> inventory_issuance_items                          |        0 |      0 | PASS   |
+| rows journalentries_copy1 -> legacy_journalentries                                 |        0 |      0 | PASS   |
+| rows journalvoucher_copy1 -> legacy_journalvoucher                                 |        0 |      0 | PASS   |
+| rows journal_voucher_voids -> legacy_journal_voucher_voids                         |        0 |      0 | PASS   |
+| rows subsidiaryledger -> legacy_subsidiaryledger                                   |     6930 |   6930 | PASS   |
+| rows postingmethod -> legacy_postingmethod                                         |        4 |      4 | PASS   |
+| rows book_types -> legacy_book_types                                               |        9 |      9 | PASS   |
+| rows accounts_payable -> legacy_accounts_payable                                   |        0 |      0 | PASS   |
+| rows accounts_payable_payments -> legacy_accounts_payable_payments                 |        0 |      0 | PASS   |
+| rows inventory_purchases -> legacy_inventory_purchases                             |        0 |      0 | PASS   |
+| rows inventory_purchase_items -> legacy_inventory_purchase_items                   |        0 |      0 | PASS   |
+| rows inventory_stock_movements -> legacy_inventory_stock_movements                 |        0 |      0 | PASS   |
+| rows inventory_adjustments -> legacy_inventory_adjustments                         |        0 |      0 | PASS   |
+| rows inventory_reorder_levels -> legacy_inventory_reorder_levels                   |        0 |      0 | PASS   |
+| rows suppliers -> legacy_suppliers                                                 |        4 |      4 | PASS   |
+| rows operator -> legacy_operator                                                   |        7 |      7 | PASS   |
+| rows profile -> legacy_profile                                                     |       18 |     18 | PASS   |
+| rows operator_profile -> legacy_operator_profile                                   |       19 |     19 | PASS   |
+| rows operator_profile_page_permissions -> legacy_operator_profile_page_permissions |      375 |    375 | PASS   |
+| rows access_control_pages -> legacy_access_control_pages                           |       66 |     66 | PASS   |
+| rows access_control_presets -> legacy_access_control_presets                       |        8 |      8 | PASS   |
+| rows access_control_preset_pages -> legacy_access_control_preset_pages             |      180 |    180 | PASS   |
+| rows chartofaccntstbl -> legacy_chartofaccntstbl                                   |      361 |    361 | PASS   |
+| rows audit_logs -> water_audit_logs                                                |     6891 |   6891 | PASS   |
+| chart of accounts: detail + summary accounts mapped                                |      317 |    317 | PASS   |
+| chart of accounts: legacy rows in water_coa_map                                    |      361 |    361 | PASS   |
+| users: eligible operators with a user account                                      |        6 |      6 | PASS   |
+| roles: one per legacy profile in use                                               |       10 |     10 | PASS   |
+| parties: water accounts with a party                                               |     6888 |   6888 | PASS   |
+| parties: crosswalk rows (water_acct)                                               |     6888 |   6888 | PASS   |
+| suppliers: legacy suppliers mapped                                                 |        4 |      4 | PASS   |
+| bill codes and defaults: accounts resolve (WaterPosting::mappingProblems)          |        0 |      0 | PASS   |
+| mapping warnings to settle on the Bill Codes / Collection Policy pages             |        0 |      6 | WARN   |
+| open balance water: water records vs ledger invoices                               |     0.00 |   0.00 | PASS   |
+| open balance one_time: water records vs ledger invoices                            |     0.00 |   0.00 | PASS   |
+| open balance installment: water records vs ledger invoices                         |     0.00 |   0.00 | PASS   |
+| open balance recurring: water records vs ledger invoices                           |     0.00 |   0.00 | PASS   |
+| ledger = legacy trial balance per account (0 accounts)                             |        0 |      0 | PASS   |
+| clearing account balance (0.00 when the legacy ledger balanced)                    |     0.00 |   0.00 | PASS   |
+
+Identity review: 0 new possible duplicate pair(s) queued (Parties > Identity Review).
+Result: PASS (all checks equal)
+   done: read 53312, written 0, skipped 0  (1.0s)
+
+EXCEPTIONS (review after the run)
+-- default accounts (2)
+   water_penalty stays unset (the former program had no value for it). Set it on Chart of Accounts > Module Default Accounts (Water) when needed.
+   water_compromise stays unset (the former program had no value for it). Set it on Chart of Accounts > Module Default Accounts (Water) when needed.
+-- page access (6)
+   Role "Water: Loan Officer" has no page rights: none of its legacy assignments had page permissions. Give it pages on User Role Configuration.
+   Role "Water: Bookkeeper" has no page rights: none of its legacy assignments had page permissions. Give it pages on User Role Configuration.
+   Role "Water: Admin/Finance Manager" has no page rights: none of its legacy assignments had page permissions. Give it pages on User Role Configuration.
+   Role "Water: Crecom Chairman" has no page rights: none of its legacy assignments had page permissions. Give it pages on User Role Configuration.
+   Role "Water: Treasurer" has no page rights: none of its legacy assignments had page permissions. Give it pages on User Role Configuration.
+   Role "Water: Teller 2" has no page rights: none of its legacy assignments had page permissions. Give it pages on User Role Configuration.
+-- bill codes (2)
+   Bill code MEMBERSHIP FEE: its A/R account "Service Fee" is not an Accounts Receivable account (Income). Review on the Bill Codes page.
+   Bill code WATER METER: its A/R account "A/D - Store & Office Equipment" is not an Accounts Receivable account (Fixed Asset). Review on the Bill Codes page.
+-- water accounts (2)
+   Account 41902 CINCO, EFREN 10 C/O SHERLY: no rate code in the former database; it cannot be billed until one is assigned on Water Service Accounts (the former program refused it too).
+   Account 31856 OMBOY, MARK F Y 2 C/O MICHAEL NOURSE: no rate code in the former database; it cannot be billed until one is assigned on Water Service Accounts (the former program refused it too).
+-- legacy membership (19)
+   Member 100002 Abing, Silveria ..: legacy membership type 1 taken as an associate member (ASI). Confirm on Member Information.
+   Member 100005 Agtag, Wilma S.: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100017 Armilla, Ma. Sahlee ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100044 Cahiyang, Maureen C.: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100106 "MNHS, . ..": no first name in the former register; imported with "-" as first name. Correct it on Member Information.
+   Member 100148 Suliano, Candelaria ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100165 Ycong, Fe ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100171 Ando, Cherry A.: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100179 Tangoan, Luisa ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100180 Dungog, Joan ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100183 Badoy, Nancy ..: legacy membership status code 4 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100188 Guanizon, Emmalinda M.: legacy membership status code 0 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100194 Limpangug, Allana V.: legacy membership status code 0 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100199 Dela Cruz, Sheryla Marie Rosento: legacy membership status code 2 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100223 DINOPOL, SHEILA ESPINOSA: legacy membership status code 0 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100319 OCHEA, VIA  MANIANITA: legacy membership status code 2 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   Member 100327 YUMOL, CRISTINA MONTERO: legacy membership type 1 taken as an associate member (ASI). Confirm on Member Information.
+   Member 100328 Mendez, Juvilyn Vivas: legacy membership status code 0 has no definition in the former database; brought in as applicant. Set the right status (active, resigned, terminated, deceased) on Member Information.
+   NOT IMPORTED (the default): the former database carries a cooperative membership register of 361 member(s) and 335 savings account(s) holding 28,713,513.24 at 2026-10-14. They are kept read-only (membershipinfo, legacy_sav*) and written to the two CSV files above. Importing them creates cooperative members and posts the savings as opening balances: do it only when the cooperative database does not already hold these members and savings. Then run: php tools/migrate_water.php --source=mnssmc_src --phase=membership --import-membership --savings-product=<code> --cutover=2026-10-14
+-- mapping check (6)
+   Bill code MEMBERSHIP FEE: A/R account: 40128 Service Fee is a Income account, not Accounts Receivable (bills of this code cannot post)
+   Bill code MEMBERSHIP FEE: income account: 11115 Cash on Hand - Collector 1 is a Bank account; a bill credits income or a deposit liability (bills of this code cannot post)
+   Bill code WATER METER: A/R account: 14183 A/D - Store & Office Equipment is a Fixed Asset account, not Accounts Receivable (bills of this code cannot post)
+   Bill code WATER METER: income account: 11118 Cash in Vault is a Bank account; a bill credits income or a deposit liability (bills of this code cannot post)
+   Collection policy: penalty income: not mapped
+   Collection policy: compromise income: not mapped
+Full exceptions list: /home/claude/gsmart_coop_water/storage/water_migration/20261014-082043-1fd5-exceptions.txt

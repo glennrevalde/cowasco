@@ -1,0 +1,10 @@
+Dropping the old target `coop_water_cut` ...
+Created `coop_water_cut` (utf8mb4).
+Copied 144 table(s), 5733 row(s).
+Created 0 view(s).
+Created 0 routine(s) and 2 trigger(s).
+Verified: every table has the same rows and checksum as the source.
+Running 1 upgrade script(s): 2026_12_01_water_billing.sql
+Upgrade scripts done; the target is at the program's version.
+Report: /home/claude/gsmart_coop_water/storage/migration/create_target_coop_water_cut_20261014_082018.md
+Done. Next: DB_NAME=coop_water_cut php tools/migrate_water.php --source=<water database> --cutover=YYYY-MM-DD --dry-run

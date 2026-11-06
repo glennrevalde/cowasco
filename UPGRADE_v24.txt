@@ -1,0 +1,124 @@
+G-SMaRT Accounting - version 24 (2026-10-15)
+=============================================
+
+This package holds only the files that were added or changed since version 23.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File), after backing it up:
+
+    database/migrations/2026_10_15_withholding_bir_advances.sql
+
+It adds the BIR Reports module (Withholding Tax Table, Print BIR Form 2307 and eight
+BIR reports), the tables withholding_taxes (seeded with WT on Goods 1%, WT on
+Services 2% and WT on VAT 5%) and payment_withholdings, an empty column wht_ids on
+vendors and customers, the accounts 1315 Creditable VAT Withheld, 1410 Advances to
+Suppliers and 2115 VAT Withheld Payable (only when those codes are free), four
+module default accounts (Withholding Tax Payable (Expanded) = 2110, VAT Withheld
+Payable = 2115, Creditable VAT Withheld = 1315, Advances to Suppliers = 1410), and
+Vendors > Advances to Suppliers with its report. The new pages are given to the
+roles that may open Terms, Tax Codes & Other Lists (the table), the Unpaid Bills
+Detail (Form 2307 and the reports) and Pay Bills (advances). Nothing is deleted and
+no amount changes. Written for MySQL 5.5, safe to run twice. With several companies,
+run it on every company database (Super Admin: Companies > Database updates > Update
+all companies). Until it is run, the program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+and database/schema.sql include the change. Do NOT import those two files over a
+live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/wht.js and assets/css/app.css.
+
+The user's manual has a new chapter 10 (BIR Reports), so the chapters after it are
+renumbered. The old files views/manual/chapters/10-administration.html,
+11-company-owner.html, 12-super-admin.html and 13-appendices.html are no longer used
+and may be deleted.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v24.xlsx")
+--------------------------------------------------------------------------
+ 1. Edit Receive Items: an item receipt (bill to follow) has an Edit button. Its date,
+    delivery slip number, site, memo and lines can be changed; stock, Inventory and
+    Accounts Payable are posted again and the purchase order it was received against
+    shows the new quantities received. A receipt whose bill has been entered is
+    changed as the bill. To change the vendor, void the receipt and receive again.
+ 2. Edit Inventory Transfer: date, From and To sites, memo and lines. The stock moves
+    again at average cost; "On hand at source" counts what the transfer itself took.
+ 3. Edit Inventory Adjustment: the adjustment opens on lines (Per Item). "Qty on hand"
+    and "Current value" are what the site had without it, so the new quantity, the
+    difference and the new value read as they did when it was entered. Saving takes
+    it off the books and posts it again in one step; the reason for the adjustment
+    and the reason for the change are both kept.
+ 4. Edit Build Assemblies: assembly, site, quantity, date and memo. The components
+    follow the quantity (as recorded on the build, or the bill of materials when
+    another assembly is chosen). A pending build stays pending unless "Save and
+    complete the build" is chosen.
+    All four edits need the Edit right on their page, refuse voided documents and the
+    closed period, check the stock (the negative-stock question is asked as on new
+    documents) and keep the before and after with the reason in the audit trail.
+ 5. Withholding Tax Table (BIR Reports > Setup): the guide to how much is withheld,
+    flexible: add, change, deactivate or delete (when unused) a tax with its code,
+    BIR ATC, name, kind (income tax withheld, or VAT withheld), rate, base (net of
+    VAT, as the guide says, or gross), whom it applies to (payments to suppliers,
+    from customers, or both) and its accounts. Seeded: WT on Goods 1% (WC158), WT on
+    Services 2% (WC160), WT on VAT 5% (WV010). The same page holds "This company is
+    a withholding agent" (when it is off, Pay Bills has no Withholding column) and
+    the payor zip code and authorized signatory printed on Form 2307.
+ 6. Withholding tax of suppliers: the vendor form has a Withholding taxes box (one,
+    two or more taxes, e.g. 1% and 5%); the Vendor Center shows them and the vendor
+    list export has the column. Customers have the same box for the taxes they
+    withhold (e.g. a government buyer: 5% VAT and 1%).
+ 7. Pay Bills: a Withholding column. Clicking it opens the Withholding Tax Table with
+    a check box per tax: tick one or more per bill (the supplier's usual taxes are
+    ticked when its bill is chosen). Each amount is worked out at once from the
+    outstanding balance net of VAT (open balance x subtotal / total), and can be
+    typed over, as can the base. The amount to pay is the open balance less the
+    discount, the credit, the advance used and the taxes withheld. Posting: Dr
+    Accounts Payable (what the bill is settled by), Cr Bank (cash paid), Cr
+    Withholding Tax Payable (1% / 2%), Cr VAT Withheld Payable (5%), as in the guide.
+    Edit Bill Payment has the same column. The bill payment shows the taxes withheld
+    and a BIR Form 2307 button.
+ 8. Receive Payments: the Withholding column uses the same list for the taxes the
+    customer withheld; 1% / 2% go to Creditable Withholding Tax, 5% to Creditable VAT
+    Withheld (never Input Tax). Payments saved before keep their withholding.
+ 9. Print BIR Form 2307 (BIR Reports): choose the supplier, year and quarter. The
+    certificate follows the official layout (January 2018 ENCS): period, payee and
+    payor TIN, name, address and zip, Part III with the income payments subject to
+    expanded withholding tax by ATC for the 1st, 2nd and 3rd month of the quarter,
+    the total and the tax withheld, then the money payments subject to withholding
+    of business tax (VAT withheld), the declaration and the signature blocks. The
+    list on the left shows every supplier with taxes withheld in the quarter and
+    whether its 2307 was printed; Print all prints one certificate per supplier.
+    Each print is recorded in the audit trail.
+10. BIR Reports (a new report group and module), following the attached guide
+    ("VAT, Withholding Tax and Company Tax Returns"): Summary of Taxes Withheld from
+    Vendors/Suppliers; Expanded Withholding Tax Register (1% / 2%, Form E, for
+    suppliers or customers, with the 2307 status and the return 0619-E / 1601-EQ);
+    Withholding Tax Remittances (0619-E months 1-2, 1601-EQ quarterly with the 0619-E
+    credit, 1600-VT monthly, with the due dates); VAT Withholding Register (1600-VT,
+    Form F); Output VAT / Sales Register (Form B: net taxable sales, output VAT 12%,
+    invoice total, income WHT 1% / 2%, VAT WHT 5%, actual cash received); Input VAT /
+    Purchases Register (Form C); Creditable VAT Withheld Schedule (Form D, 2550Q
+    Schedule 3); Quarterly VAT Return Worksheet (Form A with the 2550Q items 31A,
+    31B, 37B, 44A, 44B, 50B, 51B, 60B, 61, 15, 16, 20 and 21, the input VAT carried
+    over, and the income tax withheld shown apart as not VAT). Each carries the
+    guide's notes and "Internal worksheet only, not a substitute for BIR filing
+    forms", with Prepared by / Reviewed by / Date lines. "Last quarter" is a new
+    date choice on every report.
+11. Advance Payment to Supplier (Vendors > Advances to Suppliers): record money paid
+    to a supplier before the goods or services come (supplier, date, amount, paid
+    from, check / reference, advance account, expected date, what it pays for).
+    Posting: Dr Advances to Suppliers, Cr Bank. When the bill comes, Pay Bills shows
+    "Advances avail." and "Use advance" for the supplier's bills: the advance applied
+    is posted Dr Accounts Payable, Cr Advances to Suppliers (number AAP-), and the
+    taxes withheld are deducted when the advance is applied. An advance can be edited
+    (not below what was applied) and is voided after its applications. Report:
+    Vendors > Reports > Advances to Suppliers (what is left to apply, by supplier,
+    with the general-ledger balance). The Vendor Center has an Advance payment button
+    and shows the advances left; the Check Register lists advances paid by check.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v24.docx) are updated for all of the above.

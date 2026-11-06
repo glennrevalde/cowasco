@@ -1,0 +1,115 @@
+/* =====================================================================
+   One look for the water-billing pages and the rest of the system (assets/css/app.css).
+
+   The water pages keep their own layouts and page styles; this file, loaded by the shared shell (navbar.php),
+   only brings them in line with the cooperative pages:
+   - the same type: the pages ask for "Sora" and "JetBrains Mono"; fonts.css maps those names to the fonts the
+     cooperative pages use (nothing is downloaded, so the pages also work on an office network without internet);
+   - the same surfaces: raised cards, tactile buttons, inset fields;
+   - plain text status labels instead of coloured capsules, and form labels in normal case;
+   - the cooperative blue for primary actions (theme.js marks the near-black buttons of the former program).
+   Selectors start with body.wsh-body so they win over the page's own single-class rules wherever they are placed.
+   ===================================================================== */
+
+/* ------------------------------------------------------------------ type (the font names are mapped in fonts.css) */
+body.wsh-body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+@media screen {
+  /* ---------------------------------------------------------------- surfaces */
+  body.wsh-body .main-content :is(.card, .stat-card, .summary-card, .module-card, .action-card, .quick-action-card, .period-card,
+    .settings-section, .report-section, .toolbar-card, .posting-org-card, .import-progress-card, .hc-quick-card, .hc-download-card, .mode-card, .panel) {
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 1px 2px rgba(15, 23, 42, .07), 0 8px 18px -12px rgba(15, 23, 42, .22);
+  }
+  body.wsh-body .modal-box {
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 2px 4px rgba(15, 23, 42, .08), 0 24px 48px -18px rgba(15, 23, 42, .45);
+  }
+  /* a page's dialogs open above the menu bar (1030) and the side menu (1020), so no part of a dialog is hidden
+     under the menu; the dialog windows (AppDialog) stay above them */
+  body.wsh-body :is(.modal-overlay, .modal-bg, .overlay):is(.active, .open, .show) { z-index: 1060; }
+
+  /* fields sit slightly below the surface; the focus ring stays visible */
+  body.wsh-body .main-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]), select, textarea) {
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, .07);
+  }
+  body.wsh-body .main-content :is(input, select, textarea):focus {
+    border-color: #86b7fe;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, .07), 0 0 0 .2rem rgba(13, 110, 253, .22);
+    outline: 0;
+  }
+
+  /* ---------------------------------------------------------------- buttons: raised, pressed when clicked */
+  body.wsh-body .main-content :is(.btn, a.btn, button[type="submit"], input[type="submit"]):not([class*="link"]):not([class*="ghost"]) {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, .05));
+  }
+  body.wsh-body .main-content :is(.btn, a.btn, button[type="submit"], input[type="submit"]):not(:disabled):not([class*="link"]):not([class*="ghost"]) {
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .25) inset, 0 -1px 0 rgba(0, 0, 0, .1) inset, 0 1px 2px rgba(15, 23, 42, .2), 0 3px 6px -3px rgba(15, 23, 42, .28);
+    transition: transform .06s ease, box-shadow .12s ease, background-color .12s ease;
+  }
+  body.wsh-body .main-content :is(.btn, a.btn, button[type="submit"], input[type="submit"]):not(:disabled):active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, .25);
+  }
+
+  /* the former program's near-black primary buttons, marked by theme.js: the system's primary blue */
+  body.wsh-body .wsh-primary {
+    background-color: #0d6efd !important;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, .06)) !important;
+    border-color: #0a58ca !important;
+    color: #fff !important;
+  }
+  body.wsh-body .wsh-primary:hover:not(:disabled) { background-color: #0b5ed7 !important; }
+  body.wsh-body .wsh-primary:disabled { opacity: .55; }
+
+  /* ---------------------------------------------------------------- labels */
+  /* form labels and figure captions in normal case, like the rest of the system */
+  body.wsh-body .main-content :is(label, .stat-label, .stat-title, .success-stat-label, .mini-label, .info-cell-label, .rb-label,
+    .summary-card .label, .other-fees-title, .posting-org-title, .mini-section-title, .bill-section-title) {
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  body.wsh-body .main-content :is(.stat-label, .stat-title, .success-stat-label) { font-size: .8rem; font-weight: 600; }
+  body.wsh-body .main-content label { font-size: max(12.5px, 1em); }
+
+  /* status labels: coloured text, not capsules */
+  body.wsh-body .main-content :is(.badge, .tag, .chip, .bills-chip, .rate-pill, .count-pill, .discount-tag, .discount-auto-pill,
+    .required-badge, .reading-status-label, .hc-tag, .hc-profile-pill, .profile-badge, .settings-count, .report-count) {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 600;
+  }
+  body.wsh-body .main-content td :is(.badge, .tag, .chip, .rate-pill) { padding-top: 0 !important; padding-bottom: 0 !important; }
+  body.wsh-body .main-content :is(.chip, .bills-chip) { margin-right: .9rem; }
+  body.wsh-body .main-content .count-pill { margin-left: .25rem; color: inherit; }
+  body.wsh-body .main-content .count-pill::before { content: "("; }
+  body.wsh-body .main-content .count-pill::after { content: ")"; }
+}
+
+/* ------------------------------------------------------------------ the Class box of the water forms (organizationUnitHelpers.php) */
+body.wsh-body .water-class-field { display: block; margin: 12px 0; max-width: 520px; }
+/* the label takes the look of the page's other labels; on a page without label styles it is a plain bold label */
+:where(body.wsh-body .water-class-field) .water-class-label { display: block; margin-bottom: 6px; }
+:where(body.wsh-body .water-class-field) .water-class-label:where(:not(.field .water-class-label):not(.form-group .water-class-label)) { font-weight: 700; font-size: .82rem; color: var(--text-primary, #1f2933); }
+body.wsh-body .water-class-field .water-class-req { font-weight: 500; color: #6b7280; }
+body.wsh-body .water-class-field select { width: 100%; }
+body.wsh-body .water-class-field .water-class-hint { font-size: .74rem; color: #6b7280; margin-top: 5px; line-height: 1.45; }
+body.wsh-body .water-class-field .water-class-hint.is-bad { color: #b42318; font-weight: 600; }
+body.wsh-body .water-class-cell { font-size: .78rem; color: #4b5563; }
+/* inside a form grid the class field takes the cell like its neighbours */
+body.wsh-body .form-group .water-class-field,
+body.wsh-body .field .water-class-field,
+body.wsh-body .form-grid .water-class-field { margin: 0; max-width: none; }
+
+/* ------------------------------------------------------------------ small screens */
+@media (max-width: 767.98px) {
+  /* wide tables scroll inside their card instead of squeezing every column to a word per line */
+  body.wsh-body .main-content .wsh-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  body.wsh-body .main-content .wsh-scroll > table { min-width: 640px; }
+  body.wsh-body .main-content .ui-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  body.wsh-body .main-content .ui-table-scroll > table { min-width: 720px; }
+}

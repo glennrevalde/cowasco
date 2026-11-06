@@ -1,0 +1,56 @@
+G-SMaRT Integrated Cooperative System - version 35 (2027-01-24)
+=================================================================
+
+The requests of the second ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v6.xlsx (Sheet3).
+This package holds only the files added or changed since version 34. Copy the folder
+over your installation, keeping the folder structure. config/config.php is not
+included and is never changed.
+
+Database
+--------
+Nothing to run: version 35 adds no migration and changes no table. Your database of
+version 34 works as it is. database/accounting_system.sql and
+accounting_system_clean.sql are unchanged.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files (assets/js/passbook_run.js is new).
+
+What changed (see docs/ADDITIONAL_MODULE_V6B_CHECKLIST.md)
+---------------------------------------------------------
+- Loan Application Center: each application that was never released has a Delete
+  button on its row (and Delete the application at the end of the application).
+  It asks for the reason, then removes the application with its co-makers,
+  collateral, approvals, requirements and credit investigation. The application as
+  it was is kept in the audit trail and its number is not used again. A released
+  application, or one whose release was voided, cannot be deleted (cancel it
+  instead). The button shows for users with the Delete right on the Loan Application
+  Form (Page Access Configuration): the administrator and, as installed, the
+  General Manager and Branch Manager roles.
+- Savings Account Transaction: once the validation of the deposit / withdrawal slip
+  is printed, its window closes by itself and you are back on Savings Account
+  Transaction (the same for the payslip validation of Loan Collection).
+- Savings Account Transaction: once the transaction is printed, the form is cleared
+  for the next transaction: after the passbook lines are confirmed printed (or,
+  with Print to Passbook unticked, after the validation is printed). A note names
+  the account last used, with "Open ... again".
+- Passbook printing (Print to Passbook, Update Passbook on Savings Account
+  Transaction and Loan Collection, and Passbook Printing; savings and loan
+  passbooks): when the lines not yet printed go on to the next page, all of them
+  print in one run. After each page the print window asks "Turn the passbook to
+  page 2" (3 and so on) with "Print page 2"; the header prints first on a new page.
+  After the last page the window closes and you confirm once: "Yes, every page", or
+  only the first pages when a later page went wrong (it prints again later). A page
+  can be printed again alone.
+- Loan payments: what is due is paid first: 1. the penalties due, 2. the interest
+  due, 3. the principal due. What is left, or the whole payment when no penalty and
+  no interest is due, goes to the principal. Before, an amount above what was due
+  paid the interest of the next amortizations too. The interest of the amortizations
+  not yet due is paid when it falls due (only a payment beyond the whole principal
+  pays it, as a full payment does). The order of the dues is still the policy
+  "Payment allocation order" on Cooperative Profile & Policies (default: penalty,
+  interest, principal). Payments saved before keep their split.
+
+Set-up after the upgrade
+------------------------
+Nothing is required. To let other roles delete loan applications, give them the
+Delete right of the Loan Application Form on Page Access Configuration.

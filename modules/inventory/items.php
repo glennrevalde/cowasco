@@ -1,0 +1,583 @@
+<?php
+declare(strict_types=1);
+
+require_once APP_ROOT . '/modules/txn/_common.php';
+
+$pageKey = 'inv.items';
+$a = g('a');
+$typeLabels = [
+    'service' => 'Service', 'inventory' => 'Inventory part', 'non_inventory' => 'Non-inventory part', 'assembly' => 'Inventory assembly',
+    'other_charge' => 'Other charge', 'subtotal' => 'Subtotal', 'group' => 'Group', 'discount' => 'Discount', 'payment' => 'Payment',
+];
+$viewCosts = Access::viewCosts();
+
+// ------------------------------------------------------------------ Import items: every type of item from a CSV file, reviewed, then uploaded
+if ($a === 'import') {
+    Access::require($pageKey, 'create');
+    require_once APP_ROOT . '/modules/admin/_import_lib.php';
+    $def = Importer::type('items');
+    $main = ['code' => 'md', 'name' => 'lg', 'item_type' => 'md', 'category' => 'md', 'unit' => 'xs', 'cost' => 'sm', 'sales_price' => 'sm', 'opening_qty' => 'sm'];
+    $short = ['code' => 'Item name / code', 'name' => 'Display name', 'item_type' => 'Type', 'category' => 'Category', 'unit' => 'Unit', 'cost' => 'Cost', 'sales_price' => 'Sales price', 'opening_qty' => 'Opening qty',
+        // the other columns, under "..." on each row: a short name, the whole description when pointed at
+        'barcode' => 'Barcode', 'description' => 'Sales description', 'purchase_description' => 'Purchase description', 'uom_set' => 'U/M set', 'sales_unit' => 'Sales unit',
+        'purchase_unit' => 'Purchase unit', 'discount_pct' => 'Discount %', 'tax_code' => 'Tax code', 'income_account' => 'Income account', 'cogs_account' => 'COGS account',
+        'asset_account' => 'Inventory asset account', 'expense_account' => 'Expense account', 'preferred_vendor' => 'Preferred supplier', 'reorder_point' => 'Reorder point',
+        'max_stock' => 'Maximum stock', 'build_point' => 'Build point', 'components' => 'Components (CODE x qty; ...)', 'opening_cost' => 'Opening cost', 'opening_site' => 'Opening site',
+        'opening_date' => 'Opening qty as of', 'is_active' => 'Active (yes / no)'];
+    foreach (array_keys($def['columns']) as $k) {
+        if (!isset($short[$k]) && preg_match('/^price_level_\d+$/', $k) && preg_match('/"([^"]+)"/', (string)$def['columns'][$k][0], $lv)) {
+            $short[$k] = 'Price: ' . $lv[1];
+        }
+    }
+    $cols = [];
+    foreach ($def['columns'] as $k => $c) {
+        $cols[$k] = ['label' => $short[$k] ?? $c[0], 'req' => !empty($c[2]), 'size' => $main[$k] ?? 'md', 'more' => !isset($main[$k]), 'hint' => isset($short[$k]) ? $c[0] : '',
+            'type' => $k === 'item_type' ? 'select' : (in_array($c[1], ['num'], true) ? 'num' : ($c[1] === 'date' ? 'date' : 'text'))] + ($k === 'item_type' ? ['options' => Importer::ITEM_TYPES] : []);
+    }
+    // the columns the file has: an item already on the list gets only those changed (and a column filled in the
+    // review, e.g. the site of an opening quantity)
+    $present = function (): array {
+        $p = array_values(array_filter(explode(',', (string)p('present_cols')), fn($k) => $k !== ''));
+        return CsvReview::$lastHeader ?: $p;
+    };
+    $keepOnly = function (array $rows) use ($present, $cols): array {
+        $use = array_merge(['code'], $present());
+        foreach (array_keys($cols) as $k) {
+            foreach ($rows as $r) {
+                if (trim((string)($r[$k] ?? '')) !== '') {
+                    $use[] = $k;
+                    break;
+                }
+            }
+        }
+        $use = array_flip(array_merge(['_line'], array_unique($use)));
+        return array_map(fn($r) => array_intersect_key($r, $use), $rows);
+    };
+    $check = function (array $rows) use ($keepOnly): array {
+        $rows = $keepOnly($rows);
+        foreach ($rows as &$r) {
+            if (isset($r['item_type']) && ($t = Importer::itemType((string)$r['item_type']))) {
+                $r['item_type'] = $t;
+            }
+        }
+        unset($r);
+        $res = import_run('items', $rows, true, '', 'inv.items');
+        $byLine = [];
+        $general = [];
+        foreach ($res['errors'] as $e) {
+            if (preg_match('/^Line (\d+): (.*)$/s', $e, $m)) {
+                $byLine[(int)$m[1]][] = mb_strtoupper(mb_substr($m[2], 0, 1)) . mb_substr($m[2], 1);
+            } else {
+                $general[] = $e;
+            }
+        }
+        $codes = DB::pairs('SELECT code, item_type FROM items');
+        // the rights of the forms the import stands for: changing an item on the list, and the opening stock (an adjustment)
+        $canEdit = Access::can('inv.items', 'edit');
+        $canAdjust = Access::can('inv.adjust', 'create');
+        foreach ($rows as &$r) {
+            $r['_errors'] = $byLine[(int)$r['_line']] ?? [];
+            $code = trim((string)($r['code'] ?? ''));
+            if (isset($codes[$code]) && !$canEdit) {
+                $r['_errors'][] = $code . ' is already on the Item List: updating it needs the Edit right on the Item List.';
+            }
+            if (($r['opening_qty'] ?? '') !== '' && (float)$r['opening_qty'] > 0 && !$canAdjust) {
+                $r['_errors'][] = 'An opening quantity is posted as an inventory adjustment: it needs the Create right on Adjust Quantity/Value on Hand.';
+            }
+            $type = Importer::ITEM_TYPES[$r['item_type'] ?? ''] ?? (isset($codes[$code]) ? (Importer::ITEM_TYPES[$codes[$code]] ?? '') : 'Inventory part');
+            $r['_info'] = $r['_errors'] ? '' : (isset($codes[$code]) ? 'Updates <strong>' . h($code) . '</strong> on the Item List (' . h($type) . '): only the columns of the file change' : 'A new ' . h(mb_strtolower($type)) . ' <strong>' . h($code) . '</strong>')
+                . (!$r['_errors'] && ($r['opening_qty'] ?? '') !== '' && (float)$r['opening_qty'] > 0 ? ', with an opening quantity of ' . h($r['opening_qty']) : '');
+            $r['_notes'] = [];
+        }
+        unset($r);
+        return [$rows, ['rows' => count($rows), 'bad' => count(array_filter($rows, fn($x) => $x['_errors']))], $general];
+    };
+    // with more than one site, the opening quantities of the template name the first one
+    $siteCodes = DB::column('SELECT code FROM sites WHERE is_active = 1 ORDER BY id');
+    $siteSample = count($siteCodes) > 1 ? (string)$siteCodes[0] : '';
+    $cfg = [
+        'cols' => $cols, 'aliases' => ['item_name' => 'code', 'item_code' => 'code', 'type' => 'item_type', 'display_name' => 'name', 'price' => 'sales_price', 'uom' => 'unit'],
+        'noun' => ['item', 'items'], 'template_name' => 'import_items_template.csv',
+        'samples' => [
+            ['code' => 'RICE-25', 'name' => 'Rice, well-milled, 25 kg', 'item_type' => 'Inventory part', 'category' => 'Grocery', 'unit' => 'sack', 'cost' => '1150', 'sales_price' => '1300', 'opening_qty' => '40', 'opening_site' => $siteSample, 'is_active' => 'yes'],
+            ['code' => 'FERT-UREA', 'name' => 'Urea fertilizer 50 kg (special order)', 'item_type' => 'Non-inventory part', 'category' => 'Agri inputs', 'unit' => 'bag', 'cost' => '1650', 'sales_price' => '1800', 'is_active' => 'yes'],
+            ['code' => 'SVC-DELIV', 'name' => 'Delivery service', 'item_type' => 'Service', 'category' => 'Services', 'unit' => 'trip', 'sales_price' => '150', 'is_active' => 'yes'],
+            ['code' => 'NB-80', 'name' => 'Notebook, 80 leaves', 'item_type' => 'Inventory part', 'category' => 'School supplies', 'unit' => 'pc', 'cost' => '28', 'sales_price' => '35', 'opening_qty' => '200', 'opening_site' => $siteSample, 'is_active' => 'yes'],
+            ['code' => 'PACK-SCHOOL', 'name' => 'School supplies pack', 'item_type' => 'Inventory assembly', 'category' => 'School supplies', 'unit' => 'pack', 'sales_price' => '150', 'components' => 'NB-80 x 4', 'is_active' => 'yes'],
+            ['code' => 'CHG-HANDLING', 'name' => 'Handling charge', 'item_type' => 'Other charge', 'sales_price' => '50', 'is_active' => 'yes'],
+            ['code' => 'GRP-STARTER', 'name' => 'Starter kit', 'item_type' => 'Group', 'components' => 'RICE-25 x 1; SVC-DELIV x 1', 'is_active' => 'yes'],
+            ['code' => 'DISC-SENIOR', 'name' => 'Senior citizen discount', 'item_type' => 'Discount', 'discount_pct' => '20', 'is_active' => 'yes'],
+        ],
+        'opt' => fn() => [], 'check' => fn(array $rows, array $o) => $check($rows),
+        'post' => function (array $rows, array $o, string $file) use ($keepOnly, $check) {
+            [$checked, $sum, $general] = $check($rows);
+            if ($general || $sum['bad']) {
+                fail(($sum['bad'] ? $sum['bad'] . ' row(s) have a problem: correct them or remove them, then upload. ' : '') . implode(' ', $general));
+            }
+            $rows = array_map(fn($r) => array_diff_key($r, array_flip(['_errors', '_notes', '_info'])), $checked);
+            $res = import_run('items', $rows, false, $file ?: 'items.csv', 'inv.items');
+            if ($res['errors']) {
+                fail(implode(' ', array_slice($res['errors'], 0, 5)));
+            }
+            return $res['ok'] . ' item(s) imported to the Item List.';
+        },
+        'can_post' => true, 'done' => url($pageKey), 'confirm' => 'Upload the items? New codes are added to the Item List; a code already there is updated with the columns of the file.',
+        'fields' => function () use ($present): string {
+            return '<input type="hidden" name="present_cols" value="' . h(implode(',', $present())) . '">';
+        },
+        'intro' => 'Every type of item: inventory parts, non-inventory parts, services, inventory assemblies, other charges, groups, discounts, subtotals and payments, one row per item. A code already on the Item List is updated with the columns of the file only.',
+        'help' => 'Type blank = Inventory part. Assemblies and groups list their components as CODE x quantity; CODE x quantity (a component must be on the list or earlier in the file). Opening qty of new inventory parts and assemblies is posted as an inventory adjustment against Opening Balance Equity.',
+    ];
+    $state = CsvReview::handle($cfg);
+    layout_start('Import items', ['actions' => btn_link(url($pageKey), 'Item List', 'btn-outline-secondary', 'arrow-left'), 'js' => ['js/csv_review.js']]);
+    echo CsvReview::render($cfg, $state);
+    layout_end();
+    exit;
+}
+
+if ($a === 'new' || $a === 'edit') {
+    $it = null;
+    if ($a === 'edit') {
+        $it = DB::row('SELECT * FROM items WHERE id = :id', ['id' => (int)g('id')]);
+        if (!$it) {
+            redirect(url($pageKey));
+        }
+    } else {
+        Access::require($pageKey, 'create');
+    }
+    $canEdit = $a === 'new' || Access::can($pageKey, 'edit');
+    $type = $it['item_type'] ?? (array_key_exists(g('type'), $typeLabels) ? g('type') : 'inventory');
+    $tracked = in_array($type, ['inventory', 'assembly'], true);
+    $components = $it ? DB::all('SELECT ic.*, i.code, i.name, i.cost, i.avg_cost, i.item_type FROM item_components ic JOIN items i ON i.id = ic.component_item_id WHERE ic.parent_item_id = :p', ['p' => $it['id']]) : [];
+
+    handle_post(function () use ($it, $type, $tracked, $pageKey, $canEdit) {
+        if (!$canEdit) {
+            Access::denyPage($pageKey, 'edit');
+        }
+        $d = [
+            'item_type' => $type,
+            'code' => mb_substr(trim((string)p('code')), 0, 40),
+            'barcode' => p('barcode') ?: null,
+            'name' => mb_substr(trim((string)p('name')), 0, 120),
+            'description' => p('description') ?: null,
+            'purchase_description' => p('purchase_description') ?: null,
+            'category_id' => pint('category_id'),
+            'uom_set_id' => pint('uom_set_id'),
+            'sales_uom_id' => pint('sales_uom_id'),
+            'purchase_uom_id' => pint('purchase_uom_id'),
+            'unit' => p('unit') ?: null,
+            'sales_price' => round(pnum('sales_price'), 4),
+            'discount_pct' => round(pnum('discount_pct'), 2),
+            'income_account_id' => pint('income_account_id'),
+            'cogs_account_id' => pint('cogs_account_id'),
+            'asset_account_id' => pint('asset_account_id'),
+            'expense_account_id' => pint('expense_account_id'),
+            'tax_code_id' => pint('tax_code_id'),
+            'preferred_vendor_id' => pint('preferred_vendor_id'),
+            'reorder_point' => pnum('reorder_point'),
+            'max_stock' => pnum('max_stock'),
+            'build_point' => pnum('build_point'),
+            'is_active' => p('is_active', '1') === '1' ? 1 : 0,
+        ];
+        if (BusinessUnits::ready() && array_key_exists('patronage_eligible', $_POST)) {
+            // member purchases (or deliveries) of the item count for patronage refund
+            $d['patronage_eligible'] = p('patronage_eligible') === '1' ? 1 : 0;
+        }
+        if (Access::viewCosts()) {
+            $d['cost'] = round(pnum('cost'), 4);
+        }
+        if ($d['code'] === '' || $d['name'] === '') {
+            fail('Enter the item code and name.');
+        }
+        // an inventory part or assembly that still has stock (or a value) stays active
+        if ($it && (int)$it['is_active'] === 1 && $d['is_active'] === 0 && ($why = Stock::inactiveRefusal($it))) {
+            fail($why);
+        }
+        // a U/M set fixes the unit stock is kept in; the start units must come from that set
+        if ($d['uom_set_id']) {
+            $set = Uom::set($d['uom_set_id']);
+            if (!$set) {
+                fail('Choose a U/M set from the list.');
+            }
+            $d['unit'] = $set['base_unit'];
+            $ids = array_map(fn($u) => (int)$u['id'], Uom::units($d['uom_set_id']));
+            foreach (['sales_uom_id', 'purchase_uom_id'] as $k) {
+                if ($d[$k] && !in_array($d[$k], $ids, true)) {
+                    $d[$k] = null;
+                }
+            }
+            if ($it && (int)$it['uom_set_id'] !== $d['uom_set_id']
+                && DB::value('SELECT 1 FROM transaction_lines l JOIN uom_units u ON u.id = l.uom_id WHERE l.item_id = :i AND u.set_id <> :s', ['i' => $it['id'], 's' => $d['uom_set_id']])) {
+                fail('This item was already entered in units of its present U/M set, so the set cannot be changed. Add the units you need to that set instead.');
+            }
+        } else {
+            $d['sales_uom_id'] = null;
+            $d['purchase_uom_id'] = null;
+        }
+        if (DB::value('SELECT id FROM items WHERE code = :c AND id <> :id', ['c' => $d['code'], 'id' => $it['id'] ?? 0])) {
+            fail('Another item already uses this code.');
+        }
+        if ($d['barcode'] && DB::value('SELECT id FROM items WHERE barcode = :b AND id <> :id', ['b' => $d['barcode'], 'id' => $it['id'] ?? 0])) {
+            fail('Another item already uses this barcode.');
+        }
+        if ($tracked) {
+            $d['asset_account_id'] = $d['asset_account_id'] ?: Accts::get('inventory_asset');
+            $d['cogs_account_id'] = $d['cogs_account_id'] ?: Accts::get('cogs');
+        }
+        if (in_array($type, ['service', 'inventory', 'non_inventory', 'assembly', 'other_charge'], true) && !$d['income_account_id']) {
+            $d['income_account_id'] = Accts::get('sales_income');
+        }
+        $comps = [];
+        if (in_array($type, ['assembly', 'group'], true)) {
+            foreach ((array)($_POST['comp'] ?? []) as $c) {
+                $cid = (int)($c['item_id'] ?? 0);
+                $q = to_num($c['qty'] ?? 0);
+                if ($cid && $q > 0) {
+                    if ($it && $cid === (int)$it['id']) {
+                        fail('An item cannot be a component of itself.');
+                    }
+                    $comps[$cid] = ($comps[$cid] ?? 0) + $q;
+                }
+            }
+            if (!$comps) {
+                fail('Add at least one component.');
+            }
+        }
+        DB::tx(function () use (&$it, $d, $comps, $tracked, $pageKey) {
+            if ($it) {
+                DB::update('items', $d, 'id = :id', ['id' => $it['id']]);
+                $id = (int)$it['id'];
+                $oldComps = DB::pairs('SELECT component_item_id, qty FROM item_components WHERE parent_item_id = :p', ['p' => $id]);
+            } else {
+                $id = DB::insert('items', $d);
+                $oldComps = [];
+            }
+            if ($comps) {
+                DB::run('DELETE FROM item_components WHERE parent_item_id = :p', ['p' => $id]);
+                foreach ($comps as $cid => $q) {
+                    DB::insert('item_components', ['parent_item_id' => $id, 'component_item_id' => $cid, 'qty' => $q]);
+                }
+            }
+            // price level custom prices
+            foreach ((array)($_POST['pl'] ?? []) as $plId => $price) {
+                DB::run('DELETE FROM price_level_items WHERE price_level_id = :p AND item_id = :i', ['p' => (int)$plId, 'i' => $id]);
+                if (trim((string)$price) !== '') {
+                    DB::insert('price_level_items', ['price_level_id' => (int)$plId, 'item_id' => $id, 'custom_price' => to_num($price)]);
+                }
+            }
+            $after = $d + ['components' => array_map(fn($k, $v) => "$k x $v", array_keys($comps), $comps)];
+            if ($it) {
+                $before = $it + ['components' => array_map(fn($k, $v) => "$k x " . (float)$v, array_keys($oldComps), $oldComps)];
+                Audit::log('edit', 'inv', 'item', $id, $d['code'] . ' ' . $d['name'], ['before' => $before, 'after' => $after, 'page_key' => $pageKey]);
+            } else {
+                Audit::log('create', 'inv', 'item', $id, $d['code'] . ' ' . $d['name'], ['snapshot' => $after, 'page_key' => $pageKey]);
+                // opening quantity and value
+                $oq = pnum('opening_qty');
+                if ($tracked && $oq > 0) {
+                    $ov = r2(pnum('opening_value'));
+                    $unit = $oq > 0 ? $ov / $oq : 0;
+                    Txn::save('inventory_adjustment', [
+                        'txn_date' => pdate('opening_date', today()),
+                        'site_id' => pint('opening_site_id'),
+                        'account_id' => Accts::get('opening_equity'),
+                        'memo' => 'Opening quantity for ' . $d['code'],
+                    ], [[
+                        'line_kind' => 'item', 'item_id' => $id, 'qty' => $oq, 'rate' => round($unit, 4), 'amount' => $ov,
+                        'site_id' => pint('opening_site_id'), 'description' => 'Opening balance',
+                    ]], null, ['reason' => 'Opening balance']);
+                }
+            }
+            $it = ['id' => $id];
+        });
+        flash('success', 'Item saved.');
+        redirect_after_save(url($pageKey, ['a' => 'new', 'type' => $type]), url($pageKey, ['a' => 'edit', 'id' => $it['id']]));
+    });
+
+    $title = ($it ? 'Item: ' . $it['code'] : 'New ' . strtolower($typeLabels[$type]));
+    layout_start($title, ['actions' => (!$it && Access::can($pageKey, 'create') ? btn_link(url($pageKey, ['a' => 'import']), 'Import items', 'btn-outline-primary', 'filetype-csv') . ' ' : '') . btn_link(url($pageKey, ['type' => $type]), 'Back to list')
+        . ($it && Access::page('inv.center') && $tracked ? ' ' . btn_link(url('inv.center', ['id' => $it['id']]), 'Inventory Center', 'btn-outline-secondary', 'box-seam') : '')]);
+    $allAccts = Accts::all();
+    $components = is_post() ? array_map(fn($c) => ['component_item_id' => $c['item_id'] ?? '', 'qty' => $c['qty'] ?? ''], (array)($_POST['comp'] ?? [])) : $components;
+    $compItems = Lookup::itemPairs("is_active = 1 AND item_type IN " . ($type === 'assembly' ? "('inventory','assembly','service','other_charge','non_inventory')" : "('inventory','assembly','service','non_inventory','other_charge')"));
+    ?>
+    <form method="post"><?= csrf_field() ?>
+    <fieldset <?= $canEdit ? '' : 'disabled' ?>>
+    <div class="card mb-3"><div class="card-header"><?= h($typeLabels[$type]) ?></div><div class="card-body row g-2">
+      <?= input_field('code', 'Item name / code', fv('code', $it), ['required' => true, 'class' => 'col-md-3']) ?>
+      <?= input_field('name', 'Display name', fv('name', $it), ['required' => true, 'class' => 'col-md-5']) ?>
+      <?php if (in_array($type, ['inventory', 'assembly', 'non_inventory'], true)): ?><?= input_field('barcode', 'Barcode', fv('barcode', $it), ['class' => 'col-md-2']) ?><?php endif; ?>
+      <?php
+      $uomSets = Uom::sets(true, $it && $it['uom_set_id'] ? (int)$it['uom_set_id'] : null);
+      $curSet = (int)fv('uom_set_id', $it, 0);
+      $uomMap = [];
+      foreach (array_keys($uomSets) as $sid) {
+          $uomMap[$sid] = array_map(fn($u) => ['id' => (int)$u['id'], 'code' => $u['code'], 'name' => $u['name'], 'factor' => (float)$u['factor'], 'base' => (int)$u['is_base']], Uom::units((int)$sid));
+      }
+      ?>
+      <?php if ($uomSets): ?>
+        <?= select_field('uom_set_id', 'Unit of measure (U/M set)', $uomSets, $curSet ?: '', ['blank' => 'Single unit', 'class' => 'col-md-3', 'extra' => 'id="uomSet" data-sets="' . h(json_encode($uomMap)) . '"']) ?>
+        <?= select_field('sales_uom_id', 'Sales unit', Uom::unitOptions($curSet ?: null), fv('sales_uom_id', $it), ['blank' => 'Base unit', 'class' => 'col-md-2', 'extra' => 'id="salesUom"']) ?>
+        <?= select_field('purchase_uom_id', 'Purchase unit', Uom::unitOptions($curSet ?: null), fv('purchase_uom_id', $it), ['blank' => 'Base unit', 'class' => 'col-md-2', 'extra' => 'id="purchUom"']) ?>
+        <div class="col-md-2" id="unitPlain" <?= $curSet ? 'hidden' : '' ?>><label class="form-label">Unit</label>
+          <input class="form-control form-control-sm" name="unit" value="<?= h(fv('unit', $it, 'pc')) ?>"></div>
+        <div class="col-12 small text-muted" id="uomHelp" <?= $curSet ? '' : 'hidden' ?>>Stock, costs and reports stay in the base unit of the set; documents may be entered in any unit of it.
+          <?= Access::page('inv.uom') ? '<a href="' . h(url('inv.uom')) . '">Manage U/M sets</a>' : '' ?></div>
+      <?php else: ?>
+        <?= input_field('unit', 'Unit of measure', fv('unit', $it, 'pc'), ['class' => 'col-md-2']) ?>
+        <?php if (Access::page('inv.uom')): ?><div class="col-md-3 d-flex align-items-end"><a class="small" href="<?= h(url('inv.uom')) ?>">Set up U/M sets for multiple units</a></div><?php endif; ?>
+      <?php endif; ?>
+      <?= select_field('category_id', 'Category', Lookup::categories(), fv('category_id', $it), ['blank' => '', 'class' => 'col-md-3']) ?>
+      <?php $keepActive = $it && $tracked && (int)$it['is_active'] === 1 ? Stock::inactiveRefusal($it) : null; ?>
+      <?php if ($keepActive): ?>
+      <div class="col-md-4 d-flex align-items-end"><div class="form-check item-active-locked" title="<?= h($keepActive) ?>">
+        <input type="hidden" name="is_active" value="1">
+        <input class="form-check-input" type="checkbox" id="f_is_active" checked disabled aria-describedby="activeWhy">
+        <label class="form-check-label" for="f_is_active">Active</label>
+        <div class="small text-muted" id="activeWhy">Has a balance: it can be made inactive once it is at zero.</div></div></div>
+      <?php else: ?>
+      <?= check_field('is_active', 'Active', fv('is_active', $it, 1), 'col-md-2') ?>
+      <?php endif; ?>
+      <?php if (BusinessUnits::ready()): ?><?= check_field('patronage_eligible', 'Counts for patronage refund', fv('patronage_eligible', $it, 0), 'col-md-3') ?><?php endif; ?>
+    </div></div>
+    <?php if ($uomSets): ?>
+    <script>
+    (function () {
+      var set = document.getElementById('uomSet');
+      if (!set) return;
+      var sets = JSON.parse(set.dataset.sets || '{}');
+      function fill(sel, units, keep) {
+        sel.innerHTML = '<option value="">Base unit</option>';
+        (units || []).forEach(function (u) {
+          var o = document.createElement('option');
+          o.value = u.id;
+          o.textContent = u.code + (u.factor !== 1 ? ' = ' + u.factor + ' base' : '');
+          if (String(u.id) === String(keep)) o.selected = true;
+          sel.appendChild(o);
+        });
+      }
+      set.addEventListener('change', function () {
+        var units = sets[set.value] || [];
+        fill(document.getElementById('salesUom'), units, '');
+        fill(document.getElementById('purchUom'), units, '');
+        var plain = document.getElementById('unitPlain'), help = document.getElementById('uomHelp');
+        if (plain) plain.hidden = !!set.value;
+        if (help) help.hidden = !set.value;
+      });
+    })();
+    </script>
+    <?php endif; ?>
+
+    <?php if (!in_array($type, ['subtotal'], true)): ?>
+    <div class="row g-3">
+      <?php if (in_array($type, ['inventory', 'non_inventory', 'service', 'other_charge', 'assembly'], true)): ?>
+      <div class="col-lg-6"><div class="card h-100"><div class="card-header">Purchase information</div><div class="card-body row g-2">
+        <?php if ($type !== 'assembly'): ?><div class="col-12"><label class="form-label">Purchase description</label><input class="form-control form-control-sm" name="purchase_description" value="<?= h(fv('purchase_description', $it)) ?>"></div><?php endif; ?>
+        <?php if ($viewCosts): ?><?= input_field('cost', $type === 'assembly' ? 'Standard cost (info)' : 'Cost', fv('cost', $it, '0'), ['type' => 'number', 'step' => '0.0001', 'class' => 'col-md-4']) ?><?php endif; ?>
+        <?php if ($tracked): ?>
+          <?= select_field('cogs_account_id', 'Cost of goods sold account', $allAccts, fv('cogs_account_id', $it, Accts::get('cogs')), ['class' => 'col-md-8']) ?>
+        <?php else: ?>
+          <?= select_field('expense_account_id', 'Expense / purchase account', $allAccts, fv('expense_account_id', $it), ['blank' => 'Default', 'class' => 'col-md-8']) ?>
+        <?php endif; ?>
+        <?= select_field('preferred_vendor_id', 'Preferred vendor', Lookup::vendors(), fv('preferred_vendor_id', $it), ['blank' => '', 'class' => 'col-md-6']) ?>
+      </div></div></div>
+      <?php endif; ?>
+      <div class="col-lg-6"><div class="card h-100"><div class="card-header">Sales information</div><div class="card-body row g-2">
+        <div class="col-12"><label class="form-label">Sales description</label><input class="form-control form-control-sm" name="description" value="<?= h(fv('description', $it)) ?>"></div>
+        <?php if ($type === 'discount'): ?>
+          <?= input_field('discount_pct', 'Discount % (0 = fixed amount)', fv('discount_pct', $it, '0'), ['type' => 'number', 'class' => 'col-md-4']) ?>
+          <?= input_field('sales_price', 'Fixed discount amount', fv('sales_price', $it, '0'), ['type' => 'number', 'class' => 'col-md-4']) ?>
+        <?php elseif (!in_array($type, ['group', 'payment'], true)): ?>
+          <?= input_field('sales_price', 'Sales price', fv('sales_price', $it, '0'), ['type' => 'number', 'step' => '0.0001', 'class' => 'col-md-4']) ?>
+        <?php endif; ?>
+        <?php if (!in_array($type, ['group', 'payment'], true)): ?>
+          <?= select_field('income_account_id', $type === 'discount' ? 'Discount account' : 'Income account', $allAccts, fv('income_account_id', $it, Accts::get($type === 'discount' ? 'sales_discounts' : 'sales_income')), ['class' => 'col-md-8']) ?>
+          <?= select_field('tax_code_id', 'Tax code', Lookup::taxCodes(), fv('tax_code_id', $it), ['blank' => 'None', 'class' => 'col-md-4']) ?>
+        <?php endif; ?>
+      </div></div></div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($tracked): ?>
+    <div class="card my-3"><div class="card-header">Inventory information</div><div class="card-body row g-2">
+      <?= select_field('asset_account_id', 'Inventory asset account', $allAccts, fv('asset_account_id', $it, Accts::get('inventory_asset')), ['class' => 'col-md-4']) ?>
+      <?= input_field('reorder_point', 'Reorder point (min)', fv('reorder_point', $it, '0'), ['type' => 'number', 'class' => 'col-md-2']) ?>
+      <?= input_field('max_stock', 'Maximum stock', fv('max_stock', $it, '0'), ['type' => 'number', 'class' => 'col-md-2']) ?>
+      <?php if ($type === 'assembly'): ?><?= input_field('build_point', 'Build point', fv('build_point', $it, '0'), ['type' => 'number', 'class' => 'col-md-2']) ?><?php endif; ?>
+      <?php if ($it): ?>
+        <div class="col-md-2"><div class="form-label">On hand</div><div class="fw-semibold"><?= qty(Stock::onHand((int)$it['id'])) ?></div></div>
+        <?php if ($viewCosts): ?><div class="col-md-2"><div class="form-label">Average cost</div><div class="fw-semibold"><?= money($it['avg_cost']) ?></div></div><?php endif; ?>
+      <?php elseif ($type === 'inventory'): ?>
+        <div class="col-12 small text-muted mt-2">Opening balance (optional) — posted as an inventory adjustment against Opening Balance Equity.</div>
+        <?= input_field('opening_qty', 'Quantity on hand', fv('opening_qty', null, '0'), ['type' => 'number', 'class' => 'col-md-2']) ?>
+        <?= input_field('opening_value', 'Total value', fv('opening_value', null, '0'), ['type' => 'number', 'class' => 'col-md-2']) ?>
+        <?= input_field('opening_date', 'As of', fv('opening_date', null, today()), ['type' => 'date', 'class' => 'col-md-2']) ?>
+        <?= select_field('opening_site_id', 'Site', Lookup::sites(), fv('opening_site_id', null, array_key_first(Lookup::sites())), ['class' => 'col-md-2']) ?>
+      <?php endif; ?>
+    </div></div>
+    <?php endif; ?>
+
+    <?php if (in_array($type, ['assembly', 'group'], true)): ?>
+    <div class="card my-3"><div class="card-header"><?= $type === 'assembly' ? 'Bill of materials (components, labor and overhead per unit)' : 'Items in this group' ?></div><div class="card-body">
+      <table class="table table-sm" id="compTable"><thead><tr><th>Item</th><th class="num">Qty</th><?= $viewCosts && $type === 'assembly' ? '<th class="num">Avg / std cost</th><th class="num">Total</th>' : '' ?><th></th></tr></thead><tbody>
+      <?php $bomTotal = 0.0; $rowsC = $components ?: [['component_item_id' => '', 'qty' => '']]; foreach ($rowsC as $i => $c):
+          $ci = !empty($c['component_item_id']) ? item_cache((int)$c['component_item_id']) : null;
+          $unitCost = $ci ? (in_array($ci['item_type'], ['inventory', 'assembly'], true) ? (float)$ci['avg_cost'] : (float)$ci['cost']) : 0;
+          $bomTotal += $unitCost * to_num($c['qty']);
+      ?>
+        <tr><td><select class="form-select form-select-sm" name="comp[<?= $i ?>][item_id]"><?= options($compItems, $c['component_item_id'], '') ?></select></td>
+          <td><input class="form-control form-control-sm text-end" name="comp[<?= $i ?>][qty]" value="<?= h($c['qty'] !== '' ? qty($c['qty']) : '') ?>"></td>
+          <?php if ($viewCosts && $type === 'assembly'): ?><td class="num"><?= money($unitCost) ?></td><td class="num"><?= money($unitCost * to_num($c['qty'])) ?></td><?php endif; ?>
+          <td><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove()"><i class="bi bi-x-lg"></i></button></td></tr>
+      <?php endforeach; ?>
+      </tbody>
+      <?php if ($viewCosts && $type === 'assembly'): ?><tfoot><tr class="fw-semibold"><td colspan="3" class="text-end">Total component cost</td><td class="num"><?= money($bomTotal) ?></td><td></td></tr></tfoot><?php endif; ?>
+      </table>
+      <template id="compTpl"><tr><td><select class="form-select form-select-sm" name="comp[__i__][item_id]"><?= options($compItems, null, '') ?></select></td><td><input class="form-control form-control-sm text-end" name="comp[__i__][qty]" value="1"></td><?= $viewCosts && $type === 'assembly' ? '<td></td><td></td>' : '' ?><td><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove()"><i class="bi bi-x-lg"></i></button></td></tr></template>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="const t=document.getElementById('compTpl').innerHTML.replace(/__i__/g,'n'+Date.now());document.querySelector('#compTable tbody').insertAdjacentHTML('beforeend',t)"><i class="bi bi-plus"></i> Add component</button>
+    </div></div>
+    <?php endif; ?>
+
+    <?php if (in_array($type, ['inventory', 'assembly', 'non_inventory', 'service', 'other_charge'], true) && Lookup::priceLevels()):
+        // every active price level gets a box: blank = the level's percentage, a number = a fixed price for this item
+        $plRows = DB::all('SELECT pl.*, pli.custom_price FROM price_levels pl LEFT JOIN price_level_items pli ON pli.price_level_id = pl.id AND pli.item_id = :i WHERE pl.is_active = 1 ORDER BY pl.id', ['i' => $it['id'] ?? 0]);
+    ?>
+    <div class="card my-3"><div class="card-header d-flex justify-content-between align-items-center"><span>Price levels</span>
+      <span class="small text-muted fw-normal"><?= count($plRows) ?> levels. Customers with a price level get these prices on invoices, sales receipts and at the POS.</span></div>
+      <div class="card-body"><div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-5 g-2" id="plGrid" data-base="<?= h((string)(float)fv('sales_price', $it, '0')) ?>">
+      <?php foreach ($plRows as $pl): $posted = $_POST['pl'][$pl['id']] ?? null; ?>
+        <div class="col"><label class="form-label d-flex justify-content-between"><span class="fw-semibold text-body"><?= h($pl['name']) ?></span>
+            <span data-pl-pct="<?= h((string)(float)$pl['adjust_pct']) ?>"><?= $pl['adjust_pct'] >= 0 ? '+' : '' ?><?= h((float)$pl['adjust_pct']) ?>% = <?= money((float)fv('sales_price', $it, '0') * (1 + $pl['adjust_pct'] / 100)) ?></span></label>
+          <input class="form-control form-control-sm text-end" name="pl[<?= (int)$pl['id'] ?>]" value="<?= h($posted !== null ? $posted : ($pl['custom_price'] !== null ? (float)$pl['custom_price'] : '')) ?>" placeholder="Custom price (optional)"></div>
+      <?php endforeach; ?>
+      </div>
+      <div class="small text-muted mt-2">Leave a box empty to use the level's percentage on the sales price. Rename levels or change their percentages with <?= safe_link('inv.set_prices', [], 'Set Item Prices and Levels') ?> &rsaquo; Rename price levels, or under <?= safe_link('coa.lists', ['tab' => 'price_levels'], 'Terms, Tax Codes & Other Lists') ?>.</div>
+      </div></div>
+    <script>
+    (function () {
+      // the "= price" hint of each level follows the sales price as it is typed
+      var grid = document.getElementById('plGrid'), price = document.querySelector('[name="sales_price"]');
+      if (!grid || !price) return;
+      price.addEventListener('input', function () {
+        var base = AppFmt.num(price.value);
+        grid.querySelectorAll('[data-pl-pct]').forEach(function (el) {
+          var pct = AppFmt.num(el.dataset.plPct);
+          el.textContent = (pct >= 0 ? '+' : '') + pct + '% = ' + AppFmt.fmt(AppFmt.r2(base * (1 + pct / 100)));
+        });
+      });
+    })();
+    </script>
+    <?php endif; ?>
+    <?php if ($canEdit): ?><div class="mt-2"><?= save_buttons('Save item', url($pageKey, ['type' => $type]), Access::can($pageKey, 'create')) ?></div><?php endif; ?>
+    </fieldset>
+    </form>
+    <?php
+    layout_end();
+    return;
+}
+
+// ------------------------------------------------------------------ list
+$type = g('type');
+$q = g('q');
+$showInactive = g('inactive') === '1';
+// a category ('none' = items without one), as the Category List links here
+$catFilter = g('category_id');
+$sql = 'SELECT i.*, c.name AS category, v.name AS vendor, (SELECT COALESCE(SUM(s.qty_on_hand),0) FROM item_site_stock s WHERE s.item_id = i.id) AS on_hand
+          FROM items i LEFT JOIN item_categories c ON c.id = i.category_id LEFT JOIN vendors v ON v.id = i.preferred_vendor_id WHERE 1=1';
+$params = [];
+if ($type === 'tax') {
+    $rows = [];
+} else {
+    if ($type) {
+        $sql .= ' AND i.item_type = :t';
+        $params['t'] = $type;
+    }
+    if (!$showInactive) {
+        $sql .= ' AND i.is_active = 1';
+    }
+    if ($catFilter === 'none') {
+        $sql .= ' AND i.category_id IS NULL';
+    } elseif ((int)$catFilter > 0) {
+        $sql .= ' AND i.category_id = :cat';
+        $params['cat'] = (int)$catFilter;
+    }
+    // the search box narrows the list as you type (in the browser), so the page loads every item of the
+    // tab; the words typed are only applied here for the export
+    if ($q !== '' && g('export') === 'csv') {
+        $sql .= ' AND (i.code LIKE :q OR i.name LIKE :q2 OR i.barcode = :b)';
+        $params['q'] = "%$q%";
+        $params['q2'] = "%$q%";
+        $params['b'] = $q;
+    }
+    $rows = DB::all($sql . ' ORDER BY FIELD(i.item_type,\'service\',\'inventory\',\'non_inventory\',\'assembly\',\'other_charge\',\'subtotal\',\'group\',\'discount\',\'payment\'), i.code', $params);
+}
+if (g('export') === 'csv') {
+    Access::require($pageKey, 'print');
+    Audit::log('export', 'inv', 'list', null, 'Item list', ['page_key' => $pageKey]);
+    csv_download('items.csv', array_merge(['Type', 'Code', 'Name', 'Description', 'Unit', 'Price', 'On hand'], $viewCosts ? ['Cost', 'Avg cost'] : []),
+        array_map(fn($r) => array_merge([$typeLabels[$r['item_type']], $r['code'], $r['name'], $r['description'], $r['unit'], $r['sales_price'], $r['on_hand']], $viewCosts ? [$r['cost'], $r['avg_cost']] : []), $rows));
+}
+
+$newMenu = '';
+if (Access::can($pageKey, 'create')) {
+    $newMenu = '<div class="dropdown d-inline"><button class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-plus-lg"></i> New item</button><ul class="dropdown-menu">';
+    foreach ($typeLabels as $k => $lbl) {
+        $newMenu .= '<li><a class="dropdown-item" href="' . h(url($pageKey, ['a' => 'new', 'type' => $k])) . '">' . h($lbl) . '</a></li>';
+    }
+    $newMenu .= '</ul></div>';
+}
+layout_start('Item List', ['actions' => $newMenu . ' '
+    . page_link('inv.categories', [], 'Category List', 'btn-outline-secondary', 'tags') . ' '
+    . (Access::can($pageKey, 'create') ? btn_link(url($pageKey, ['a' => 'import']), 'Import items', 'btn-outline-primary', 'filetype-csv') . ' ' : '')
+    . (Access::can($pageKey, 'print') ? btn_link(current_url(['export' => 'csv']), 'Export', 'btn-outline-secondary', 'download') : '')]);
+?>
+<ul class="nav nav-tabs mb-2 small">
+  <li class="nav-item"><a class="nav-link <?= $type === '' ? 'active' : '' ?>" href="<?= h(url($pageKey)) ?>">All</a></li>
+  <?php foreach ($typeLabels as $k => $lbl): ?><li class="nav-item"><a class="nav-link <?= $type === $k ? 'active' : '' ?>" href="<?= h(url($pageKey, ['type' => $k])) ?>"><?= h($lbl) ?></a></li><?php endforeach; ?>
+  <li class="nav-item"><a class="nav-link <?= $type === 'tax' ? 'active' : '' ?>" href="<?= h(url($pageKey, ['type' => 'tax'])) ?>">Sales tax items</a></li>
+</ul>
+<?php if ($type === 'tax'): ?>
+  <div class="card"><table class="table table-sm mb-0"><thead><tr><th>Code</th><th>Name</th><th class="num">Rate</th><th>Output tax account</th><th>Input tax account</th><th>Active</th></tr></thead>
+  <?php foreach (DB::all('SELECT * FROM tax_codes ORDER BY id') as $tc): ?>
+    <tr><td><?= h($tc['code']) ?></td><td><?= h($tc['name']) ?></td><td class="num"><?= h(pct($tc['rate'])) ?></td><td><?= h(account_label($tc['sales_account_id'] ? (int)$tc['sales_account_id'] : null)) ?></td><td><?= h(account_label($tc['purchase_account_id'] ? (int)$tc['purchase_account_id'] : null)) ?></td><td><?= (int)$tc['is_active'] ? 'Yes' : 'No' ?></td></tr>
+  <?php endforeach; ?></table>
+  <div class="card-body small"><?= safe_link('coa.lists', ['tab' => 'tax'], 'Manage tax codes') ?></div></div>
+<?php else: ?>
+<form class="item-list-filters filters mb-2" method="get" role="search"><input type="hidden" name="p" value="<?= h($pageKey) ?>"><input type="hidden" name="type" value="<?= h($type) ?>">
+  <div class="live-search item-list-search"><i class="bi bi-search"></i>
+    <input class="form-control form-control-sm" type="search" name="q" value="<?= h($q) ?>" placeholder="Type part of a code, name, barcode, category or supplier" autocomplete="off"
+           aria-label="Search the items" data-live-filter="#itemList tbody tr.item-row" data-live-count="#itemCount" data-live-empty="#itemNone"></div>
+  <select class="form-select form-select-sm item-list-cat" name="category_id" aria-label="Category" data-no-combo data-autosubmit><?= options(['' => 'All categories', 'none' => '(no category)'] + Lookup::categories(), $catFilter) ?></select>
+  <label class="small d-flex align-items-center gap-1 item-list-inactive"><input class="form-check-input m-0" type="checkbox" name="inactive" value="1" <?= checked($showInactive) ?> data-autosubmit> Include inactive</label>
+  <span class="small text-muted item-list-count"><span id="itemCount"><?= count($rows) ?></span> item(s)</span>
+</form>
+<div class="card"><div class="table-responsive"><table class="table table-sm table-hover mb-0" id="itemList">
+  <thead><tr><th>Code</th><th>Name</th><th>Type</th><th>Category</th><th>Unit</th><th class="num">Price</th><?= $viewCosts ? '<th class="num">Cost</th><th class="num">Avg cost</th>' : '' ?><th class="num">On hand</th><th>Tax</th><th>Pref. vendor</th></tr></thead>
+  <tbody>
+  <?php foreach ($rows as $r): ?>
+    <tr class="item-row <?= (int)$r['is_active'] ? '' : 'text-muted' ?>" data-filter-text="<?= h($r['code'] . ' ' . $r['name'] . ' ' . $r['barcode'] . ' ' . $r['category'] . ' ' . $r['vendor'] . ' ' . ($typeLabels[$r['item_type']] ?? '') . ' ' . $r['description']) ?>">
+      <td><a href="<?= h(url($pageKey, ['a' => 'edit', 'id' => $r['id']])) ?>"><?= h($r['code']) ?></a></td><td><?= h($r['name']) ?></td>
+      <td class="small"><?= h($typeLabels[$r['item_type']]) ?></td><td class="small"><?= h($r['category']) ?></td><td><?= h($r['unit']) ?></td>
+      <td class="num"><?= $r['item_type'] === 'discount' && (float)$r['discount_pct'] > 0 ? h(pct($r['discount_pct'])) : money($r['sales_price'], true) ?></td>
+      <?php if ($viewCosts): ?><td class="num"><?= money($r['cost'], true) ?></td><td class="num"><?= in_array($r['item_type'], ['inventory', 'assembly'], true) ? money($r['avg_cost']) : '' ?></td><?php endif; ?>
+      <td class="num <?= (float)$r['on_hand'] < 0 ? 'neg' : '' ?>"><?= in_array($r['item_type'], ['inventory', 'assembly'], true) ? qty($r['on_hand']) : '' ?></td>
+      <td class="small"><?= h(Lookup::taxCodes()[$r['tax_code_id']] ?? '') ?></td><td class="small"><?= h($r['vendor']) ?></td></tr>
+  <?php endforeach; ?>
+  <tr id="itemNone"><td colspan="<?= $viewCosts ? 11 : 9 ?>" class="text-muted text-center py-3"><?= $rows ? 'No item matches what you typed.' : 'No item on this list yet.' ?></td></tr>
+  </tbody>
+</table></div></div>
+<script>
+(function () {
+  // Export takes the words typed in the search box at the moment it is clicked
+  var box = document.querySelector('.item-list-search input');
+  document.querySelectorAll('.page-actions a[href*="export=csv"]').forEach(function (a) {
+    a.addEventListener('click', function () {
+      var u = new URL(a.href, window.location.href);
+      if (box && box.value.trim() !== '') { u.searchParams.set('q', box.value.trim()); } else { u.searchParams.delete('q'); }
+      a.href = u.toString();
+    });
+  });
+})();
+</script>
+<?php endif; ?>
+<?php
+layout_end();

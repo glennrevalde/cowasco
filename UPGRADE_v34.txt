@@ -1,0 +1,102 @@
+G-SMaRT Integrated Cooperative System - version 34 (2027-01-17)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v6.xlsx. This package holds
+only the files added or changed since version 33. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File; or php tools/upgrade.php), after backing it up:
+
+    database/migrations/2027_01_17_passbook_designer.sql
+
+It:
+- adds passbook_types.ledger: a passbook type is a savings passbook or a loan
+  passbook (a type a loan product uses becomes a loan passbook);
+- adds passbook_types.layout_json: the design of the passbook (cover, header,
+  body, footer), saved on Cooperative > Passbook Types;
+- gives Start Line Skip and No. of Line Skip their meaning in the former
+  program: the first line never printed on (the centre fold) and how many lines
+  are skipped. Printing always starts on line 1. A type that listed its fold
+  lines ("Lines never printed on", e.g. 13,14) gets Start Line Skip 13 and No. of
+  Line Skip 2;
+- gives the "Loan Passbook" installed with the program, if it was never changed,
+  the set-up of the former program's loan passbook: Start Line Skip 13, No. of
+  Line Skip 2, Max Lines 29, Body Left 1, a page of 4.75 x 6.75 inches, the
+  footer below the last line.
+
+Nothing is deleted, no posted amount changes, the lines already printed keep their
+page and line. Written for MySQL 5.5, safe to run twice. With several companies,
+run it on every company database (Super Admin: Companies > Database updates >
+Update all companies). Until it is run, the program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files.
+
+Set-up after the upgrade
+------------------------
+1. Cooperative > Passbook Types: open each passbook type.
+   - Check its Kind (Savings passbook or Loan passbook).
+   - Passbook Type Setup, in tups (1 inch = 1,440 tups), as in the former program:
+     Cover Top / Left, Header Top / Left, Footer Top / Left, Passbook Body Top /
+     Left and Interval, Start Line Skip, No. of Line Skip, Max Lines.
+     Former program, Regular Passbook: 900/2400, 700/300, 8000/100, 1230/200,
+     275, 12, 1, 26. Loan Passbook: the same with Body Left 1, Start Line Skip 13,
+     No. of Line Skip 2, Max Lines 29.
+   - The passbook size (page width and height), the font, the characters per
+     inch (20 is the condensed print of the former passbooks) and the font size.
+   - The design: on the Cover, Header, Body and Footer tabs, place each field
+     (drag it on the drawing, or type Left / Top / Width in tups), its alignment
+     and its format. "Use the default ..." puts back the former program's layout.
+   - Save, then "Print a test page" and adjust until every field falls on its
+     place in the passbook.
+   A type not saved since version 33 keeps printing with its settings of before
+   (shown in the design) until it is saved here.
+2. Savings & Deposit Products and Loan Products: a savings product now lists only
+   the savings passbooks, a loan product only the loan passbooks. Check the
+   passbook type of each product.
+3. Accounts printed before: the next line of a passbook is where it was. A new
+   passbook (Passbook Printing > New passbook) starts on page 1, line 1.
+
+What changed (see docs/ADDITIONAL_MODULE_V6_CHECKLIST.md)
+--------------------------------------------------------
+- Capacity to Pay: the entries saved on a loan application (monthly income,
+  spouse income, net disposable income, dependents, employer, business, spouse)
+  are where the borrower's next application starts. When a new application is
+  opened (or the member is chosen on it), they are filled from the member's last
+  application, as last saved; a note says which one. What is updated replaces
+  them, the rest stays. A first loan starts from the Financial Information tab.
+  A renewal or restructuring starts the same way. The application shows a
+  Capacity to pay card.
+- Credit Investigation: a new investigation starts from the borrower's last one:
+  the spouse, addresses, residence, areas and values, informants, children,
+  sources of income, assets and character references, with its findings shown
+  for reference. Once saved, an investigation shows its own entries. A row is
+  saved when any of its boxes is filled (an income with its employer and amount
+  but no source name was left out before). The Sources of income list is now
+  across the page, so its boxes are wide enough; on a phone every row is a card.
+- Passbook printing follows the former program: printing starts on line 1 (not
+  line 13); Start Line Skip and No. of Line Skip leave the centre fold blank (with
+  13 and 2, after line 12 the next entry prints on line 15); after Max Lines the
+  next entry goes to line 1 of the next page, after the header. The line number
+  prints beside the date.
+- The loan passbook has its own design, separate from the savings passbook:
+  the header prints the Loan Type, the Term (e.g. 36mos) and the Due Date; each
+  line the line no., Date, Reference No., Release, Loan Payment, Loan Balance,
+  Interest Payment, Fines / Surcharges Payment and Teller ID. The release is on
+  line 1. The loan's charges (penalties, adjustments, waivers) are not passbook
+  lines.
+- Passbook Types is the Passbook Type Setup of the former program, with a design
+  facility for the cover, header, body and footer (in place of the Crystal Report
+  templates): the fields, their place, width, alignment, format and size, any
+  passbook size, condensed print, a live drawing with sample data, and test
+  pages (a page with sample entries, the line numbers of a page, the cover).
+- Passbook Printing: savings or loan passbook; the header prints first on a new
+  page; Print the header of a page alone; reprints of loan passbooks too; a fold
+  line cannot be chosen as the next line.

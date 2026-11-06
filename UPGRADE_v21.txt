@@ -1,0 +1,50 @@
+G-SMaRT Accounting - version 21 (2026-10-04)
+=============================================
+
+This package holds only the files that were added or changed since version 20.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+New file: modules/txn/_memorize.php
+
+Database
+--------
+No database change in this version: there is no migration to run (the reasons for
+adjustments are kept in the settings table, the memorized pro-formas in the existing
+memorized_txns table). Do NOT import database/accounting_system.sql or
+accounting_system_clean.sql over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/app.js and assets/css/app.css.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v21.xlsx")
+--------------------------------------------------------------------------
+ 1. Report filters on the related records. Every report about items can be narrowed
+    by Category, Item type and Preferred supplier; every report about customers by
+    Customer type; and Site, Item, Customer, Vendor or Class were added where they
+    were missing (45 reports: inventory, sales, receivables, income, POS, processing,
+    payables, check register, fixed asset additions). Totals, subtotals and percentages
+    are those of what is shown, and the line under the title names the filters chosen.
+ 2. Quantity on Hand by Site: a Site filter (only that site's column, for example
+    Gabi KMF), with Category, Item type and Preferred supplier.
+ 3. Adjust Quantity/Value on Hand:
+    - Memorize Adjustment: what is on the form (Per Item or Per Batch) is kept as a
+      pro-forma; Load Memorized Adjustment fills the form from it, to revise and post.
+    - Edit reasons: add, rename, reorder or take off the reasons of adjustment
+      (users who may edit adjustments). "Other" stays last. Changes are audited.
+    - Category: Per Batch grid filtered by a category; Per Item "Category > Add its
+      items" puts a whole category on the lines; Find & Select Items filters by category.
+    - Net adjustment column (Per Item and Per Batch): what each line changes the value
+      of the stock by, with the totals under the grid. With "Quantity and total
+      value", typing the new quantity works out the prospective New value at average
+      cost (grey italics) until a value is typed over it.
+ 4. Memorize Transaction and Load Memorized Transaction on the forms: Journal Entries,
+    Write Checks, Cash Voucher, Receive Items, Create Purchase Orders, Receive Items and
+    Enter Bills, Create Estimates, Sales Orders, Invoices, Batch Invoices, Sales
+    Receipts (and Enter Bills, Statement Charges, Credit Memos, Supplier Debit Memos).
+    Memorize keeps what is on the form on the Memorized Transactions list (nothing is
+    recorded); Load fills a new form from it. The Memorized Transactions list has
+    "Open on the form" on every line. Item receipts can now be memorized and entered.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v21.docx) are updated for all of the above.

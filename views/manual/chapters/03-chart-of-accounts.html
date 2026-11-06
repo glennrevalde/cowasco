@@ -1,0 +1,1561 @@
+<p>The <strong>Financial</strong> module (called Chart of Accounts before version 39) holds the accounts that every transaction posts to, the lists the other modules share, the journal entries you make by hand, and the financial statements. Most entries reach the general ledger on their own: an invoice, a bill, a check or a POS sale writes its ledger lines the moment it is saved. This chapter explains how to set the accounts up, how to record what the modules cannot post for you, and how to read the ledger and the statements.</p>
+<p>In the sidebar the module has four groups:</p>
+<ul>
+<li><strong>Lists:</strong> Chart of Accounts, Account Types, Class List, Employees &amp; Other Names, Memorized Transactions.</li>
+<li><strong>Setup:</strong> Set Up Budgets, Module Default Accounts, Terms, Tax Codes &amp; Other Lists.</li>
+<li><strong>Transactions:</strong> Make Journal Entries.</li>
+<li><strong>Reports:</strong> the trial balances, balance sheets, income statements and their summaries, cash flow, ledgers and journal. Click <strong>Reports</strong> to open the list.</li>
+</ul>
+<div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>You see only the pages and buttons your role allows (see <a href="manual.php?c=administration#pg-admin-page_access">Page Access Configuration</a>). Adding, changing or deleting accounts and changing the module default accounts also needs the special permission <strong>Can change the Chart of Accounts and default accounts</strong>, set in <a href="manual.php?c=administration#pg-admin-roles">User Role Configuration</a>.</p></div>
+<h2 id="pg-coa-accounts">Chart of Accounts<a class="man-hash" href="#pg-coa-accounts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The Chart of Accounts is the list of every account the books use: cash and bank accounts, receivables, inventory, payables, equity, income and expenses. Here you add accounts, group them under main accounts, give them their account type, mark the ones that keep a subsidiary ledger, and open the ledger or the register of any account.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Chart of Accounts</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_accounts__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_accounts__main.jpg" alt="The Chart of Accounts: 1000 Cash with the total of its eight sub-accounts, the sub-accounts under it, and the accounts of the types Cash and Loans Receivable" width="1094" height="1500" loading="lazy" decoding="async"></a><figcaption>The Chart of Accounts: 1000 Cash with the total of its eight sub-accounts, the sub-accounts under it, and the accounts of the types Cash and Loans Receivable</figcaption></figure>
+<p>The accounts are shown in five cards, <strong>Assets</strong>, <strong>Liabilities</strong>, <strong>Equity</strong>, <strong>Incomes</strong> and <strong>Expenses</strong>. Each card is in code order, and every main account is followed by its sub-accounts. A sub-account is indented under its main account with an arrow, for example 1010 Cash in Bank - BDO Checking under 1000 Cash, and a main account says under its name how many sub-accounts it has. Accounts that the modules need, such as 1100 Accounts Receivable, 1200 Inventory and 2000 Accounts Payable, carry the word <strong>system</strong> in grey. Tick <strong>Include inactive accounts</strong> above the list to show the accounts you have made inactive; they appear greyed out.</p>
+<h4 id="s-the-columns">The columns<a class="man-hash" href="#s-the-columns" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Code</td>
+<td>The account code. The list is sorted by it.</td>
+</tr>
+<tr>
+<td>Name</td>
+<td>The account name. Click it to open the <a href="#pg-rpt-general_ledger">General Ledger</a> of this account.</td>
+</tr>
+<tr>
+<td>Type</td>
+<td>The account type: a built-in type (see the table below), or a type of your own (see <a href="#pg-coa-account_types">Account Types</a>) with the built-in type it behaves as under it in grey, for example <strong>Cash</strong> over <strong>Bank</strong>.</td>
+</tr>
+<tr>
+<td>Normal</td>
+<td><strong>Debit</strong> or <strong>Credit</strong>: the side that increases the account.</td>
+</tr>
+<tr>
+<td>With SL</td>
+<td><strong>Yes</strong> when the account keeps a subsidiary ledger.</td>
+</tr>
+<tr>
+<td>Balance</td>
+<td>The balance of the account on its normal side, for all dates. A main account with sub-accounts shows, in bold, the total of its own balance and the balances of its sub-accounts (on a phone it is labelled <strong>Total with sub-accounts</strong>). A negative balance is shown in brackets.</td>
+</tr>
+<tr>
+<td>Links</td>
+<td><strong>Edit</strong>, <strong>Register</strong> and <strong>Delete</strong>, for the users allowed to use them.</td>
+</tr>
+</tbody>
+</table></div>
+<p>A main account shows the total of its sub-accounts. In the demo company, 1000 Cash shows <strong>1,469,480.61</strong>: the total of its eight sub-accounts, among them 1010 Cash in Bank - BDO Checking with 577,084.14 and 1020 Cash in Bank - BPI Savings with 800,000.00. 1000 Cash has no balance of its own; when a main account has one, its own balance is shown under the total as <strong>own</strong> and the amount. Inactive sub-accounts count in the total even while they are hidden. The financial statements show the same totals (see <a href="#pg-rpt-balance_sheet">Balance Sheet</a>).</p>
+<p>Bank balances show as ••• to a user who has neither the special permission <strong>View bank balances outside Banking</strong> nor access to <a href="manual.php?c=banking#pg-bank-register">Use Register</a>. The total of a main account with Bank sub-accounts is hidden the same way.</p>
+<h4 id="s-account-types">Account types<a class="man-hash" href="#s-account-types" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The account type decides where the account appears on the statements and which forms offer it. The program has the fifteen built-in types below; the category and the normal balance follow from the type. You can add types of your own, such as <strong>Cash</strong> or <strong>Loans Receivable</strong>, under <a href="#pg-coa-account_types">Account Types</a>: each one behaves as one of the built-in types, is a classification of its own on the Balance Sheet and the Income Statement, and is linked to a section of the Statement of Cash Flows.</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Built-in type</th>
+<th>Category</th>
+<th>Normal balance</th>
+<th>Section on the statements</th>
+<th>Statement of Cash Flows (to start with)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bank</td>
+<td>Asset</td>
+<td>Debit</td>
+<td>Current Assets</td>
+<td>Cash and cash equivalents</td>
+</tr>
+<tr>
+<td>Accounts Receivable</td>
+<td>Asset</td>
+<td>Debit</td>
+<td>Current Assets</td>
+<td>Operating activities</td>
+</tr>
+<tr>
+<td>Other Current Asset</td>
+<td>Asset</td>
+<td>Debit</td>
+<td>Current Assets</td>
+<td>Operating activities</td>
+</tr>
+<tr>
+<td>Fixed Asset</td>
+<td>Asset</td>
+<td>Debit</td>
+<td>Fixed Assets</td>
+<td>Investing activities</td>
+</tr>
+<tr>
+<td>Other Asset</td>
+<td>Asset</td>
+<td>Debit</td>
+<td>Other Assets</td>
+<td>Investing activities</td>
+</tr>
+<tr>
+<td>Accounts Payable</td>
+<td>Liability</td>
+<td>Credit</td>
+<td>Current Liabilities</td>
+<td>Operating activities</td>
+</tr>
+<tr>
+<td>Credit Card</td>
+<td>Liability</td>
+<td>Credit</td>
+<td>Current Liabilities</td>
+<td>Operating activities</td>
+</tr>
+<tr>
+<td>Other Current Liability</td>
+<td>Liability</td>
+<td>Credit</td>
+<td>Current Liabilities</td>
+<td>Operating activities</td>
+</tr>
+<tr>
+<td>Long Term Liability</td>
+<td>Liability</td>
+<td>Credit</td>
+<td>Long-term Liabilities</td>
+<td>Financing activities</td>
+</tr>
+<tr>
+<td>Equity</td>
+<td>Equity</td>
+<td>Credit</td>
+<td>Equity</td>
+<td>Financing activities</td>
+</tr>
+<tr>
+<td>Income</td>
+<td>Income</td>
+<td>Credit</td>
+<td>Income</td>
+<td>Net income</td>
+</tr>
+<tr>
+<td>Other Income</td>
+<td>Income</td>
+<td>Credit</td>
+<td>Other Income</td>
+<td>Net income</td>
+</tr>
+<tr>
+<td>Cost of Goods Sold</td>
+<td>Expense</td>
+<td>Debit</td>
+<td>Cost of Goods Sold</td>
+<td>Net income</td>
+</tr>
+<tr>
+<td>Expense</td>
+<td>Expense</td>
+<td>Debit</td>
+<td>Expenses</td>
+<td>Net income</td>
+</tr>
+<tr>
+<td>Other Expense</td>
+<td>Expense</td>
+<td>Debit</td>
+<td>Other Expenses</td>
+<td>Net income</td>
+</tr>
+</tbody>
+</table></div>
+<p>Some types also change what the forms allow. A type of your own does the same as the built-in type it behaves as: an account of the type <strong>Cash</strong> that behaves as Bank is offered wherever a Bank account is.</p>
+<ul>
+<li><strong>Bank</strong> accounts are the ones offered on <a href="manual.php?c=banking#pg-bank-write_checks">Write Checks</a>, <a href="manual.php?c=banking#pg-bank-deposits">Make Deposits</a>, the cash account of a <a href="manual.php?c=banking#pg-bank-cash_voucher">Cash Voucher</a> and <a href="manual.php?c=banking#pg-bank-reconcile">Reconcile</a>. Create cash funds such as a petty cash fund or a revolving fund as Bank accounts too, so they can be paid out of and reconciled.</li>
+<li><strong>Credit Card</strong> accounts can be chosen on Write Checks and Transfer Funds.</li>
+<li><strong>Other Current Asset</strong> accounts can be chosen in Transfer Funds and as the <strong>Deposit to</strong> account of a sales receipt.</li>
+<li>A journal entry line to an <strong>Accounts Receivable</strong> account needs a customer, and a line to an <strong>Accounts Payable</strong> account needs a vendor.</li>
+</ul>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_accounts__new.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_accounts__new.jpg" alt="The New account form, with what the chosen type does and where its accounts are shown" width="1094" height="627" loading="lazy" decoding="async"></a><figcaption>The New account form, with what the chosen type does and where its accounts are shown</figcaption></figure>
+<h4 id="s-fields">Fields<a class="man-hash" href="#s-fields" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Account type</td>
+<td>A built-in type from the table above, or a type of your own, listed with the built-in type it behaves as, for example <strong>Cash (Bank)</strong>. The box under the code and name says what the type does and where its accounts are shown on the Balance Sheet or the Income Statement and on the Statement of Cash Flows. A new account starts as <strong>Expense</strong>; when you choose a main account in <strong>Sub-account of</strong> before touching the type, the new account takes the type of that main account.</td>
+</tr>
+<tr>
+<td>Code</td>
+<td>Up to 20 characters. Every account needs its own code.</td>
+</tr>
+<tr>
+<td>Name</td>
+<td>Up to 120 characters.</td>
+</tr>
+<tr>
+<td>Sub-account of</td>
+<td>Leave blank for a main account, or choose the main account it belongs under. Only main accounts are listed, and the main account must be of the same category (an asset under an asset, an expense under an expense). On the financial statements a sub-account is shown under its main account, in the classification of the main account's type, and the main account shows the total of its sub-accounts.</td>
+</tr>
+<tr>
+<td>Normal balance</td>
+<td><strong>From type</strong> takes the normal balance of the type. Choose <strong>Debit</strong> or <strong>Credit</strong> only for a contra account (see below).</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Untick to stop offering the account on forms. It keeps its history and still shows on reports.</td>
+</tr>
+<tr>
+<td>With SL (keeps a subsidiary ledger)</td>
+<td>Tick when you want a listing of the names (customers, suppliers, employees, other names) that transacted this account. See "With SL" below.</td>
+</tr>
+<tr>
+<td>Bank account no. (bank accounts)</td>
+<td>The bank's account number, for your reference.</td>
+</tr>
+<tr>
+<td>Description</td>
+<td>A note about what the account is for.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The form reminds you: "Contra accounts (accumulated depreciation, sales returns, drawings) use the opposite normal balance of their type." For example, 1525 Accumulated Depreciation - Machinery is a Fixed Asset account with a <strong>Credit</strong> normal balance, so it reduces the fixed assets on the Balance Sheet.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_accounts__edit.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_accounts__edit.jpg" alt="Editing account 1009 Cash on Hand - Accounting Office, of the type Cash, which behaves as Bank" width="1094" height="647" loading="lazy" decoding="async"></a><figcaption>Editing account 1009 Cash on Hand - Accounting Office, of the type Cash, which behaves as Bank</figcaption></figure>
+<h4 id="s-step-by-step">Step by step<a class="man-hash" href="#s-step-by-step" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To add an account:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Chart of Accounts</strong>.</li>
+<li>Click <strong>New account</strong>.</li>
+<li>Choose the <strong>Account type</strong>.</li>
+<li>Type the <strong>Code</strong> and the <strong>Name</strong>.</li>
+<li>If the account belongs under another one, choose it in <strong>Sub-account of</strong>. The new account takes the type of that main account unless you chose a type yourself.</li>
+<li>Leave <strong>Normal balance</strong> at <strong>From type</strong> unless this is a contra account.</li>
+<li>Tick <strong>With SL</strong> if you want the account to keep a subsidiary ledger.</li>
+<li>For a bank account, type the <strong>Bank account no.</strong></li>
+<li>Click <strong>Save account</strong>, or <strong>Save account &amp; New</strong> to save it and start another one straight away.</li>
+</ol>
+<p><strong>To change an account:</strong></p>
+<ol>
+<li>Click <strong>Edit</strong> on the account's line.</li>
+<li>Change what you need. The title of the form shows the code, for example "Edit account 1000".</li>
+<li>Click <strong>Save account</strong>.</li>
+</ol>
+<p><strong>To make an account inactive:</strong></p>
+<ol>
+<li>Click <strong>Edit</strong> on the account's line.</li>
+<li>Untick <strong>Active</strong>.</li>
+<li>Click <strong>Save account</strong>.</li>
+</ol>
+<p><strong>To delete an account:</strong></p>
+<ol>
+<li>Find the account. A <strong>Delete</strong> link appears only on an account that is not a system account, whose balance is zero and that has no sub-accounts.</li>
+<li>Click <strong>Delete</strong> and confirm "Delete this account?".</li>
+</ol>
+<p><strong>To open an account's register:</strong> click <strong>Register</strong> on its line. The link appears for Bank, Credit Card, Accounts Receivable, Accounts Payable, Other Current Asset and Other Current Liability accounts. See <a href="manual.php?c=banking#pg-bank-register">Use Register</a>.</p>
+<p><strong>To export the list:</strong> click <strong>Export</strong>. The file <code>chart_of_accounts.csv</code> holds, for every account shown and in the order of the list, the code, name, type, the built-in type it behaves as, category, normal balance, parent, With SL, balance, the total with sub-accounts (for a main account that has sub-accounts) and the active flag. Export needs the print/export permission on this page.</p>
+<h4 id="s-buttons">Buttons<a class="man-hash" href="#s-buttons" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>New account:</strong> opens a blank account form. Shown only to users with the special permission to change the Chart of Accounts.</li>
+<li><strong>Account types:</strong> opens <a href="#pg-coa-account_types">Account Types</a>. The account form has the same button.</li>
+<li><strong>Export:</strong> downloads the list as a spreadsheet file.</li>
+<li><strong>Module default accounts:</strong> opens <a href="#pg-coa-default_accounts">Module Default Accounts</a>.</li>
+</ul>
+<h4 id="s-with-sl-keeping-a-subsidiary-ledger">With SL: keeping a subsidiary ledger<a class="man-hash" href="#s-with-sl-keeping-a-subsidiary-ledger" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>An account marked <strong>With SL</strong> keeps a listing of the names that transacted it, like a subsidiary ledger of advances to employees, deposits from customers or loans from officers. While the box is ticked:</p>
+<ul>
+<li>every journal entry, cash voucher and check that posts to the account must name a customer, supplier, employee or other name. On a journal entry or cash voucher the name is chosen on the line; on a check, the payee of the check counts for every line.</li>
+<li>saving without a name is refused with a message that names the account, for example "The account 1400 - Prepaid Expenses is marked "With SL", so the line posting to it needs a name: choose a customer, supplier, employee or other name."</li>
+<li>the <a href="#pg-rpt-subsidiary_ledger">Subsidiary Ledger</a> and the <a href="#pg-rpt-schedule_of_accounts">Schedule of Accounts</a> list the account and its names.</li>
+</ul>
+<p>The rule applies to entries saved after the box is ticked. Entries made earlier keep whatever name they had.</p>
+<h4 id="s-what-it-records">What it records<a class="man-hash" href="#s-what-it-records" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Adding or changing an account posts nothing. Every change is written to the audit trail.</p>
+<h4 id="s-good-to-know">Good to know<a class="man-hash" href="#s-good-to-know" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"Enter the account code and name." Both are required.</li>
+<li>"Another account uses this code." Choose a different code.</li>
+<li>"A sub-account must be under a parent account of the same category." Choose a parent of the same category, or change the type.</li>
+<li>"System accounts used by the modules cannot be made inactive." Accounts with the <strong>system</strong> tag must stay active.</li>
+<li>"This account has transactions; it cannot be moved to a different category." You can change the type within the same category (for example from Expense to Other Expense), but not from an expense to an asset once entries have been posted.</li>
+<li>"This account has sub-accounts of its category; it cannot be moved to another category." A main account keeps its category while it has sub-accounts.</li>
+<li>"This account is one the modules post to: it can only take a type that behaves as Accounts Receivable." An account with the <strong>system</strong> word keeps its built-in type. It can still take a type of your own that behaves as the same built-in type, for example 1050 Undeposited Funds a type that behaves as Other Current Asset.</li>
+<li>"This account is in use. Make it inactive instead of deleting it." An account cannot be deleted while it has ledger entries or transaction lines, is a module default account, has sub-accounts, or is used on an item. Make it inactive instead.</li>
+<li>Without the special permission to change the Chart of Accounts, the list is read-only and the <strong>New account</strong>, <strong>Edit</strong> and <strong>Delete</strong> links do not appear.</li>
+</ul>
+<h2 id="pg-coa-account_types">Account Types<a class="man-hash" href="#pg-coa-account_types" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>Account Types lists the account types: the fifteen built-in ones and the types you add yourself, such as <strong>Cash</strong> or <strong>Loans Receivable</strong>. Each type is a classification of its own on the Balance Sheet and the Income Statement (a heading, its accounts and a total), and each balance sheet type is linked to a section of the Statement of Cash Flows, so the cash flow statement always ties to the cash accounts.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Account Types, or the <strong>Account types</strong> button on the <a href="#pg-coa-accounts">Chart of Accounts</a> and on the account form.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_account_types__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_account_types__main.jpg" alt="Account Types: the types of each category, with the types Cash and Loans Receivable among the built-in ones" width="1094" height="1500" loading="lazy" decoding="async"></a><figcaption>Account Types: the types of each category, with the types Cash and Loans Receivable among the built-in ones</figcaption></figure>
+<p>A type of your own <strong>behaves as</strong> one of the built-in types. The built-in type decides everything the program does with the accounts: their category and normal balance, the group they are shown in (Current Assets, Fixed Assets, Expenses ...) and which forms offer them. An account of the type <strong>Cash</strong> that behaves as Bank is offered on Write Checks, Make Deposits, the cash vouchers, the teller cash and Reconcile, exactly like a Bank account. Your type adds its own name, its place on the statements and its section of the Statement of Cash Flows.</p>
+<h4 id="s-acty-list">The list<a class="man-hash" href="#s-acty-list" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The types are shown in five cards, <strong>Assets</strong>, <strong>Liabilities</strong>, <strong>Equity</strong>, <strong>Income</strong> and <strong>Expenses</strong>, in the order they take on the statements.</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Type</td>
+<td>The name of the type and its description. The fifteen built-in types carry the word <strong>built-in</strong> in grey; a type you made inactive carries <strong>inactive</strong>.</td>
+</tr>
+<tr>
+<td>Behaves as</td>
+<td>The built-in type it behaves as (<strong>itself</strong> for a built-in type).</td>
+</tr>
+<tr>
+<td>Shown under</td>
+<td>The group of the statement its heading is shown in, for example Current Assets.</td>
+</tr>
+<tr>
+<td>Cash flow section</td>
+<td><strong>Cash and cash equivalents</strong>, <strong>Operating</strong>, <strong>Investing</strong> or <strong>Financing</strong>. Income and expense types show <strong>Net income</strong>: they reach the Statement of Cash Flows through the net income.</td>
+</tr>
+<tr>
+<td>Accounts</td>
+<td>How many accounts are of the type.</td>
+</tr>
+<tr>
+<td>Open / Edit</td>
+<td>Opens the type: <strong>Open</strong> for a built-in type, <strong>Edit</strong> for one of yours.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The card <strong>On the Statement of Cash Flows</strong> beside the list shows which types are in each section. In the demo company, <strong>Cash</strong> and <strong>Bank</strong> are the cash and cash equivalents, and <strong>Loans Receivable</strong> is an operating activity with Accounts Receivable and the other current assets and liabilities.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_account_types__new.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_account_types__new.jpg" alt="A new account type named Loans Receivable, behaving as Other Current Asset, an operating activity" width="1094" height="781" loading="lazy" decoding="async"></a><figcaption>A new account type named Loans Receivable, behaving as Other Current Asset, an operating activity</figcaption></figure>
+<h4 id="s-acty-fields">Fields<a class="man-hash" href="#s-acty-fields" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Up to 60 characters, for example <strong>Loans Receivable</strong>. Two types cannot have the same name. A built-in type keeps its name.</td>
+</tr>
+<tr>
+<td>Behaves as</td>
+<td>The built-in type the accounts of this type behave as. The line under it says what the program does with them. It cannot be changed on a built-in type, or on a type that accounts use: move the accounts to another type first.</td>
+</tr>
+<tr>
+<td>On the Statement of Cash Flows</td>
+<td>For an asset, liability or equity type: <strong>Cash and cash equivalents</strong> (its accounts make the cash at the beginning and at the end of the statement), <strong>Operating activities</strong>, <strong>Investing activities</strong> or <strong>Financing activities</strong> (the change in its accounts is shown in that section). It starts at the section of the built-in type (see the table under <a href="#s-account-types">Account types</a>). An income or expense type has no choice: it is part of the net income.</td>
+</tr>
+<tr>
+<td>Order</td>
+<td>The order among the types that behave as the same built-in type, lower first. The built-in types are numbered 10, 20 ... 150, so a type of yours with the order 5 comes before the built-in type it behaves as: <strong>Cash</strong> (5) before <strong>Bank</strong> (10).</td>
+</tr>
+<tr>
+<td>Description</td>
+<td>A note about what the type is for, shown under its name in the list.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Untick to stop offering the type when an account is added or changed. The accounts already of the type keep it. Built-in types are always active.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The box at the bottom of the form shows where the type will be, for example "Balance Sheet: Assets &gt; Current Assets &gt; Loans Receivable (its accounts and a total). Statement of Cash Flows: Operating activities."</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_account_types__edit.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_account_types__edit.jpg" alt="The type Loans Receivable with its five accounts, and the asset accounts of other types that can be given it" width="1094" height="1050" loading="lazy" decoding="async"></a><figcaption>The type Loans Receivable with its five accounts, and the asset accounts of other types that can be given it</figcaption></figure>
+<h4 id="s-acty-accounts">The accounts of a type<a class="man-hash" href="#s-acty-accounts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>An open type has two more cards:</p>
+<ul>
+<li><strong>Accounts of this type</strong> lists its accounts. Tick some, choose another type in <strong>Move the ticked accounts to</strong> and click <strong>Move</strong>.</li>
+<li><strong>Give accounts this type</strong> lists the accounts of the same category that are of another type, each with its present type. Type part of a code or name in the search box to narrow the list. Ticking a main account ticks its sub-accounts too; untick any you want to leave. Click <strong>Give them the type</strong> and the type's name.</li>
+</ul>
+<p>An account that takes a type of another built-in type behaves as that built-in type from then on: for example an Other Current Asset account given the type Cash (which behaves as Bank) is then offered wherever money is paid or received. Its entries do not change. Accounts the modules post to (with the word <strong>system</strong> on the Chart of Accounts) are offered only for a type that behaves as their own built-in type. You can also choose the type of one account on its form in the <a href="#pg-coa-accounts">Chart of Accounts</a>.</p>
+<h4 id="s-acty-steps">Step by step<a class="man-hash" href="#s-acty-steps" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To add a type, for example Loans Receivable:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Account Types</strong> and click <strong>New account type</strong>.</li>
+<li>Type the <strong>Name</strong>: Loans Receivable.</li>
+<li>In <strong>Behaves as</strong>, choose <strong>Other Current Asset</strong>.</li>
+<li>Leave <strong>On the Statement of Cash Flows</strong> at <strong>Operating activities</strong>.</li>
+<li>Type an <strong>Order</strong> (5 puts it before the other current assets) and a <strong>Description</strong> if you like.</li>
+<li>Click <strong>Save account type</strong>. The message "Account type added. Give it its accounts below." appears and the type stays open.</li>
+</ol>
+<p><strong>To give accounts a type:</strong></p>
+<ol>
+<li>Open the type (<strong>Edit</strong> on its line).</li>
+<li>In <strong>Give accounts this type</strong>, tick the accounts, for example 1210 Loans Receivable - Current, 1211 Loans Receivable - Past Due and the others of the loan portfolio.</li>
+<li>Click <strong>Give them the type Loans Receivable</strong>. The message says how many accounts are now of the type.</li>
+</ol>
+<p><strong>To make a Cash classification of the cash on hand, the cash in banks and the cash funds:</strong> add a type named <strong>Cash</strong> that behaves as <strong>Bank</strong>, with <strong>Cash and cash equivalents</strong> on the Statement of Cash Flows, then give it 1000 Cash (its sub-accounts are ticked with it) and any other cash account. The Balance Sheet then shows the heading Cash with these accounts and <strong>Total Cash</strong>, and the Statement of Cash Flows ends with the same total.</p>
+<p><strong>To move accounts to another type:</strong> open the type they are of, tick them under <strong>Accounts of this type</strong>, choose the other type in <strong>Move the ticked accounts to</strong> and click <strong>Move</strong>. Only types of the same category are offered.</p>
+<p><strong>To change a type:</strong> open it, change what you need and click <strong>Save account type</strong>. The statements follow at once; no entry changes.</p>
+<p><strong>To delete a type:</strong> open a type of yours that no account uses and click <strong>Delete this type</strong>, then confirm. A type with accounts must give them to another type first.</p>
+<h4 id="s-acty-statements">How the statements show the types<a class="man-hash" href="#s-acty-statements" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>Balance Sheet and Income Statement:</strong> inside the group of its built-in type (Current Assets, Fixed Assets, Expenses ...), every type has a heading with its name, its accounts and the line <strong>Total</strong> and the type's name. Where a group holds only one built-in type and none of yours, the group's own heading is enough and the type heading is left out, for example Fixed Assets.</li>
+<li><strong>Main accounts and sub-accounts:</strong> a sub-account is shown under its main account, in the classification of the main account's type. On the Balance Sheet and the Income Statement a main account with sub-accounts is a heading followed by its sub-accounts, a line for its own entries when it has any, and its total. The <a href="#pg-rpt-balance_sheet_summary">Balance Sheet Summary</a> and the <a href="#pg-rpt-income_statement_summary">Income Statement Summary</a> show the main accounts only, each with its total.</li>
+<li><strong>Statement of Cash Flows:</strong> the accounts of the types in <strong>Cash and cash equivalents</strong> give the cash at the beginning and at the end of the period. The change in every other balance sheet account is shown in the section of its type, under the type's heading with the line <strong>Net change in</strong> and the type's name. Each account is counted once, so the cash at the end of the period equals the total of the cash accounts on the Balance Sheet.</li>
+</ul>
+<h4 id="s-acty-records">What it records<a class="man-hash" href="#s-acty-records" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Adding or changing a type and giving accounts a type post nothing and change no amount. Every change is written to the audit trail; giving an account a type is written as a change of that account.</p>
+<h4 id="s-acty-good-to-know">Good to know<a class="man-hash" href="#s-acty-good-to-know" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"There is already an account type named "Cash"." Names are compared without regard to capitals.</li>
+<li>"Choose the section of the Statement of Cash Flows the accounts of this type belong to." An asset, liability or equity type needs its section.</li>
+<li>"5 account(s) are of this type. Move them to another type first." A type with accounts cannot be deleted, and the built-in type it behaves as cannot change.</li>
+<li>"The account 1100 is one the modules post to: it can only take a type that behaves as Accounts Receivable." Such accounts keep their built-in type.</li>
+<li>A sub-account keeps the category of its main account, and an account with entries keeps its category, so types are given within one category.</li>
+<li>Adding, changing and deleting types needs the special permission <strong>Can change the Chart of Accounts and default accounts</strong>; giving accounts a type also needs Edit on the Chart of Accounts. Users without it see the list only.</li>
+<li>Import Data accepts the name of any type, built-in or yours, in the account type column of the accounts file.</li>
+</ul>
+<h2 id="pg-coa-classes">Class List<a class="man-hash" href="#pg-coa-classes" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>Classes split the books your own way: by branch, department, project or product line. Every transaction form has a <strong>Class</strong> box, the class is copied to every ledger line the transaction posts, and the financial reports can be filtered by class or shown with one column per class. You name the classes yourself and can rename them at any time.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Class List</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_classes__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_classes__main.jpg" alt="The Class List with Head Office, Makati Store and Cebu Store, and the New class form on the right" width="1094" height="433" loading="lazy" decoding="async"></a><figcaption>The Class List with Head Office, Makati Store and Cebu Store, and the New class form on the right</figcaption></figure>
+<h4 id="s-the-columns_1">The columns<a class="man-hash" href="#s-the-columns_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Class name</td>
+<td>The name shown on forms and reports.</td>
+</tr>
+<tr>
+<td>Description</td>
+<td>Your note about the class.</td>
+</tr>
+<tr>
+<td>Order</td>
+<td>The position of the class in drop-down lists (lowest first).</td>
+</tr>
+<tr>
+<td>Entries</td>
+<td>How many transactions carry this class.</td>
+</tr>
+<tr>
+<td>Net income (FY)</td>
+<td>Income less expenses posted with this class in the current fiscal year. Shown only to users who may open <a href="#pg-rpt-income_statement_class">Income Statement by Class</a>.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td><strong>Yes</strong> or <strong>No</strong>.</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="s-fields_1">Fields<a class="man-hash" href="#s-fields_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Class name</td>
+<td>Up to 80 characters, for example Main Branch, Piggery or Meat Shop. Two classes cannot share a name.</td>
+</tr>
+<tr>
+<td>Order in lists</td>
+<td>A whole number. Classes are listed from the lowest number up, then by name.</td>
+</tr>
+<tr>
+<td>Description</td>
+<td>An optional note, up to 255 characters.</td>
+</tr>
+<tr>
+<td>Active (offered on transaction forms)</td>
+<td>Untick to stop offering the class on new transactions. It stays on the transactions that already have it and in the report filters.</td>
+</tr>
+</tbody>
+</table></div>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_classes__edit.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_classes__edit.jpg" alt="Editing the Head Office class" width="1094" height="533" loading="lazy" decoding="async"></a><figcaption>Editing the Head Office class</figcaption></figure>
+<h4 id="s-step-by-step_1">Step by step<a class="man-hash" href="#s-step-by-step_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To add a class:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Class List</strong>.</li>
+<li>In the <strong>New class</strong> panel, type the <strong>Class name</strong>.</li>
+<li>Type the <strong>Order in lists</strong> and a <strong>Description</strong> if you want them.</li>
+<li>Click <strong>Save class</strong>, or <strong>Save class &amp; New</strong> to add another one straight away.</li>
+</ol>
+<p><strong>To rename or change a class:</strong></p>
+<ol>
+<li>Click <strong>Edit</strong> on the class's line. The panel becomes <strong>Edit class</strong>.</li>
+<li>Change the name, order, description or <strong>Active</strong> box.</li>
+<li>Click <strong>Save class</strong>. Click <strong>Cancel</strong> to go back to a blank form without saving.</li>
+</ol>
+<p><strong>To delete a class:</strong> click <strong>Delete</strong> on its line and confirm. The link appears only on a class that no transaction carries.</p>
+<h4 id="s-buttons_1">Buttons<a class="man-hash" href="#s-buttons_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>Income Statement by Class</strong> and <strong>Balance Sheet by Class</strong> open the two reports that show one column per class.</li>
+</ul>
+<h4 id="s-what-it-records_1">What it records<a class="man-hash" href="#s-what-it-records_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Nothing is posted. The class you choose on a transaction is copied to its ledger lines when the transaction is saved.</p>
+<h4 id="s-good-to-know_1">Good to know<a class="man-hash" href="#s-good-to-know_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"Renaming a class changes its name everywhere, including past transactions and reports." Reports always show the current name.</li>
+<li>"Another class already has this name." Choose a different name.</li>
+<li>"Cebu Store is already used on transactions, so it cannot be deleted. Make it inactive instead." Any use counts, including a line of a journal entry or a POS terminal's default class.</li>
+<li>When you save a transaction with the <strong>Class</strong> box empty, the program asks first: <strong>No class selected</strong>, "This transaction has no class. It will be saved as Unclassified and will not appear under any class on the class reports." Click <strong>Choose a class</strong> to go back to the box, or <strong>Continue saving</strong>. The question is not asked while no class exists yet.</li>
+<li>On journal entries and cash vouchers each line can carry its own class. The class at the top of the form fills the class of every line that has an account.</li>
+</ul>
+<h2 id="pg-coa-names">Employees &amp; Other Names<a class="man-hash" href="#pg-coa-names" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>This list holds the people and bodies that are paid or tracked without being a customer or a supplier: employees (cash advances, reimbursements), owners, government offices and the like. The names appear in the <strong>Paid to</strong> and <strong>SL</strong> lists of cash vouchers, in the <strong>Name</strong> list of journal entries and in the <strong>Pay to the order of</strong> list of checks, next to the customers and suppliers.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Employees &amp; Other Names</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_names__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_names__main.jpg" alt="Employees &amp; Other Names on the All tab" width="1094" height="672" loading="lazy" decoding="async"></a><figcaption>Employees &amp; Other Names on the All tab</figcaption></figure>
+<p>Three tabs filter the list: <strong>All</strong>, <strong>Employees</strong> and <strong>Other names</strong>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_names__type_employee.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_names__type_employee.jpg" alt="The Employees tab" width="1094" height="672" loading="lazy" decoding="async"></a><figcaption>The Employees tab</figcaption></figure>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_names__type_other.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_names__type_other.jpg" alt="The Other names tab, with Barangay Treasurer" width="1094" height="672" loading="lazy" decoding="async"></a><figcaption>The Other names tab, with Barangay Treasurer</figcaption></figure>
+<h4 id="s-the-columns_2">The columns<a class="man-hash" href="#s-the-columns_2" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>The name as it appears in the pickers.</td>
+</tr>
+<tr>
+<td>Type</td>
+<td><strong>Employee</strong> or <strong>Other name</strong>.</td>
+</tr>
+<tr>
+<td>Employee no.</td>
+<td>The employee number, if any.</td>
+</tr>
+<tr>
+<td>Position</td>
+<td>The position, or the relationship for other names.</td>
+</tr>
+<tr>
+<td>Phone</td>
+<td>The phone number.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td><strong>Yes</strong> or <strong>No</strong>.</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="s-fields_2">Fields<a class="man-hash" href="#s-fields_2" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Person or organization already on file</td>
+<td>On a new name only. When the person is already in the program (a member, customer or supplier), choose it here: the name becomes one more role of that party. Left at <strong>Not on file: a new party made from this name</strong>, the name gets a party of its own, unless it looks like one on file: then saving stops with the possible matches, and you choose the party or tick <strong>This is a different person or organization</strong>. See <a href="manual.php?c=parties#s-party-forms">The party on member, customer, supplier and other-name forms</a>.</td>
+</tr>
+<tr>
+<td>Type</td>
+<td><strong>Employee</strong> or <strong>Other name</strong>. On the Employees or Other names tab it starts with that type.</td>
+</tr>
+<tr>
+<td>Name</td>
+<td>Required, up to 120 characters. The same name cannot be entered twice with the same type.</td>
+</tr>
+<tr>
+<td>Employee no.</td>
+<td>Optional, for employees.</td>
+</tr>
+<tr>
+<td>Position / relationship</td>
+<td>For example Cashier, or "Permits and clearances".</td>
+</tr>
+<tr>
+<td>Phone</td>
+<td>Optional.</td>
+</tr>
+<tr>
+<td>TIN</td>
+<td>The tax identification number, if any.</td>
+</tr>
+<tr>
+<td>Address</td>
+<td>Optional.</td>
+</tr>
+<tr>
+<td>Notes</td>
+<td>Optional.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Untick to leave the name out of the pickers. It stays on the documents that already have it.</td>
+</tr>
+</tbody>
+</table></div>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_names__edit.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_names__edit.jpg" alt="Editing an other name" width="1094" height="672" loading="lazy" decoding="async"></a><figcaption>Editing an other name</figcaption></figure>
+<h4 id="s-step-by-step_2">Step by step<a class="man-hash" href="#s-step-by-step_2" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To add a name:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Employees &amp; Other Names</strong>.</li>
+<li>In the <strong>New name</strong> panel, choose the <strong>Type</strong>.</li>
+<li>Type the <strong>Name</strong> and the other details you have.</li>
+<li>Click <strong>Save name</strong>, or <strong>Save name &amp; New</strong> to add another one.</li>
+</ol>
+<p><strong>To change a name:</strong> click <strong>Edit</strong> on its line, change the details in the <strong>Edit name</strong> panel, and click <strong>Save name</strong>.</p>
+<p><strong>To delete a name:</strong> click <strong>Delete</strong> on its line and confirm. The link appears only on names that no transaction carries.</p>
+<h4 id="s-buttons_2">Buttons<a class="man-hash" href="#s-buttons_2" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>Cash Voucher</strong> opens the <a href="manual.php?c=banking#pg-bank-cash_voucher">Cash Voucher</a> page.</li>
+</ul>
+<h4 id="s-good-to-know_2">Good to know<a class="man-hash" href="#s-good-to-know_2" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"This name is already on the list." A name of the same type already exists.</li>
+<li>"Ella Ramos is already used on transactions, so it cannot be deleted. Make it inactive instead."</li>
+<li>In the pickers, employees are listed as "Ella Ramos (Employee)" and other names as "Barangay Treasurer (Other name)", so you can tell them from a customer or supplier with the same name.</li>
+<li>Adding a name here does not give that person a login. Users are managed in <a href="manual.php?c=administration#pg-admin-users">User Accounts</a>.</li>
+</ul>
+<h2 id="pg-coa-memorized_txns">Memorized Transactions<a class="man-hash" href="#pg-coa-memorized_txns" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>A memorized transaction is a saved copy of a transaction you enter again and again: the monthly rent check, a standing invoice, the payroll journal entry. It keeps the names, accounts, items and amounts; the date and the document number are given each time it is entered. You can enter it from the list whenever you need it, get a reminder when it is due, or let the program enter it on its due date.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Memorized Transactions. The Home page also shows <strong>Memorized transactions due</strong> with an <strong>Open</strong> button when a reminder is due (see <a href="manual.php?c=home-and-reports#pg-home-dashboard">Home Dashboard</a>).</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_memorized_txns__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_memorized_txns__main.jpg" alt="The Memorized Transactions list with a bill and a check that are overdue" width="1094" height="372" loading="lazy" decoding="async"></a><figcaption>The Memorized Transactions list with a bill and a check that are overdue</figcaption></figure>
+<h4 id="s-the-columns_3">The columns<a class="man-hash" href="#s-the-columns_3" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name and type</td>
+<td>The name you gave it, with its type (Invoice, Bill, Check, Journal Entry, Inventory Adjustment and so on) and its notes underneath.</td>
+</tr>
+<tr>
+<td>Name on the transaction</td>
+<td>The customer, supplier or payee of the saved copy.</td>
+</tr>
+<tr>
+<td>Amount</td>
+<td>The total of the saved copy.</td>
+</tr>
+<tr>
+<td>Schedule</td>
+<td>How it is entered: <strong>Automatically</strong>, <strong>Reminder</strong>, <strong>When needed</strong> or, for an adjustment or a batch of invoices, <strong>Loaded when needed</strong> (the full wording shows when you point at it), with the frequency under it, for example "Every month" or "Every 2 weeks".</td>
+</tr>
+<tr>
+<td>Next due</td>
+<td>The next due date, with <strong>Due</strong> or <strong>Overdue</strong> under it when a reminder is due.</td>
+</tr>
+<tr>
+<td>Entered</td>
+<td>How many times it was entered, for example "3 of 12 times" when a number is set, with the date of the last entry under it.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lines with a reminder due are marked with a coloured edge. Inactive ones are greyed out. When you use groups, each group has its own heading line.</p>
+<h4 id="s-memorizing-a-transaction">Memorizing a transaction<a class="man-hash" href="#s-memorizing-a-transaction" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>You add to this list in two ways, for users who may create memorized transactions:</p>
+<ul>
+<li>From the form, before saving: <strong>Memorize Transaction</strong> beside the save buttons of every transaction form (see <a href="manual.php?c=getting-started#sec-memorize-form">Memorize Transaction and Load Memorized Transaction</a>), and <strong>Memorize Adjustment</strong> on <a href="manual.php?c=inventory#pg-inv-adjust">Adjust Quantity/Value on Hand</a>. Item receipts, batches of invoices and inventory adjustments are memorized this way.</li>
+<li>From a saved transaction: the <strong>Memorize</strong> button on the saved (not voided) invoices, sales receipts, estimates, sales orders, statement charges, credit memos, bills, supplier debit memos, purchase orders, checks, journal entries and cash vouchers.</li>
+</ul>
+<p><strong>Load Memorized Transaction</strong> on a new form fills the form from one of them. On this list, the <strong>Open</strong> button (open on the form) does the same: it opens a new form of its kind filled from it.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_memorized_txns__form_only.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_memorized_txns__form_only.jpg" alt="The list with memorized adjustments and an invoice memorized from the form: the Open button on every line" width="1094" height="598" loading="lazy" decoding="async"></a><figcaption>The list with memorized adjustments and an invoice memorized from the form: the Open button on every line</figcaption></figure>
+<figure class="man-fig man-fig-narrow"><a class="man-zoom" href="assets/manual/img/coa_memorized_txns__memorize_modal.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_memorized_txns__memorize_modal.jpg" alt="The Memorize dialog of a bill" width="500" height="516" loading="lazy" decoding="async"></a><figcaption>The Memorize dialog of a bill</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name it</td>
+<td>Starts as the name on the transaction and its type, for example "Accounting Partners &amp; Co. Bill". Required.</td>
+</tr>
+<tr>
+<td>Group (optional)</td>
+<td>A heading to group related entries, for example "Month-end".</td>
+</tr>
+<tr>
+<td>How it is entered</td>
+<td><strong>Enter it automatically</strong>, <strong>Remind me when it is due</strong> or <strong>Don't remind me (I enter it from the list)</strong>.</td>
+</tr>
+<tr>
+<td>Every</td>
+<td>A number and a unit: <strong>Day(s)</strong>, <strong>Week(s)</strong>, <strong>Month(s)</strong>, <strong>Quarter(s)</strong> or <strong>Year(s)</strong>.</td>
+</tr>
+<tr>
+<td>Next due</td>
+<td>The date of the next entry. It starts one month after the transaction's date.</td>
+</tr>
+<tr>
+<td>Remind (days before)</td>
+<td>How many days before the due date the reminder starts (0 to 90).</td>
+</tr>
+<tr>
+<td>Number remaining (blank = no limit)</td>
+<td>How many more times it should be entered, for example 11 for the rest of a one-year lease.</td>
+</tr>
+<tr>
+<td>Notes</td>
+<td>Shown under the name on the list.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The three ways of entering:</p>
+<ul>
+<li><strong>Enter it automatically:</strong> the program records the entry on its due date, the first time anyone opens the system that day, and shows "Memorized transaction "..." was entered automatically for 09/03/2026." If several due dates were missed, it catches up one date at a time, each entry with its own date.</li>
+<li><strong>Remind me when it is due:</strong> from the set number of days before the due date, the line shows <strong>Due</strong> (or <strong>Overdue</strong> once the date has passed) and the Home page lists it. You enter it with <strong>Enter now</strong>.</li>
+<li><strong>Don't remind me (I enter it from the list):</strong> it waits on the list until you enter it.</li>
+</ul>
+<h4 id="s-step-by-step_3">Step by step<a class="man-hash" href="#s-step-by-step_3" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To memorize a transaction:</strong></p>
+<ol>
+<li>Open the saved transaction, for example a bill from Accounting Partners &amp; Co.</li>
+<li>Click <strong>Memorize</strong>.</li>
+<li>Check <strong>Name it</strong> and choose a <strong>Group</strong> if you use groups.</li>
+<li>Choose <strong>How it is entered</strong>.</li>
+<li>Set <strong>Every</strong>, for example 1 <strong>Month(s)</strong>, and the <strong>Next due</strong> date.</li>
+<li>Set <strong>Remind (days before)</strong> and <strong>Number remaining</strong> if needed.</li>
+<li>Click <strong>Memorize</strong>. The message "Memorized as "...". It is on the Memorized Transactions list." confirms it.</li>
+</ol>
+<p><strong>To enter a memorized transaction now:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Memorized Transactions</strong>.</li>
+<li>Click <strong>Enter now</strong> on its line. The dialog <strong>Enter a memorized transaction</strong> opens.</li>
+<li>Check the <strong>Date of the entry</strong>. It starts at the next due date.</li>
+<li>Leave <strong>Move the schedule on to the next due date</strong> ticked if this entry is the one that was due. Untick it for an extra entry that should not move the schedule.</li>
+<li>Click <strong>Enter it</strong>. The document is recorded straight away and opens so you can check it.</li>
+</ol>
+<p><strong>To change the schedule:</strong></p>
+<ol>
+<li>Click the pencil button on the line.</li>
+<li>In the <strong>Edit</strong> form at the top, change the <strong>Name</strong>, <strong>Group (optional)</strong>, <strong>How it is entered</strong>, <strong>Every</strong>, <strong>Next due</strong>, <strong>Remind (days before)</strong>, <strong>Number remaining (blank = no limit)</strong>, <strong>Stop after</strong>, <strong>Active</strong> or <strong>Notes</strong>.</li>
+<li>Click <strong>Save</strong>.</li>
+</ol>
+<p><strong>To take one off the list:</strong> click the trash button and confirm "Take "..." off the memorized list? The transactions already entered from it are not touched."</p>
+<h4 id="s-buttons_3">Buttons<a class="man-hash" href="#s-buttons_3" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>New journal entry</strong> opens a blank <a href="#pg-coa-journal">Make Journal Entries</a> form.</li>
+<li><strong>Enter now</strong> is shown on active lines to users who may create memorized transactions. It is green when the line is due.</li>
+<li><strong>Open</strong> opens a new form filled from the line, to change and save. A batch of invoices and an inventory adjustment are always used this way (their figures are revised each time), so they have no <strong>Enter now</strong>; their button is green when they are due.</li>
+</ul>
+<h4 id="s-what-it-records_2">What it records<a class="man-hash" href="#s-what-it-records_2" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Entering a memorized transaction saves an ordinary transaction of its type, with a new number and the date you chose, and posts it exactly as if you had typed it. An invoice or bill gets its due date from its terms. After the entry, <strong>Last entered</strong>, <strong>Entered</strong> and <strong>Number remaining</strong> are updated and <strong>Next due</strong> moves on by the frequency. Each entry is noted in the audit trail.</p>
+<h4 id="s-good-to-know_3">Good to know<a class="man-hash" href="#s-good-to-know_3" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>The saved copy does not change when you edit the original transaction later. To change the amounts, memorize the corrected transaction again and delete the old line.</li>
+<li>When <strong>Number remaining</strong> reaches zero, or the next due date falls after <strong>Stop after</strong>, the memorized transaction becomes inactive and is no longer entered or reminded.</li>
+<li>An automatic entry that cannot be recorded (for example because its date is on or before the closing date, or a default account is missing) is switched to <strong>Remind me when it is due</strong> and the reason is written to the audit trail. Enter it by hand once the problem is fixed.</li>
+<li>Opening balance entries and voided transactions cannot be memorized.</li>
+<li>The transactions entered from the list are ordinary transactions: change, void or delete them on their own pages.</li>
+</ul>
+<h2 id="pg-coa-budgets">Set Up Budgets<a class="man-hash" href="#pg-coa-budgets" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>A budget holds the amounts you plan for each account, month by month, for one fiscal year. A budget is for the income statement or for the balance sheet, and can be limited to one class. The <a href="#pg-rpt-budget_income">Income Statement vs Budget</a> and <a href="#pg-rpt-budget_balance">Balance Sheet vs Budget</a> reports put the actual figures beside it and show the difference.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Set Up Budgets. The same page, for sales forecasts per customer, is <strong>Customers &gt; Set Up Forecast</strong> (see <a href="manual.php?c=customers#pg-cust-forecast">Set Up Forecast</a>).</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_budgets__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_budgets__main.jpg" alt="Set Up Budgets with no budget yet" width="1094" height="258" loading="lazy" decoding="async"></a><figcaption>Set Up Budgets with no budget yet</figcaption></figure>
+<h4 id="s-the-columns_4">The columns<a class="man-hash" href="#s-the-columns_4" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>The budget's name. Click it to enter the amounts.</td>
+</tr>
+<tr>
+<td>What it budgets</td>
+<td><strong>Income statement (profit and loss)</strong> or <strong>Balance sheet</strong>.</td>
+</tr>
+<tr>
+<td>Fiscal year</td>
+<td>The year, or the months it covers when the fiscal year does not start in January.</td>
+</tr>
+<tr>
+<td>Class</td>
+<td>The class the budget is for, if any.</td>
+</tr>
+<tr>
+<td>Yearly total</td>
+<td>The sum of all its monthly amounts.</td>
+</tr>
+<tr>
+<td>Notes</td>
+<td>Your notes.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Each line has an <strong>Amounts</strong> button and a delete (trash) button.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_budgets__new.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_budgets__new.jpg" alt="The New budget form" width="1094" height="426" loading="lazy" decoding="async"></a><figcaption>The New budget form</figcaption></figure>
+<h4 id="s-fields_3">Fields<a class="man-hash" href="#s-fields_3" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>For example "Budget 2027". Required.</td>
+</tr>
+<tr>
+<td>What it budgets</td>
+<td><strong>Income statement (profit and loss)</strong> lists the Income, Other Income, Cost of Goods Sold, Expense and Other Expense accounts. <strong>Balance sheet</strong> lists the asset, liability and equity accounts.</td>
+</tr>
+<tr>
+<td>Fiscal year</td>
+<td>The year the budget is for. The months follow the fiscal year set in <a href="manual.php?c=administration#pg-admin-settings">Company, Security &amp; Closing Date</a>; the form says in which month it starts.</td>
+</tr>
+<tr>
+<td>Class (optional)</td>
+<td>Leave blank for the whole company, or choose a class to budget one branch or department. The actual figures are then only those of that class.</td>
+</tr>
+<tr>
+<td>Notes</td>
+<td>Optional.</td>
+</tr>
+<tr>
+<td>Start from last year's actual figures</td>
+<td>Fills the grid with the actual figures of the year before, so you adjust them instead of typing everything.</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="s-the-amounts-grid">The amounts grid<a class="man-hash" href="#s-the-amounts-grid" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>After <strong>Create</strong>, the budget opens in its amounts grid. Each active account of the budget's kind has a row, grouped by account type, with a box for each of the twelve months and a <strong>Year</strong> total. The <strong>Total</strong> row at the bottom adds up each month.</p>
+<ul>
+<li><strong>Fill a row:</strong> type an amount, click in any box of a row, then click <strong>Across</strong>. Every month of that row gets the amount.</li>
+<li><strong>Yearly total:</strong> type a yearly amount, click in a row, then click <strong>Spread</strong>. The amount is divided evenly over the twelve months; the last month takes the centavos left over.</li>
+<li><strong>Notes:</strong> change the budget's notes.</li>
+</ul>
+<p>Enter income and expense amounts as positive figures. For a balance sheet budget, enter the balance you expect at the end of each month, also as positive figures for assets, liabilities and equity.</p>
+<h4 id="s-step-by-step_4">Step by step<a class="man-hash" href="#s-step-by-step_4" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To create a budget:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Set Up Budgets</strong>.</li>
+<li>Click <strong>New budget</strong>.</li>
+<li>Type the <strong>Name</strong>, choose <strong>What it budgets</strong> and type the <strong>Fiscal year</strong>.</li>
+<li>Choose a <strong>Class</strong> if the budget is for one class.</li>
+<li>Tick <strong>Start from last year's actual figures</strong> if you want the grid filled for you.</li>
+<li>Click <strong>Create</strong>. The grid opens with the message "Budget 2027 created. Enter the monthly amounts below."</li>
+<li>Type or change the monthly amounts.</li>
+<li>Click <strong>Save the amounts</strong>. The message says how many monthly amounts were saved.</li>
+</ol>
+<p><strong>To change the amounts later:</strong> click the budget's name or <strong>Amounts</strong>, change the figures and click <strong>Save the amounts</strong>.</p>
+<p><strong>To compare with the actual figures:</strong> on the grid click <strong>Compare with actual</strong>, or open the report from <strong>Income statement vs budget</strong> on the list.</p>
+<p><strong>To delete a budget:</strong> click the trash button on its line and confirm "Delete "..." and its amounts?".</p>
+<h4 id="s-what-it-records_3">What it records<a class="man-hash" href="#s-what-it-records_3" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>A budget posts nothing to the books. It is only compared with the ledger by the budget reports.</p>
+<h4 id="s-good-to-know_4">Good to know<a class="man-hash" href="#s-good-to-know_4" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"There is already a budget called "Budget 2027" for 2027." Two budgets of the same kind and year cannot share a name.</li>
+<li>"Enter the fiscal year." The year must be between 2000 and 2100.</li>
+<li>When <strong>Start from last year's actual figures</strong> is ticked, the copied figures are only shown on the grid ("Last year's actual figures were copied in. Change what you need and press Save."). They are kept only after you click <strong>Save the amounts</strong>.</li>
+<li>Empty boxes and zeros are not saved.</li>
+<li>The <strong>Compare with actual</strong> button opens the report on the newest budget of that kind. If you have several budgets, choose the one you want in the report's <strong>Budget</strong> box.</li>
+</ul>
+<h2 id="pg-coa-journal">Make Journal Entries<a class="man-hash" href="#pg-coa-journal" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>A journal entry posts debits and credits directly to the accounts you choose. Routine activity posts automatically from invoices, bills, payments and the POS, so you use journal entries for what no other form records: opening balances, accruals, reclassifications, corrections and closing entries.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Make Journal Entries opens the list of journal entries. The Home page quick action <strong>Make Journal Entries</strong> opens a blank entry.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_journal__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_journal__main.jpg" alt="The Journal Entries list" width="1094" height="253" loading="lazy" decoding="async"></a><figcaption>The Journal Entries list</figcaption></figure>
+<p>The list shows the journal entries and opening balance entries of a date range (from 90 days back to 30 days ahead when it opens). Use <strong>From</strong>, <strong>To</strong>, <strong>Status</strong> (<strong>Posted</strong> or <strong>Void</strong>), <strong>Class</strong> and <strong>Search</strong> (number, name or memo), then click <strong>Filter</strong>. Click a number to open the entry. <strong>Export</strong> downloads the list.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_journal__new.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_journal__new.jpg" alt="A new journal entry" width="1094" height="633" loading="lazy" decoding="async"></a><figcaption>A new journal entry</figcaption></figure>
+<h4 id="s-fields_4">Fields<a class="man-hash" href="#s-fields_4" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date</td>
+<td>The date the entry posts on.</td>
+</tr>
+<tr>
+<td>Entry no.</td>
+<td>Leave blank to get the next number (the grey text shows it, for example JE-00005). Type your own number only if you need one.</td>
+</tr>
+<tr>
+<td>Reference</td>
+<td>An outside reference, for example a document number.</td>
+</tr>
+<tr>
+<td>Memo</td>
+<td>What the entry is for. It is used as the memo of every line that has none.</td>
+</tr>
+<tr>
+<td>Class</td>
+<td>The class of the whole entry. It fills the class of every line.</td>
+</tr>
+<tr>
+<td>Opening balance entry</td>
+<td>Tick for the entry that brings in your opening balances. It is then labelled <strong>Opening Balance</strong> instead of Journal Entry.</td>
+</tr>
+<tr>
+<td>Explanation</td>
+<td>Shown only when you change a saved entry: why the entry is changed (at least 10 characters). The approver reads it, and it is kept with the change in the audit trail.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The lines:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Account</td>
+<td>Type part of the account name to find it, for example "rent" for 6010 Rent Expense.</td>
+</tr>
+<tr>
+<td>Debit</td>
+<td>The debit amount of the line.</td>
+</tr>
+<tr>
+<td>Credit</td>
+<td>The credit amount of the line. A line has a debit or a credit, not both.</td>
+</tr>
+<tr>
+<td>Memo</td>
+<td>The description of the line.</td>
+</tr>
+<tr>
+<td>Name</td>
+<td>A customer, supplier, employee or other name. Required on Accounts Receivable, Accounts Payable and With SL accounts.</td>
+</tr>
+<tr>
+<td>Class</td>
+<td>The class of the line. Change it only when this line belongs to another class.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Under the lines, <strong>Totals</strong> shows the debits and the credits, and <strong>Difference</strong> shows what is still out of balance. <strong>Add line</strong> adds a row; the red X removes one.</p>
+<h4 id="s-step-by-step_5">Step by step<a class="man-hash" href="#s-step-by-step_5" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To make a journal entry:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Make Journal Entries</strong> and click <strong>New journal entry</strong>.</li>
+<li>Check the <strong>Date</strong>.</li>
+<li>Type a <strong>Reference</strong> and a <strong>Memo</strong>.</li>
+<li>Choose the <strong>Class</strong> if you use classes.</li>
+<li>On the first line, choose the <strong>Account</strong> and type the <strong>Debit</strong>.</li>
+<li>On the next line, choose the account and type the <strong>Credit</strong>.</li>
+<li>Add more lines if needed, until <strong>Difference</strong> shows 0.00.</li>
+<li>Choose a <strong>Name</strong> on every line that needs one.</li>
+<li>Click <strong>Save entry</strong>, or <strong>Save entry &amp; New</strong> to start another one.</li>
+</ol>
+<div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>To accrue September rent of ₱85,000.00 that will be billed in October, debit 6010 Rent Expense ₱85,000.00 and credit 2200 Accrued Expenses ₱85,000.00, with the memo "Accrued rent, September".</p></div>
+<p><strong>To enter opening balances:</strong></p>
+<ol>
+<li>Start a new journal entry dated the day before you begin using the system.</li>
+<li>Tick <strong>Opening balance entry</strong>.</li>
+<li>Debit each asset account with its balance and credit each liability and equity account with its balance.</li>
+<li>Save when <strong>Difference</strong> is 0.00. In the demo company, OB-0001 debits 1010 Cash in Bank - BDO Checking ₱2,500,000.00 and the other cash accounts, and credits 3000 Owner's Capital ₱3,320,000.00.</li>
+</ol>
+<p><strong>To change a journal entry:</strong> a saved entry is changed only with the approval of a second, authorized user (a user with the Approve right on Make Journal Entries).</p>
+<ol>
+<li>Open the entry from the list.</li>
+<li>Click <strong>Edit (needs approval)</strong>.</li>
+<li>Change the lines or the header.</li>
+<li>Type the <strong>Explanation</strong>: why the entry is changed.</li>
+<li>If the approver is with you, open <strong>Supervisor approval</strong> and let them type their user name and password (or an approval code); the change is made at once. Otherwise leave it empty.</li>
+<li>Click <strong>Save the change</strong>. Without an approver at the desk the change waits on <a href="#pg-coa-je_edits">Journal Entry Changes</a>, and the entry stays as it is until it is approved.</li>
+</ol>
+<p>An entry with a change waiting shows a yellow notice with <strong>Review the change</strong>, and an entry that was changed lists its changes under <strong>Changes made to this entry</strong>.</p>
+<p><strong>To print a journal entry:</strong> open it and click <strong>Print</strong>, then click <strong>Print</strong> above the page. See the print format below.</p>
+<p><strong>To void or delete a journal entry:</strong> open it, click <strong>Void</strong> or <strong>Delete</strong>, type the reason and confirm. Voiding keeps the entry with no effect on the ledger; deleting removes it, and a full copy stays in the audit trail.</p>
+<p><strong>To memorize a journal entry:</strong> open it and click <strong>Memorize</strong> (see <a href="#pg-coa-memorized_txns">Memorized Transactions</a>).</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_journal__view.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_journal__view.jpg" alt="A saved opening balance entry, with the general ledger entries it created" width="1094" height="887" loading="lazy" decoding="async"></a><figcaption>A saved opening balance entry, with the general ledger entries it created</figcaption></figure>
+<p>The saved entry shows the date, number, status, memo, class and who entered it, the lines as you entered them, and <strong>General ledger entries created automatically</strong> with the total debits and credits. A ledger line that was cleared in a bank reconciliation is marked <strong>cleared</strong>.</p>
+<h4 id="s-buttons_4">Buttons<a class="man-hash" href="#s-buttons_4" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>Edit</strong>, <strong>Print</strong>, <strong>Memorize</strong>, <strong>Void</strong>, <strong>Delete</strong>: see the procedures above. Each appears only when you have the permission.</li>
+<li><strong>History</strong> opens the <a href="manual.php?c=administration#pg-admin-txn_history">Transaction History</a> of the entry.</li>
+<li><strong>Back to list</strong> returns to the Journal Entries list.</li>
+<li><strong>Journal list</strong> (on the form) goes back to the list without saving.</li>
+</ul>
+<h4 id="s-the-print-format">The print format<a class="man-hash" href="#s-the-print-format" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The printed journal entry has the company name, address and TIN (and the logo, when the administrator has switched it on for this document), the title <strong>JOURNAL ENTRY</strong> or <strong>OPENING BALANCE</strong>, the number and the date. Under it are the memo, reference, site and class, then a table with <strong>Account</strong>, <strong>Description</strong>, <strong>Name</strong>, <strong>Class</strong>, <strong>Debit</strong> and <strong>Credit</strong>, the two totals, and the signature lines <strong>Prepared by</strong> (the user who entered it), <strong>Checked by</strong> and <strong>Approved by</strong>. A line without its own class prints the class of the entry.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_journal__print.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_journal__print.jpg" alt="The printed opening balance entry" width="946" height="698" loading="lazy" decoding="async"></a><figcaption>The printed opening balance entry</figcaption></figure>
+<h4 id="s-what-it-records_4">What it records<a class="man-hash" href="#s-what-it-records_4" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Each line posts to its account exactly as entered: a debit line debits the account, a credit line credits it. The name and the class of the line go with it to the ledger, so a line to 1100 Accounts Receivable with the name ABC Trading Corp. changes that customer's balance. An opening balance entry posts the same way; only its label differs.</p>
+<h4 id="s-good-to-know_5">Good to know<a class="man-hash" href="#s-good-to-know_5" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"A journal entry needs at least two lines."</li>
+<li>"Debits (85,000.00) must equal credits (80,000.00)." The totals must agree to the centavo.</li>
+<li>"Choose an account for every journal line." A line with an amount needs an account.</li>
+<li>"A journal line cannot have both a debit and a credit." Split it into two lines.</li>
+<li>"Lines posted to Accounts Receivable need a customer name." and "Lines posted to Accounts Payable need a vendor name." Choose the name on that line.</li>
+<li>A journal entry to Accounts Receivable or Accounts Payable changes the customer's or supplier's balance, but it is not an invoice or a bill: it does not appear in <a href="manual.php?c=customers#pg-cust-payments">Receive Payments</a> or <a href="manual.php?c=vendors#pg-vend-pay_bills">Pay Bills</a>. Use those modules for sales and purchases.</li>
+<li>A journal entry never changes item quantities, even when it posts to 1200 Inventory. Use <a href="manual.php?c=inventory#pg-inv-adjust">Adjust Quantity/Value on Hand</a> for stock.</li>
+<li>"The books are closed through 06/28/2026. You do not have permission to record transactions dated on or before the closing date." Only users with the special permission <strong>Can change transactions on/before the closing date or already reconciled</strong> can post on or before the closing date, or change an entry that was cleared in a bank reconciliation.</li>
+<li>A voided entry cannot be edited.</li>
+<li>When the <strong>Class</strong> at the top is empty but every line that has an account carries its own class, the program saves without asking about the class.</li>
+<li>Journal entry numbers (JE-) are shared with other entries the program makes itself, such as bank service charges, interest earned and cash over and short, so the numbers on this list may skip.</li>
+</ul>
+<h2 id="pg-coa-je_edits">Journal Entry Changes<a class="man-hash" href="#pg-coa-je_edits" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The changes to saved journal entries (and opening balance entries) that wait for approval, and the ones decided. A change is made only when a second user approves it: the maker asks, with the explanation; the checker compares and approves or rejects.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Journal Entry Changes, or <strong>Journal entry changes</strong> on the journal entry form. Users without the Approve right on Make Journal Entries see their own requests.</p>
+<p>The list has the tabs <strong>Waiting for approval</strong>, <strong>Approved</strong>, <strong>Rejected</strong>, <strong>Withdrawn</strong> and <strong>All</strong>, with who asked and when, the entry, the explanation, the status and who decided. Click <strong>Review</strong> (or <strong>Open</strong>) to see one change.</p>
+<h4 id="s-je-edits-review">Reviewing a change<a class="man-hash" href="#s-je-edits-review" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The change shows the entry, who asked, when and why, and <strong>Before and after</strong>: the entry as it is now and the entry as proposed, line by line, with the values the change alters highlighted. A change of the date, number, reference, memo, class or line of business is listed above the lines.</p>
+<ul>
+<li><strong>Approve and apply</strong> saves the entry with the proposed lines at once, through the same checks as a new entry (balanced debits and credits, the closing date), with the explanation as the reason in the audit trail.</li>
+<li><strong>Reject</strong> leaves the entry as it is. Type the reason in <strong>Remarks</strong> first: the user who asked reads it.</li>
+<li><strong>Withdraw the request</strong> (the user who asked, while it waits) takes the change back.</li>
+</ul>
+<h4 id="s-je-edits-good-to-know">Good to know<a class="man-hash" href="#s-je-edits-good-to-know" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>A change is approved by someone other than the user who asked for it, with the Approve right on Make Journal Entries (System Administration &gt; Page Access).</li>
+<li>"The journal entry was changed since this request was made." The entry changed after the request: reject it and ask again on the entry as it is now.</li>
+<li>A newer change to the same entry replaces the one waiting (it is marked <strong>Replaced by a later request</strong>).</li>
+<li>Every request, approval, rejection and withdrawal is in the audit trail.</li>
+</ul>
+<h2 id="pg-coa-default_accounts">Module Default Accounts<a class="man-hash" href="#pg-coa-default_accounts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>Each module posts to a set of default accounts: the receivable, the payable, the tax accounts, the inventory and cost of sales, the clearing accounts of the POS and so on. They are set up before any transaction is recorded. Items, tax codes, payment methods and fixed asset categories can carry their own accounts; the defaults are used when they do not.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Module Default Accounts, or the <strong>Module default accounts</strong> button on the Chart of Accounts.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_default_accounts__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_default_accounts__main.jpg" alt="Module Default Accounts for the demo company" width="1094" height="1263" loading="lazy" decoding="async"></a><figcaption>Module Default Accounts for the demo company</figcaption></figure>
+<h4 id="s-fields_5">Fields<a class="man-hash" href="#s-fields_5" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Default</th>
+<th>What it is used for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accounts Receivable</td>
+<td>Debited by invoices, statement charges and finance charges; credited by payments and credit memos.</td>
+</tr>
+<tr>
+<td>Creditable Withholding Tax</td>
+<td>Debited with the income tax (1% / 2%) a customer withholds on a payment.</td>
+</tr>
+<tr>
+<td>Creditable VAT Withheld</td>
+<td>Debited with the VAT (5%) a government customer withholds on a payment: a VAT credit (2550Q Item 16).</td>
+</tr>
+<tr>
+<td>Default Sales Income</td>
+<td>Credited by sales lines whose item has no income account.</td>
+</tr>
+<tr>
+<td>Finance Charge Income</td>
+<td>Credited by assessed finance charges.</td>
+</tr>
+<tr>
+<td>Output Tax</td>
+<td>Credited with VAT on sales when the tax code has no output tax account.</td>
+</tr>
+<tr>
+<td>Reimbursable Expense Income</td>
+<td>Credited when billable costs are added to an invoice.</td>
+</tr>
+<tr>
+<td>Sales Discounts</td>
+<td>Debited with early-payment discounts given on customer payments.</td>
+</tr>
+<tr>
+<td>Sales Returns and Allowances</td>
+<td>Debited by credit memo lines.</td>
+</tr>
+<tr>
+<td>Undeposited Funds</td>
+<td>Debited by payments and sales receipts waiting to be deposited; credited by Make Deposits.</td>
+</tr>
+<tr>
+<td>Accounts Payable</td>
+<td>Credited by bills; debited by bill payments and supplier debit memos.</td>
+</tr>
+<tr>
+<td>Default Purchases / Expense</td>
+<td>Debited by purchase lines whose non-stock item has no expense account.</td>
+</tr>
+<tr>
+<td>Input Tax</td>
+<td>Debited with VAT on purchases when the tax code has no input tax account.</td>
+</tr>
+<tr>
+<td>Purchase Discounts</td>
+<td>Credited with early-payment discounts taken in Pay Bills.</td>
+</tr>
+<tr>
+<td>Withholding Tax Payable (Expanded)</td>
+<td>Credited with the income tax (1% / 2%) withheld from suppliers in Pay Bills, until it is remitted (0619-E, 1601-EQ).</td>
+</tr>
+<tr>
+<td>VAT Withheld Payable</td>
+<td>Credited with the VAT (5%) withheld from suppliers in Pay Bills, until it is remitted (1600-VT).</td>
+</tr>
+<tr>
+<td>Advances to Suppliers</td>
+<td>Debited by advances paid to suppliers; credited when they are applied to bills.</td>
+</tr>
+<tr>
+<td>Cost of Goods Sold</td>
+<td>Debited with the cost of stock sold, when the item has no cost of sales account.</td>
+</tr>
+<tr>
+<td>Inventory Adjustment (Shrinkage)</td>
+<td>The other side of inventory adjustments and physical counts.</td>
+</tr>
+<tr>
+<td>Inventory Asset</td>
+<td>The stock account of items that have no asset account of their own.</td>
+</tr>
+<tr>
+<td>Processing / Disassembly Variance</td>
+<td>The variance of processing orders.</td>
+</tr>
+<tr>
+<td>Processing Labor &amp; Overhead Absorbed</td>
+<td>Credited with labor and overhead added to processing orders.</td>
+</tr>
+<tr>
+<td>Card Clearing</td>
+<td>POS card and other non-cash tenders whose payment method has no clearing account.</td>
+</tr>
+<tr>
+<td>Cash on Hand (Register)</td>
+<td>POS cash sales of a terminal that has no cash account of its own.</td>
+</tr>
+<tr>
+<td>Cash Over and Short</td>
+<td>The difference found when a POS shift is closed.</td>
+</tr>
+<tr>
+<td>E-wallet Clearing</td>
+<td>POS e-wallet tenders whose payment method has no clearing account.</td>
+</tr>
+<tr>
+<td>Bank / Merchant Charges</td>
+<td>Merchant fees on card settlements in Make Deposits, and the suggested service charge account in Reconcile.</td>
+</tr>
+<tr>
+<td>Interest Income</td>
+<td>The suggested interest account in Reconcile.</td>
+</tr>
+<tr>
+<td>Gain / Loss on Disposal of Assets</td>
+<td>The gain or loss when a fixed asset is disposed of.</td>
+</tr>
+<tr>
+<td>Opening Balance Equity</td>
+<td>The other side of opening balances brought in with items and fixed assets.</td>
+</tr>
+<tr>
+<td>Retained Earnings</td>
+<td>Holds the net income of earlier fiscal years on the Trial Balance and the Balance Sheet.</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="s-step-by-step_6">Step by step<a class="man-hash" href="#s-step-by-step_6" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To change a default account:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Module Default Accounts</strong>.</li>
+<li>In the card of the module, choose the new account in the drop-down beside the label.</li>
+<li>Change any other defaults you need.</li>
+<li>Click <strong>Save default accounts</strong>. The message says how many defaults were changed.</li>
+</ol>
+<h4 id="s-good-to-know_6">Good to know<a class="man-hash" href="#s-good-to-know_6" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>Changing a default affects only transactions saved from then on. Saved transactions keep what they posted, until they are edited and saved again.</li>
+<li>Only active accounts are offered. A default cannot be cleared back to <strong>— not set —</strong> once it is set.</li>
+<li>The boxes are greyed out, with the note "You need the "Chart of Accounts changes" permission to edit these.", for users who lack the edit permission on this page or the special permission <strong>Can change the Chart of Accounts and default accounts</strong>.</li>
+<li>If a default the program needs is missing, saving a transaction stops with "The default account "Undeposited Funds" is not set. Set it under Financial &gt; Module Default Accounts."</li>
+<li>Every change is written to the audit trail with the old and the new account.</li>
+</ul>
+<h2 id="pg-coa-lists">Terms, Tax Codes &amp; Other Lists<a class="man-hash" href="#pg-coa-lists" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>This page keeps the short lists the other modules use: payment terms, tax codes, payment methods, price levels, sales representatives, customer types, item categories and billing groups. Each list has its own tab.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Terms, Tax Codes &amp; Other Lists</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__main.jpg" alt="Terms, Tax Codes &amp; Other Lists on the Payment terms tab" width="1094" height="489" loading="lazy" decoding="async"></a><figcaption>Terms, Tax Codes &amp; Other Lists on the Payment terms tab</figcaption></figure>
+<p>Every tab works the same way: the list is on the left, and the <strong>Add</strong> panel on the right adds a new entry. Click <strong>Edit</strong> on a line to change it in the <strong>Edit</strong> panel.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__edit.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__edit.jpg" alt="Editing the payment terms &quot;2% 10 Net 30&quot;" width="1094" height="489" loading="lazy" decoding="async"></a><figcaption>Editing the payment terms &quot;2% 10 Net 30&quot;</figcaption></figure>
+<h4 id="s-step-by-step_7">Step by step<a class="man-hash" href="#s-step-by-step_7" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>To add an entry:</strong></p>
+<ol>
+<li>Click the tab of the list.</li>
+<li>Fill in the <strong>Add</strong> panel.</li>
+<li>Click <strong>Save</strong>, or <strong>Save &amp; New</strong> to add another one.</li>
+</ol>
+<p><strong>To change an entry:</strong></p>
+<ol>
+<li>Click <strong>Edit</strong> on its line.</li>
+<li>Change the fields.</li>
+<li>Click <strong>Save</strong>. <strong>Cancel</strong> returns to a blank Add panel.</li>
+</ol>
+<p>Entries cannot be deleted from this page. Untick <strong>Active</strong> to stop offering one on forms (the last three lists have no Active box).</p>
+<h4 id="s-payment-terms">Payment terms<a class="man-hash" href="#s-payment-terms" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__tab_terms.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__tab_terms.jpg" alt="The Payment terms tab" width="1094" height="489" loading="lazy" decoding="async"></a><figcaption>The Payment terms tab</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>For example "Net 30" or "2% 10 Net 30".</td>
+</tr>
+<tr>
+<td>Net days</td>
+<td>Days from the document date to the due date. "Due on receipt" is 0.</td>
+</tr>
+<tr>
+<td>Early-payment discount %</td>
+<td>The discount for paying early, for example 2.</td>
+</tr>
+<tr>
+<td>Discount if paid within (days)</td>
+<td>The number of days the discount is allowed, for example 10.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Untick to stop offering the terms.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Invoices and bills work out the due date from the terms. <a href="manual.php?c=customers#pg-cust-payments">Receive Payments</a> and <a href="manual.php?c=vendors#pg-vend-pay_bills">Pay Bills</a> offer the early-payment discount while it is still allowed.</p>
+<h4 id="s-tax-codes">Tax codes<a class="man-hash" href="#s-tax-codes" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__tab_tax_codes.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__tab_tax_codes.jpg" alt="The Tax codes tab" width="1094" height="500" loading="lazy" decoding="async"></a><figcaption>The Tax codes tab</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Code</td>
+<td>The short code shown on forms, for example VAT12.</td>
+</tr>
+<tr>
+<td>Name</td>
+<td>For example "VAT 12%".</td>
+</tr>
+<tr>
+<td>Rate %</td>
+<td>The tax rate. Non-taxable, VAT-exempt and zero-rated codes have 0.</td>
+</tr>
+<tr>
+<td>Output tax account</td>
+<td>The account credited with this tax on sales. Blank uses the default Output Tax account.</td>
+</tr>
+<tr>
+<td>Input tax account</td>
+<td>The account debited with this tax on purchases. Blank uses the default Input Tax account.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Untick to stop offering the code.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Prices on sales and purchase forms are VAT-exclusive: the tax of each line is the line amount times the rate.</p>
+<h4 id="s-payment-methods">Payment methods<a class="man-hash" href="#s-payment-methods" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__tab_payment_methods.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__tab_payment_methods.jpg" alt="The Payment methods tab" width="1094" height="631" loading="lazy" decoding="async"></a><figcaption>The Payment methods tab</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>For example Cash, GCash or Credit/Debit Card.</td>
+</tr>
+<tr>
+<td>Type</td>
+<td><strong>Cash</strong>, <strong>Check</strong>, <strong>Card</strong>, <strong>E-wallet</strong>, <strong>Bank transfer</strong>, <strong>Gift voucher</strong> or <strong>Other</strong>.</td>
+</tr>
+<tr>
+<td>POS clearing account</td>
+<td>The account a POS tender of this method is debited to, for example 1060 Card Clearing. When it is blank, a POS sale uses the default Card Clearing or E-wallet Clearing account, and a customer payment taken at the counter uses Undeposited Funds. Cash tenders always go to the terminal's cash account.</td>
+</tr>
+<tr>
+<td>POS payment option</td>
+<td>Ticked methods are offered as tenders on the POS Register.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Untick to stop offering the method.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Card and e-wallet balances waiting in their clearing accounts are settled to the bank in <a href="manual.php?c=banking#pg-bank-deposits">Make Deposits</a>.</p>
+<h4 id="s-price-levels">Price levels<a class="man-hash" href="#s-price-levels" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__tab_price_levels.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__tab_price_levels.jpg" alt="The Price levels tab" width="1094" height="587" loading="lazy" decoding="async"></a><figcaption>The Price levels tab</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>For example Wholesale or VIP.</td>
+</tr>
+<tr>
+<td>Adjust standard price by %</td>
+<td>The change from the item's standard price: -5 for 5% less, 5 for 5% more.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Untick to stop offering the level.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Every company has ten levels, <strong>Wholesale</strong>, <strong>VIP</strong>, <strong>Retail Plus</strong> and <strong>Price Level 4</strong> to <strong>Price Level 10</strong> as delivered; give them your own names here, or all at once with <strong>Rename price levels</strong> on <a href="manual.php?c=inventory#pg-inv-set_prices">Set Item Prices and Levels</a>. A customer with a price level gets these prices on sales forms and at the POS. Prices of single items can be set per level in Set Item Prices and Levels.</p>
+<h4 id="s-sales-representatives">Sales representatives<a class="man-hash" href="#s-sales-representatives" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__tab_sales_reps.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__tab_sales_reps.jpg" alt="The Sales representatives tab" width="1094" height="472" loading="lazy" decoding="async"></a><figcaption>The Sales representatives tab</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Field</th>
+<th>What to enter / what it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>The representative's name.</td>
+</tr>
+<tr>
+<td>Initials</td>
+<td>Short initials, for example MS.</td>
+</tr>
+<tr>
+<td>Linked user</td>
+<td>The user account of the representative, if any.</td>
+</tr>
+<tr>
+<td>Commission %</td>
+<td>The rate the Sales by Rep Summary report uses to work out each representative's commission.</td>
+</tr>
+<tr>
+<td>Active</td>
+<td>Untick to stop offering the representative.</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="s-customer-types">Customer types<a class="man-hash" href="#s-customer-types" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__tab_customer_types.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__tab_customer_types.jpg" alt="The Customer types tab" width="1094" height="378" loading="lazy" decoding="async"></a><figcaption>The Customer types tab</figcaption></figure>
+<p>Only a <strong>Name</strong>, for example Corporate, Government, Retail or School. You choose a customer's type in the <a href="manual.php?c=customers#pg-cust-center">Customer Center</a> and can find transactions by customer type in <a href="manual.php?c=home-and-reports#pg-home-find">Find</a>.</p>
+<h4 id="s-item-categories">Item categories<a class="man-hash" href="#s-item-categories" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__tab_item_categories.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__tab_item_categories.jpg" alt="The Item categories tab" width="1094" height="474" loading="lazy" decoding="async"></a><figcaption>The Item categories tab</figcaption></figure>
+<p>Only a <strong>Name</strong>, for example Accessories or Computers. You choose an item's category on the item form of the <a href="manual.php?c=inventory#pg-inv-items">Item List</a>, which also shows it in a Category column, and the POS reports can total the sales by category. A note above the tab points to the <a href="manual.php?c=inventory#pg-inv-categories">Category List</a> of the Inventory menu, which also deletes categories (moving their items to another one) and shows how many items each holds.</p>
+<h4 id="s-billing-groups">Billing groups<a class="man-hash" href="#s-billing-groups" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_lists__tab_billing_groups.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_lists__tab_billing_groups.jpg" alt="The Billing groups tab" width="1094" height="377" loading="lazy" decoding="async"></a><figcaption>The Billing groups tab</figcaption></figure>
+<p>Only a <strong>Name</strong>, for example "Monthly Service Contracts". A customer put in a billing group is picked together with the rest of the group in <a href="manual.php?c=customers#pg-cust-batch_invoices">Create Batch Invoices</a>.</p>
+<h4 id="s-good-to-know_7">Good to know<a class="man-hash" href="#s-good-to-know_7" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>"Enter a name." Every entry needs a name.</li>
+<li>Text fields hold up to 80 characters.</li>
+<li>Two entries can have the same name; check the list before adding.</li>
+<li>Every addition and change is written to the audit trail.</li>
+</ul>
+<h2 id="s-financial-reports">Financial reports<a class="man-hash" href="#s-financial-reports" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The reports of this module are listed under <strong>Financial &gt; Reports</strong> in the sidebar, and in the Chart of Accounts card of the <a href="manual.php?c=home-and-reports#pg-home-reports">Report Center</a>. They all read the general ledger, so they always agree with each other and with the transactions.</p>
+<p>Every report has the common report tools: <strong>Refresh</strong>, <strong>Print / PDF</strong>, <strong>Export to spreadsheet</strong>, <strong>Email link</strong>, <strong>Modify Report</strong> and <strong>Memorize</strong>, and a click on an account or a number opens the detail behind it. These are explained once in <a href="manual.php?c=home-and-reports#sec-reports">Working with reports</a>. This section describes what is special to each report.</p>
+<p>Most financial reports have a <strong>Class</strong> filter. <strong>All</strong> shows everything; a class shows only the ledger lines of that class; <strong>(Unclassified)</strong> shows only the lines that have no class.</p>
+<h3 id="pg-rpt-trial_balance">Trial Balance<a class="man-hash" href="#pg-rpt-trial_balance" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Trial Balance lists every account with a balance on a date, in a Debit or a Credit column, and checks that the two totals agree. Use it at month-end before you prepare the statements.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Trial Balance</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_trial_balance__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_trial_balance__report.jpg" alt="The Trial Balance as of 09/27/2026" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Trial Balance as of 09/27/2026</figcaption></figure>
+<p><strong>Filters:</strong> <strong>As of</strong> (the date of the balances) and <strong>Class</strong>.</p>
+<p><strong>The columns:</strong> <strong>Account</strong> (code and name; click it to open its General Ledger), <strong>Type</strong>, <strong>Debit</strong> and <strong>Credit</strong>. The <strong>TOTAL</strong> row adds each column.</p>
+<p><strong>How to read it:</strong> balance sheet accounts show their balance at the date. Income and expense accounts show only the activity of the current fiscal year, from the first day of the fiscal year to the As of date, as the note above the table says. The net income of earlier years is included in Retained Earnings. If the two totals differ, the note ends with <strong>Out of balance!</strong> in red.</p>
+<div class="man-callout man-tip"><div class="man-callout-t"><i class="bi bi-lightbulb"></i>Tip</div><p>Accounts with a zero balance are left out, so the list stays short.</p></div>
+<h3 id="pg-rpt-balance_sheet">Balance Sheet<a class="man-hash" href="#pg-rpt-balance_sheet" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Balance Sheet shows what the company owns, owes and is worth on a date.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Balance Sheet</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_balance_sheet__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_balance_sheet__report.jpg" alt="The Balance Sheet: the classification Cash with 1000 Cash, its sub-accounts and its total, then Accounts Receivable and Loans Receivable" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Balance Sheet: the classification Cash with 1000 Cash, its sub-accounts and its total, then Accounts Receivable and Loans Receivable</figcaption></figure>
+<p><strong>Filters:</strong> <strong>As of</strong> and <strong>Class</strong>.</p>
+<p><strong>How to read it:</strong> the report has three parts. <strong>ASSETS</strong> has Current Assets (the Bank, Accounts Receivable and Other Current Asset types and the types of yours that behave as them), Fixed Assets and Other Assets. <strong>LIABILITIES</strong> has Current Liabilities (Accounts Payable, Credit Card and Other Current Liability) and Long-term Liabilities. <strong>EQUITY</strong> lists the equity accounts and the line <strong>Net Income (fiscal year to date)</strong>; Retained Earnings includes the net income of earlier years. Each group has its total, and the last line is <strong>TOTAL LIABILITIES AND EQUITY</strong>.</p>
+<p>Inside a group, every account type is a classification of its own: a heading with the name of the type, its accounts, and <strong>Total</strong> with the type's name (see <a href="#pg-coa-account_types">Account Types</a>). Where a group holds only one built-in type and none of yours, as Fixed Assets usually does, the type heading is left out. A sub-account is shown under its main account, and a main account with sub-accounts is a heading followed by its sub-accounts, a line <strong>(own entries)</strong> when something was posted to the main account itself, and its total. In the picture, Current Assets starts with the classification <strong>Cash</strong>: 1000 - Cash with its sub-accounts 1001 to 1020 and <strong>Total 1000 - Cash</strong> of 1,469,480.61, then 1009 - Cash on Hand - Accounting Office with 290,850.32, and <strong>Total Cash</strong> of 1,760,330.93.</p>
+<p>Contra accounts show as negative figures: 1525 Accumulated Depreciation - Machinery shows -28,950.00 under Fixed Assets. The note above the table says "Assets = Liabilities + Equity." when the two sides agree.</p>
+<div class="man-callout man-tip"><div class="man-callout-t"><i class="bi bi-lightbulb"></i>Tip</div><p>For a short balance sheet with the main accounts only, open the <a href="#pg-rpt-balance_sheet_summary">Balance Sheet Summary</a>.</p></div>
+<div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>Filtered by class, the two sides may not agree, because a journal entry or cash voucher can carry a different class on each line. The note then explains this instead of showing an error.</p></div>
+<h3 id="pg-rpt-balance_sheet_summary">Balance Sheet Summary<a class="man-hash" href="#pg-rpt-balance_sheet_summary" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Balance Sheet with the main accounts only: each main account is one line with the total of its sub-accounts, and the sub-accounts themselves are not listed. Use it for the board and the members when the full list is too long.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Balance Sheet Summary</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_balance_sheet_summary__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_balance_sheet_summary__report.jpg" alt="The Balance Sheet Summary: 1000 Cash on one line with the total of its sub-accounts" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Balance Sheet Summary: 1000 Cash on one line with the total of its sub-accounts</figcaption></figure>
+<p><strong>Filters:</strong> <strong>As of</strong> and <strong>Class</strong>, as on the Balance Sheet.</p>
+<p><strong>How to read it:</strong> the parts, groups and account-type classifications are those of the <a href="#pg-rpt-balance_sheet">Balance Sheet</a>, and so are all the totals. In the picture, <strong>1000 - Cash</strong> is a single line of 1,469,480.61, the total of its eight sub-accounts, and <strong>Total Cash</strong> is 1,760,330.93 as on the Balance Sheet. Click a main account that has sub-accounts to open the Balance Sheet for the same date, where they are listed; click any other account to open its General Ledger. The <strong>Net Income (fiscal year to date)</strong> line opens the Income Statement Summary.</p>
+<h3 id="pg-rpt-balance_sheet_class">Balance Sheet by Class<a class="man-hash" href="#pg-rpt-balance_sheet_class" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The same balance sheet with one column per class, an <strong>Unclassified</strong> column for entries without a class, and a <strong>Total</strong> column.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Balance Sheet by Class, or the <strong>Balance Sheet by Class</strong> button on the <a href="#pg-coa-classes">Class List</a>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_balance_sheet_class__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_balance_sheet_class__report.jpg" alt="The Balance Sheet by Class with Head Office, Makati Store, Cebu Store and Unclassified" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Balance Sheet by Class with Head Office, Makati Store, Cebu Store and Unclassified</figcaption></figure>
+<p><strong>Filters:</strong> <strong>As of</strong> only.</p>
+<p><strong>How to read it:</strong> every active class has a column, and an inactive class has one when it has entries. Click an amount in a class column to open the General Ledger of that account for that class. The note says "Assets = Liabilities + Equity in total." A single column rarely balances on its own, because a payment received by one branch may settle the invoice of another, or a journal line may carry its own class. The note names the columns that do not balance.</p>
+<h3 id="pg-rpt-trial_balance_range">Trial Balance by Date Range<a class="man-hash" href="#pg-rpt-trial_balance_range" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>This trial balance shows only the movement of each account between two dates, not the balance carried from before.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Trial Balance by Date Range</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_trial_balance_range__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_trial_balance_range__report.jpg" alt="The Trial Balance by Date Range for September 2026" width="1094" height="859" loading="lazy" decoding="async"></a><figcaption>The Trial Balance by Date Range for September 2026</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> (a preset such as <strong>This month</strong>), <strong>From</strong>, <strong>To</strong> and <strong>Class</strong>.</p>
+<p><strong>The columns:</strong> <strong>Account</strong>, <strong>Type</strong>, and the net movement in <strong>Debit</strong> or <strong>Credit</strong>, with a <strong>TOTAL</strong> row.</p>
+<p><strong>How to read it:</strong> in the picture, 1010 Cash in Bank - BDO Checking has a debit of 203,828.98: the account went up by that much in September. Use it to review one month's activity or to check a period before you close it.</p>
+<h3 id="pg-rpt-trial_balance_totals">Trial Balance of Totals<a class="man-hash" href="#pg-rpt-trial_balance_totals" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>For each account, the total of all debits and the total of all credits posted between two dates, and their difference.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Trial Balance of Totals</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_trial_balance_totals__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_trial_balance_totals__report.jpg" alt="The Trial Balance of Totals for September 2026" width="1094" height="848" loading="lazy" decoding="async"></a><figcaption>The Trial Balance of Totals for September 2026</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong>, <strong>From</strong>, <strong>To</strong> and <strong>Class</strong>.</p>
+<p><strong>The columns:</strong> <strong>Account</strong>, <strong>Type</strong>, <strong>Total debit</strong>, <strong>Total credit</strong> and <strong>Net movement</strong> (debits less credits). The <strong>TOTAL</strong> row shows the grand totals; when the books balance, the total debits equal the total credits and the net movement is 0.00.</p>
+<div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>In September, 1010 Cash in Bank - BDO Checking received 288,828.98 and paid out 85,000.00, a net movement of 203,828.98. The Trial Balance by Date Range shows only the 203,828.98.</p></div>
+<h3 id="pg-rpt-balance_sheet_range">Balance Sheet by Date Range<a class="man-hash" href="#pg-rpt-balance_sheet_range" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>A balance sheet built only from the transactions dated between two dates. Every figure is the change during the period, not the balance at the end of it.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Balance Sheet by Date Range</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_balance_sheet_range__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_balance_sheet_range__report.jpg" alt="The Balance Sheet by Date Range for September 2026" width="1094" height="942" loading="lazy" decoding="async"></a><figcaption>The Balance Sheet by Date Range for September 2026</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong>, <strong>From</strong>, <strong>To</strong> and <strong>Class</strong>.</p>
+<p><strong>The columns:</strong> <strong>Account</strong> and <strong>Change in the period</strong>.</p>
+<p><strong>How to read it:</strong> assets are shown debit-positive, and liabilities and equity credit-positive, so both sides agree. The accounts are classified by account type, with each main account and its sub-accounts, as on the <a href="#pg-rpt-balance_sheet">Balance Sheet</a>. The <strong>Equity</strong> section includes <strong>Net income of the period</strong>. A negative asset figure means the asset went down; in the picture, 1200 Inventory fell by 129,128.33 during September.</p>
+<h3 id="pg-rpt-budget_income">Income Statement vs Budget<a class="man-hash" href="#pg-rpt-budget_income" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>Puts the actual income and expenses beside an income statement budget and shows the difference.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Income Statement vs Budget, the <strong>Income statement vs budget</strong> button on <a href="#pg-coa-budgets">Set Up Budgets</a>, or <strong>Compare with actual</strong> on a budget.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_budget_income__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_budget_income__report.jpg" alt="Income Statement vs Budget before any budget is set up" width="1094" height="504" loading="lazy" decoding="async"></a><figcaption>Income Statement vs Budget before any budget is set up</figcaption></figure>
+<p><strong>Filters:</strong></p>
+<ul>
+<li><strong>Budget:</strong> the budget to compare with. With none chosen, the newest income statement budget is used.</li>
+<li><strong>Show:</strong> <strong>Year to date</strong> (from the first month of the budget to the month the fiscal year has reached today), <strong>The whole fiscal year</strong>, or <strong>One month at a time</strong>.</li>
+<li><strong>Month:</strong> the month of the fiscal year (Month 1 is the first month of the fiscal year), used with <strong>One month at a time</strong>.</li>
+<li><strong>Class:</strong> shown above the report, but the figures always follow the class of the budget itself.</li>
+</ul>
+<p><strong>The columns:</strong> <strong>Account</strong>, <strong>Actual</strong>, <strong>Budget</strong>, <strong>Difference</strong> (actual less budget) and <strong>% of budget</strong> (how much of the budget was reached). Accounts are grouped under INCOME, COST OF GOODS SOLD, EXPENSES, OTHER INCOME and OTHER EXPENSES, each with a total, and a <strong>NET INCOME</strong> line closes the report: income and other income, less cost of goods sold, expenses and other expenses. It matches the net income of the <a href="#pg-rpt-income_statement">Income Statement</a> for the same months. The note names the budget and the months shown.</p>
+<p><strong>How to read it:</strong> for income, a positive difference is good news; for an expense, a positive difference means you spent more than planned. Click an account to see its entries in the General Ledger.</p>
+<p>When no budget exists, the report says "No budget has been set up yet. Financial &gt; Set Up Budgets makes one."</p>
+<h3 id="pg-rpt-budget_balance">Balance Sheet vs Budget<a class="man-hash" href="#pg-rpt-budget_balance" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>Puts the actual balances of the asset, liability and equity accounts beside a balance sheet budget.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Balance Sheet vs Budget, or <strong>Compare with actual</strong> on a balance sheet budget.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_budget_balance__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_budget_balance__report.jpg" alt="Balance Sheet vs Budget before any balance sheet budget is set up" width="1094" height="475" loading="lazy" decoding="async"></a><figcaption>Balance Sheet vs Budget before any balance sheet budget is set up</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Budget</strong>; <strong>Show</strong> (<strong>As at the latest month</strong>, <strong>The whole fiscal year</strong> or <strong>One month at a time</strong>); <strong>Month</strong>; <strong>Class</strong> (shown, but the figures follow the class of the budget).</p>
+<p><strong>The columns:</strong> <strong>Account</strong>, <strong>Actual</strong>, <strong>Budget</strong>, <strong>Difference</strong> and <strong>% of budget</strong>, grouped under ASSETS, LIABILITIES and EQUITY with totals.</p>
+<p><strong>How to read it:</strong> a balance is a figure at a point in time, so the report compares the balances at the end of the last month shown, not a sum of months. With <strong>As at the latest month</strong>, that is the month the fiscal year has reached today. The equity accounts show only what was posted to them; the profit of the current year is not added to them on this report.</p>
+<h3 id="pg-rpt-income_statement">Income Statement<a class="man-hash" href="#pg-rpt-income_statement" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Income Statement (profit and loss) shows the income, costs and expenses of a period and the resulting net income.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Income Statement</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_income_statement__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_income_statement__report.jpg" alt="The Income Statement for the fiscal year to date" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Income Statement for the fiscal year to date</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> (starts at <strong>Fiscal year to date</strong>), <strong>From</strong>, <strong>To</strong>, <strong>Class</strong>, and <strong>Columns</strong>: <strong>Total only</strong>, or one column per <strong>Month</strong>, <strong>Quarter</strong> or <strong>Year</strong> followed by a <strong>Total</strong> column.</p>
+<p><strong>How to read it:</strong> the report runs <strong>Income</strong>, <strong>Cost of Goods Sold</strong>, <strong>GROSS PROFIT</strong>, <strong>Expenses</strong>, <strong>NET OPERATING INCOME</strong>, <strong>Other Income</strong>, <strong>Other Expenses</strong> and <strong>NET INCOME</strong>. Inside each section every account type is a classification of its own when the section has a type of yours (a heading, its accounts and its total), and a main account with sub-accounts is a heading followed by its sub-accounts and its total, as on the <a href="#pg-rpt-balance_sheet">Balance Sheet</a>. Contra-income accounts such as 4050 Sales Returns and Allowances and 4060 Sales Discounts show as negative figures inside Income. Click an account to see its entries.</p>
+<div class="man-callout man-tip"><div class="man-callout-t"><i class="bi bi-lightbulb"></i>Tip</div><p>Choose <strong>Columns: Month</strong> with <strong>Dates: This fiscal year</strong> to see the months side by side and spot an expense that jumped.</p></div>
+<h3 id="pg-rpt-income_statement_summary">Income Statement Summary<a class="man-hash" href="#pg-rpt-income_statement_summary" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Income Statement with the main accounts only: each main account is one line with the total of its sub-accounts, and the sub-accounts themselves are not listed.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Income Statement Summary</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_income_statement_summary__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_income_statement_summary__report.jpg" alt="The Income Statement Summary for the fiscal year to date" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Income Statement Summary for the fiscal year to date</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> (starts at <strong>Fiscal year to date</strong>), <strong>From</strong>, <strong>To</strong>, <strong>Class</strong> and <strong>Columns</strong>, as on the Income Statement.</p>
+<p><strong>How to read it:</strong> the sections, the account-type classifications and every total, from <strong>GROSS PROFIT</strong> to <strong>NET INCOME</strong>, are those of the <a href="#pg-rpt-income_statement">Income Statement</a>. A main account with sub-accounts is one line with their total; click it to open the Income Statement for the same dates, where they are listed. Any other account opens its General Ledger. In the demo company the income and expense accounts have no sub-accounts, so the summary lists the same lines as the Income Statement.</p>
+<h3 id="pg-rpt-income_statement_class">Income Statement by Class<a class="man-hash" href="#pg-rpt-income_statement_class" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Income Statement with one column per class, an <strong>Unclassified</strong> column and a <strong>Total</strong> column. Use it to compare the profit of your branches, departments or projects.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Income Statement by Class, or the <strong>Income Statement by Class</strong> button on the <a href="#pg-coa-classes">Class List</a>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_income_statement_class__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_income_statement_class__report.jpg" alt="The Income Statement by Class for the fiscal year to date" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Income Statement by Class for the fiscal year to date</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong>, <strong>From</strong> and <strong>To</strong>.</p>
+<p><strong>How to read it:</strong> the lines are the same as on the Income Statement. Click an amount in a class column to see the entries of that account for that class. In the picture, Makati Store had sales of 56,773.50 and a gross profit of 13,930.17 in the fiscal year to date. Large Unclassified figures mean transactions were saved without a class.</p>
+<h3 id="pg-rpt-cash_flow">Statement of Cash Flows<a class="man-hash" href="#pg-rpt-cash_flow" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Statement of Cash Flows explains how the cash went up or down in a period, by the indirect method.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Statement of Cash Flows</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_cash_flow__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_cash_flow__report.jpg" alt="The Statement of Cash Flows: operating activities by account type, with the net change in each type" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Statement of Cash Flows: operating activities by account type, with the net change in each type</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> (starts at <strong>Fiscal year to date</strong>), <strong>From</strong>, <strong>To</strong> and <strong>Class</strong>.</p>
+<p><strong>How to read it:</strong></p>
+<ul>
+<li><strong>OPERATING ACTIVITIES</strong> starts from the <strong>Net Income</strong> of the period. The change in the accumulated depreciation accounts (Fixed Asset accounts with a Credit normal balance) is added back as "(depreciation)", because depreciation uses no cash. Then come the account types linked to operating activities, each with its accounts and the line <strong>Net change in</strong> and the type's name: with the built-in links, Accounts Receivable, Other Current Asset, Accounts Payable, Credit Card and Other Current Liability.</li>
+<li><strong>INVESTING ACTIVITIES</strong> shows the change in the accounts of the types linked to investing activities: with the built-in links, Fixed Asset and Other Asset.</li>
+<li><strong>FINANCING ACTIVITIES</strong> shows the change in the accounts of the types linked to financing activities: with the built-in links, Long Term Liability and Equity.</li>
+<li><strong>NET CASH INCREASE (DECREASE) FOR THE PERIOD</strong>, <strong>Cash at beginning of period</strong> and <strong>CASH AT END OF PERIOD</strong> close the report.</li>
+</ul>
+<p>Which section an account is in follows its account type, as set under <a href="#pg-coa-account_types">Account Types</a>; a sub-account follows the type of its main account. Each account is shown once, as one line with the total of its sub-accounts for a main account, so the sections add up to the change in the cash. In the demo company the type <strong>Loans Receivable</strong> is an operating activity, shown with its own heading and <strong>Net change in Loans Receivable</strong>.</p>
+<p>An increase in an asset uses cash and shows as a negative figure; an increase in a liability or equity provides cash and shows as a positive figure. The cash is the accounts of the types linked to <strong>Cash and cash equivalents</strong>, which the note above the table names, for example "Indirect method. Cash = the accounts of the types counted as cash and cash equivalents (Cash, Bank)". Money still in Undeposited Funds or in the card and e-wallet clearing accounts is treated as an operating asset until it is deposited, unless you give those accounts a type linked to cash and cash equivalents.</p>
+<p>The cash at the end of the period equals the total of the cash accounts on the <a href="#pg-rpt-balance_sheet">Balance Sheet</a> at the same date: in the demo company, its <strong>Total Cash</strong>. If it does not, the note says "Does not tie to the cash accounts" in red with the balance it expected.</p>
+<h3 id="pg-rpt-general_ledger">General Ledger<a class="man-hash" href="#pg-rpt-general_ledger" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The General Ledger lists every entry posted to each account, with a running balance. It is where you land when you click an account on any other report.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; General Ledger, or click an account name on the <a href="#pg-coa-accounts">Chart of Accounts</a> or on a financial report.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_general_ledger__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_general_ledger__report.jpg" alt="The General Ledger for September 2026" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The General Ledger for September 2026</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> (starts at <strong>This month</strong>), <strong>From</strong>, <strong>To</strong>, <strong>Account</strong> (blank for all accounts), <strong>Class</strong> and <strong>Search</strong> (a word in the memo, the number or the name).</p>
+<p><strong>The columns:</strong> <strong>Date</strong>, <strong>Type</strong>, <strong>Num</strong> (click it to open the transaction), <strong>Name</strong>, <strong>Memo</strong>, <strong>Class</strong>, <strong>Debit</strong>, <strong>Credit</strong> and <strong>Balance</strong>.</p>
+<p><strong>How to read it:</strong> each account starts with its <strong>Beginning balance</strong> at the From date and ends with a <strong>Total</strong> line showing the total debits, total credits and the ending balance. The balance is shown on the account's normal side (its <strong>Normal balance</strong> on the Chart of Accounts): for an asset or expense account debits increase it and credits decrease it; for a liability, equity or income account, such as 4500 Water Sales or 2000 Accounts Payable, credits increase it and debits decrease it, so its credit balance shows as a positive amount. A negative balance means the account is on its other side. For income and expense accounts, the beginning balance counts only from the start of the fiscal year. Accounts with no entries and no beginning balance are left out.</p>
+<h3 id="pg-rpt-subsidiary_ledger">Subsidiary Ledger<a class="man-hash" href="#pg-rpt-subsidiary_ledger" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Subsidiary Ledger lists the entries of one name (or of every name) on the accounts that keep a subsidiary ledger: a customer, a supplier, an employee or an other name, with a running balance per account.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Subsidiary Ledger, or click a name on the <a href="#pg-rpt-schedule_of_accounts">Schedule of Accounts</a>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_subsidiary_ledger__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_subsidiary_ledger__report.jpg" alt="The Subsidiary Ledger for the fiscal year, starting with ABC Trading Corp." width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Subsidiary Ledger for the fiscal year, starting with ABC Trading Corp.</figcaption></figure>
+<p><strong>Filters:</strong></p>
+<ul>
+<li><strong>Dates</strong>, <strong>From</strong> and <strong>To</strong> (starts at <strong>This fiscal year</strong>).</li>
+<li><strong>Account:</strong> one account, or blank for every account marked <strong>With SL</strong>. While no account is marked With SL, a blank Account lists every account the names transacted.</li>
+<li><strong>Class.</strong></li>
+<li><strong>Subsidiary ledger (name):</strong> one customer, supplier, employee or other name, or <strong>— every name —</strong>.</li>
+<li><strong>Which entries:</strong> <strong>From and to: the entries between the two dates</strong>, or <strong>To: every entry up to the To date</strong>.</li>
+</ul>
+<p><strong>The columns:</strong> <strong>Date</strong>, <strong>Ref ID</strong> (the transaction number; click it to open the transaction), <strong>Account</strong>, <strong>Description</strong> (the memo, or the transaction type), <strong>Class</strong>, <strong>Debit</strong>, <strong>Credit</strong> and <strong>Balance</strong>.</p>
+<p><strong>How to read it:</strong> the report is grouped by name, then by account, with a total line for each account and a <strong>Total</strong> row for the whole report. The <strong>Balance</strong> is debits less credits, running down each account. With <strong>From and to</strong>, the balance starts at zero on the From date, so it shows the movement of the period; choose <strong>To: every entry up to the To date</strong> to see what the name stands at on the To date. When you choose one name and leave <strong>Account</strong> blank, every account marked With SL is listed for that name, including those it has no entries on, so you see its whole subsidiary ledger at once.</p>
+<div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>To see what an employee still owes on cash advances, choose the advances account in <strong>Account</strong>, the employee in <strong>Subsidiary ledger (name)</strong> and <strong>To: every entry up to the To date</strong>.</p></div>
+<h3 id="pg-rpt-schedule_of_accounts">Schedule of Accounts<a class="man-hash" href="#pg-rpt-schedule_of_accounts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Schedule of Accounts lists, for each account, the names that transacted it and the amount each one stands at. Use it to support an account balance with its list of names, for example a schedule of accounts receivable or of employee advances.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Schedule of Accounts</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_schedule_of_accounts__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_schedule_of_accounts__report.jpg" alt="The Schedule of Accounts for the fiscal year" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Schedule of Accounts for the fiscal year</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong>, <strong>From</strong>, <strong>To</strong>, <strong>Account</strong> (blank for every account marked With SL), <strong>Class</strong> (blank includes every class and the entries without one) and <strong>Which entries</strong> (as on the Subsidiary Ledger).</p>
+<p><strong>The columns:</strong></p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SL Code</td>
+<td>A short code for the name: c for a customer, v for a supplier, o for an employee or other name, followed by its number.</td>
+</tr>
+<tr>
+<td>Subsidiary Ledger Name</td>
+<td>The name. Click it to open its Subsidiary Ledger for that account.</td>
+</tr>
+<tr>
+<td>Kind</td>
+<td>Customer, Supplier, Employee or Other name.</td>
+</tr>
+<tr>
+<td>Current Amount</td>
+<td>What the name stands at, on the account's normal side.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>How to read it:</strong> each account is a group with a <strong>Total</strong> line; names that net to zero are left out. The amounts follow the account's normal balance, so on 1100 Accounts Receivable a positive amount is what the customer owes. For a true balance rather than a period's movement, choose <strong>To: every entry up to the To date</strong>. While no account is marked With SL and no account is chosen, the note asks you to choose an account or tick With SL on the accounts you want a schedule of.</p>
+<h3 id="pg-rpt-journal">Journal<a class="man-hash" href="#pg-rpt-journal" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The Journal lists every posted transaction with all its ledger lines, in date order: the book of original entry.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Reports &gt; Journal</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_journal__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_journal__report.jpg" alt="The Journal for September 2026" width="1094" height="1100" loading="lazy" decoding="async"></a><figcaption>The Journal for September 2026</figcaption></figure>
+<p><strong>Filters:</strong> <strong>Dates</strong> (starts at <strong>This month</strong>), <strong>From</strong>, <strong>To</strong>, <strong>Class</strong> and <strong>Type</strong> (one kind of transaction, for example Check or Deposit).</p>
+<p><strong>The columns:</strong> <strong>Date</strong>, <strong>Type</strong> and <strong>Num</strong> (on the first line of each transaction; click the number to open it), <strong>Account</strong>, <strong>Memo</strong>, <strong>Class</strong>, <strong>Debit</strong> and <strong>Credit</strong>. The <strong>TOTAL</strong> row adds the debits and the credits.</p>
+<p><strong>How to read it:</strong> each transaction starts on a new line with a rule above it. Use the <strong>Type</strong> filter to review, for example, all the deposits of the month. With a <strong>Class</strong> chosen, only the lines of that class are shown. The report shows at most 2,000 transactions; narrow the dates if you need more.</p>

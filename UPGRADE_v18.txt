@@ -1,0 +1,57 @@
+G-SMaRT Accounting - version 18 (2026-10-01)
+=============================================
+
+This package holds only the files that were added or changed since version 17.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Do NOT import database/accounting_system.sql or accounting_system_clean.sql over a
+live database (they drop and recreate every table; they are for new installs only).
+On a database already in use, run this one migration file (MySQL 5.5 safe, re-runnable):
+
+    database/migrations/2026_10_01_price_levels_approval_codes.sql
+
+With several companies, run it on every company database (Super Admin > Companies >
+Database updates > Update all companies does that). Until it is run, the system stops
+after log-in with a page that names it.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v18.xlsx")
+--------------------------------------------------------------------------
+ 1. Vendor Center: the list narrows as you type (incremental search).
+ 2. Inventory Center: the list narrows as you type.
+ 3. Inventory Center: Site filter. All sites by default; with a site chosen, the
+    quantities, open orders and transaction history shown are that site's alone.
+ 4. Customer Center: the list narrows as you type.
+ 5. CSV import: files saved by Excel in Windows encoding (curly quotes, dashes,
+    accented letters), UTF-8 or UTF-16 are read correctly on every import type.
+    The "Incorrect string value '\x94...'" error is gone.
+ 6. Processing order: Total inputs and Total outputs lines on the saved order and
+    on the printout.
+ 7. Processing order: Variance line (inputs less outputs) on the order and the printout.
+ 8. Price levels can be renamed (and their percentage and active flag set) with the
+    "Rename price levels" button on Set Item Prices and Levels.
+ 9. Price levels 6 to 10 added (ten levels per company).
+10. Transfer Inventory: the list shows From site, To site and the quantity moved;
+    the saved transfer and its printout name both sites.
+11. System approval through code: Point of Sale > Approval Codes. A supervisor
+    generates a one-time alphanumeric code (optionally for one user, one page and a
+    validity period); the cashier types it on the "Approval code" tab of the
+    Supervisor approval box (POS Register and every other form that asks for
+    approval). The code works once and then expires; the page lists every code as
+    Open / Used (by whom, when, on which transaction) / Expired / Cancelled. Only
+    the roles that may approve at the POS Register (and administrators) can
+    generate codes.
+12. POS Sales by Cashier and POS Sales by Payment Method are now one report,
+    "POS Sales by Cashier & Payment Method".
+13. Modify Report (the former Design button, on every report): add or remove
+    columns, including the related fields of the records behind each row
+    (transaction, customer, supplier, item, account, fixed asset), plus the heading
+    and footer options ("Prepared on ..." line, a line above the foot, and the
+    existing title, subtitle, company lines, logo, printed line, signatures and
+    page numbers). Added fields go into the export, the scheduled e-mail and saved
+    layouts.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v18.docx) are updated for all of the above.

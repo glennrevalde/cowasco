@@ -1,0 +1,64 @@
+Rolling back water migration run 20261014-081917-aba5 on coop_water_rehearsal (source mnssmc_src)
+  phases found: reference, coa, users, bill_codes, accounts, suppliers, membership, history, verify
+   water_postings of the run                                                     0
+   items made for inventory bill codes                                           1
+   rows copied into water_audit_logs                                          6891
+   rows copied into legacy_chartofaccntstbl                                    361
+   rows copied into legacy_access_control_preset_pages                         180
+   rows copied into legacy_access_control_presets                                8
+   rows copied into legacy_access_control_pages                                 66
+   rows copied into legacy_operator_profile_page_permissions                   375
+   rows copied into legacy_operator_profile                                     19
+   rows copied into legacy_profile                                              18
+   rows copied into legacy_operator                                              7
+   rows copied into legacy_suppliers                                             4
+   rows copied into legacy_book_types                                            9
+   rows copied into legacy_postingmethod                                         4
+   rows copied into legacy_subsidiaryledger                                   6930
+   rows copied into legacy_savingsinterest                                       1
+   rows copied into legacy_savaccnttransaction                                7872
+   rows copied into legacy_savingsaccounts                                     364
+   rows copied into legacy_savingstranscode                                      7
+   rows copied into discounted_members                                          37
+   rows copied into water_accounts                                            6888
+   rows copied into data_import_rows                                          6888
+   rows copied into data_import_mapping_rules                                   21
+   rows copied into data_import_batches                                          1
+   rows copied into bill_periods                                                 1
+   rows copied into water_billing_settings                                      21
+   rows copied into bill_codes                                                   3
+   rows copied into membershipinfo                                             361
+   rows copied into syssequence                                                 19
+   rows copied into water_meter_members                                         52
+   rows copied into discount_privilege_rules                                     1
+   rows copied into discounts                                                    3
+   rows copied into water_meter_discounts                                        1
+   rows copied into water_pipe_sizes                                             7
+   rows copied into rate_code                                                    4
+   rows copied into ic_segments                                                  1
+   rows copied into ic_divisions                                                 1
+   rows copied into branches                                                     1
+   rows copied into bussinessprofile                                             1
+   rows copied into membercontactchannels                                     1956
+   rows copied into contactchannels                                              4
+   rows copied into memberaddress                                             6888
+   rows copied into addresses                                                 6888
+   rows copied into addresstype                                                  3
+   rows copied into cities                                                     145
+   party_crosswalk rows (water_acct)                                          6888
+   customers of water-service accounts (made by the postings)                    0
+   parties of water-service accounts                                          6888
+   vendors created from legacy suppliers                                         4
+   party_crosswalk rows (water_supp)                                             4
+   parties of legacy suppliers                                                   4
+   user page overrides                                                         168
+   user roles                                                                   20
+   users created                                                                 6
+   roles created                                                                10
+   water_user_map rows                                                           7
+   water default accounts cleared                                                4
+   accounts imported from the legacy chart                                     318
+   water_coa_map rows                                                          361
+   cooperative branches created                                                  1
+   classes created                                                               1
+Rollback of run 20261014-081917-aba5 done.

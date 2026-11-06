@@ -1,0 +1,71 @@
+G-SMaRT Integrated Cooperative System - version 42 (2026-11-01)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v13.xlsx. This package holds only
+the files added or changed since version 41. Copy the folder over your installation,
+keeping the folder structure. config/config.php is not included and is never changed.
+
+Database
+--------
+One migration, for MySQL 5.5 (back up the database first):
+
+  database/migrations/2027_03_14_share_capital_billing.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         php tools/upgrade.php
+
+It adds three tables (share_capital_plans, share_capital_bills, share_capital_collections),
+one column payment_transactions.share_capital_amount (0.00 on every receipt on file), the
+payment and item type "sharecap", and the page Water Billing > Billing > Fixed Share
+Capital Billing, after One-Time Billing, given to the roles that have One-Time Billing
+with the same rights. Nothing is deleted and no amount changes. Safe to run a second
+time. Until it is run, the program (the water pages too) stops after log-in with a page
+that names it.
+
+database/accounting_system.sql and accounting_system_clean.sql are written again with
+it (a new installation needs nothing else).
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed (see docs/ADDITIONAL_MODULE_V13_CHECKLIST.md)
+----------------------------------------------------------
+- Inventory Center, transaction history: "On hand after" and "Avg after" are worked out
+  in the order of the transaction dates. A transaction recorded later with an earlier
+  date (back-dated) takes its place and the balances after it are right; the top line
+  is the quantity on hand. Nothing stored changes.
+- Water Billing > Billing > Fixed Share Capital Billing (new):
+    Transaction code upon collection  a savings deposit code (CSD Cash Savings Deposit
+                                      until another is chosen) and its Class
+    Members on fixed billing          Member name, Share capital account (open share
+                                      capital accounts only), Frequency (monthly,
+                                      quarterly, semi-annually, annually), Start date,
+                                      Posting day (1 to 31), Amount; Edit, Hold /
+                                      Resume, Delete, and the Bills of each member
+  A bill is posted on its posting day (the last day of a shorter month), with NO journal
+  entry: it only tracks the contribution still unpaid. Hold stops the bills until
+  Resume (the days on hold are not billed); Delete cancels the unpaid bills. An edit starts
+  after the period already billed (nothing is billed twice or back-billed). A closed
+  account or a member who left is not billed.
+- Collections (Cashier): the share capital bills are open items of the member's
+  water-service account (the same person). Collected, each is a deposit to the share
+  capital account by the code of the page: Dr the cashier's cash, Cr share capital, a
+  row of the Savings Account Transaction (savings number series, the receipt as OR)
+  ready for Passbook Printing. The receipt shows FIXED SHARE CAPITAL; Collection
+  Corrections reverses it with ECSD (the deposit cannot be deleted or corrected on its own
+  in the savings module). The product's minimum deposit does not apply to these
+  contributions; they are never overdue (no penalty on them).
+- Collection Summary: Report type Summary (as before, with a Share capital column) or
+  Detailed (a column for each code name collected, never put together). Water Reports >
+  Collection & Payments and Payment History show the share capital too.
+
+Set-up after the upgrade
+------------------------
+- Water Billing > Billing > Fixed Share Capital Billing > Collection: check the
+  transaction code (CSD) and choose the class, then Save.
+- Add the members (Add member). A member needs an open share capital account; the
+  cashier collects on the member's water-service account, the one opened under the
+  member's party (Water Service Accounts > Add, the party chosen). The page flags a
+  member with no water-service account.
+- Optional: a daily scheduled task, php water/process/runShareCapitalBilling.php, posts
+  the bills of the day early in the morning (they are posted anyway when the page or the
+  cashier opens).

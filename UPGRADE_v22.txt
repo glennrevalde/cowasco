@@ -1,0 +1,60 @@
+G-SMaRT Accounting - version 22 (2026-10-07)
+=============================================
+
+This package holds only the files that were added or changed since version 21.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+New files: app/CompanyAccess.php, modules/auth/switch_company.php,
+           modules/vendors/_bill_payment_edit.php
+
+Database
+--------
+No company database change in this version: there is no migration to run.
+With several companies, the platform (master) database gets one new table,
+user_company_links, the first time a user of another company is added. The program
+creates it by itself (CREATE TABLE IF NOT EXISTS, MySQL 5.5 safe); it is also in
+database/master_schema.sql for new installations. Do NOT import
+database/accounting_system.sql or accounting_system_clean.sql over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/app.js and assets/css/app.css.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v22.xlsx")
+--------------------------------------------------------------------------
+ 1. Edit bill payments. A bill payment now has an Edit button (users with Edit on
+    Pay Bills). Edit Bill Payment changes the date, check / payment number, method,
+    payment account, reference, memo, class and print mark, and which of the vendor's
+    bills it pays and by how much (with discounts). Saving posts the payment again,
+    works out the balance and status of every bill it paid before or pays now, and
+    records the change with its reason in the audit trail. Closed periods, bank
+    reconciliations and the supervisor approval above the amount limit apply as on
+    every transaction. The vendor stays the same (a payment to the wrong vendor is
+    voided and entered again).
+ 2. Negative Inventory Listing: an As of date filter. Today shows the quantities on
+    hand now; an earlier date shows the items below zero on that day, from every
+    movement up to that date, with the last issue up to that date.
+ 3. Physical Inventory Worksheet: an As of date filter. The system quantities are
+    those of the date chosen (today: on hand now), for one site or all sites.
+ 4. Adjust Quantity/Value on Hand: the Category selection takes two or more
+    categories. Per Batch: "Categories" is a drop-down list of check boxes (Tick all,
+    Clear, search, Show); the grid lists the items of every ticked category, and Post
+    adjustment & New keeps them. Per Item: "Categories > Add their items" and the
+    Categories box of Find & Select Items take several categories too. Old links with
+    one category still work.
+ 5. A user who switches between two companies without being a Super Admin.
+    User Accounts (and Employees & Users) > "Add user from another company": type the
+    username the person logs in with at their own company and give them roles, sites
+    and POS terminals in this company. The person logs in at their own company as
+    always; the company name in the top bar becomes a switch between their companies
+    (one click, no password), with a blue strip and "Back to ..." while they work in
+    the other company. They can do only what the roles of that company allow, their
+    password stays with their own company, and supervisor approvals they give use that
+    password. Either company can remove the access (User Accounts: "Remove access to
+    this company" / "Also works in ... Remove"), and it ends when their own account is
+    deactivated; a user working in the other company is then taken back home at the
+    next click. Every grant, removal and switch is in the audit trails and the
+    platform audit log.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v22.docx) are updated for all of the above.

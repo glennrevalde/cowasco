@@ -1,0 +1,69 @@
+G-SMaRT Integrated Cooperative System - version 37 (2027-02-07)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v8.xlsx. This package holds
+only the files added or changed since version 36. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File; or php tools/upgrade.php), after backing it up:
+
+    database/migrations/2027_01_31_adjustment_passbook.sql
+
+From this version a loan adjustment is a line of the loan passbook. The script marks
+the adjustments recorded before it as passed over, so they do not come out on the
+next printing in the middle of the lines already printed, and records when it did so
+(the setting loan_pb_adjustments_since). No table or column is added, nothing is
+deleted and no amount changes. Written for MySQL 5.5, safe to run twice (an
+adjustment recorded after the first run stays to be printed). With several
+companies, run it on every company database (Super Admin: Companies > Database
+updates > Update all companies). Until it is run, the program shows a page naming
+it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change; the sample file also has an Interest on Share Capital batch in
+review (see below). Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js and assets/css files (assets/js/loan_pick.js is new).
+
+What changed (see docs/ADDITIONAL_MODULE_V8_CHECKLIST.md)
+---------------------------------------------------------
+- Loan Adjustments: a "Print to Passbook" option box beside Record the adjustment,
+  ticked at first. Once the adjustment is recorded, the Print to Passbook window
+  opens and prints it in the loan passbook (with any other line of the loan not yet
+  printed), then asks whether it printed right. In the passbook an adjustment has
+  the code AJ: a decrease prints as a payment in the column of the principal, the
+  interest or the fines, an increase prints negative; the reference is its voucher
+  no., or ADJ. Update Passbook on the page (and on Loan Collection) prints it later.
+  The Loan Ledger Form's passbook view shows the adjustments the same way.
+- Loan Statement of Account: the search box (now "Borrower or loan no.") lists the
+  borrowers with outstanding loans, each with the loan no., the loan product and the
+  balance, as soon as it is clicked. Each letter typed narrows the list by the
+  borrower's name, the loan no. or the loan product; choosing a loan opens its
+  statement. A name or product typed and sent with Refresh opens the one loan it
+  finds, or lists the loans to choose from. Loan Adjustments finds its loan the
+  same way.
+- Interest on Share Capital and Patronage Refund: Compute no longer asks anything
+  ("Yes, post it" is gone): computing posts nothing and the computation opens for
+  review. The list shows what each member owes the cooperative (past-due
+  amortizations and penalties in red with the loan nos., a hold, the loan balance,
+  the unpaid subscription); members are removed one by one (Remove) or ticked and
+  removed together, with the reason (Delinquent: past-due loan, Has another
+  obligation to the cooperative, Not a member in good standing, or another reason),
+  put back, or adjusted. With an amount shared in proportion, the members left share
+  it again. Then: 1. Finish the review, 2. Approve (with the resolution), 3. Post.
+  Distribution Batches shows a batch not yet approved as "In review" or "Reviewed",
+  "not posted".
+- The confirmation windows of the cooperative pages say what the button does
+  (Approve, Create the application, Request the waiver, Record the recovery ...)
+  instead of "Yes, post it".
+
+Set-up after the upgrade
+------------------------
+Nothing is required. To print loan adjustments, the loan product needs a passbook
+type (Loans > Loan Products), as for the other loan passbook lines. Users who print
+passbooks need the print right of Passbook Printing to see Print to Passbook.

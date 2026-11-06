@@ -1,0 +1,93 @@
+G-SMaRT Accounting - version 26 (2026-11-01)
+=============================================
+
+This package holds only the files that were added or changed since version 25.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File), after backing it up:
+
+    database/migrations/2026_11_01_cooperative.sql
+
+It adds the Cooperative Management System: its tables; three empty columns
+(users.coop_branch_id, users.coop_cash_account_id, other_names.member_id); the
+cooperative accounts of the chart where their codes are still free (1110, 1210-1230,
+2300-2370, 3010-3340, 4400-4480, 7100-7120) and the Cooperative group of Module
+Default Accounts; the six new menus and their pages; eight roles (General Manager,
+Bookkeeper, Loan Officer, Credit Committee, Teller, Membership Officer, Collector,
+Branch Manager) with their page rights and special permissions, and cooperative
+rights for the Accountant and Auditor roles; number series, savings transaction
+codes, member types, passbook types, CDA field mappings, a regulatory calendar and
+policy defaults. Nothing is deleted and no amount changes. Written for MySQL 5.5,
+safe to run twice. With several companies, run it on every company database (Super
+Admin: Companies > Database updates > Update all companies). Until it is run, the
+program shows a page naming it.
+
+After running it, open Chart of Accounts > Module Default Accounts, Cooperative
+group: where your chart already used one of the codes above, the cooperative default
+points at your own account with that code. Correct it before posting.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change; the first also has a sample cooperative (two branches, 12
+members, savings, time deposits and loans, and the cooperative users with the
+password Demo@12345: manager, bookkeeper, branchmgr, loanofficer, creditcom,
+membership, teller1, teller2). Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/coop.js and assets/css/app.css.
+
+What is new (the requests of "PH_Cooperative_Management_System_Complete_Features"
+and "ADDITIONAL_MODULE_FOR_COOP_SYSTEMS_v1.xlsx")
+------------------------------------------------------------------------------
+ 1. Cooperative: Member Center and Member Information (full profile, joint and
+    institutional members, documents with expiry, photo and signature,
+    beneficiaries, status workflow with reasons, holds and alerts, attendance,
+    notes); Member Statement of Account with the member ID card, the share capital
+    certificate and the certificate of balances; Cooperative Vouchers; Opening
+    Balances Import (members, savings and share capital, time deposits, loans:
+    checked first, all or nothing); set-up of the profile and policies, branches,
+    lists, passbook types, document numbering and document wording.
+ 2. Savings & Deposits: products with effective-dated rate tiers; deposits,
+    withdrawals and transfers with the approval rules; interest posting and
+    dormancy; passbook printing with line tracking, cover and balance forwarded;
+    time deposits (placement, certificate, monthly accrual, maturity, renewal,
+    pre-termination); payroll / CBU batch deductions; check clearing.
+ 3. Loans: products and charges; applications with the eligibility check, credit
+    investigation, approval by level; release (cash, cheque or credit to savings,
+    with the payoff of a renewed loan); promissory note, disclosure statement with
+    the effective interest rate, schedule, co-maker statement, statement of account,
+    reminders and demand letters; collection with the penalty, interest and
+    principal allocation; loan accounts; adjustments; waivers; renewal,
+    restructuring, write-off and recovery; penalty and interest accrual runs;
+    aging by maturity, at PAR and by amortization.
+ 4. Teller: shifts with the cash count by denomination and the printed cash count
+    sheet, official receipts and member disbursements (including the settlement of
+    members who have resigned, been terminated or died).
+ 5. Year-end Distribution: net surplus allocation to the statutory funds, interest
+    on share capital and patronage refund batches with preview, approval by another
+    user, posting and reversal.
+ 6. CDA Compliance: officers and committees, compliance tracking, regulatory
+    calendar, CAPR data preparation and CSV export with an editable field mapping.
+ 7. 47 cooperative reports, among them the Statement of Financial Condition,
+    Statement of Operations, Statement of Changes in Equity and the Subsidiary vs
+    General Ledger Reconciliation.
+ 8. The Home page shows the cooperative figures and what needs attention; the top
+    bar shows the count.
+
+Every money event posts one balanced voucher to the same general ledger; nothing
+posted is edited or deleted (void with a reason, or an adjusting entry).
+
+Documentation and tests
+-----------------------
+- The built-in User's Manual has a new chapter 13, Cooperative Management; every
+  cooperative page's Help button opens its section. The Word edition of the manual
+  does not include it yet.
+- docs/COOP_IMPLEMENTATION_NOTES.md: installing, setting up, routines, how the
+  module posts, formulas, assumptions and limitations.
+- docs/COOP_REQUIREMENTS_CHECKLIST.md: every requirement with where it is and its
+  status (Done / Partial / Not done).
+- tests/coop/: automated tests (php tests/coop/run.php, on a throw-away database)
+  and their latest results in tests/coop/RESULTS.md.

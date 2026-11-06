@@ -1,0 +1,13 @@
+Rolling back water migration run 20261014-081931-938f on coop_water_rehearsal (source mnssmc_src)
+  phases found: membership
+   water_postings of the run                                                     0
+   savings ledger lines of the opening import                                  312
+   savings opening voucher                                                       1
+   water_postings of the savings import                                          1
+   savings accounts opened for the imported members                            335
+   members imported from the legacy register                                   361
+   parties of the imported members                                             361
+   party_crosswalk rows (water_coopmb)                                         361
+   legacy savings clearing account                                               1
+   items made for inventory bill codes                                           0
+Rollback of run 20261014-081931-938f done.

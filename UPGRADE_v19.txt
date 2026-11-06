@@ -1,0 +1,54 @@
+G-SMaRT Accounting - version 19 (2026-10-03)
+=============================================
+
+This package holds only the files that were added or changed since version 18.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Do NOT import database/accounting_system.sql or accounting_system_clean.sql over a
+live database (they drop and recreate every table; they are for new installs only).
+On a database already in use, run this one migration file (MySQL 5.5 safe, re-runnable):
+
+    database/migrations/2026_10_03_categories_reports_shift_corrections.sql
+
+With several companies, run it on every company database (Super Admin > Companies >
+Database updates > Update all companies does that). Until it is run, the system stops
+after log-in with a page that names it.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v19.xlsx")
+--------------------------------------------------------------------------
+ 1. Inventory > Lists > Category List: add, rename and delete item categories, with
+    the number of items, active items, quantity and value of each. A category in use
+    is deleted only after its items are moved to another category or to none (which
+    also merges two categories). The Item List can be filtered by category.
+ 2. Inventory Valuation Summary: an "Inventory site" filter. With a site chosen the
+    quantities and values are that site's.
+ 3. Quantity on Hand by Site: an "As of" date filter (today by default).
+ 4. POS Daily Sales Summary: a Class filter (Unclassified = sales without a class).
+ 5. New reports: Income by Customer Summary and Income by Customer Detail (sales of
+    the items sold to each customer less their cost: income or loss, and margin), and
+    Expenses by Vendor Summary (by month, quarter or year if wanted) and Expenses by
+    Vendor Detail (every expense charged to each supplier, with account and class).
+ 6. Point of Sale > Shifts, Cash Drops & Readings: an administrator or POS supervisor
+    corrects the closing entries of a closed shift (opening float, cash drops, cash
+    counted). Expected cash and over/short are worked out again, the Cash Over/Short
+    journal entry is changed, made or voided to match, the Z-reading prints the new
+    figures, and every correction is kept in the audit trail and listed on the shift.
+ 7. New report: No. of Days Inventory Has No Movement (days since each item was last
+    sold to a customer, with its last movement of any kind; by site and category).
+ 8. Adjust Quantity/Value on Hand: an "Adjustment option". Per Batch Adjustment is the
+    grid of every item (as before). Per Item Adjustment is the QuickBooks layout: item
+    lines with qty on hand, new quantity or difference, U/M and class, Find & Select
+    Items, Set Qty to Zero, Customer:Job, total value and number of item adjustments,
+    Save & Close / Save & New / Clear. The choice is remembered.
+ 9. The opening cash float of the cashier is shown on the current shift, on the list
+    of shifts, on each shift's page and on the X- and Z-readings.
+
+Also: report group headings, subtotals and totals now run across the empty columns
+after them (no more "Total ABC Trading Corp." squeezed into the Type column), and the
+Supervisor approval box stacks its two boxes when it sits in a narrow card.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v19.docx) are updated for all of the above.

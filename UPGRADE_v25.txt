@@ -1,0 +1,74 @@
+G-SMaRT Accounting - version 25 (2026-10-22)
+=============================================
+
+This package holds only the files that were added or changed since version 24.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File), after backing it up:
+
+    database/migrations/2026_10_22_inventory_movement_reports.sql
+
+It adds four report pages: Inventory Movement Summary Report and Inventory Movement
+Detailed Report (given to the roles that may open No. of Days Inventory Has No
+Movement), Sales Report Through Inventory Movement (given to the roles that may open
+Sales by Item Summary) and Inventory Movement Transactions, the drill-down page the
+three reports open (given to both). No table or column is added, nothing is deleted
+and no amount changes. Written for MySQL 5.5, safe to run twice. With several
+companies, run it on every company database (Super Admin: Companies > Database
+updates > Update all companies). Until it is run, the program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/wht.js and assets/css/app.css.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v25.xlsx")
+--------------------------------------------------------------------------
+ 1. Inventory Movement Summary Report (Inventory > Reports). Filters: From and To
+    dates, Site, Class (and Item, Category). Columns: Item code, Item description,
+    Beg. balance (the ending inventory of the day before the From date), In, Out and
+    Ending balance (the ending inventory of the To date = Beg. balance + In - Out),
+    with a TOTAL line.
+    In:  Write Checks (and Cash Vouchers) with inventory, positive or negative;
+         Receive Items; Receive Items and Enter Bills; Transfer Inventory to the site;
+         Adjust Quantity positive; Build Assemblies assembled items; Disassemble /
+         Process Items outputs.
+    Out: Create Invoices; Enter Sales Receipts; Create Batch Invoices; POS sales
+         (less credit memos and POS returns that restock); Transfer Inventory from
+         the site; Adjust Quantity negative; Build Assemblies component items;
+         Disassemble / Process Items inputs consumed; Supplier Debit Memos.
+    Only transactions dated within the range count, voided ones are left out. Every
+    figure (the TOTAL line too) is a link to its source transactions.
+ 2. Inventory Movement Detailed Report (Inventory > Reports), same filters. Columns:
+    Item code, Item description, Beg. balance; under an IN heading Purchases,
+    Transfer inventory, Adjust quantity, Build assemblies, Disassemble / process
+    items; under an OUT heading (negative figures) Sales, Transfer inventory, Adjust
+    quantity, Build assemblies, Disassemble / process items, Supplier debit memo; and
+    Ending balance (the sum of the line). TOTAL line; every figure drills down.
+ 3. Sales Report Through Inventory Movement (Customers > Reports, Sales Reports).
+    Filters: From and To dates, Site, Class, Cashier (and Item, Category). Columns:
+    Item description, Beg. inventory, Delivery (in), Withdrawals (out), Ending
+    inventory, Sales (qty) = Beg. + Delivery - Withdrawals - Ending, Ave. price (the
+    average price per unit of the invoices, batch invoices, sales receipts and POS
+    sales) and Total sales = Sales (qty) x Ave. price, which equals the amount of
+    those documents. Delivery and Withdrawals leave out invoices, batch invoices,
+    sales receipts and POS sales. TOTAL line (its Ave. price is total sales over the
+    quantity sold). With a Cashier chosen, the sales columns are that cashier's
+    documents and a "Sold by other cashiers" column shows the rest of the quantity
+    sold. Every figure drills down.
+ 4. Inventory Movement Transactions: the page the figures open, listing the
+    transactions (type, date, number, name, site, movement, quantity) item by item,
+    with a total equal to the figure clicked. Click a number to open the transaction.
+ 5. Pay Bills (sheet 4): the Withholding box works out the tax base from the bill's
+    outstanding balance (net of VAT, less the early-payment discount) as soon as it is
+    opened, even when the bill is not ticked. Ticking a tax computes its amount at
+    once, ticks the bill and lowers the amount to pay; the amount can still be typed
+    over for an adjustment. Edit Bill Payment and Receive Payments work the same way.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v25.docx) are updated for all of the above.

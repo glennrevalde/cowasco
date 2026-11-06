@@ -1,0 +1,76 @@
+G-SMaRT Accounting - version 23 (2026-10-08)
+=============================================
+
+This package holds only the files that were added or changed since version 22.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File), after backing it up:
+
+    database/migrations/2026_10_08_custom_report_deposit_edit.sql
+
+It adds the Customized Inventory Report page (for the roles that may open the
+Inventory Valuation Summary) and one empty column, transaction_lines.pos_shift_id,
+which links a deposit line to the POS shift whose cash it deposits; the deposits
+already made are linked by the "(shift #n)" words on their lines. Nothing is deleted
+and no amount changes. Written for MySQL 5.5, safe to run twice. With several
+companies, run it on every company database (Super Admin: Companies > Database
+updates > Update all companies). Until it is run, the program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+and database/schema.sql include the change. Do NOT import those two files over a
+live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/js/app.js and assets/css/app.css.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v23.xlsx")
+--------------------------------------------------------------------------
+ 1. Item form: an inventory part or assembly that still has a balance (stock at any
+    site, or a value) cannot be made inactive. The Active box stays ticked and
+    locked, with the reason; saving it inactive anyway, or an import with
+    is_active = No, is refused. Items with no balance, and services and the other
+    types, can be made inactive as before.
+ 2. Item List: the search is incremental. Typing a part of a code, name, barcode,
+    category or supplier narrows the list at once, word by word, with a count of the
+    matches; Enter opens the first item. The category and Include inactive boxes
+    apply at once (no Filter button). Export takes the words typed.
+ 3. Customized Inventory Report (Inventory > Reports): one line per item with the
+    columns the user picks in its Columns box (open to everybody who may open the
+    report): item details (descriptions, barcode, category, type, unit, supplier, tax
+    code, status, reorder point, maximum stock), stock and value at the end of the
+    period (on hand, below reorder point, average cost, asset value and %, sales price,
+    retail value and %, gross profit in stock), profit per unit (purchase cost, gross
+    profit per unit, gross profit % per unit, markup %), sales of the period (qty sold,
+    sales amount, average selling price, cost of sales, GROSS PROFIT, GROSS PROFIT %,
+    % of sales, last sold) and purchases of the period (qty bought, amount, last
+    bought). Filters: dates, item, site, category, item type, supplier, which items.
+    It prints, exports, memorizes, and can be redesigned with Modify Report.
+    Every report about items (Inventory Valuation Summary among them) can also add
+    the item fields gross profit per unit, gross profit %, markup %, asset value,
+    retail value, purchase description, tax code, maximum stock and status through
+    Modify Report.
+ 4. Edit Make Deposit: a deposit has an Edit button (Edit right on Make Deposits).
+    Edit Deposit shows what it holds ticked: take payments or POS shifts off (they wait
+    to be deposited again) or add others, change the date, account, slip number, memo,
+    class, other receipts and cash back. The deposit is posted again, with the change
+    and its reason in the audit trail.
+ 5. Shifts, Cash Drops & Readings: a date filter on the list of shifts (Today,
+    Yesterday, This/Last week, This/Last month or custom From/To), with Status,
+    Terminal and Cashier, totals for the period and pages of 100 shifts, so earlier
+    days can be seen. Without dates the latest 30 shifts show, as before.
+ 6. Corrected shifts and Make Deposits: the cash to deposit of a shift is the cash
+    counted less the opening float (it stays in the drawer) plus the cash drops, from
+    the corrected figures. In your example (float 3,000.00, counted corrected from
+    9,170.48 to 12,170.48) Make Deposits proposes 9,170.48, which was 6,170.48 before
+    the correction; the page now explains the calculation and marks corrected shifts.
+    A shift already deposited can now be corrected too: the deposit follows on its
+    own (its line for the shift, its total and its ledger entry), and the message and
+    the shift's corrections list say so. The shift page shows the cash to deposit,
+    also while the correction is typed.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v23.docx) are updated for all of the above.

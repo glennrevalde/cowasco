@@ -1,0 +1,86 @@
+/* ==========================================================================
+   Water Billing — FORCE CONFIGURATION guided setup (business pages only)
+   Colours reuse the existing palette variables defined by navbar.php.
+   ========================================================================== */
+.setup-tutorial-overlay {
+    position: fixed; inset: 0; z-index: 150000;
+    display: flex; align-items: center; justify-content: center;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    background: rgba(15, 15, 26, .62); backdrop-filter: blur(3px);
+    box-sizing: border-box; overflow: hidden;
+}
+html:has(.setup-tutorial-overlay.is-blocking) { overflow: hidden; }
+.setup-tutorial-dialog {
+    width: min(640px, 100%);
+    max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px);
+    display: flex; flex-direction: column;
+    background: var(--white, #fff); color: var(--text-primary, #0f0f1a);
+    border-radius: 16px; box-shadow: 0 30px 80px rgba(15, 23, 42, .35);
+    padding: 22px 22px 18px; box-sizing: border-box; outline: none;
+}
+.setup-tutorial-progress {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font: 700 .78rem 'JetBrains Mono', monospace; color: var(--text-secondary, #6b7280); letter-spacing: .04em;
+}
+.setup-tutorial-progress-done { font-weight: 500; }
+.setup-tutorial-track { height: 6px; border-radius: 6px; background: var(--border, #e8eaed); margin: 8px 0 14px; overflow: hidden; }
+.setup-tutorial-fill { height: 100%; background: var(--accent, #1a1a2e); border-radius: 6px; transition: width .3s ease; }
+.setup-tutorial-title { margin: 0 0 10px; font-size: 1.3rem; line-height: 1.3; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.setup-tutorial-body { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; font-size: .9rem; line-height: 1.55; }
+.setup-tutorial-body p { margin: 0 0 10px; overflow-wrap: anywhere; }
+.setup-tutorial-admin { padding: 10px 12px; border-radius: 8px; background: var(--off-white, #f8f9fb); border: 1px solid var(--border, #e8eaed); }
+.setup-tutorial-steps { margin-top: 6px; }
+.setup-tutorial-steps summary { cursor: pointer; font-weight: 600; font-size: .85rem; }
+.setup-tutorial-steps ol { margin: 8px 0 0; padding-left: 20px; }
+.setup-tutorial-steps li { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: .85rem; border-bottom: 1px dashed var(--border, #e8eaed); }
+.setup-tutorial-steps li.is-current { font-weight: 700; }
+.setup-tutorial-steps li.is-ready { color: var(--text-secondary, #6b7280); }
+.setup-tutorial-step-state { flex: 0 0 auto; font: 600 .72rem 'JetBrains Mono', monospace; }
+.setup-tutorial-actions {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid var(--border, #e8eaed);
+    position: sticky; bottom: 0; background: var(--white, #fff);
+}
+.setup-tutorial-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 42px; padding: 9px 16px; border-radius: 10px; border: 1.5px solid var(--border, #e8eaed);
+    background: var(--white, #fff); color: var(--text-primary, #0f0f1a);
+    font: 600 .875rem 'Sora', sans-serif; text-decoration: none; cursor: pointer; box-sizing: border-box;
+}
+.setup-tutorial-btn:focus-visible { outline: 2px solid var(--accent, #1a1a2e); outline-offset: 2px; }
+.setup-tutorial-btn.is-primary { background: var(--accent, #1a1a2e); border-color: var(--accent, #1a1a2e); color: #fff; }
+
+/* Guided banner on setup/recovery routes: never blocks the very form needed. */
+.setup-tutorial-banner {
+    position: sticky; top: 64px; z-index: 89;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    margin: 0 0 4px 260px; padding: 12px 24px;
+    background: var(--white, #fff); border-bottom: 1px solid var(--border, #e8eaed);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .08); font-size: .85rem; line-height: 1.5;
+}
+.setup-tutorial-banner-text { flex: 1 1 320px; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; overflow-wrap: anywhere; }
+.setup-tutorial-banner-step { font: 700 .72rem 'JetBrains Mono', monospace; color: var(--text-secondary, #6b7280); letter-spacing: .04em; }
+.setup-tutorial-banner-hint { flex-basis: 100%; color: var(--text-secondary, #6b7280); font-size: .8rem; }
+.setup-tutorial-banner-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+@media (max-width: 768px) {
+    .setup-tutorial-banner { margin-left: 0; padding: 10px 16px; }
+    .setup-tutorial-banner-actions { flex: 1 1 100%; }
+    .setup-tutorial-banner-actions .setup-tutorial-btn { flex: 1 1 auto; }
+    .setup-tutorial-dialog { padding: 18px 16px 14px; border-radius: 12px; }
+    .setup-tutorial-title { font-size: 1.12rem; }
+    .setup-tutorial-actions .setup-tutorial-btn { flex: 1 1 100%; }
+}
+
+/* Spotlight on the control to complete. */
+.setup-tutorial-spotlight {
+    outline: 3px solid var(--accent, #1a1a2e) !important; outline-offset: 6px !important;
+    border-radius: 8px; box-shadow: 0 0 0 9999px rgba(15, 15, 26, .28) !important;
+    position: relative; z-index: 88;
+    animation: setup-tutorial-pulse 1.6s ease-in-out 3;
+}
+@keyframes setup-tutorial-pulse {
+    0%, 100% { outline-offset: 6px; }
+    50% { outline-offset: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .setup-tutorial-spotlight { animation: none; } }
+@media print { .setup-tutorial-overlay, .setup-tutorial-banner { display: none !important; } }

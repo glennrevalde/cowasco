@@ -1,0 +1,91 @@
+G-SMaRT Integrated Cooperative System - version 36 (2027-01-31)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v7.xlsx. This package holds
+only the files added or changed since version 35. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and
+is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File; or php tools/upgrade.php), after backing it up:
+
+    database/migrations/2027_01_24_account_types.sql
+
+It:
+- adds the table account_types: the account types of Chart of Accounts > Account
+  Types. The fifteen built-in types (Bank, Accounts Receivable, ... Other Expense)
+  are written as its first rows, each linked to its section of the Statement of
+  Cash Flows (Bank: cash and cash equivalents; Accounts Receivable, Other Current
+  Asset and the current liabilities: operating; Fixed Asset and Other Asset:
+  investing; Long Term Liability and Equity: financing);
+- adds accounts.type_id: the type chosen for an account (empty = its built-in
+  type, which every account keeps until you give it another);
+- adds the pages Chart of Accounts > Account Types (with the rights of Chart of
+  Accounts), and the reports Balance Sheet Summary and Income Statement Summary
+  (with the rights of the Balance Sheet and of the Income Statement).
+
+Nothing is deleted, no amount changes and every account stays of the type it is.
+Written for MySQL 5.5, safe to run twice. With several companies, run it on every
+company database (Super Admin: Companies > Database updates > Update all
+companies). Until it is run, the program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change; the sample file also has the two example types below. Do NOT
+import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/css file.
+
+What changed (see docs/ADDITIONAL_MODULE_V7_CHECKLIST.md)
+---------------------------------------------------------
+- Chart of Accounts > Account Types (new): add account types of your own, such
+  as Cash or Loans Receivable. Each one "behaves as" one of the built-in types
+  (a Cash type that behaves as Bank is offered wherever money is paid or
+  received, exactly like a Bank account), and is linked to a section of the
+  Statement of Cash Flows: cash and cash equivalents, operating, investing or
+  financing activities. Open a type to give it accounts (ticking a main account
+  ticks its sub-accounts) or to move its accounts to another type. The account
+  form offers every type, with a note saying what it does and where its accounts
+  are shown; a new sub-account takes the type of its main account.
+- Statement of Cash Flows: the cash is the accounts of the types linked to cash
+  and cash equivalents (named in the note above the report); every other balance
+  sheet account is shown once, in the section of its type, under the type's
+  heading with "Net change in" the type. The cash at the end of the period equals
+  the cash accounts of the Balance Sheet; if not, the note says so in red.
+- Balance Sheet and Income Statement (and by Class, by Date Range): every account
+  type is a classification of its own: a heading, its accounts and "Total" the
+  type. A sub-account is shown under its main account, in the classification of
+  the main account's type; a main account with sub-accounts shows them and
+  "Total" the main account.
+- Chart of Accounts: a main account shows the total of its sub-accounts (its own
+  balance, if any, under it). The list is in tree order: each main account
+  followed by its sub-accounts. The Type column shows your types, with the
+  built-in type each behaves as. Export adds the columns Behaves as and Total
+  with sub-accounts.
+- New reports under Chart of Accounts > Reports: Balance Sheet Summary and Income
+  Statement Summary. They show the main accounts only, each with the total of its
+  sub-accounts; every total is that of the Balance Sheet and the Income
+  Statement.
+- Import Data (accounts): the account type column accepts your own types too.
+
+Set-up after the upgrade
+------------------------
+Nothing is required: every account keeps its built-in type and the statements
+balance as before. To get the classifications of the workbook:
+
+1. Chart of Accounts > Account Types > New account type: Name "Cash", Behaves as
+   Bank, On the Statement of Cash Flows: Cash and cash equivalents, Order 5.
+   Save. Under "Give accounts this type" tick 1000 Cash (its sub-accounts are
+   ticked with it) and any other cash account, then "Give them the type Cash".
+2. New account type: Name "Loans Receivable", Behaves as Other Current Asset,
+   Operating activities, Order 5. Save, then give it the loans receivable
+   accounts and their allowance for probable losses.
+3. Open the Balance Sheet, the Balance Sheet Summary and the Statement of Cash
+   Flows: Cash and Loans Receivable are classifications of their own, and the
+   cash at the end of the cash flow statement equals Total Cash.
+
+Accounts the modules post to (with the word "system" on the Chart of Accounts)
+keep their built-in type: they can take a type of yours only when it behaves as
+the same built-in type.

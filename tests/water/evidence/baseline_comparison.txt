@@ -1,0 +1,1 @@
+compared 172200 calculations: 172150 identical, 50 failing the same way on both sides (configuration), 0 different, 0 only after

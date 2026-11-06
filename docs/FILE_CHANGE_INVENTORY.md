@@ -1,0 +1,727 @@
+# File-change inventory
+
+Computed by `tools/dev/file_inventory.py` from the shipped files (`git ls-files`) against the two supplied ZIP files,
+byte for byte. The water system lives under `water/` (its former root folder); everything else is the cooperative system.
+
+| Class | Files |
+|---|---:|
+| Cooperative system, unchanged | 699 |
+| Cooperative system, changed | 173 |
+| Water system, unchanged (under water/) | 28 |
+| Water system, adapted (under water/) | 223 |
+| New | 244 |
+| Cooperative files not shipped | 1 |
+| Water files not shipped | 48 |
+| **Shipped in total** | **1367** |
+
+## New files
+
+- `.gitignore`
+- `.user.ini`
+- `UPGRADE_v30.txt`
+- `UPGRADE_v31.txt`
+- `UPGRADE_v32.txt`
+- `UPGRADE_v33.txt`
+- `UPGRADE_v34.txt`
+- `UPGRADE_v35.txt`
+- `UPGRADE_v36.txt`
+- `UPGRADE_v37.txt`
+- `UPGRADE_v38.txt`
+- `UPGRADE_v39.txt`
+- `UPGRADE_v40.txt`
+- `UPGRADE_v41.txt`
+- `UPGRADE_v42.txt`
+- `UPGRADE_v43.txt`
+- `UPGRADE_v44.txt`
+- `UPGRADE_v45.txt`
+- `UPGRADE_v46.txt`
+- `app/AccountTypes.php`
+- `app/CsvImports.php`
+- `app/CsvReview.php`
+- `app/JournalEdits.php`
+- `app/LoanImport.php`
+- `app/LoanTxn.php`
+- `app/LoanVouchers.php`
+- `app/MemberDefaults.php`
+- `app/SavTxn.php`
+- `app/ShareCapitalBilling.php`
+- `app/WaterAccounts.php`
+- `app/WaterPages.php`
+- `app/WaterPosting.php`
+- `app/WaterReceiptLayout.php`
+- `app/WaterSchema.php`
+- `app/XlsxReader.php`
+- `app/reports/water.php`
+- `assets/js/csv_review.js`
+- `assets/js/datefield.js`
+- `assets/js/dialog.js`
+- `assets/js/dist_batch.js`
+- `assets/js/loan_collection.js`
+- `assets/js/loan_pick.js`
+- `assets/js/loan_release.js`
+- `assets/js/passbook_designer.js`
+- `assets/js/passbook_run.js`
+- `assets/js/savings.js`
+- `assets/js/subgroup_manager.js`
+- `assets/manual/img/coa_account_types__edit.jpg`
+- `assets/manual/img/coa_account_types__main.jpg`
+- `assets/manual/img/coa_account_types__new.jpg`
+- `assets/manual/img/coop_member__water.jpg`
+- `assets/manual/img/coop_members__import.jpg`
+- `assets/manual/img/coop_passbooks__test.jpg`
+- `assets/manual/img/dist_isc__basis.jpg`
+- `assets/manual/img/dist_isc__delete.jpg`
+- `assets/manual/img/dist_isc__remove.jpg`
+- `assets/manual/img/dist_pr__basis.jpg`
+- `assets/manual/img/inv_items__import.jpg`
+- `assets/manual/img/loan_accounts__import.jpg`
+- `assets/manual/img/loan_accounts__imported.jpg`
+- `assets/manual/img/loan_accounts__internal.jpg`
+- `assets/manual/img/loan_accounts__ledger.jpg`
+- `assets/manual/img/loan_adjustments__find.jpg`
+- `assets/manual/img/loan_adjustments__passbook.jpg`
+- `assets/manual/img/loan_application__form.jpg`
+- `assets/manual/img/loan_applications__delete.jpg`
+- `assets/manual/img/loan_collection__ec.jpg`
+- `assets/manual/img/loan_docs__release.jpg`
+- `assets/manual/img/loan_release__form.jpg`
+- `assets/manual/img/loan_release__voucher.jpg`
+- `assets/manual/img/loan_vouchers__main.jpg`
+- `assets/manual/img/rpt_balance_sheet_summary__report.jpg`
+- `assets/manual/img/rpt_income_statement_summary__report.jpg`
+- `assets/manual/img/rpt_loan_soa__find.jpg`
+- `assets/manual/img/sav_accounts__hold.jpg`
+- `assets/manual/img/sav_accounts__import.jpg`
+- `assets/manual/img/sav_accounts__menu.jpg`
+- `assets/manual/img/sav_center__main.jpg`
+- `assets/manual/img/sav_passbook__turn.jpg`
+- `assets/manual/img/sav_td__caiw.jpg`
+- `assets/manual/img/sav_transact__batch.jpg`
+- `assets/manual/img/sav_transact__pages.jpg`
+- `assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css`
+- `assets/vendor/bootstrap-icons/font/fonts/bootstrap-icons.woff`
+- `assets/vendor/bootstrap-icons/font/fonts/bootstrap-icons.woff2`
+- `assets/vendor/bootstrap/css/bootstrap.min.css`
+- `assets/vendor/bootstrap/js/bootstrap.bundle.min.js`
+- `assets/vendor/flatpickr/LICENSE.md`
+- `assets/vendor/flatpickr/flatpickr.min.css`
+- `assets/vendor/flatpickr/flatpickr.min.js`
+- `config/config.example.php`
+- `database/migrations/2026_12_01_water_billing.sql`
+- `database/migrations/2026_12_20_member_lists_class_je_changes.sql`
+- `database/migrations/2026_12_27_member_defaults_savings_center.sql`
+- `database/migrations/2027_01_03_loan_collection_error_correct.sql`
+- `database/migrations/2027_01_10_teller_menu_loan_release_vouchers.sql`
+- `database/migrations/2027_01_17_passbook_designer.sql`
+- `database/migrations/2027_01_24_account_types.sql`
+- `database/migrations/2027_01_31_adjustment_passbook.sql`
+- `database/migrations/2027_02_21_menus_imports_codes.sql`
+- `database/migrations/2027_03_07_water_ladder_billing.sql`
+- `database/migrations/2027_03_14_share_capital_billing.sql`
+- `database/migrations/2027_03_21_share_capital_terms_batch.sql`
+- `database/migrations/2027_03_28_regular_joint_subgroups_receipts.sql`
+- `database/seeds/water_reference.sql`
+- `docs/ADDITIONAL_MODULE_V10_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V11_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V12_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V13_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V14_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V15_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V16_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V2_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V3_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V4_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V5_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V6B_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V6_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V7_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V8_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V9_CHECKLIST.md`
+- `docs/DELIVERY_REPORT.md`
+- `docs/DEPLOYMENT_XAMPP.md`
+- `docs/FILE_CHANGE_INVENTORY.md`
+- `docs/MAPPING_CROSSWALK.md`
+- `docs/MENU_MAP.md`
+- `docs/MIGRATION_EXCEPTIONS.md`
+- `docs/POSTING_EXAMPLES.md`
+- `docs/RECONCILIATION_REPORT.md`
+- `docs/RETAINED_REPLACED_MATRIX.md`
+- `docs/TEST_EVIDENCE.md`
+- `docs/WATER_IMPORT_FILES.md`
+- `docs/WATER_INTEGRATION_DESIGN.md`
+- `docs/WATER_MIGRATION.md`
+- `modules/admin/_import_lib.php`
+- `modules/coa/account_types.php`
+- `modules/coa/je_edits.php`
+- `modules/coop/_loan_ledgers.php`
+- `modules/coop/_loan_release.php`
+- `modules/coop/_loan_voucher.php`
+- `modules/coop/loan_vouchers.php`
+- `modules/coop/sav_center.php`
+- `modules/water/page.php`
+- `storage/migration/.gitkeep`
+- `storage/water_migration/.gitkeep`
+- `tests/coop/cases_v30.php`
+- `tests/coop/cases_v31_members.php`
+- `tests/coop/cases_v31_savings.php`
+- `tests/coop/cases_v32_loans.php`
+- `tests/coop/cases_v33.php`
+- `tests/coop/cases_v34.php`
+- `tests/coop/cases_v35.php`
+- `tests/coop/cases_v36.php`
+- `tests/coop/cases_v37.php`
+- `tests/coop/cases_v38.php`
+- `tests/coop/cases_v39.php`
+- `tests/coop/cases_v40.php`
+- `tests/coop/cases_v41.php`
+- `tests/coop/cases_v42.php`
+- `tests/coop/cases_v43.php`
+- `tests/coop/cases_v44.php`
+- `tests/coop/cases_v46.php`
+- `tests/coop/cases_water.php`
+- `tests/water/RESULTS_BACKUP_RESTORE.md`
+- `tests/water/RESULTS_E2E.md`
+- `tests/water/RESULTS_IMPORT_FILES.md`
+- `tests/water/RESULTS_IMPORT_FILES_FULL_POSTING.md`
+- `tests/water/RESULTS_LEGACY_LEDGER_FIXTURE.md`
+- `tests/water/RESULTS_MIGRATIONS_TWICE.md`
+- `tests/water/backup_restore_test.php`
+- `tests/water/baseline_calc.php`
+- `tests/water/compare_baseline.php`
+- `tests/water/e2e_http.php`
+- `tests/water/e2e_lib.php`
+- `tests/water/evidence/baseline_comparison.txt`
+- `tests/water/evidence/cutover_both/1_create_target.log`
+- `tests/water/evidence/cutover_both/1_create_target_report.md`
+- `tests/water/evidence/cutover_both/2_dry_run.log`
+- `tests/water/evidence/cutover_both/3_real_run.log`
+- `tests/water/evidence/cutover_both/4_second_run.log`
+- `tests/water/evidence/cutover_both/exceptions.txt`
+- `tests/water/evidence/rehearsal/00_install.log`
+- `tests/water/evidence/rehearsal/01_dry_run.log`
+- `tests/water/evidence/rehearsal/02_real_run.log`
+- `tests/water/evidence/rehearsal/03_second_run.log`
+- `tests/water/evidence/rehearsal/04_membership.log`
+- `tests/water/evidence/rehearsal/05_membership_again.log`
+- `tests/water/evidence/rehearsal/06_verify_after_import.log`
+- `tests/water/evidence/rehearsal/07_rollback_20261014-081917-aba5.log`
+- `tests/water/evidence/rehearsal/07_rollback_20261014-081931-938f.log`
+- `tests/water/evidence/rehearsal/SUMMARY.txt`
+- `tests/water/evidence/rehearsal/counts_after_rollback.tsv`
+- `tests/water/evidence/rehearsal/counts_diff.txt`
+- `tests/water/evidence/rehearsal/counts_fresh.tsv`
+- `tests/water/fixture_water_reference.sql`
+- `tests/water/import_files_http.php`
+- `tests/water/migration_rehearsal.sh`
+- `tests/water/migrations_twice_test.php`
+- `tests/water/run_e2e.sh`
+- `tools/build_water_manual.py`
+- `tools/create_target.php`
+- `tools/dev/delivery_evidence.php`
+- `tools/dev/extract_water_schema.py`
+- `tools/dev/file_inventory.py`
+- `tools/dev/water_legacy_fixture.php`
+- `tools/dev/water_legacy_fixture.sql`
+- `tools/migrate_water.php`
+- `tools/rollback_water.php`
+- `tools/upgrade.php`
+- `tools/water_demo.php`
+- `tools/water_migration_lib.php`
+- `tools/water_starter.php`
+- `water/common/.htaccess`
+- `water/common/fonts.css`
+- `water/common/import-review.css`
+- `water/common/import-review.js`
+- `water/common/importReviewHelpers.php`
+- `water/common/incremental-search.js`
+- `water/common/nav_visibility.js`
+- `water/common/navbar_components.php`
+- `water/common/oneTimeBillImportHelpers.php`
+- `water/common/receipt-designer.js`
+- `water/common/receipt-print.js`
+- `water/common/retired.php`
+- `water/common/shell.css`
+- `water/common/theme.css`
+- `water/common/theme.js`
+- `water/database/.htaccess`
+- `water/process/addressSubgroups.php`
+- `water/process/deleteReading.php`
+- `water/process/oneTimeBillImport.php`
+- `water/process/runShareCapitalBilling.php`
+- `water/process/saveShareCapitalBilling.php`
+- `water/process/searchParties.php`
+- `water/process/shareCapitalImport.php`
+- `water/process/updateMemberSubgroup.php`
+- `water/resources/manuals/.htaccess`
+- `water/resources/manuals/Water_Billing_User_Manual.docx`
+- `water/resources/manuals/Water_Billing_User_Manual.pdf`
+- `water/views/address_subgroups.php`
+- `water/views/one_time_billing_import.php`
+- `water/views/receipt_layouts.php`
+- `water/views/share_capital_billing.php`
+- `water/views/share_capital_import.php`
+
+## Cooperative system files changed
+
+- `.htaccess`
+- `README.md`
+- `app/Access.php`
+- `app/Accts.php`
+- `app/Backup.php`
+- `app/Balances.php`
+- `app/BusinessUnits.php`
+- `app/Classes.php`
+- `app/Coop.php`
+- `app/CoopAlerts.php`
+- `app/CoopLedger.php`
+- `app/CoopRecon.php`
+- `app/DB.php`
+- `app/Distribution.php`
+- `app/Find.php`
+- `app/Importer.php`
+- `app/Loans.php`
+- `app/Lookup.php`
+- `app/Maintenance.php`
+- `app/Manual.php`
+- `app/Members.php`
+- `app/Names.php`
+- `app/Party.php`
+- `app/PartyStatement.php`
+- `app/Passbook.php`
+- `app/Posting.php`
+- `app/Report.php`
+- `app/SavBatch.php`
+- `app/Savings.php`
+- `app/Schema.php`
+- `app/Settings.php`
+- `app/Sql.php`
+- `app/Stock.php`
+- `app/Teller.php`
+- `app/TimeDeposits.php`
+- `app/Txn.php`
+- `app/helpers.php`
+- `app/registry.php`
+- `app/reports/budgets.php`
+- `app/reports/coop.php`
+- `app/reports/coop_loans.php`
+- `app/reports/coop_savings.php`
+- `app/reports/finance.php`
+- `app/reports/party.php`
+- `app/reports/subsidiary.php`
+- `assets/css/app.css`
+- `assets/js/app.js`
+- `assets/js/coop.js`
+- `assets/manual/img/coa_accounts__edit.jpg`
+- `assets/manual/img/coa_accounts__main.jpg`
+- `assets/manual/img/coa_accounts__new.jpg`
+- `assets/manual/img/coop_members__main.jpg`
+- `assets/manual/img/coop_passbooks__main.jpg`
+- `assets/manual/img/dist_batches__main.jpg`
+- `assets/manual/img/dist_isc__main.jpg`
+- `assets/manual/img/home_dashboard__full.jpg`
+- `assets/manual/img/inv_items__main.jpg`
+- `assets/manual/img/loan_accounts__main.jpg`
+- `assets/manual/img/loan_adjustments__main.jpg`
+- `assets/manual/img/loan_application__view.jpg`
+- `assets/manual/img/loan_applications__main.jpg`
+- `assets/manual/img/loan_ci__main.jpg`
+- `assets/manual/img/loan_collection__main.jpg`
+- `assets/manual/img/loan_release__main.jpg`
+- `assets/manual/img/nav__reports_menu.jpg`
+- `assets/manual/img/nav__sidebar.jpg`
+- `assets/manual/img/nav__user_menu.jpg`
+- `assets/manual/img/phone__dashboard.jpg`
+- `assets/manual/img/phone__menu.jpg`
+- `assets/manual/img/rpt_balance_sheet__report.jpg`
+- `assets/manual/img/rpt_cash_flow__report.jpg`
+- `assets/manual/img/rpt_income_statement__report.jpg`
+- `assets/manual/img/sav_accounts__main.jpg`
+- `assets/manual/img/sav_accounts__view.jpg`
+- `assets/manual/img/sav_passbook__main.jpg`
+- `assets/manual/img/sav_td__main.jpg`
+- `assets/manual/img/sav_td__view.jpg`
+- `assets/manual/img/sav_transact__main.jpg`
+- `assets/manual/img/sav_txn_codes__main.jpg`
+- `assets/manual/img/teller_or__main.jpg`
+- `assets/manual/img/teller_receipts__main.jpg`
+- `assets/manual/img/teller_shift__main.jpg`
+- `config/config.php`
+- `database/accounting_system.sql`
+- `database/accounting_system_clean.sql`
+- `database/schema.sql`
+- `modules/admin/import.php`
+- `modules/admin/roles.php`
+- `modules/admin/settings.php`
+- `modules/banking/cash_voucher.php`
+- `modules/coa/accounts.php`
+- `modules/coa/journal.php`
+- `modules/coop/_coop.php`
+- `modules/coop/api.php`
+- `modules/coop/business_units.php`
+- `modules/coop/dist_batch.php`
+- `modules/coop/dist_batches.php`
+- `modules/coop/dist_surplus.php`
+- `modules/coop/lists.php`
+- `modules/coop/loan_accounts.php`
+- `modules/coop/loan_adjustments.php`
+- `modules/coop/loan_application.php`
+- `modules/coop/loan_applications.php`
+- `modules/coop/loan_ci.php`
+- `modules/coop/loan_collection.php`
+- `modules/coop/loan_docs.php`
+- `modules/coop/loan_penalties.php`
+- `modules/coop/loan_products.php`
+- `modules/coop/loan_release.php`
+- `modules/coop/loan_restructure.php`
+- `modules/coop/loan_waivers.php`
+- `modules/coop/member.php`
+- `modules/coop/member_statement.php`
+- `modules/coop/members.php`
+- `modules/coop/numbering.php`
+- `modules/coop/passbooks.php`
+- `modules/coop/profile.php`
+- `modules/coop/sav_accounts.php`
+- `modules/coop/sav_batch.php`
+- `modules/coop/sav_clearing.php`
+- `modules/coop/sav_interest.php`
+- `modules/coop/sav_passbook.php`
+- `modules/coop/sav_products.php`
+- `modules/coop/sav_td.php`
+- `modules/coop/sav_transact.php`
+- `modules/coop/sav_transfer.php`
+- `modules/coop/sav_txn_codes.php`
+- `modules/coop/teller_disburse.php`
+- `modules/coop/teller_or.php`
+- `modules/coop/teller_receipts.php`
+- `modules/coop/teller_shift.php`
+- `modules/customers/center.php`
+- `modules/customers/payments.php`
+- `modules/customers/statements.php`
+- `modules/home/dashboard.php`
+- `modules/home/find.php`
+- `modules/inventory/adjust.php`
+- `modules/inventory/center.php`
+- `modules/inventory/items.php`
+- `modules/party/center.php`
+- `modules/party/statement.php`
+- `modules/pos/approval_codes.php`
+- `modules/pos/register.php`
+- `modules/txn/_common.php`
+- `modules/txn/_grids.php`
+- `modules/txn/page.php`
+- `modules/vendors/center.php`
+- `tests/coop/RESULTS.md`
+- `tests/coop/RESULTS_pure_php.md`
+- `tests/coop/cases.php`
+- `tests/coop/cases_more.php`
+- `tests/coop/cases_party.php`
+- `tests/coop/run.php`
+- `tools/coop_demo.php`
+- `tools/export_sql.php`
+- `tools/install.php`
+- `tools/lib.php`
+- `views/layout.php`
+- `views/manual/chapters/01-getting-started.html`
+- `views/manual/chapters/02-home-and-reports.html`
+- `views/manual/chapters/03-chart-of-accounts.html`
+- `views/manual/chapters/05-customers.html`
+- `views/manual/chapters/06-vendors.html`
+- `views/manual/chapters/07-inventory.html`
+- `views/manual/chapters/08-point-of-sale.html`
+- `views/manual/chapters/09-banking.html`
+- `views/manual/chapters/11-administration.html`
+- `views/manual/chapters/13-cooperative.html`
+- `views/manual/chapters/14-appendices.html`
+- `views/manual/chapters/14-parties.html`
+- `views/manual/manual.json`
+- `views/manual/search.json`
+- `views/platform_layout.php`
+
+## Water system files adapted
+
+Most of these carry the same mechanical changes: the session/config bootstrap of the integrated system instead of the
+former `session_start()`, the integrated title and fonts, and (for the accounting and inventory parts) the posting
+bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
+
+- `water/assets/`: 1
+- `water/common/`: 34
+- `water/database/`: 1
+- `water/process/`: 110
+- `water/resources/`: 1
+- `water/views/`: 76
+
+<details><summary>Every adapted water file</summary>
+
+- `water/assets/css/ui-consistency.css`
+- `water/common/accountingReportPage.php`
+- `water/common/billAccountingCorrectionHelpers.php`
+- `water/common/billCreationHelpers.php`
+- `water/common/billLifecycleHelpers.php`
+- `water/common/billingHelpers.php`
+- `water/common/business-request.js`
+- `water/common/business-responsive.css`
+- `water/common/business-ui-consistency.js`
+- `water/common/businessRequestGuard.php`
+- `water/common/collectionReceiptHelpers.php`
+- `water/common/customerLedgerHelpers.php`
+- `water/common/dataImportHelpers.php`
+- `water/common/dataImportMappingHelpers.php`
+- `water/common/displayHelpers.php`
+- `water/common/helpCenterHelpers.php`
+- `water/common/institutionConfigurationHelpers.php`
+- `water/common/journalVoidHelpers.php`
+- `water/common/navbar.php`
+- `water/common/operationTokenHelpers.php`
+- `water/common/paymentService.php`
+- `water/common/readingHelpers.php`
+- `water/common/setup-tutorial.css`
+- `water/common/setup-tutorial.js`
+- `water/common/setupReadinessHelpers.php`
+- `water/common/setupTutorial.php`
+- `water/common/systemDataHelpers.php`
+- `water/common/ui-consistency.css`
+- `water/common/ui-consistency.js`
+- `water/common/userProfileHelpers.php`
+- `water/common/waterBillCodeProvisioningHelpers.php`
+- `water/common/waterBillingSnapshotHelpers.php`
+- `water/common/waterRateBillingHelpers.php`
+- `water/common/waterRateGroupHelpers.php`
+- `water/common/waterReadingWorkflowHelpers.php`
+- `water/database/config.php`
+- `water/process/accessControlHelpers.php`
+- `water/process/addBatchInstallmentBill.php`
+- `water/process/addBatchOneTimeBill.php`
+- `water/process/addBillCode.php`
+- `water/process/addBillPeriod.php`
+- `water/process/addDiscount.php`
+- `water/process/addDiscountedMembers.php`
+- `water/process/addInstallmentBill.php`
+- `water/process/addMember.php`
+- `water/process/addOneTimeBill.php`
+- `water/process/addWaterMeterDiscount.php`
+- `water/process/addWaterMeterMember.php`
+- `water/process/addWaterPipeSize.php`
+- `water/process/applyDiscountToRateCode.php`
+- `water/process/autoAssignSeniors.php`
+- `water/process/billLifecycleProcess.php`
+- `water/process/billingReceiptHelpers.php`
+- `water/process/bulkUpdateMemberRateCode.php`
+- `water/process/collectionAccountingHelpers.php`
+- `water/process/collectionCorrectionProcess.php`
+- `water/process/computeBillMaintenanceWaterAmount.php`
+- `water/process/createRateCode.php`
+- `water/process/deleteBatchOneTimeBill.php`
+- `water/process/deleteBillCode.php`
+- `water/process/deleteBillPeriod.php`
+- `water/process/deleteDiscount.php`
+- `water/process/deleteDiscountPrivilegeRule.php`
+- `water/process/deleteDiscountedMembers.php`
+- `water/process/deleteInstallmentBill.php`
+- `water/process/deleteOneTimeBill.php`
+- `water/process/deleteRateCode.php`
+- `water/process/deleteWaterMeterDiscount.php`
+- `water/process/deleteWaterMeterMember.php`
+- `water/process/deleteWaterPipeSize.php`
+- `water/process/deleteWaterRateGroup.php`
+- `water/process/disconnectionHelpers.php`
+- `water/process/disconnectionNoticeHelpers.php`
+- `water/process/downloadImportIssues.php`
+- `water/process/downloadUserManual.php`
+- `water/process/editBatchOneTimeBill.php`
+- `water/process/editBillCode.php`
+- `water/process/editBillPeriod.php`
+- `water/process/editDiscount.php`
+- `water/process/editInstallmentBill.php`
+- `water/process/editOneTimeBill.php`
+- `water/process/editRateCode.php`
+- `water/process/editWaterMeterDiscount.php`
+- `water/process/editWaterMeterMember.php`
+- `water/process/editWaterPipeSize.php`
+- `water/process/generateRecurringBill.php`
+- `water/process/generateRecurringBills.php`
+- `water/process/getAllReceivables.php`
+- `water/process/getBatchMembers.php`
+- `water/process/getInventoryItem.php`
+- `water/process/getMemberReadingData.php`
+- `water/process/getMembersByStreet.php`
+- `water/process/getPeriodReadings.php`
+- `water/process/getReadingHistory.php`
+- `water/process/getSetupReadiness.php`
+- `water/process/getSoaData.php`
+- `water/process/getWaterRates.php`
+- `water/process/installmentBillingInventoryHelpers.php`
+- `water/process/inventoryCostingHelpers.php`
+- `water/process/inventoryIssuanceAccountingHelpers.php`
+- `water/process/journalNumberingHelpers.php`
+- `water/process/journal_helpers.php`
+- `water/process/logout.php`
+- `water/process/manageMemberWRDiscount.php`
+- `water/process/markNotificationRead.php`
+- `water/process/markPaidOneTimeBill.php`
+- `water/process/oneTimeBillingInventoryHelpers.php`
+- `water/process/organizationUnitHelpers.php`
+- `water/process/paymentAdjustmentProcess.php`
+- `water/process/postBilling.php`
+- `water/process/recurringBillingProcess.php`
+- `water/process/refreshImportReconciliation.php`
+- `water/process/registerReceiptPrint.php`
+- `water/process/repairSetupPrerequisite.php`
+- `water/process/revalidateImportBatch.php`
+- `water/process/reverseItemIssuance.php`
+- `water/process/runImportChunk.php`
+- `water/process/runRecurringBilling.php`
+- `water/process/saveBatchReading.php`
+- `water/process/saveBranch.php`
+- `water/process/saveCollectionPolicyConfiguration.php`
+- `water/process/saveDiscountPrivilegeRule.php`
+- `water/process/saveDivision.php`
+- `water/process/saveImportMappingRule.php`
+- `water/process/saveIndividualReading.php`
+- `water/process/saveInstitutionConfiguration.php`
+- `water/process/saveItemIssuance.php`
+- `water/process/saveOrganizationUnit.php`
+- `water/process/saveSegment.php`
+- `water/process/saveSetupTutorialProgress.php`
+- `water/process/saveWaterBillingBillCode.php`
+- `water/process/saveWaterRateGroup.php`
+- `water/process/searchAllReceivables.php`
+- `water/process/searchMembers.php`
+- `water/process/searchOtherReceivables.php`
+- `water/process/searchWaterBillReceivables.php`
+- `water/process/stageImportChunk.php`
+- `water/process/stageImportCsv.php`
+- `water/process/sysSequenceHelpers.php`
+- `water/process/toggleScheduleStatus.php`
+- `water/process/updateFreeCubic.php`
+- `water/process/updateImportBatchOptions.php`
+- `water/process/updateManualDisconnection.php`
+- `water/process/updateMemberRateCode.php`
+- `water/process/updateMemberSequence.php`
+- `water/process/updateWaterRateGroup.php`
+- `water/resources/manuals/user_manual_content.json`
+- `water/views/access_control.php`
+- `water/views/account_setup_required.php`
+- `water/views/accounting_management.php`
+- `water/views/accounts_payable.php`
+- `water/views/balance_sheet.php`
+- `water/views/bill_codes.php`
+- `water/views/bill_period.php`
+- `water/views/billing_adjustments.php`
+- `water/views/billing_history.php`
+- `water/views/billing_list.php`
+- `water/views/billing_management.php`
+- `water/views/book_types.php`
+- `water/views/branches.php`
+- `water/views/chart_of_accounts.php`
+- `water/views/collection_corrections.php`
+- `water/views/collection_management.php`
+- `water/views/collection_policy_configuration.php`
+- `water/views/collection_receipt.php`
+- `water/views/coming_soon.php`
+- `water/views/customer_ledger.php`
+- `water/views/dashboard.php`
+- `water/views/disconnection_management.php`
+- `water/views/discount_management.php`
+- `water/views/discount_privilege_rules.php`
+- `water/views/discounted_members.php`
+- `water/views/discounts.php`
+- `water/views/divisions.php`
+- `water/views/forgot_password.php`
+- `water/views/general_ledger.php`
+- `water/views/generate_disconnection_notice.php`
+- `water/views/generate_official_receipt.php`
+- `water/views/generate_soa.php`
+- `water/views/help_center.php`
+- `water/views/import_management.php`
+- `water/views/income_statement.php`
+- `water/views/installment_bill.php`
+- `water/views/institution_configuration.php`
+- `water/views/inventory_adjustment.php`
+- `water/views/inventory_history.php`
+- `water/views/inventory_items.php`
+- `water/views/inventory_management.php`
+- `water/views/inventory_purchase.php`
+- `water/views/item_issuance.php`
+- `water/views/journal_entry.php`
+- `water/views/login.php`
+- `water/views/member_list.php`
+- `water/views/meter_reading_list_print.php`
+- `water/views/notifications.php`
+- `water/views/one_time_billing.php`
+- `water/views/organization_units.php`
+- `water/views/other_payments.php`
+- `water/views/other_payments_collection.php`
+- `water/views/payment_history.php`
+- `water/views/print_meter_reading_list.php`
+- `water/views/profile.php`
+- `water/views/profile_cash_gl_configuration.php`
+- `water/views/rate_codes.php`
+- `water/views/rates_management.php`
+- `water/views/reading_entry.php`
+- `water/views/reading_history.php`
+- `water/views/recurring_bill.php`
+- `water/views/register.php`
+- `water/views/reports_management.php`
+- `water/views/search.php`
+- `water/views/segments.php`
+- `water/views/settings.php`
+- `water/views/stock_monitoring.php`
+- `water/views/subsidiary_ledger_report.php`
+- `water/views/trial_balance.php`
+- `water/views/update_billing.php`
+- `water/views/user_configuration.php`
+- `water/views/user_manual.php`
+- `water/views/water_bills_collection.php`
+- `water/views/water_meter.php`
+- `water/views/water_rate_discounts.php`
+- `water/views/water_rates.php`
+
+</details>
+
+## Water system files shipped unchanged
+
+- `water/common/`: 8
+- `water/process/`: 12
+- `water/resources/`: 5
+- `water/seeders/`: 1
+- `water/storage/`: 2
+
+## Not shipped
+
+Cooperative system (`storage/platform/multi_company.json` is the switch the program writes when several companies are
+set up; the copy in the ZIP named the build machine's own databases, so a new installation starts without it):
+
+- `storage/platform/multi_company.json`
+
+Water system (by folder; `.git` excluded). These are the endpoints of the retired water accounting, inventory,
+supplier and user pages (their jobs are done by the cooperative pages: `docs/RETAINED_REPLACED_MATRIX.md`), the
+former login/landing `index.php`, database dumps and reset scripts (`database/*.sql`, `seeders/truncate.sql`: the
+schema is in `database/migrations/2026_12_01_water_billing.sql` and the data comes through `tools/migrate_water.php`),
+a CSV export of customer data (`files/`), sample import files (`storage/imports/`), the former manuals (replaced by
+generated ones) and the former project notes and test evidence (`docs/`, `README.md`, `scenarios.txt`,
+`recommendations.txt`).
+
+- `README.md`: 1
+- `database/01_reset_transactions_and_periods.sql`: 1
+- `database/02_full_reset_keep_operators.sql`: 1
+- `database/empty_memberlist.sql`: 1
+- `database/mnssmc_test.sql`: 1
+- `docs/AUDIT_IMPLEMENTATION_REPORT_2026-09-24.md`: 1
+- `docs/FILES_CHANGED.txt`: 1
+- `docs/test-evidence/`: 17
+- `files/Account Master DB july 3 2026 (2).csv`: 1
+- `index.php`: 1
+- `process/addInventoryAdjustment.php`: 1
+- `process/addPurchase.php`: 1
+- `process/addSupplier.php`: 1
+- `process/getLoginProfileOptions.php`: 1
+- `process/payAccountsPayable.php`: 1
+- `process/saveAccessControl.php`: 1
+- `process/saveReorderLevel.php`: 1
+- `process/saveUserConfiguration.php`: 1
+- `process/voidPurchase.php`: 1
+- `recommendations.txt`: 1
+- `resources/manuals/`: 2
+- `scenarios.txt`: 1
+- `seeders/truncate.sql`: 1
+- `storage/imports/`: 8

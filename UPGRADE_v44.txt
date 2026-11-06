@@ -1,0 +1,45 @@
+G-SMaRT Integrated Cooperative System - version 44 (2026-11-02)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v15.xlsx. This package holds only
+the files added or changed since version 43. Copy the folder over your installation,
+keeping the folder structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No migration: nothing to run on the database. database/accounting_system.sql (the sample
+database) is written again with a sample joint account and a sample institution;
+accounting_system_clean.sql is unchanged.
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed (see docs/ADDITIONAL_MODULE_V15_CHECKLIST.md)
+----------------------------------------------------------
+- Members & Others > Member Center > New member > Joint account / Institution (and
+  every saved joint account or institution) opens the form of the former program:
+    Joint/Institution Details   Member ID, the status and type in large letters (NEW,
+                                ASSOCIATE - JOINT), Membership name, Authorized
+                                representatives (name, position / relation, member if
+                                a member), Residence address, Office / business
+                                address, Contact details (contact list, e-mail, TIN),
+                                specimen signatures
+    Membership Information      Passbook number with Get passbook number, Membership
+                                date, Type, Status, PMES date, Cluster, Segmentation;
+                                Branch, subscribed shares, par value, account officer;
+                                the alert at the counter and notes
+  Family and beneficiaries, Financial and Loan and savings grouping are not shown for a
+  joint account or an institution (an individual keeps them). Water, Customer and
+  Vendor Defaults stay. Choosing the Kind of member switches the form at once. A
+  joint account or institution takes a member type of its kind.
+- Get passbook number (on the joint form, and on Loan and savings grouping for an
+  individual): the next number of Document Numbering > Passbook that no member has,
+  taken from the series when the member is saved. A passbook number already given to
+  another member is refused.
+- The Type list of a joint account or institution shows the member types of its kind;
+  a new one starts with Associate - Joint or Associate - Institutional. Its mobile is
+  the first mobile of its contact list.
+
+Set-up after the upgrade
+------------------------
+- Optional: Members & Others > Document Numbering > Passbook: the prefix, the next
+  number and the number of digits of the passbook numbers (000001 at first).

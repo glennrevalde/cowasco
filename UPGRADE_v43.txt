@@ -1,0 +1,65 @@
+G-SMaRT Integrated Cooperative System - version 43 (2026-11-01)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v14.xlsx. This package holds only
+the files added or changed since version 42. Copy the folder over your installation,
+keeping the folder structure. config/config.php is not included and is never changed.
+
+Database
+--------
+One migration, for MySQL 5.5 (back up the database first). It needs the migration of
+version 42 (2027_03_14_share_capital_billing.sql) first:
+
+  database/migrations/2027_03_21_share_capital_terms_batch.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         php tools/upgrade.php
+
+It adds four columns and one index:
+
+  share_capital_plans.term_days   the term of a member's fixed billing, in days (empty = no
+                                  due date, open)
+  share_capital_plans.batch_no    the batch or import that put the member on fixed billing
+  share_capital_bills.due_date    the due date of a bill (empty = open)
+  share_capital_bills.term_days   the term it was posted with
+
+Every billing and bill on file stays open (no due date), as before. Nothing is deleted
+and no amount changes. Safe to run a second time. Until it is run, the program stops
+after log-in with a page that names it.
+
+database/accounting_system.sql and accounting_system_clean.sql are written again with
+it (a new installation needs nothing else).
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed (see docs/ADDITIONAL_MODULE_V14_CHECKLIST.md)
+----------------------------------------------------------
+- Fixed Share Capital Billing, Add member / Edit: a Term (days) field. Filled in, it
+  sets the due date of each bill (its posting date plus the term); blank, the bill has
+  no due date (open). The list shows the term of each member (Term 10 days, or No due
+  date) and Bills shows the due date of each bill.
+- Fixed Share Capital Billing > Batch billing (new): Batch Share Capital Billing.
+  Amount, Frequency, Start date, Posting date (day) and Term (days) once, then tick the
+  members, each with the share capital account beside the name (Find, tick all shown,
+  "With a water-service account only"). Save puts every member ticked on fixed billing,
+  or none; the members of one batch share a batch number (SCB-...).
+- Fixed Share Capital Billing > Import (new): the members and their share capital
+  accounts from a CSV or Excel (.xlsx) file (Excel and CSV templates on the page), with
+  values for the blank cells (amount, frequency, start date, posting day, term). Every
+  line is shown for review first: a line with a problem in red, with the problem and
+  the cell at fault; correct a cell by typing in it, remove a member with x, or remove
+  every red line at once. Post billing puts every member on fixed billing, or none (batch
+  SCI-...).
+- One-Time Billing > Import Charges (new; also linked from Batch Issue Charges): many
+  members' charges from a CSV or Excel file, each line with its own charge category
+  (code name of Bill Codes), amount (blank: the bill code's price; a material: its
+  price times the quantity) and term. The same review (red lines to correct or remove),
+  then Issue bills makes one one-time bill and one invoice for each line, as Issue
+  Individual Charge does (the member discount, the stock of a material, the class),
+  every line or none. The water bill's own bill code is refused.
+- Collections (Cashier): a share capital bill shows its due date, or No due date; one
+  past its due date is marked Late. No penalty or compromise is suggested on them.
+- Excel (.xlsx) files are read when PHP's zip extension is on (in C:\xampp\php\php.ini
+  remove the ";" before extension=zip and restart Apache); otherwise choose CSV files.
+- The rights: the import pages follow their page (Fixed Share Capital Billing, One-Time
+  Billing); posting or issuing takes the Create right. Nothing to set.

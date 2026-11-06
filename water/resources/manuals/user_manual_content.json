@@ -1,0 +1,1863 @@
+{
+    "metadata": {
+        "product": "Water Billing",
+        "title": "Water Billing User Manual",
+        "subtitle": "Water operations in the integrated cooperative system",
+        "version": "2.4",
+        "revision_date": "2 November 2026",
+        "audience": "System administrators, billing officers, meter readers, cashiers, accountants, inventory officers and authorized report users",
+        "support_note": "Page availability depends on the user's roles and the pages given to them in Page Access Configuration."
+    },
+    "role_guides": [
+        {
+            "name": "System Administrator",
+            "responsibilities": [
+                "Configure users, roles and page access (System Administration)",
+                "Maintain organization units, bill codes, rates, discounts, and system settings",
+                "Review controlled billing and payment adjustments",
+                "Coordinate database backup, migrations, and release validation"
+            ]
+        },
+        {
+            "name": "Billing Officer / Meter Reader",
+            "responsibilities": [
+                "Create and monitor billing periods",
+                "Record individual or batch meter readings",
+                "Review computed charges and exceptions",
+                "Post approved water bills and generate statements"
+            ]
+        },
+        {
+            "name": "Cashier / Collector",
+            "responsibilities": [
+                "Search customer receivables",
+                "Collect full or partial payments",
+                "Confirm cash tender and change",
+                "Print or reprint official receipts and review payment history"
+            ]
+        },
+        {
+            "name": "Accounting Officer",
+            "responsibilities": [
+                "Review journals, the general ledger and subsidiary ledgers in the Report Center",
+                "Maintain accounting setup assigned to the role (Chart of Accounts, bill code accounts)",
+                "Reconcile billing, collections, receivables and controlled reversals",
+                "Review supplier bills and the A/P Aging reports"
+            ]
+        },
+        {
+            "name": "Inventory / Purchasing Officer",
+            "responsibilities": [
+                "Maintain inventory items and suppliers in the cooperative Inventory and Vendors menus",
+                "Record purchases, supplier bills and stock adjustments",
+                "Issue materials to field work with Material Issuance",
+                "Review stock status, movements and inventory-backed billing"
+            ]
+        },
+        {
+            "name": "Manager / Report User",
+            "responsibilities": [
+                "Review operational dashboards and reports",
+                "Validate report filters and control totals",
+                "Print or export authorized reports",
+                "Escalate discrepancies before records are adjusted"
+            ]
+        }
+    ],
+    "quick_start": [
+        {
+            "title": "1. Sign in",
+            "text": "Open the login page of the system and enter your assigned username and password. The same sign-in opens the cooperative, accounting and water pages."
+        },
+        {
+            "title": "2. Confirm your access",
+            "text": "The side menu shows only the pages given to your roles. Water pages are under Water Billing; contact the administrator when a required page is missing."
+        },
+        {
+            "title": "3. Complete master setup",
+            "text": "Before live billing, confirm organization units, members, bill codes, rate codes, tariff tiers, discounts, and accounting mappings."
+        },
+        {
+            "title": "4. Run the water-billing cycle",
+            "text": "Create an open period, enter readings, review calculations, post approved bills, collect payments, and reconcile reports."
+        },
+        {
+            "title": "5. Protect financial history",
+            "text": "Do not directly alter billed or paid records. Use approved reversal, refund, debit, or credit adjustment workflows."
+        }
+    ],
+    "articles": [
+        {
+            "id": "getting-started",
+            "category": "Getting Started",
+            "title": "Sign in, navigate, and switch responsibilities safely",
+            "summary": "Learn the login flow, side-menu navigation, page access and secure logout.",
+            "keywords": [
+                "login",
+                "navigation",
+                "role",
+                "access",
+                "logout",
+                "sidebar"
+            ],
+            "page": "dashboard",
+            "page_file": "dashboard.php",
+            "steps": [
+                "Open the system login page using the approved network address.",
+                "Enter your assigned username and password. Never use another user's credentials.",
+                "After sign-in, confirm the name shown in the user menu at the top right; it also lists your roles.",
+                "Use the sidebar to open only the modules required for the current task.",
+                "When finished, select the sign-out icon in the sidebar footer and close the browser on shared workstations."
+            ],
+            "notes": [
+                "A missing menu item usually means your roles do not have access to that page.",
+                "Do not bookmark processing endpoints or attempt to open unassigned pages directly."
+            ]
+        },
+        {
+            "id": "member-registration",
+            "category": "Members",
+            "title": "Open and maintain a water-service account",
+            "summary": "Create the water-service account of a consumer, link it to the consumer's party record, and keep its address, status and rate code accurate.",
+            "keywords": [
+                "water account",
+                "service account",
+                "consumer",
+                "customer",
+                "party",
+                "register",
+                "address",
+                "contact",
+                "rate code",
+                "address sub-group",
+                "purok",
+                "sitio",
+                "zone"
+            ],
+            "page": "member_list",
+            "page_file": "member_list.php",
+            "steps": [
+                "Open Water Service Accounts and choose the option to add an account.",
+                "Search the party list first: a person or organization that is already a member, customer or supplier keeps one party record and gets another water-service account under it. A water customer is not made a cooperative member by opening an account.",
+                "Enter the account details from the approved application: name, address, city, contact channels, organization unit, status, rate code and pipe size.",
+                "Review the duplicate check before saving; a consumer with several service connections gets several accounts under the same party.",
+                "After saving, open the account in the Party / Member Center (Water tab) and verify the details before entering readings or bills."
+            ],
+            "notes": [
+                "Incorrect rate-code assignment affects every future water calculation.",
+                "Do not create a second account merely to correct a spelling or contact detail; edit the existing account when permitted.",
+                "Membership is applied for and approved in the Cooperative menu (Membership Applications), never through the water module.",
+                "The Address sub-group list (purok, sitio, zone) is kept on Water Billing > Service & Materials > Address Sub-groups, or from the link \"Add, edit or delete sub-groups\" under any Address sub-group box. A renamed sub-group is changed on every member and account that has it; one in use cannot be deleted, but it can be switched off so it is no longer offered."
+            ]
+        },
+        {
+            "id": "organization-setup",
+            "category": "Administration",
+            "title": "Configure branches, divisions, and segments",
+            "summary": "Maintain the organization dimensions used by billing, accounting, reporting, and collection records.",
+            "keywords": [
+                "branch",
+                "division",
+                "segment",
+                "organization unit",
+                "setup"
+            ],
+            "page": "organization_units",
+            "page_file": "organization_units.php",
+            "steps": [
+                "Open Organization Units.",
+                "Create or review branches first, followed by divisions and segments required by the accounting structure.",
+                "Use clear codes and descriptions that match the approved chart and reporting structure.",
+                "Avoid deleting units already used by financial transactions; deactivate or preserve historical values according to policy.",
+                "Test the selections in a nonfinancial setup form before the next billing run."
+            ],
+            "notes": [
+                "Organization dimensions are stored with billing and collection journals; inconsistent setup complicates reconciliation."
+            ]
+        },
+        {
+            "id": "rate-codes-and-tiers",
+            "category": "Rates and Discounts",
+            "title": "Configure rate codes and progressive water tiers",
+            "summary": "Create a complete, continuous tariff with a fixed first tier and an open-ended final tier where required.",
+            "keywords": [
+                "rate",
+                "tariff",
+                "tier",
+                "minimum charge",
+                "fixed",
+                "variable",
+                "water meter"
+            ],
+            "page": "water_meter",
+            "page_file": "water_meter.php",
+            "steps": [
+                "Open Rates Management, then review or create the required rate code.",
+                "Open Water Meter Rates and select the rate code to configure.",
+                "Enter the first tier using the approved starting value, ending value, amount, and FIXED or VARIABLE billing type.",
+                "Add each succeeding tier so its starting value is exactly one unit after the previous ending value.",
+                "Make the final tier open-ended by leaving its upper limit blank when the tariff must cover all higher consumption.",
+                "Review the configuration status and correct every reported gap, overlap, duplicate start, or missing terminal tier before billing."
+            ],
+            "notes": [
+                "The system blocks incomplete tariffs instead of silently ignoring consumption above the final configured range.",
+                "Rate amounts use controlled decimal precision. Confirm the official tariff before activation."
+            ]
+        },
+        {
+            "id": "water-discounts",
+            "category": "Rates and Discounts",
+            "title": "Create and assign water discounts",
+            "summary": "Configure free-water allowances, percentage or fixed discounts, eligibility limits, and one active assignment per member.",
+            "keywords": [
+                "discount",
+                "free water",
+                "percentage",
+                "fixed discount",
+                "privilege",
+                "assignment"
+            ],
+            "page": "water_rate_discounts",
+            "page_file": "water_rate_discounts.php",
+            "steps": [
+                "Open Discount Management, then select Water Rate Discounts.",
+                "Create a descriptive discount name and enter a nonnegative free-water allowance when applicable.",
+                "Choose one monetary mode only: none, percentage, or fixed.",
+                "For a percentage discount, enter a value greater than zero and not more than 100 percent.",
+                "For a fixed discount, enter a positive amount. The applied discount cannot exceed the base water charge.",
+                "Set the maximum eligible consumption when the discount should stop above an approved usage level.",
+                "Assign the discount to the member. A new assignment replaces the member's previous water-discount assignment."
+            ],
+            "notes": [
+                "Calculation order is free-water allowance, tariff/minimum charge, eligibility check, then one approved monetary discount."
+            ]
+        },
+        {
+            "id": "billing-periods",
+            "category": "Water Billing",
+            "title": "Create, close, reopen, and protect billing periods",
+            "summary": "Manage inclusive billing dates without overlap and prevent historical periods from being changed incorrectly.",
+            "keywords": [
+                "billing period",
+                "open",
+                "close",
+                "reopen",
+                "overlap",
+                "period dates"
+            ],
+            "page": "bill_period",
+            "page_file": "bill_period.php",
+            "steps": [
+                "Open Billing Management, then Billing Periods.",
+                "Choose an approved duration and enter the inclusive starting and ending dates.",
+                "Confirm the ending date matches the selected duration and does not overlap any existing period.",
+                "When creating the next period automatically, verify that it begins one day after the current period ends.",
+                "Keep the period open while readings are being entered and reviewed.",
+                "Before closing, resolve every unposted reading draft. Closing is blocked while unposted readings remain.",
+                "Reopen only when the period has no billed or paid readings. Used period dates and codes are protected from historical changes.",
+                "Delete only completely unused periods through the provided action and confirmation."
+            ],
+            "notes": [
+                "Period ranges are inclusive. A shared boundary date is considered an overlap."
+            ]
+        },
+        {
+            "id": "individual-reading",
+            "category": "Meter Reading",
+            "title": "Record an individual meter reading",
+            "summary": "Enter a present reading while the system derives the authoritative previous reading and charge from stored data.",
+            "keywords": [
+                "meter reading",
+                "individual",
+                "previous reading",
+                "present reading",
+                "consumption",
+                "edit reading",
+                "delete reading",
+                "unposted reading"
+            ],
+            "page": "reading_entry",
+            "page_file": "reading_entry.php",
+            "steps": [
+                "Open Billing Management, then Enter Readings.",
+                "Select Individual Entry and choose an open billing period.",
+                "Search and select the active member.",
+                "Review the previous reading supplied by the system. It comes from the latest valid earlier billing period and must not be typed manually.",
+                "Enter the nonnegative whole-number present reading. It cannot be lower than the previous reading unless a separate approved meter-reset workflow exists.",
+                "Review the displayed consumption, tariff breakdown, free-water allowance, discount, and amount due.",
+                "Save the draft and verify it in Reading History before posting.",
+                "To correct a reading before it is posted, find it under Recorded Readings and choose Edit: type the right present reading (the consumption and the amount are worked out again as you type) and choose Save changes.",
+                "To remove a reading before it is posted, choose Delete, give the reason (at least 5 characters, kept in the audit log) and confirm. The account can then be read again for the period."
+            ],
+            "notes": [
+                "Posted (billed) or paid readings show \"Posted, locked\" on Recorded Readings and cannot be edited or deleted; they are corrected through Billing Adjustments.",
+                "A reading cannot be deleted while the account has a reading of a later period: the later reading's previous reading came from it.",
+                "Edit needs the Create or Edit right on Reading Entry; Delete needs that and the Delete right.",
+                "A reading cannot be inserted into an earlier period when a later reading already exists."
+            ]
+        },
+        {
+            "id": "batch-reading",
+            "category": "Meter Reading",
+            "title": "Record batch meter readings",
+            "summary": "Safely encode readings for an approved street or zone while preserving ownership and record immutability.",
+            "keywords": [
+                "batch",
+                "meter reading",
+                "street",
+                "zone",
+                "multiple members",
+                "save"
+            ],
+            "page": "reading_entry",
+            "page_file": "reading_entry.php",
+            "steps": [
+                "Open Enter Readings and select Batch Entry.",
+                "Choose one open billing period and the required street or zone filter.",
+                "Load the member list and verify that every displayed account belongs to the selected area.",
+                "Enter each present reading. The system validates the stored previous reading and record ownership for every row.",
+                "Review row-level errors before finalizing. Invalid rows are reported with specific reasons.",
+                "Save in manageable batches; the system limits a request to 500 rows.",
+                "Review Reading History and the Meter Reading List before posting."
+            ],
+            "notes": [
+                "Do not reuse an old batch page after a period is closed. Reload the page and confirm the selected period before saving."
+            ]
+        },
+        {
+            "id": "posting-water-bills",
+            "category": "Water Billing",
+            "title": "Review and post water bills",
+            "summary": "Post only validated reading drafts from one open period using immutable tariff and discount snapshots.",
+            "keywords": [
+                "post bill",
+                "water bill",
+                "snapshot",
+                "due date",
+                "journal",
+                "billing date"
+            ],
+            "page": "billing_history",
+            "page_file": "billing_history.php",
+            "steps": [
+                "Confirm the period remains open and all intended readings have been saved and reviewed.",
+                "Review the Meter Reading List, Reading History, and exception messages for the exact period.",
+                "Open the posting action from Billing Management and select only that billing period.",
+                "Enter an approved billing date that is not earlier than the period end.",
+                "Select the approved payment term so the due date equals the period end plus the configured term.",
+                "Confirm the branch, division, and segment selections.",
+                "Post the bills. The system verifies the saved calculation snapshot and does not recalculate from newly edited rates or discounts.",
+                "Review posted totals, journal references, billing history, and a sample statement before beginning collections."
+            ],
+            "notes": [
+                "Legacy drafts without a valid snapshot must be reviewed and backfilled before posting.",
+                "Zero-amount bills may be posted without an invalid zero-value journal; positive bills require a successful billing journal."
+            ]
+        },
+        {
+            "id": "soa-history",
+            "category": "Water Billing",
+            "title": "Generate statements and review billing history",
+            "summary": "Use stored bill values to produce statements and verify customer balances without changing historical charges.",
+            "keywords": [
+                "statement",
+                "SOA",
+                "billing history",
+                "reading history",
+                "customer ledger"
+            ],
+            "page": "generate_soa",
+            "page_file": "generate_soa.php",
+            "steps": [
+                "Open Generate Statement of Account.",
+                "Search for the member and select the required as-of date or billing range.",
+                "Review water, one-time, installment, and recurring receivables shown by the page.",
+                "Confirm cancelled and deleted items are not included in active balances.",
+                "Print or save the statement using the approved paper setting.",
+                "For a transaction-level review, open Customer Ledger, Billing History, Reading History, or Payment History as permitted."
+            ],
+            "notes": [
+                "Historical posted water bills display their stored snapshot or preserved legacy amount; current tariff changes must not alter old statements."
+            ]
+        },
+        {
+            "id": "one-time-billing",
+            "category": "Other Billing",
+            "title": "Create a one-time bill",
+            "summary": "Charge an approved service, fee, or inventory-backed item using validated member, amount, quantity, due date, and accounting dimensions.",
+            "keywords": [
+                "one-time bill",
+                "custom bill",
+                "service charge",
+                "inventory billing",
+                "batch billing",
+                "import charges"
+            ],
+            "page": "one_time_billing",
+            "page_file": "one_time_billing.php",
+            "steps": [
+                "Open Billing Management, then One-Time Billing.",
+                "Select an active member and an active bill code.",
+                "Enter the billing date, approved term or due date, description, organization dimensions, and required quantity.",
+                "For noninventory codes, enter the approved charge amount.",
+                "For inventory-backed codes, verify quantity and stock; the system calculates the authoritative selling total from the configured price.",
+                "Review the transaction and save it once. The system checks stock and accounting requirements inside the transaction.",
+                "Verify the bill in Billing History or Collections before issuing the customer statement."
+            ],
+            "notes": [
+                "Batch one-time billing deduplicates and locks members and is limited to 500 accounts per request.",
+                "Import Charges issues many members' charges from a CSV or Excel file, each line with its own charge category and amount, after a review of every line (lines with a problem in red, to correct or remove)."
+            ]
+        },
+        {
+            "id": "installment-billing",
+            "category": "Other Billing",
+            "title": "Create and monitor an installment contract",
+            "summary": "Generate an exact server-side schedule and let Collections determine schedule and parent payment status.",
+            "keywords": [
+                "installment",
+                "schedule",
+                "fixed",
+                "flexible",
+                "due dates",
+                "contract",
+                "incremental search"
+            ],
+            "page": "installment_bill",
+            "page_file": "installment_bill.php",
+            "steps": [
+                "Open Installment Billing and select an active member and bill code.",
+                "Enter the approved total, start date, payment mode, term, description, and organization dimensions.",
+                "For fixed schedules, allow the server to distribute exact cents across the required number of installments.",
+                "For flexible schedules, enter exactly the required number of positive amounts whose rounded total equals the contract total.",
+                "Review generated dates, including month-end handling, then save.",
+                "Collect installment payments only through Collection Management. Do not use direct paid/unpaid toggles.",
+                "The parent contract becomes completed only when every locked schedule is fully paid."
+            ],
+            "notes": [
+                "Batch installment billing excludes inventory bill codes to avoid unsafe shared stock allocation.",
+                "Cancellation or deletion is blocked when paid schedules exist until the related payments are reversed properly.",
+                "The Consumer Account list narrows as you type, from the first letter: the names that start with what you typed come first. Up and Down move, Enter takes the highlighted account."
+            ]
+        },
+        {
+            "id": "recurring-billing",
+            "category": "Other Billing",
+            "title": "Manage recurring plans and subscriptions",
+            "summary": "Create recurring charges carefully and collect generated receivables through the unified collection workflow.",
+            "keywords": [
+                "recurring",
+                "subscription",
+                "plan",
+                "cycle",
+                "automatic bill"
+            ],
+            "page": "recurring_bill",
+            "page_file": "recurring_bill.php",
+            "steps": [
+                "Open Recurring Billing and review the available plans and subscriptions.",
+                "Create or edit plan terms only when authorized and before they are used for new cycles.",
+                "Assign the active member and approved plan, then review the next cycle information.",
+                "Use the system's approved generation action or scheduled process according to local operating procedures.",
+                "Review generated recurring receivables before collection.",
+                "Collect recurring bills through Collection Management so receipts, allocations, balances, and journal records remain consistent."
+            ],
+            "notes": [
+                "Do not mark recurring bills paid directly from the recurring page."
+            ]
+        },
+        {
+            "id": "collections",
+            "category": "Collections",
+            "title": "Collect a full or partial customer payment",
+            "summary": "Use the unified service to collect water, one-time, installment, and recurring receivables with server-derived balances and optional cashier-entered Penalty or Compromise.",
+            "keywords": [
+                "collection",
+                "payment",
+                "partial",
+                "cash",
+                "change",
+                "penalty",
+                "receipt",
+                "compromise",
+                "pre-printed receipt"
+            ],
+            "page": "water_bills_collection",
+            "page_file": "water_bills_collection.php",
+            "steps": [
+                "Open Collection Management and choose the collection page available to your role.",
+                "Search and select the active member.",
+                "Load the receivables and verify that every selected item belongs to the member.",
+                "Enter the principal amount to allocate to each item. A partial amount is allowed but cannot exceed the locked remaining balance.",
+                "Under Other Fees, select Penalty and/or Compromise only when authorized, then type the approved amount manually. The server never calculates or supplies a default amount.",
+                "Enter the validated business date and cash tendered. Future dates and excessive backdating are rejected.",
+                "Confirm the total payment and change, then submit once.",
+                "Open and print the generated receipt. Verify the transaction number, customer, cashier, allocations, remaining balances, tender, change, and journal state."
+            ],
+            "notes": [
+                "Excess cash is change; it is not added as an uncontrolled customer credit.",
+                "If a timeout occurs, search Payment History before attempting another submission to avoid duplicate collection attempts.",
+                "When Company, Security & Closing Date > Water Billing has Collection: print receipt type set to Pre-Printed, the receipt prints only its entries, on the cooperative's printed water bill form; \"Print on plain paper\" on the receipt prints the whole receipt once."
+            ]
+        },
+        {
+            "id": "reversal-refund-adjustment",
+            "category": "Collections",
+            "title": "Reverse, refund, debit, or credit a financial record",
+            "summary": "Use controlled adjustment workflows instead of directly editing paid status, amounts, or historical totals.",
+            "keywords": [
+                "reversal",
+                "refund",
+                "debit",
+                "credit",
+                "adjustment",
+                "void payment"
+            ],
+            "page": "billing_adjustments",
+            "page_file": "billing_adjustments.php",
+            "steps": [
+                "Confirm that an actual correction is required and obtain the approval required by local policy.",
+                "Open Billing Adjustments with a role that may make corrections.",
+                "For a payment correction, select the active receipt and choose reversal or refund. Enter a complete reason and business date.",
+                "For a bill correction, choose debit to increase the obligation or credit to reduce it. A credit cannot reduce the bill below the amount already paid.",
+                "Review the affected allocations, restored balances, installment status, and compensating journal before confirming.",
+                "After completion, print or save the adjustment reference and reconcile the customer ledger, payment history and the general ledger (Journal report)."
+            ],
+            "notes": [
+                "Legacy receipts without complete allocation details are blocked from automatic reversal.",
+                "Never change amount-paid or paid-status fields directly in the database."
+            ]
+        },
+        {
+            "id": "inventory-purchasing",
+            "category": "Inventory and AP",
+            "title": "Record purchases, stock and supplier bills in the cooperative inventory",
+            "summary": "Meters, pipes and supplies are cooperative inventory items: purchases, bills and stock changes are recorded once, in the cooperative Inventory and Vendors menus, and field use is recorded with Material Issuance.",
+            "keywords": [
+                "inventory",
+                "purchase",
+                "supplier",
+                "vendor",
+                "stock",
+                "adjustment",
+                "accounts payable",
+                "meter",
+                "pipe",
+                "material issuance"
+            ],
+            "page": "inv.center",
+            "page_file": "",
+            "steps": [
+                "Open Inventory > Item List and confirm the item (meter, pipe, fitting) exists with its asset, COGS and income accounts.",
+                "Record the purchase with Vendors > Receive Items and Enter Bills (or Enter Bills) using the correct supplier, date, quantities and costs.",
+                "Pay supplier bills with Vendors > Pay Bills; balances are on the A/P Aging reports.",
+                "Issue materials to field work with Water Billing > Material Issuance; the issuance takes the stock out at average cost and posts one inventory adjustment.",
+                "Sell a meter or connection materials to a consumer with a One-Time or Installment bill whose bill code is linked to the inventory item; the bill posts the sale and its cost of goods sold.",
+                "Use Inventory > Adjust Quantity/Value on Hand only for approved physical or valuation corrections, with a clear reason.",
+                "Review Inventory Stock Status by Item and the Inventory Movement Detailed Report after each significant transaction."
+            ],
+            "notes": [
+                "There is one stock ledger for the whole cooperative; the water module has no separate inventory.",
+                "Reverse an issuance from Material Issuance rather than adjusting stock by hand, so the cost and the ledger stay linked."
+            ]
+        },
+        {
+            "id": "accounting-review",
+            "category": "Accounting",
+            "title": "Review water postings in the cooperative general ledger",
+            "summary": "Every water bill, collection, correction and issuance is one document of the cooperative general ledger, posted once with its source reference.",
+            "keywords": [
+                "accounting",
+                "journal",
+                "general ledger",
+                "subsidiary ledger",
+                "debit",
+                "credit",
+                "posted",
+                "water postings"
+            ],
+            "page": "home.reports",
+            "page_file": "",
+            "steps": [
+                "Open the Report Center and choose the Journal, General Ledger, Trial Balance or the customer and A/R reports.",
+                "Filter by date range, account, customer (party), business unit (Water Utility) or branch class.",
+                "A water bill is an invoice numbered with the bill reference; a collection is a payment numbered with the receipt number.",
+                "For collections, verify that the cash debit equals principal plus penalty and that the receivable credits equal the principal collected.",
+                "Corrections never edit a posted document: a voided bill or a reversed receipt keeps its number and gets a linked reversal.",
+                "Escalate any difference between the water registers and the ledger; do not compensate with unrelated manual journal lines."
+            ],
+            "notes": [
+                "The posting of each water event is recorded once (water_postings); repeating a request cannot post it twice."
+            ]
+        },
+        {
+            "id": "disconnection",
+            "category": "Operations",
+            "title": "Review disconnection and reconnection cases",
+            "summary": "Use current receivable status and authorized reasons when disconnecting or reconnecting service.",
+            "keywords": [
+                "disconnection",
+                "reconnection",
+                "delinquent",
+                "service status",
+                "eligibility"
+            ],
+            "page": "disconnection_management",
+            "page_file": "disconnection_management.php",
+            "steps": [
+                "Open Disconnection Management and review the candidate list and source balances.",
+                "Confirm the member identity, current balance, due status, and any recent payment before taking action.",
+                "Enter the approved reason and effective date for disconnection or reconnection.",
+                "Submit the action once and verify the resulting status and log entry.",
+                "When a payment was made immediately before the action, reload the record and recheck eligibility."
+            ],
+            "notes": [
+                "Exceptions to settled-balance or reconnection policy should require documented approval."
+            ]
+        },
+        {
+            "id": "reports-printing",
+            "category": "Reports and Printing",
+            "title": "Generate reports and print readable documents",
+            "summary": "Apply correct filters, review control totals, and use the approved paper and orientation settings.",
+            "keywords": [
+                "reports",
+                "print",
+                "meter list",
+                "receipt",
+                "statement",
+                "ledger",
+                "A4",
+                "letter",
+                "landscape",
+                "receipt layout",
+                "pre-printed",
+                "margins"
+            ],
+            "page": "reports_management",
+            "page_file": "reports_management.php",
+            "steps": [
+                "Open Reports and select the required report type.",
+                "Enter valid date, member, status, and organization filters. Review the on-screen records before export or print.",
+                "Compare report totals with the related billing, collection, inventory, AP, or ledger source when the report is used for reconciliation.",
+                "For the Meter Reading List, use landscape orientation for the full table. Select Letter, Legal, or A4 as required.",
+                "In the print dialog, use 100 percent or Default scale unless a documented printer-specific adjustment is necessary.",
+                "Confirm readable text, wrapped customer names, repeated headers, complete page numbers or footer content, and no clipped rows.",
+                "For receipts, statements, ledgers and disconnection reports, preview every page before final printing.",
+                "For pre-printed forms, open Water Billing > Setup > Receipt Layout Setup, choose the receipt, set the paper and the top, bottom, left and right margins, then drag each entry on the drawing to where the form has room for it (or type its Left and Top), give a reason and Save layout.",
+                "Choose Print a test page and print it on a form at Actual size / 100%; move the entries and print again until they fall in place."
+            ],
+            "notes": [
+                "The Meter Reading List uses larger preview and print typography and should not be reduced by browser shrink-to-fit.",
+                "All measurements on Receipt Layout Setup are in tups: 1,440 tups = 1 inch, 567 tups = 1 cm. The arrow keys move the selected entry by 10 tups, with Shift by 100."
+            ]
+        },
+        {
+            "id": "user-access-settings",
+            "category": "Administration",
+            "title": "Users, roles, page access and water settings",
+            "summary": "Users and their rights are managed once for the whole system; water settings cover the institution, collection policy, organization units and readiness.",
+            "keywords": [
+                "user",
+                "role",
+                "page access",
+                "permissions",
+                "cash account",
+                "settings",
+                "administrator",
+                "printed",
+                "pre-printed",
+                "receipt type"
+            ],
+            "page": "admin.users",
+            "page_file": "",
+            "steps": [
+                "Open System Administration > User Accounts to create users, reset passwords and set the cash account a cashier collects into.",
+                "Assign roles with User Role Configuration; set the pages each role may open with Page Access Configuration (water pages are listed under Water Billing).",
+                "Sign in with a test account and verify the menu and direct-page restrictions.",
+                "Remove access promptly when responsibilities change.",
+                "Review Water Billing > Water Settings (institution signatories, collection policy, organization units and the readiness checklist) after configuration changes."
+            ],
+            "notes": [
+                "A user without a role sees only the pages open to every signed-in user.",
+                "Company, Security & Closing Date > Water Billing chooses Printed (the whole receipt on plain paper) or Pre-Printed (only the entries, on the cooperative's own forms) for the collection receipt and for the official receipt."
+            ]
+        },
+        {
+            "id": "troubleshooting",
+            "category": "Troubleshooting",
+            "title": "Diagnose common operational problems",
+            "summary": "Use safe checks for missing access, blocked readings, invalid tariffs, posting failures, duplicate payments, and print problems.",
+            "keywords": [
+                "error",
+                "troubleshoot",
+                "access denied",
+                "posting failed",
+                "print small",
+                "duplicate payment",
+                "closed period"
+            ],
+            "page": "help_center",
+            "page_file": "help_center.php",
+            "steps": [
+                "Read the complete error message and note the page, member, period, transaction reference, and time.",
+                "Refresh master data only after confirming that the previous operation did not already succeed.",
+                "For access errors, ask the administrator to check your roles (User Role Configuration) and their pages (Page Access Configuration).",
+                "For reading errors, confirm the period is open, the member is active, and the present reading is not below the stored previous reading.",
+                "For tariff errors, verify continuous tiers and one open-ended final tier.",
+                "For posting errors, verify snapshots, period state, dates, organization units, and accounting mappings.",
+                "For payment timeouts, search Payment History before retrying.",
+                "For small print, choose landscape, an approved paper size, and Default or 100 percent scale.",
+                "When escalation is required, attach a screenshot but do not expose passwords, database credentials, or unrelated customer data."
+            ],
+            "notes": [
+                "Do not fix financial discrepancies through direct SQL unless an approved migration or recovery procedure specifically requires it."
+            ]
+        }
+    ],
+    "troubleshooting": [
+        {
+            "problem": "A required module is missing from the sidebar",
+            "checks": "Ask the administrator to review your role in User Role Configuration and the role's pages in Page Access Configuration.",
+            "avoid": "Do not use another user's credentials or manually type unauthorized URLs."
+        },
+        {
+            "problem": "Reading cannot be saved",
+            "checks": "Confirm the period is open, member is active, rate code is valid, reading is a whole number, and present reading is not below the database-derived previous reading.",
+            "avoid": "Do not alter previous-reading values in the browser or database."
+        },
+        {
+            "problem": "Tariff configuration is rejected",
+            "checks": "Remove duplicate starting values, gaps, overlaps, invalid amounts, and any finite final tier that leaves higher consumption uncovered.",
+            "avoid": "Do not bypass tariff validation just to continue billing."
+        },
+        {
+            "problem": "Period cannot be closed",
+            "checks": "Find and resolve unposted reading drafts in that period.",
+            "avoid": "Do not delete or mark drafts billed directly."
+        },
+        {
+            "problem": "Water posting is blocked",
+            "checks": "Verify the period is open, snapshots are present and valid, dates are approved, dimensions are active, and positive bills have accounting mappings.",
+            "avoid": "Do not recalculate historical drafts by changing current rates without formal approval."
+        },
+        {
+            "problem": "Payment appears to time out",
+            "checks": "Search Payment History and the receipt number before submitting again. The idempotency control may have already completed the transaction.",
+            "avoid": "Do not click Submit repeatedly."
+        },
+        {
+            "problem": "Receipt cannot be reversed",
+            "checks": "Confirm it is active and has complete allocation-detail records. Legacy receipts may require a reviewed manual recovery plan.",
+            "avoid": "Do not set the receipt or bill status directly in the database."
+        },
+        {
+            "problem": "Meter List print is too small",
+            "checks": "Use landscape, approved paper size, and 100 percent or Default print scaling. Verify browser print preview before printing.",
+            "avoid": "Do not use Fit to page when it makes the table unreadable."
+        },
+        {
+            "problem": "Report total does not match an operational screen",
+            "checks": "Verify date range, status, member, and organization filters. Compare the underlying source transactions and exclude reversed/cancelled entries consistently.",
+            "avoid": "Do not edit totals directly to force a match."
+        }
+    ],
+    "faqs": [
+        {
+            "question": "Why can I see fewer pages than another user?",
+            "answer": "Access belongs to roles. The administrator gives each role only the pages required for that responsibility."
+        },
+        {
+            "question": "Can I type or change the previous meter reading?",
+            "answer": "No. The authoritative previous reading is derived from the latest valid earlier billing period in the database."
+        },
+        {
+            "question": "Why must the final tariff tier be open-ended?",
+            "answer": "An open-ended final tier prevents high consumption from being ignored when usage exceeds the last finite range."
+        },
+        {
+            "question": "Can a member have both percentage and fixed water discounts?",
+            "answer": "No. One monetary discount mode is active at a time. A free-water allowance may also apply before the tariff and monetary discount."
+        },
+        {
+            "question": "Can I edit a reading after it is billed?",
+            "answer": "No. Billed or paid readings are immutable. Use the approved adjustment or reversal process when a correction is necessary."
+        },
+        {
+            "question": "Does changing a rate change old posted bills?",
+            "answer": "No. New and edited reading drafts store a calculation snapshot, and posting or historical displays use that stored snapshot."
+        },
+        {
+            "question": "Can a customer pay only part of a bill?",
+            "answer": "Yes. The unified collection service supports partial allocations and keeps the remaining balance open."
+        },
+        {
+            "question": "What happens when cash tendered is greater than the payment?",
+            "answer": "The difference is recorded as change. It is not automatically stored as additional customer credit."
+        },
+        {
+            "question": "Who enters Penalty and Compromise amounts?",
+            "answer": "The cashier enters each approved amount manually during collection. Settings only activate or deactivate the Penalty and Compromise checkboxes; the server does not calculate or default either fee."
+        },
+        {
+            "question": "Why should I search Payment History after a timeout?",
+            "answer": "The transaction may already have completed even when the browser did not show the final page. Searching first prevents an unnecessary duplicate attempt."
+        },
+        {
+            "question": "Why is direct paid-status editing disabled?",
+            "answer": "Changing status alone can make bills, receipts, allocations, customer balances, and journals disagree. Financial corrections must use controlled workflows."
+        },
+        {
+            "question": "What print settings should I use for the Meter Reading List?",
+            "answer": "Use landscape orientation, the approved Letter, Legal, or A4 paper size, and Default or 100 percent scale."
+        },
+        {
+            "question": "What does a blank Term (days) mean on Fixed Share Capital Billing?",
+            "answer": "The bills have no specific due date: they stay open until collected. With a term, each bill is due on its posting date plus the term."
+        },
+        {
+            "question": "Can I bill many members with different amounts at once?",
+            "answer": "Yes. Fixed Share Capital Billing > Import takes a file of members with their share capital accounts and amounts; One-Time Billing > Import Charges takes a file of charges with their own categories and amounts. Every line is shown for review before anything is saved."
+        },
+        {
+            "question": "Can a reading be corrected after it is saved?",
+            "answer": "Yes, while it is not posted: Reading Entry > Recorded Readings > Edit or Delete. A posted reading is corrected through Billing Adjustments."
+        },
+        {
+            "question": "How do I print receipts on our pre-printed forms?",
+            "answer": "Choose Pre-Printed on Company, Security & Closing Date > Water Billing, then place the entries on Water Billing > Setup > Receipt Layout Setup and print a test page to check them."
+        }
+    ],
+    "glossary": [
+        {
+            "term": "Role",
+            "definition": "A named set of page rights (for example Cashier or Billing Officer) given to users on User Role Configuration."
+        },
+        {
+            "term": "Amount due",
+            "definition": "The authoritative obligation for a bill before subtracting valid payments or credits."
+        },
+        {
+            "term": "Allocation",
+            "definition": "The part of a payment applied to one specific receivable, separated into principal and penalty where applicable."
+        },
+        {
+            "term": "Billing period",
+            "definition": "An inclusive date range used to group meter readings and water-billing activity."
+        },
+        {
+            "term": "Business date",
+            "definition": "The validated operational date assigned to a collection or adjustment, stored separately from the actual system timestamp."
+        },
+        {
+            "term": "Canonical engine/service",
+            "definition": "The single authoritative implementation used by every relevant workflow to avoid conflicting calculations or statuses."
+        },
+        {
+            "term": "Consumption",
+            "definition": "Current meter reading minus the authoritative previous reading, never below zero in the standard workflow."
+        },
+        {
+            "term": "Credit adjustment",
+            "definition": "A controlled reduction of a bill that cannot reduce the obligation below the amount already paid."
+        },
+        {
+            "term": "Debit adjustment",
+            "definition": "A controlled increase of a bill with a documented reason and balancing accounting entry."
+        },
+        {
+            "term": "Free-water allowance",
+            "definition": "Approved cubic meters deducted from consumption before billable usage is processed through the tariff."
+        },
+        {
+            "term": "Global reference",
+            "definition": "An identifier retained across the bill lifecycle for traceability and accounting linkage."
+        },
+        {
+            "term": "Immutable snapshot",
+            "definition": "The stored tariff, discount, breakdown, precision, and amount used for a reading so later configuration changes cannot rewrite history."
+        },
+        {
+            "term": "Minimum charge",
+            "definition": "A fixed first-tier charge applied according to the approved tariff policy, including the configured free-water rule."
+        },
+        {
+            "term": "Open-ended tier",
+            "definition": "The final tariff tier with no upper consumption limit."
+        },
+        {
+            "term": "Overpayment",
+            "definition": "An allocation greater than the remaining receivable balance; the canonical service rejects it. Extra cash tendered is returned as change."
+        },
+        {
+            "term": "Partial payment",
+            "definition": "A valid payment smaller than the remaining bill balance, leaving the receivable open for the remainder."
+        },
+        {
+            "term": "Compromise",
+            "definition": "An optional final cashier-entered fee after the penalty stage. It is available only when Compromise is activated in Settings and is never calculated automatically."
+        },
+        {
+            "term": "Penalty",
+            "definition": "An optional cashier-entered fee that is available only when Penalty is activated in Settings. It is not calculated from the due date, balance, percentage, or grace period."
+        },
+        {
+            "term": "Posted bill",
+            "definition": "A finalized bill whose stored amount and financial history are protected from direct editing."
+        },
+        {
+            "term": "Rate code",
+            "definition": "The classification that connects a member to an approved set of water tariff tiers."
+        },
+        {
+            "term": "Reversal",
+            "definition": "A controlled cancellation that restores balances and creates compensating records rather than deleting history."
+        },
+        {
+            "term": "Subsidiary ledger",
+            "definition": "Detailed account activity associated with a customer or other subsidiary identifier."
+        },
+        {
+            "term": "Tariff tier",
+            "definition": "A continuous consumption range with a fixed or variable approved amount."
+        },
+        {
+            "term": "Ladder Rate Billing",
+            "definition": "A rate code computation that bills each tier's own cubic meters at that tier's rate and adds the tiers up (the minimum charge, then 5 x 31.80, 10 x 34.30 ...)."
+        },
+        {
+            "term": "Straight Rate Billing",
+            "definition": "A rate code computation that bills the whole consumption at the rate of the tier it falls in (250 x 55.40)."
+        }
+    ],
+    "checklists": {
+        "daily_opening": [
+            "Confirm the correct date, network connection and printer availability.",
+            "Review open billing periods and unresolved errors from the previous day.",
+            "Confirm that the cashier's user account has its cash account before collecting payments.",
+            "Verify that required master data changes were approved before beginning live transactions."
+        ],
+        "daily_closing": [
+            "Review newly entered readings, bills, payments, reversals, refunds, material issuances and adjustments.",
+            "Reconcile cash tendered, receipts, payment history, and collection journal references.",
+            "Review failed or incomplete transactions and document the follow-up owner.",
+            "Sign out and secure printed documents and exported files."
+        ],
+        "billing_cycle": [
+            "Confirm rate codes, tariff continuity, discounts, organization dimensions, and accounting mappings.",
+            "Create the open billing period without overlap.",
+            "Enter and review individual or batch readings.",
+            "Resolve invalid readings and snapshot issues.",
+            "Print and review the Meter Reading List.",
+            "Post approved water bills for the exact period.",
+            "Review sample statements, billing history, and journal references.",
+            "Begin collections only after approval and reconciliation."
+        ],
+        "monthly_admin": [
+            "Review users, roles, page permissions and inactive accounts.",
+            "Confirm backup completion and test restoration according to the local disaster-recovery plan.",
+            "Review rate, discount, penalty, and accounting-setting changes.",
+            "Review duplicate, exception, reversal, refund, and adjustment logs.",
+            "Run and reconcile management, collection, billing, inventory, AP, and accounting reports."
+        ]
+    },
+    "chapters": [
+        {
+            "number": 1,
+            "title": "Introduction and Manual Conventions",
+            "sections": [
+                {
+                    "heading": "Purpose",
+                    "paragraphs": [
+                        "This manual explains how authorized users operate Water Billing from initial setup through meter reading, billing, collections, reporting, and controlled corrections. It is written for daily users and administrators and should be used together with the organization's approved financial, tariff, privacy, and records-management policies."
+                    ]
+                },
+                {
+                    "heading": "Access-dependent interface",
+                    "paragraphs": [
+                        "The system gives page rights to roles. Two people may see different menu pages in the same system. Instructions that mention a missing page apply only when your roles include that page."
+                    ]
+                },
+                {
+                    "heading": "Symbols and warnings",
+                    "bullets": [
+                        "Required: an action that must be completed before continuing.",
+                        "Caution: an action that can affect financial or historical records.",
+                        "Verification: a result that should be checked after saving.",
+                        "Escalate: contact the authorized administrator or supervisor instead of bypassing the system control."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 2,
+            "title": "System Access, Navigation, and Security",
+            "sections": [
+                {
+                    "heading": "Signing in",
+                    "steps": [
+                        "Open the approved system URL.",
+                        "Enter your assigned username and password.",
+                        "Verify the user name shown in the user menu after login.",
+                        "Report any unexpected access immediately."
+                    ]
+                },
+                {
+                    "heading": "Navigating the interface",
+                    "paragraphs": [
+                        "The side menu holds every module of the system: the cooperative, accounting and inventory menus and Water Billing. The top bar carries search, help, notifications and the user menu. On smaller screens, open the menu with the menu button."
+                    ],
+                    "bullets": [
+                        "Use the dashboard or module hubs to enter a workflow.",
+                        "Avoid using the browser Back button during a financial submission.",
+                        "Do not open process URLs directly.",
+                        "Sign out after every session, especially on shared devices."
+                    ]
+                },
+                {
+                    "heading": "Incremental searching",
+                    "bullets": [
+                        "Every list box with a search on the Water Billing pages narrows as you type, from the first letter; the names that start with what you typed come first and the letters typed are marked.",
+                        "Up and Down (Page Up and Page Down) move in the list, Enter takes the highlighted entry (Tab takes it only when it is the only match), Escape closes it. Typing on the closed box opens it with the letters.",
+                        "The searches of Water Service Accounts, Billing List, Billing Adjustments, Disconnection Management, Collection Corrections and Discounted Members show their results as you type, without pressing Search.",
+                        "The member searches of Reading Entry, Generate SOA / Post Billing and Collections (Cashier) start from one letter and are moved with the arrow keys."
+                    ]
+                },
+                {
+                    "heading": "Password and account safety",
+                    "bullets": [
+                        "Keep credentials private.",
+                        "Do not save passwords in shared browsers.",
+                        "Do not share screenshots containing credentials, secret configuration, or unrelated customer data.",
+                        "Use the approved password-reset process when access is lost."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 3,
+            "title": "Dashboard and Operational Overview",
+            "sections": [
+                {
+                    "heading": "Dashboard purpose",
+                    "paragraphs": [
+                        "The Dashboard provides quick operational counts, shortcuts, recent records, and system activity. Treat dashboard figures as a starting point and use the detailed module or report for final reconciliation."
+                    ]
+                },
+                {
+                    "heading": "Recommended review",
+                    "bullets": [
+                        "Confirm active member count and expected billing activity.",
+                        "Review unpaid custom bills and active installment contracts when displayed.",
+                        "Use quick actions only when the destination page is given to your role.",
+                        "Investigate unexpected zeros or stale figures before relying on them for management decisions."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 4,
+            "title": "Member and Organization Setup",
+            "sections": [
+                {
+                    "heading": "Member records",
+                    "steps": [
+                        "Search for an existing member before creating a new record.",
+                        "Enter the approved name, account, address, city, contact, status, and rate code.",
+                        "Save and re-open the record to verify the result.",
+                        "Correct the existing member rather than creating a duplicate account."
+                    ]
+                },
+                {
+                    "heading": "Organization dimensions",
+                    "paragraphs": [
+                        "Branches, divisions, and segments are used by billing and accounting records. Codes and descriptions should match the approved organization and chart structure."
+                    ],
+                    "bullets": [
+                        "Create parent or shared units before assigning them in transactions.",
+                        "Avoid deleting dimensions used by historical records.",
+                        "Review active status before a billing or collection run."
+                    ]
+                },
+                {
+                    "heading": "Address sub-groups",
+                    "steps": [
+                        "Open Water Billing > Service & Materials > Address Sub-groups, or choose \"Add, edit or delete sub-groups\" under an Address sub-group box (Water Service Accounts, or the member's Water Defaults).",
+                        "To add one, type its name and its order and choose Add.",
+                        "To change one, choose Edit: rename it, change its order or untick Offered, then Save. A new name is carried to every member and account that has the old one.",
+                        "To delete one, choose Delete and confirm. One that a member or an account has cannot be deleted: move them first, or switch it off."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 5,
+            "title": "Rate Codes, Tariffs, and Discounts",
+            "sections": [
+                {
+                    "heading": "Rate code assignment",
+                    "paragraphs": [
+                        "Each water-billed member must have the correct rate code. The rate code determines which tariff tiers are loaded during calculation."
+                    ]
+                },
+                {
+                    "heading": "Computation: Ladder Rate Billing or Straight Rate Billing",
+                    "paragraphs": [
+                        "Each rate code has a computation, chosen under Computation when the rate code is added or edited on Water Billing > Rate Codes. It applies to every water bill of the accounts on that rate code: individual and batch readings, the live preview, posting, corrections and the statements. Rate codes on file keep Straight Rate Billing until it is changed.",
+                        "Straight Rate Billing: the whole consumption is billed at the rate of the tier it falls in. 250 cubic meters on RESIDENTIAL ASSOCIATE: 250 x 55.40 = 13,850.00.",
+                        "Ladder Rate Billing: each tier bills only its own cubic meters at its own rate, and the tiers are added up. The same 250 cubic meters: 145.50 (0-5, the minimum charge) + 5 x 31.80 (6-10) + 10 x 34.30 (11-20) + 10 x 44.80 (21-30) + 10 x 50.10 (31-40) + 210 x 55.40 (41-250) = 13,230.50."
+                    ],
+                    "bullets": [
+                        "The list of rate codes shows each code's computation and what 30 cubic meters come to under it (and under the other one), so the choice can be checked before saving.",
+                        "Water Meter Rates shows the computation beside each rate code's tiers.",
+                        "The bill keeps the computation it was made with: changing a rate code later does not change bills already posted.",
+                        "The free cubic meters of a discount come off the top of the consumption, then the rest is priced by the rate code's computation; a percentage or fixed discount applies after that, up to 30 cubic meters as before."
+                    ]
+                },
+                {
+                    "heading": "Valid tariff rules",
+                    "bullets": [
+                        "The first tier starts at the approved base value, normally 0 or 1.",
+                        "Each next tier starts exactly one unit after the previous tier ends.",
+                        "Ranges do not overlap.",
+                        "Starting values are unique within one rate code.",
+                        "Amounts are positive and use the approved FIXED or VARIABLE type.",
+                        "The final tier is open-ended when higher consumption must always be covered."
+                    ]
+                },
+                {
+                    "heading": "Discount rules",
+                    "bullets": [
+                        "Free-water allowance is a nonnegative whole number.",
+                        "One monetary mode is active: none, percentage, or fixed.",
+                        "Percentage is greater than zero and no more than 100 when active.",
+                        "Fixed discount is positive when active and never reduces the bill below zero.",
+                        "A maximum consumption rule can make a member ineligible above the approved threshold.",
+                        "Each member has one authoritative water-discount assignment."
+                    ]
+                },
+                {
+                    "heading": "Calculation order",
+                    "steps": [
+                        "Normalize consumption.",
+                        "Price the consumption with the rate code's computation (Straight or Ladder Rate Billing).",
+                        "Subtract the approved free-water allowance and price the remaining cubic meters the same way.",
+                        "Check discount eligibility.",
+                        "Apply one percentage or fixed discount.",
+                        "Cap the discount at the base charge and store the result using controlled precision."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 6,
+            "title": "Billing Period Management",
+            "sections": [
+                {
+                    "heading": "Creating a period",
+                    "steps": [
+                        "Select the approved duration.",
+                        "Enter inclusive start and end dates.",
+                        "Confirm no existing period overlaps the range.",
+                        "When creating the next period, confirm its start is one day after the current period end.",
+                        "Save and verify that the intended period is open."
+                    ]
+                },
+                {
+                    "heading": "Closing and reopening",
+                    "bullets": [
+                        "Close only after all intended reading drafts have been posted or resolved.",
+                        "A period with unposted drafts cannot close.",
+                        "Reopen only when no billed or paid readings exist.",
+                        "Codes and dates become protected once readings exist."
+                    ]
+                },
+                {
+                    "heading": "Deletion",
+                    "paragraphs": [
+                        "Delete only unused periods through the provided POST action and confirmation. Historical periods should remain available for traceability."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 7,
+            "title": "Individual and Batch Meter Reading",
+            "sections": [
+                {
+                    "heading": "Individual entry",
+                    "steps": [
+                        "Choose an open period.",
+                        "Find the member: type any part of the name (first or last, in any order: \"maria santos\" or \"santos, maria\"), the account number or the street. Each word typed must match.",
+                        "Select the member in the list (it shows the account number and address, and whether the reading is pending, encoded or billed).",
+                        "Review the system-derived previous reading.",
+                        "Enter the whole-number present reading.",
+                        "Review consumption and charge details: the preview names the computation of the member's rate code.",
+                        "Save and verify in Reading History."
+                    ]
+                },
+                {
+                    "heading": "Batch entry",
+                    "steps": [
+                        "Choose the open period and one street or zone.",
+                        "Load the server-validated member list.",
+                        "Enter readings and resolve row-level errors.",
+                        "Save up to 500 rows per request.",
+                        "Review the saved records and Meter Reading List."
+                    ]
+                },
+                {
+                    "heading": "Editing or deleting an unposted reading",
+                    "steps": [
+                        "Open Reading Entry, choose the period and Individual, and find the reading under Recorded Readings.",
+                        "Edit: type the right present reading; the consumption and the amount are worked out again; choose Save changes.",
+                        "Delete: give the reason (at least 5 characters) and choose Delete reading. The account can then be read again for the period.",
+                        "A posted or paid reading shows \"Posted, locked\": correct it through Billing Adjustments."
+                    ]
+                },
+                {
+                    "heading": "Protected records",
+                    "bullets": [
+                        "Billed and paid readings cannot be edited or deleted.",
+                        "Closed-period readings cannot be changed.",
+                        "Submitted reading IDs must belong to the selected member and period.",
+                        "An earlier-period reading cannot be inserted, or deleted, while a later reading exists.",
+                        "Every deletion is kept in the audit log with its reason and the reading as it was."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 8,
+            "title": "Water Calculation Snapshots and Bill Posting",
+            "sections": [
+                {
+                    "heading": "Snapshot purpose",
+                    "paragraphs": [
+                        "Every new or edited water-reading draft stores the rate code, tariff tiers, selected discount, consumption, billable consumption, free-water result, minimum charge, tier lines, base charge, discount, final amount, accounting mappings, precision data, timestamp, and integrity hash. This prevents future rate changes from rewriting historical calculations."
+                    ]
+                },
+                {
+                    "heading": "Posting checklist",
+                    "steps": [
+                        "Confirm the exact period is open.",
+                        "Review all reading drafts and exceptions.",
+                        "Verify snapshots and stored amounts.",
+                        "Enter an approved billing date and term.",
+                        "Confirm organization dimensions.",
+                        "Post once.",
+                        "Review posted totals and journal references."
+                    ]
+                },
+                {
+                    "heading": "Posting controls",
+                    "bullets": [
+                        "Posting uses stored snapshots and does not recalculate from current rates.",
+                        "Billing date cannot precede the period end.",
+                        "Due date follows the approved period-end-plus-term rule.",
+                        "Positive bills require a successful journal.",
+                        "Existing valid global references are preserved.",
+                        "Zero-amount bills are handled without an invalid zero-value journal."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 9,
+            "title": "Statements, Billing History, and Customer Ledger",
+            "sections": [
+                {
+                    "heading": "Statement of Account",
+                    "steps": [
+                        "Choose the statement type and the reading period.",
+                        "Search for the member by name, account number or street (each word typed must match) and select it.",
+                        "Review active water and other receivables.",
+                        "Confirm cancelled or deleted items are excluded.",
+                        "Preview all pages and print or save the statement."
+                    ]
+                },
+                {
+                    "heading": "History and ledger review",
+                    "bullets": [
+                        "Billing History shows posted obligations.",
+                        "Reading History supports meter and calculation review.",
+                        "Payment History shows canonical collection transactions and status.",
+                        "Customer Ledger provides transaction-level running activity.",
+                        "Historical water values come from stored snapshots or preserved legacy amounts."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 10,
+            "title": "One-Time Billing",
+            "sections": [
+                {
+                    "heading": "Creating bills (Issue Individual Charge)",
+                    "steps": [
+                        "Select an active member.",
+                        "Under Charges, tick each charge category to bill; type Find a charge to narrow the list by code or description.",
+                        "Type the amount of each charge ticked. A material (an inventory bill code) is billed by its quantity: type the quantity and the amount follows its sales price; the stock on hand is shown beside it.",
+                        "Check the total under the list (the charges ticked and their sum), the dates, the term and the class.",
+                        "Post: one one-time bill and one invoice is made for each charge ticked, all on the same form. Nothing is posted if one of them is refused (for example a material short of stock)."
+                    ]
+                },
+                {
+                    "heading": "Changing a bill (Update Bill Record)",
+                    "steps": [
+                        "Click the edit button of the bill.",
+                        "Change the charge category, the date issued, the amount (or the quantity of a material), the due date or the status as needed. A new category fills in its own amount; a material shows its quantity.",
+                        "Choose the class of the change and save."
+                    ],
+                    "bullets": [
+                        "A new charge category or date issued issues the bill again: its invoice is voided (kept, marked replaced) and the corrected invoice \"<no>-R1\" is posted on the date issued with the new category's accounts. A material's stock comes back and the new quantity goes out.",
+                        "This is allowed while nothing is collected on the bill and its status stays Unpaid. Once a payment is recorded, the category and the date issued are locked on the form, and the server refuses them.",
+                        "Every change is kept in the audit trail with the old and new values."
+                    ]
+                },
+                {
+                    "heading": "Batch creation",
+                    "bullets": [
+                        "Members are deduplicated and locked.",
+                        "The request is limited to 500 members.",
+                        "Inventory quantity must remain safe for every transaction.",
+                        "Review the generated bills before collection.",
+                        "Batch Issue Charges bills the same charge category and amount to every member ticked. For a different amount or charge for each member, use Import Charges (Importing one-time charges, below)."
+                    ]
+                },
+                {
+                    "heading": "Importing one-time charges",
+                    "steps": [
+                        "On One-Time Billing, click Import Charges (or, in Batch Issue Charges, Import them from a file).",
+                        "Download the Excel template or the CSV template. One line per charge, so a member may have several lines: account_no (the account number of the water-service account, required; an account with no number: its account ID), member_name (checked against the account), charge_code (the code name of a bill code, as in Bill Codes), amount, quantity (for a material), bill_date and term_days.",
+                        "Under Values for the blank cells, choose the charge category, the amount, the date issued and the term to use where a cell is blank, and the class of the bills (required: until it is chosen, the message above the lines says so and nothing can be issued).",
+                        "Choose the file (CSV or Excel .xlsx) and click Read the file for review. Nothing is issued yet.",
+                        "Review the lines. A line with a problem is shown in red with the problem under it: an account that does not exist or is not active, a name that does not match, a charge category not in Bill Codes or without its accounts, an amount that is not more than zero, a material short of stock, a date or term that is not valid.",
+                        "Correct a cell by typing in it, or remove a charge with the x button. Remove the lines with a problem takes every red line out at once.",
+                        "When no line is red, click Issue bills. Each line becomes a one-time bill with its invoice on the ledger, as Issue Individual Charge makes it; every line or none."
+                    ],
+                    "bullets": [
+                        "A blank amount takes the price of the bill code. A material (an inventory bill code) is priced from its bill code times the quantity (1 when blank), and its stock is checked for all the lines together: a line that goes past the stock on hand is the one in red.",
+                        "The member discount applies as on Issue Individual Charge; the line shows the gross, the discount and the bill.",
+                        "The due date is the date issued plus the term; a blank term with no value for the blank cells, or OPEN, means no due date.",
+                        "Dates are read as YYYY-MM-DD, MM/DD/YYYY or 31-Jan-2027; an amount may be at most 999,999,999.99. A line that posting would refuse (a closed period, a bill code whose accounts cannot post) is already red in the review.",
+                        "The water bill's own bill code is billed by Post Billing and is refused here.",
+                        "The import follows the rights of One-Time Billing: issuing takes the Create right. Every bill is kept in the audit trail with the file name."
+                    ]
+                },
+                {
+                    "heading": "Fixed Share Capital Billing",
+                    "steps": [
+                        "Open Water Billing > Billing > Fixed Share Capital Billing (after One-Time Billing).",
+                        "Under Collection, choose the Transaction code upon collection (a deposit code of Savings Transaction Codes, CSD Cash Savings Deposit at first) and the Class, then Save. The class may be left to the one chosen at the cashier.",
+                        "Click Add member. Choose the member (only members with an open share capital account are listed) and the share capital account.",
+                        "Choose the Frequency (Monthly, Quarterly, Semi-annually or Annually), type the Amount (the fixed amount collected each time), the Start date and the Posting day (1 to 31).",
+                        "Type the Term (days) when the bills have a due date: the due date of each bill is its posting date plus the term (posted on the 1st with a term of 10, it is due on the 11th). Leave it blank when the bills have no specific due date (open).",
+                        "Check the posting dates and the due date shown under the form, then Save. Exit closes the form without saving."
+                    ],
+                    "bullets": [
+                        "The first bill is posted on the posting day on or after the start date, then every frequency after it on the posting day (the last day of a shorter month: day 31 is the 30th in November and the 28th or 29th in February).",
+                        "The Frequency column shows the term of each member's billing: Term 10 days, or No due date. Edit changes the term of the bills posted from then on; a bill already posted keeps its due date. Bills shows the due date of each bill (Open when it has none).",
+                        "A bill is posted automatically when its day comes (when this page or the cashier opens, or by the scheduled task php process/runShareCapitalBilling.php). The posting days already past when a member is added are posted at once, as the contribution expected since the start date.",
+                        "Posting a bill makes NO journal entry: it only tracks the contribution still unpaid. The books change only when the cashier collects it.",
+                        "Edit changes the frequency, start date, posting day, amount or account. The new schedule starts after the period the bills posted cover (after the month of the last bill, from the month the old schedule would bill next), so nothing is billed twice or back-billed; the bills already posted keep their amount.",
+                        "Hold stops the billing for now (with a reason); no bill is posted while on hold and the days on hold are not billed. Resume starts it again from the next posting day. The bills already posted stay collectible.",
+                        "Delete takes the member off fixed billing (with a reason): the unpaid bills, and the rest of a partly paid one, are cancelled; what was collected stays on the share capital account. Added again later, the member is never billed twice for a month.",
+                        "No bill is posted for a share capital account that is closed or a member who is no longer active: the page shows Not billed beside the member.",
+                        "Bills lists the bills of a member: posting date, amount, collected, status and receipts.",
+                        "The cashier collects a member's bills on the member's water-service account (the same person, one Party ID). A member with no water-service account is flagged on the page."
+                    ]
+                },
+                {
+                    "heading": "Batch Share Capital Billing",
+                    "steps": [
+                        "On Fixed Share Capital Billing, click Batch billing.",
+                        "Type the Amount, choose the Frequency, the Start date and the Posting day, and type the Term (days) or leave it blank for no due date. They are the same for every member of the batch; the first posting and its due date are shown under the fields.",
+                        "Tick the members to bill, each with the share capital account shown beside the name. Find narrows the list by name or account number; the box at the top of the list ticks or clears all the members shown. With a water-service account only hides the members the cashier cannot collect from yet.",
+                        "Check the count and the amount a posting under the list (Selected: N members), then Save. Exit closes the form without saving."
+                    ],
+                    "bullets": [
+                        "Only the open share capital accounts of active members that are not on fixed billing yet are listed.",
+                        "Every member ticked is put on fixed billing, or none: if one of them cannot be (an account closed in the meantime, for example), nothing is saved and the message names the member.",
+                        "The members of one batch share a batch number (SCB-...), kept with each billing and in the audit trail. Each one is then an ordinary fixed billing: it can be edited, put on hold, resumed or deleted on its own.",
+                        "The posting days already past are posted at once for each member, as when members are added one by one."
+                    ]
+                },
+                {
+                    "heading": "Importing Batch Share Capital Billing",
+                    "steps": [
+                        "On Fixed Share Capital Billing, click Import.",
+                        "Download the Excel template or the CSV template. One line per member: account_no (the share capital account, required), member_name (checked against the account), amount, frequency, start_date, posting_day and term_days. The second sheet of the Excel template explains each column.",
+                        "Under Values for the blank cells, type the amount, frequency, start date, posting day and term to use where a cell of the file is blank. A cell filled in keeps its own value. A term of OPEN on a line means no due date for that member.",
+                        "Choose the file (CSV or Excel .xlsx) and click Read the file for review. Nothing is saved yet.",
+                        "Review the lines. A line with a problem is shown in red with the problem under it, and the cell at fault is marked: an account that is not a share capital account, a closed account, a member who is not active, a member already on fixed billing, the same account twice, a name that does not match, an amount, frequency, date, posting day or term that is not valid.",
+                        "Correct a cell by typing in it (the line is checked again as you type) or remove a member with the x button (Put back the last brings it back). Remove the lines with a problem takes every red line out at once; Only lines with a problem shows them alone.",
+                        "When no line is red, click Post billing. Every member is put on fixed billing, or none."
+                    ],
+                    "bullets": [
+                        "An account number that lost its leading zero in a spreadsheet is found again, with a note on the line; when it could be more than one account, the line is red and the number must be typed in full.",
+                        "Each line shows the member, the first bill and its due date before posting. The total of the amounts a posting is shown above the lines.",
+                        "The members of one import share a batch number (SCI-...), kept with each billing and in the audit trail, with the file name.",
+                        "The import follows the rights of Fixed Share Capital Billing: posting takes the Create right."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 11,
+            "title": "Installment Billing",
+            "sections": [
+                {
+                    "heading": "Contract creation",
+                    "steps": [
+                        "Select the active member and bill code.",
+                        "Enter the approved total and start date.",
+                        "Choose compatible payment mode and term.",
+                        "Allow the system to generate fixed dates and exact cents, or enter a fully reconciled flexible schedule.",
+                        "Review and save the contract."
+                    ]
+                },
+                {
+                    "heading": "Schedule and parent status",
+                    "bullets": [
+                        "Dates are generated server-side and month-end dates are clamped safely.",
+                        "Schedule amounts must sum exactly to the parent total.",
+                        "Payments occur through Collections.",
+                        "Schedule and parent status are derived from actual amounts paid.",
+                        "Paid contracts cannot be cancelled or deleted until payments are reversed appropriately."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 12,
+            "title": "Recurring Billing",
+            "sections": [
+                {
+                    "heading": "Plans and subscriptions",
+                    "steps": [
+                        "Review or create an approved recurring plan.",
+                        "Assign the active member and approved plan.",
+                        "Confirm cycle and due information.",
+                        "Generate charges through the approved recurring action or scheduled procedure.",
+                        "Review generated receivables.",
+                        "Collect only through the unified Collections workflow."
+                    ]
+                },
+                {
+                    "heading": "Controls",
+                    "bullets": [
+                        "Do not mark recurring bills paid directly.",
+                        "Preserve plan terms used by existing history.",
+                        "Review duplicate-cycle or failed-generation messages before retrying."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 13,
+            "title": "Collections, Partial Payments, Other Fees, and Receipts",
+            "sections": [
+                {
+                    "heading": "Unified collection workflow",
+                    "steps": [
+                        "Select the member.",
+                        "Load server-derived receivable balances.",
+                        "Allocate principal to one or more water, one-time, installment, or recurring items.",
+                        "Under Other Fees, optionally select Penalty and/or Compromise and type the approved amount manually.",
+                        "Enter the validated business date and cash tender.",
+                        "Confirm totals and change.",
+                        "Submit once and print the receipt."
+                    ]
+                },
+                {
+                    "heading": "Payment controls",
+                    "bullets": [
+                        "A receivable must belong to the selected member.",
+                        "Allocation cannot exceed the remaining locked balance.",
+                        "Partial payments keep the remaining balance open.",
+                        "Extra cash becomes change, not an uncontrolled receivable credit.",
+                        "Future dates and excessive backdating are rejected.",
+                        "Duplicate submissions are protected by an idempotency mechanism.",
+                        "Penalty and Compromise are optional manual fees; the server does not calculate or default their amounts."
+                    ]
+                },
+                {
+                    "heading": "Collecting the fixed share capital",
+                    "bullets": [
+                        "The share capital bills of Fixed Share Capital Billing are listed among the open items of the member's water-service account, marked Share Capital, with the date posted, the due date (or No due date when the billing has no term) and the member's name. A bill past its due date is marked Late. They are found by the cashier search like any other open item.",
+                        "Tick them like the other bills; a part of a bill may be collected (the rest stays open). They appear in the Share Capital box of the payment panel.",
+                        "On payment, each one is a deposit to the member's share capital account by the transaction code chosen on Fixed Share Capital Billing (CSD at first): Dr the cashier's cash account (or the code's own account), Cr share capital, in the class of the page or of the cashier. It is a row of the Savings Account Transaction, numbered in the savings series, with the receipt as its OR, ready to print in the passbook (Passbook Printing).",
+                        "The product's minimum deposit does not apply to these contributions: their amount is the one set on Fixed Share Capital Billing.",
+                        "The receipt shows them as FIXED SHARE CAPITAL beside the bills paid; its total includes them. A receipt of share capital only has no water journal (only the deposits' entries).",
+                        "Collection Corrections reverses or refunds such a receipt like any other: each deposit is taken back by its error-correct code (ECSD), with the reverse journal entry, and the bill is open again. The deposit cannot be deleted or corrected on its own in the savings module. No penalty or compromise is suggested on these bills, with or without a due date."
+                    ]
+                },
+                {
+                    "heading": "Receipt review",
+                    "bullets": [
+                        "Receipt number and status",
+                        "Customer and cashier",
+                        "Business date and recording timestamp",
+                        "Principal and penalty per item",
+                        "Balance after each allocation",
+                        "Cash tendered and change",
+                        "Journal reference and lifecycle state",
+                        "Reversal or refund information when applicable",
+                        "Generate Official Receipt prints the payment as recorded. The paid bill-code amounts and the total can be changed before printing only by a user whose role has the special permission \"Water Billing: can change the paid bill-code amounts and the total on an official receipt before printing it\" (administrators always). For the others they are read-only. The saved payment never changes."
+                    ]
+                },
+                {
+                    "heading": "Printed and pre-printed receipts",
+                    "bullets": [
+                        "Printed: the receipt prints whole on plain paper (its frames, titles, labels and entries).",
+                        "Pre-Printed: only the entries print, each where the cooperative's printed form has room for it. The water bill form has two copies side by side.",
+                        "The choice is made on Company, Security & Closing Date > Water Billing, one for the collection receipt and one for the official receipt.",
+                        "Each receipt has a link to print it the other way once (\"Print on plain paper\" or \"Print on a pre-printed form\").",
+                        "When a receipt has more charges than the form has lines, the last line adds the rest together.",
+                        "Print at Actual size / 100%, with the browser's headers and footers off."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 14,
+            "title": "Controlled Reversals, Refunds, Debits, and Credits",
+            "sections": [
+                {
+                    "heading": "Payment reversal or refund",
+                    "steps": [
+                        "Obtain approval.",
+                        "Select an active canonical receipt with complete allocations.",
+                        "Choose reversal or refund and enter a detailed reason and business date.",
+                        "Review restored balances and the compensating journal.",
+                        "Confirm and reconcile the ledger and payment history."
+                    ]
+                },
+                {
+                    "heading": "Bill debit or credit",
+                    "steps": [
+                        "Select the bill and adjustment type.",
+                        "Enter the amount, reason, and business date.",
+                        "Confirm a credit does not reduce the obligation below the amount paid.",
+                        "Review schedule effects for installment bills.",
+                        "Confirm the balancing journal and audit reference."
+                    ]
+                },
+                {
+                    "heading": "Prohibited shortcuts",
+                    "bullets": [
+                        "Do not change paid flags directly.",
+                        "Do not overwrite amount-paid fields.",
+                        "Do not delete receipts to hide mistakes.",
+                        "Do not create unrelated journal lines to force balances to agree."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 15,
+            "title": "Materials, Purchasing and Supplier Bills",
+            "sections": [
+                {
+                    "heading": "One inventory",
+                    "paragraphs": [
+                        "Meters, pipes and supplies are items of the cooperative inventory. There is one stock ledger; the water module keeps no separate stock."
+                    ]
+                },
+                {
+                    "heading": "Purchases",
+                    "steps": [
+                        "Record the purchase with Vendors > Receive Items and Enter Bills (or Enter Bills).",
+                        "Select the supplier, date, items, quantities and costs.",
+                        "Pay the supplier with Vendors > Pay Bills.",
+                        "Review the A/P Aging reports."
+                    ]
+                },
+                {
+                    "heading": "Field use and sales",
+                    "paragraphs": [
+                        "Issue materials to field work with Water Billing > Material Issuance; the stock leaves at average cost in one inventory adjustment, and a reversal returns it. A meter sold to a consumer is billed with a One-Time or Installment bill whose bill code is linked to the item, which also posts the cost of goods sold."
+                    ]
+                },
+                {
+                    "heading": "Corrections",
+                    "paragraphs": [
+                        "Use Inventory > Adjust Quantity/Value on Hand only with an approved reason. Reverse an issuance from Material Issuance instead of adjusting stock by hand."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 16,
+            "title": "Accounting Review",
+            "sections": [
+                {
+                    "heading": "Water documents in the general ledger",
+                    "bullets": [
+                        "Open the Journal or General Ledger report and trace each document to its source bill, receipt or issuance.",
+                        "Confirm debits equal credits.",
+                        "Filter by business unit (Water Utility) or branch class when reviewing the water results.",
+                        "A voided or reversed document keeps its number and shows the linked reversal; posted documents are never edited."
+                    ]
+                },
+                {
+                    "heading": "Collections accounting",
+                    "paragraphs": [
+                        "A collection debits the cash account set on the cashier's user account, credits the receivable of each bill paid and, when a penalty is charged, the penalty income account of the collection policy. Each posting is recorded once with its source reference."
+                    ]
+                },
+                {
+                    "heading": "Subsidiary ledger",
+                    "paragraphs": [
+                        "Use the subsidiary ledger to review customer-linked account activity. Compare it with billing, payment, adjustment, and statement records before concluding that a balance is incorrect."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 17,
+            "title": "Disconnection and Reconnection",
+            "sections": [
+                {
+                    "heading": "Reviewing candidates",
+                    "steps": [
+                        "Open the candidate list.",
+                        "Confirm current source balances and due status.",
+                        "Reload after recent payments.",
+                        "Enter the approved reason and date.",
+                        "Submit and verify the logged status."
+                    ]
+                },
+                {
+                    "heading": "Operational caution",
+                    "paragraphs": [
+                        "A payment and a disconnection action can occur close together. Always refresh and re-evaluate current eligibility immediately before confirming the service-status change."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 18,
+            "title": "Reports and Printing",
+            "sections": [
+                {
+                    "heading": "Report workflow",
+                    "steps": [
+                        "Choose the report.",
+                        "Enter valid filters.",
+                        "Review on-screen rows and totals.",
+                        "Compare to the source module when reconciling.",
+                        "Export or print the complete dataset using approved procedures."
+                    ]
+                },
+                {
+                    "heading": "Collection Summary: a period of dates and times",
+                    "bullets": [
+                        "From and To take a date and a time (for example 10/12/2026 08:00 AM to 10/12/2026 05:00 PM, a cashier's shift). Only the receipts recorded within that period are listed and totalled.",
+                        "With times, a receipt counts at the moment it was recorded (the column Date and time recorded). A period of whole days (12:00 AM to 11:59 PM) counts the receipts by their business date, as before (the column Business date): a receipt entered later for an earlier business day stays on that day.",
+                        "Choosing a preset (Today, This month ...) runs it over whole days, from 12:00 AM of the first day to 11:59 PM of the last.",
+                        "The By date, By cashier and By payment type views keep the times: clicking a count lists the receipts of that line within the period."
+                    ]
+                },
+                {
+                    "heading": "Collection Summary: Report type Summary or Detailed",
+                    "bullets": [
+                        "Report type Summary (the report as before): Bills paid in one amount, Share capital (the fixed share capital contributions collected), Penalty, Compromise and Total collected.",
+                        "Report type Detailed: what was collected by code name, one column for each code name collected in the period (the bill code of each bill paid: WATER BILL for the water bills, the bill code of each one-time, installment and recurring bill, FIXED SHARE CAPITAL for the share capital contributions), never put together, then Penalty, Compromise and Total collected.",
+                        "Both work with every Show view (every receipt, by date, by cashier, by payment type) and with the other filters; the totals of the two report types agree.",
+                        "The code names are those of Bill Codes (CODE NAME)."
+                    ]
+                },
+                {
+                    "heading": "Meter Reading List",
+                    "bullets": [
+                        "Use landscape for the full nine-column table.",
+                        "Choose Letter, Legal, or A4 according to the office standard.",
+                        "Use 100 percent or Default print scale.",
+                        "Confirm readable 9-10 point print text, wrapping, repeated headers, and complete footer placement."
+                    ]
+                },
+                {
+                    "heading": "Other print pages",
+                    "bullets": [
+                        "Collection Receipt: preview all allocations and remaining balances.",
+                        "Statement of Account: verify member and as-of information.",
+                        "Customer Ledger: use landscape and review every page.",
+                        "Journal report: verify balanced lines and references.",
+                        "Disconnection Report: confirm status, source balance, and readable wide columns."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 19,
+            "title": "Users, Roles, Page Access and Settings",
+            "sections": [
+                {
+                    "heading": "Users and roles",
+                    "steps": [
+                        "Create or review the user in System Administration > User Accounts.",
+                        "Assign the approved role.",
+                        "Set the cash account for cashiers on the user account.",
+                        "Verify the assignment with a controlled sign-in test."
+                    ]
+                },
+                {
+                    "heading": "Page permissions",
+                    "paragraphs": [
+                        "Rights are given to roles on Page Access Configuration; every water page has its own entry. Grant the minimum pages needed.",
+                        "Special permissions are given per role on User Role Configuration. For Water Billing: \"can change the paid bill-code amounts and the total on an official receipt before printing it\" (without it, the cashier prints the receipt as paid)."
+                    ]
+                },
+                {
+                    "heading": "Change control",
+                    "bullets": [
+                        "Document who approved each permission or setting change.",
+                        "Remove access when duties change.",
+                        "Review privileged pages regularly.",
+                        "Test after migrations or major configuration updates."
+                    ]
+                },
+                {
+                    "heading": "Receipt Layout Setup",
+                    "steps": [
+                        "Open Water Billing > Setup > Receipt Layout Setup and choose the water bill / collection receipt or the official receipt.",
+                        "Paper, margins and printing: the size of the form, the top, bottom, left and right margins, the copies across the paper and where the second one starts, the font, its size and the characters per inch.",
+                        "For the header, the lines and the totals: the origin of the part, then each entry with its Left, Top, Width, alignment, format and size. Drag an entry on the drawing, or select it and use the arrow keys (10 tups; with Shift 100).",
+                        "Add an entry, remove one, or use the default of a part; give the reason and choose Save layout.",
+                        "Print a test page on a form and adjust until every entry falls in place. Put the receipt back to the default layout with Back to the default layout."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 20,
+            "title": "Security, Privacy, and Record Protection",
+            "sections": [
+                {
+                    "heading": "Daily security practices",
+                    "bullets": [
+                        "Use personal credentials only.",
+                        "Lock or sign out when leaving the workstation.",
+                        "Do not share database credentials or configuration files.",
+                        "Export only the customer data required for the approved purpose.",
+                        "Store printouts securely and dispose of them according to policy."
+                    ]
+                },
+                {
+                    "heading": "Financial history",
+                    "paragraphs": [
+                        "Posted bills, paid allocations, receipts, and journals are records of financial events. Correct them through controlled compensating workflows rather than editing or deleting history."
+                    ]
+                },
+                {
+                    "heading": "Escalation package",
+                    "bullets": [
+                        "Page and module name",
+                        "Member or transaction reference",
+                        "Exact date and time",
+                        "Steps performed",
+                        "Full error text",
+                        "Screenshot with sensitive data minimized",
+                        "Expected result and actual result"
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 21,
+            "title": "Troubleshooting Guide",
+            "sections": [
+                {
+                    "heading": "General diagnostic sequence",
+                    "steps": [
+                        "Stop repeated submissions.",
+                        "Record the error and reference.",
+                        "Check the relevant master data and current lifecycle state.",
+                        "Search history to determine whether the transaction succeeded.",
+                        "Retry only when it is safe and authorized.",
+                        "Escalate with complete evidence when the cause is not clear."
+                    ]
+                },
+                {
+                    "heading": "Common issues",
+                    "paragraphs": [
+                        "Use the Help Center troubleshooting table for page access, reading, tariff, period, posting, payment, reversal, reporting, and printing problems."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 22,
+            "title": "Operational Checklists",
+            "sections": [
+                {
+                    "heading": "Daily opening",
+                    "bullets": [
+                        "Confirm the correct date, network connection and printer availability.",
+                        "Review open billing periods and unresolved errors from the previous day.",
+                        "Confirm that the cashier's user account has its cash account before collecting payments.",
+                        "Verify that required master data changes were approved before beginning live transactions."
+                    ]
+                },
+                {
+                    "heading": "Daily closing",
+                    "bullets": [
+                        "Review newly entered readings, bills, payments, reversals, refunds, material issuances and adjustments.",
+                        "Reconcile cash tendered, receipts, payment history, and collection journal references.",
+                        "Review failed or incomplete transactions and document the follow-up owner.",
+                        "Sign out and secure printed documents and exported files."
+                    ]
+                },
+                {
+                    "heading": "Billing cycle",
+                    "bullets": [
+                        "Confirm rate codes, tariff continuity, discounts, organization dimensions, and accounting mappings.",
+                        "Create the open billing period without overlap.",
+                        "Enter and review individual or batch readings.",
+                        "Resolve invalid readings and snapshot issues.",
+                        "Print and review the Meter Reading List.",
+                        "Post approved water bills for the exact period.",
+                        "Review sample statements, billing history, and journal references.",
+                        "Begin collections only after approval and reconciliation."
+                    ]
+                },
+                {
+                    "heading": "Monthly administration",
+                    "bullets": [
+                        "Review users, roles, page permissions and inactive accounts.",
+                        "Confirm backup completion and test restoration according to the local disaster-recovery plan.",
+                        "Review rate, discount, penalty, and accounting-setting changes.",
+                        "Review duplicate, exception, reversal, refund, and adjustment logs.",
+                        "Run and reconcile management, collection, billing, inventory, AP, and accounting reports."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 23,
+            "title": "Frequently Asked Questions",
+            "sections": [
+                {
+                    "heading": "Questions and answers",
+                    "paragraphs": [
+                        "The Help Center and this manual include answers to the most common access, reading, tariff, billing, payment, and printing questions."
+                    ]
+                }
+            ]
+        },
+        {
+            "number": 24,
+            "title": "Glossary",
+            "sections": [
+                {
+                    "heading": "Key terms",
+                    "paragraphs": [
+                        "Use the glossary to interpret billing, collection, adjustment, and accounting terminology consistently."
+                    ]
+                }
+            ]
+        }
+    ]
+}
