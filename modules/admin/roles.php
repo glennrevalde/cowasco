@@ -4,6 +4,8 @@ declare(strict_types=1);
 $pageKey = 'admin.roles';
 $a = g('a');
 $pages = DB::all('SELECT p.*, m.code AS module_code, m.name AS module_name FROM pages p JOIN modules m ON m.id = p.module_id ORDER BY m.sort_order, p.sort_order');
+// a page row of the database that the program no longer has (Data Import Management, removed in version 49) is not offered
+$pages = array_values(array_filter($pages, static fn(array $pg): bool => Access::pageDef((string)$pg['page_key']) !== null));
 $acts = ['allowed' => 'View', 'can_create' => 'Create', 'can_edit' => 'Edit', 'can_delete' => 'Delete/Void', 'can_print' => 'Print/Export', 'can_approve' => 'Approve'];
 
 /** "page: VCEDPA" strings for audit comparisons */

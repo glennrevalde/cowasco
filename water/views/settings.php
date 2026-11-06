@@ -59,13 +59,6 @@ $settingsActions = [
         'button' => 'Open Access Control',
     ],
     [
-        'title' => 'Data Import Management',
-        'description' => 'Stage, validate, review, and import approved Account Master and Billing Master CSV records in the required member, bill, recurring-charge, and collection order.',
-        'file' => 'import_management.php',
-        'page_key' => 'import_management',
-        'button' => 'Open Data Import Management',
-    ],
-    [
         'title' => 'Receipt Layout Setup',
         'description' => 'Design the pre-printed water bill / collection receipt and official receipt: the paper, the top, bottom, left and right margins, and where each entry prints. Printed or Pre-Printed is chosen on Company, Security & Closing Date.',
         'file' => 'receipt_layouts.php',

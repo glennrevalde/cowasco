@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-02 12:58:10 (19.1 s)
-- **Server:** http://127.0.0.1:8096
-- **Database:** coop_e2e46 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Run:** 2026-11-07 06:29:29 (7.9 s)
+- **Server:** http://127.0.0.1:8097
+- **Database:** coop_e2e49 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 10.11.14-MariaDB-0ubuntu0.24.04.1
-- **Result:** 348 passed, 0 failed, 348 checks
+- **Result:** 402 passed, 0 failed, 402 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261102-125753-CEC1 | COL-20261102-125753-CEC1 | PASS |
+| payment number = official receipt number | COL-20261107-062922-25D1 | COL-20261107-062922-25D1 | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 229 | 229 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261102-125753-CEC1 | COL-20261102-125753-CEC1 | PASS |
+| retry of the same request returns the same receipt | COL-20261107-062922-25D1 | COL-20261107-062922-25D1 | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -261,7 +261,7 @@
 | ...and both carry the class chosen | 0 | 0 | PASS |
 | no charge ticked: nothing is issued | 3 | 3 | PASS |
 | the charge category of the bill changed | 5 | 5 | PASS |
-| ...and its date issued | 2026-11-01 | 2026-11-01 | PASS |
+| ...and its date issued | 2026-11-06 | 2026-11-06 | PASS |
 | ...its amount follows the new category (a material at its sales price) | 1,200.00 | 1,200.00 | PASS |
 | the first invoice is voided as replaced, not deleted | replaced | replaced | PASS |
 | the corrected invoice -R1 is posted on the new date issued | yes | yes | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok b5552 B | E2E Purok b5552 B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok 9e9cf B | E2E Purok 9e9cf B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -417,6 +417,70 @@
 | the water bill / collection receipt on its pre-printed form: only the entries, two copies | yes | yes | PASS |
 | the official receipt on its pre-printed form | yes | yes | PASS |
 | ...put back to the default layout |  |  | PASS |
+
+## v47 Billing Adjustments: Edit opens the bill itself; the Individual Statement of Account
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| an unpaid one-time bill to correct (55.00, due in 5 days) | yes | yes | PASS |
+| Billing Adjustments: Edit opens the bill (a link to the bill), the small Edit Uncollected Bill box is gone | yes | yes | PASS |
+| the editor shows the bill itself: its kind and invoice number, billed to, the bill code, the amount, the totals | yes | yes | PASS |
+| ...its correctable fields in the bill (the amount, the due date), the class and the reason beside it | yes | yes | PASS |
+| the preview without the form token is refused (403) | yes | yes | PASS |
+| preview: 65.50 due in 10 days, term 10 days, up by 10.50; the bill is not changed | yes | yes | PASS |
+| preview: a due date before the bill date is refused, with the reason | yes | yes | PASS |
+| preview of a collected water bill is refused (a debit or credit memo instead) | yes | yes | PASS |
+| a refused correction (a reason too short) goes back to the bill with the message and the amount typed | yes | yes | PASS |
+| ...and nothing is saved | 55.00 | 55.00 | PASS |
+| the correction is saved from the bill: back on Billing Adjustments with the message | yes | yes | PASS |
+| the bill: 65.50, due in 10 days, term (days) 10, corrected once | yes | yes | PASS |
+| its invoice is replaced by the correction "-R1" for 65.50 | yes | yes | PASS |
+| a water bill opens with its meter reading, consumption and the tariff lines | yes | yes | PASS |
+| preview: 3 m3 more is priced at the tariff, as the save prices it | yes | yes | PASS |
+| preview: a present reading below the previous one is refused | yes | yes | PASS |
+| an installment bill opens with its payment schedule | yes | yes | PASS |
+| preview: 601.00 spread again over the three due dates | 200.34, 200.33, 200.33 | 200.34, 200.33, 200.33 | PASS |
+| a cashier cannot open the bill editor | yes | yes | PASS |
+| ...nor ask for a corrected bill | yes | yes | PASS |
+| trial balance after the corrections: debits = credits | 0.00 | 0.00 | PASS |
+| a second billing period after the first (Bill Period Management) | yes | yes | PASS |
+| the account has unpaid water bills in two billing periods | 2 | 2 | PASS |
+| Generate SOA / Post Billing: the Individual Statement of Account tab | yes | yes | PASS |
+| ...?tab=individual opens on it | yes | yes | PASS |
+| ...and from Reports (Generate Statement of Account), beside the statement of one billing period | yes | yes | PASS |
+| the member or customer is found by the account number, with the unpaid invoices counted | yes | yes | PASS |
+| ...and by the last name | yes | yes | PASS |
+| every unpaid water bill is offered, whatever its billing period | water:3,water:8 | water:3,water:8 | PASS |
+| ...with the balances of the bills on file (water, one-time, installment, recurring) | 7,246.00 | 7,246.00 | PASS |
+| account E: the corrected one-time bill (65.50) and every unpaid amortization of its installment contracts | yes | yes | PASS |
+| a statement dated before the bills lists none of them | 0 | 0 | PASS |
+| a statement date that is not a date is refused | yes | yes | PASS |
+| the statement lists only the invoice chosen of the account; one not unpaid and another account's bill are left off and named | yes | yes | PASS |
+| ...its total is that invoice's balance; the cooperative, the account and the General Manager are on it | yes | yes | PASS |
+| a statement with no invoice chosen is refused | yes | yes | PASS |
+| the statement of one billing period still lists that period's water bill | 1 | 1 | PASS |
+| an installment amortization not yet due is listed but not ticked at first; the others are | yes | yes | PASS |
+| a member or customer with two accounts is one name with both accounts | yes | yes | PASS |
+| ...all accounts: the invoices of both, each with its account | yes | yes | PASS |
+| ...no invoice twice (a share capital bill on the first account only) | 2 | 2 | PASS |
+| ...one account: its invoices only | yes | yes | PASS |
+| ...another person's account is refused | yes | yes | PASS |
+| a recurring bill corrected with the same due date keeps its due date and term | yes | yes | PASS |
+| ...a new due date: the term counts from the end of its service period | 20 | 20 | PASS |
+| ...a due date before the end of the service period is refused | yes | yes | PASS |
+| a cashier (no Post Billing) cannot read the statement data | yes | yes | PASS |
+
+## v49 Data Import Management and the Technical prerequisites step removed
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| the Data Import Management page is gone | 404 | 404 | PASS |
+| ...and its endpoints | 404 | 404 | PASS |
+| Water Settings: no Data Import Management card | yes | yes | PASS |
+| Page Access does not offer Data Import Management (its row stays in the database) | yes | yes | PASS |
+| the menu has no Data Import Management | yes | yes | PASS |
+| the set-up guide: no Technical prerequisites step, the administrator first, 7 steps | yes | yes | PASS |
+| ...and nothing in it about storage/imports | yes | yes | PASS |
 
 ## 7.4c Period close
 
@@ -432,5 +496,5 @@
 | trial balance: debits = credits | 0.00 | 0.00 | PASS |
 | every document balances | 0 | 0 | PASS |
 | no ledger document belongs to two water events | 0 | 0 | PASS |
-| A/R control account = open water invoices (subledger) | 9,657.35 | 9,657.35 | PASS |
-| water records open balance = A/R subledger for the accounts used | 9,657.35 | 9,657.35 | PASS |
+| A/R control account = open water invoices (subledger) | 10,538.45 | 10,538.45 | PASS |
+| water records open balance = A/R subledger for the accounts used | 10,538.45 | 10,538.45 | PASS |

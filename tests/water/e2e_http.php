@@ -1010,6 +1010,211 @@ if ($rF !== '') {
 $admin->post('water/views/receipt_layouts.php?kind=collection', ['csrf_token' => $admin->csrf(), 'kind' => 'collection', 'action' => 'reset']);
 Checks::eq('...put back to the default layout', '', (string)$q("SELECT setting_value FROM settings WHERE setting_key = 'water_receipt_layout_collection'"));
 
+// ======================================================================================== v47
+Checks::section('v47 Billing Adjustments: Edit opens the bill itself; the Individual Statement of Account');
+$cls = ['class_id' => $classId];   // the class of the water forms ($org is an account row since 7.8)
+$in = static fn(int $days): string => date('Y-m-d', strtotime($today . ' ' . ($days >= 0 ? '+' : '') . $days . ' days'));
+$money2 = static fn($v): string => number_format((float)$v, 2, '.', '');
+// an unpaid one-time bill (a service fee) of account E, nothing collected on it
+$admin->post('water/process/addOneTimeBill.php', ['csrf_token' => $admin->csrf(), 'member_id' => $E, 'bill_code_id' => $memCode, 'quantity' => 1, 'total_amount' => 55,
+    'bill_date' => $today, 'due_date' => $in(5)] + $cls);
+$ob = (int)$q('SELECT bill_id FROM one_time_bills WHERE member_id = :m ORDER BY bill_id DESC LIMIT 1', ['m' => $E]);
+Checks::true('an unpaid one-time bill to correct (55.00, due in 5 days)', $ob > 0 && $money($q('SELECT total_amount FROM one_time_bills WHERE bill_id = :b', ['b' => $ob])) === 55.0);
+$admin->get('water/views/billing_adjustments.php?type=one_time');
+Checks::true('Billing Adjustments: Edit opens the bill (a link to the bill), the small Edit Uncollected Bill box is gone',
+    $admin->status === 200 && str_contains($admin->body, 'billing_adjustments.php?edit=one_time-' . $ob) && !str_contains($admin->body, 'Edit Uncollected Bill'));
+$admin->get('water/views/billing_adjustments.php?edit=one_time-' . $ob);
+$acctE = $row('SELECT account_number, lastname FROM water_accounts WHERE pkey = :p', ['p' => $E]);
+$b = $admin->body;
+Checks::true('the editor shows the bill itself: its kind and invoice number, billed to, the bill code, the amount, the totals',
+    $admin->status === 200 && str_contains($b, 'One-Time Bill') && str_contains($b, 'Invoice No.') && str_contains($b, 'Billed to') && str_contains($b, 'MEMBERSHIP FEE')
+    && str_contains($b, 'Total amount') && str_contains($b, 'Balance due') && str_contains($b, 'Account no. ' . htmlspecialchars((string)$acctE['account_number'])), $admin->url);
+Checks::true('...its correctable fields in the bill (the amount, the due date), the class and the reason beside it',
+    str_contains($b, 'id="beAmount"') && str_contains($b, 'id="beDue"') && str_contains($b, 'name="class_id"') && str_contains($b, 'name="reason"') && str_contains($b, 'Save correction'));
+// the preview: computed by the save's own functions, nothing written
+$admin->post('water/process/previewBillCorrection.php', ['bill' => 'one_time-' . $ob, 'total_amount' => '60.00']);
+Checks::true('the preview without the form token is refused (403)', $admin->status === 403 && ($admin->json['ok'] ?? true) === false, (string)$admin->status);
+$admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'one_time-' . $ob, 'total_amount' => '65.50', 'due_date' => $in(10)]);
+$pb = $admin->json['bill'] ?? [];
+Checks::true('preview: 65.50 due in 10 days, term 10 days, up by 10.50; the bill is not changed',
+    ($admin->json['ok'] ?? false) === true && $money2($pb['total'] ?? 0) === '65.50' && (int)($pb['term_days'] ?? -1) === 10 && $money2($pb['change'] ?? 0) === '10.50'
+    && $money($q('SELECT total_amount FROM one_time_bills WHERE bill_id = :b', ['b' => $ob])) === 55.0, json_encode($admin->json));
+$admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'one_time-' . $ob, 'total_amount' => '65.50', 'due_date' => $in(-3)]);
+Checks::true('preview: a due date before the bill date is refused, with the reason', ($admin->json['ok'] ?? true) === false && str_contains((string)($admin->json['error'] ?? ''), 'before the bill date'), json_encode($admin->json));
+$admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'water-' . $readings[$A]['id'], 'pres_reading' => 40]);
+Checks::true('preview of a collected water bill is refused (a debit or credit memo instead)', ($admin->json['ok'] ?? true) === false && ($admin->json['error'] ?? '') !== '', json_encode($admin->json));
+// a refused save goes back to the bill with what was typed; then it is saved
+$admin->post('water/process/billLifecycleProcess.php', ['csrf_token' => $admin->csrf(), 'action' => 'edit', 'return' => 'editor', 'bill_type' => 'one_time', 'bill_id' => $ob,
+    'total_amount' => '65.50', 'due_date' => $in(10), 'reason' => 'no'] + $cls);
+Checks::true('a refused correction (a reason too short) goes back to the bill with the message and the amount typed',
+    str_contains($admin->url, 'billing_adjustments.php?edit=one_time-' . $ob) && str_contains($admin->body, 'at least 5 characters') && str_contains($admin->body, 'value="65.50"'), $admin->url);
+Checks::eq('...and nothing is saved', 55.0, $money($q('SELECT total_amount FROM one_time_bills WHERE bill_id = :b', ['b' => $ob])));
+$admin->post('water/process/billLifecycleProcess.php', ['csrf_token' => $admin->csrf(), 'action' => 'edit', 'return' => 'editor', 'bill_type' => 'one_time', 'bill_id' => $ob,
+    'total_amount' => '65.50', 'due_date' => $in(10), 'reason' => 'Fee raised to 65.50 (e2e v47)'] + $cls);
+Checks::true('the correction is saved from the bill: back on Billing Adjustments with the message', str_contains($admin->url, 'billing_adjustments.php') && !str_contains($admin->url, 'edit=') && str_contains($admin->body, 'corrected'), $admin->url);
+$obRow = $row('SELECT total_amount, due_date, term_days, bill_edit_count FROM one_time_bills WHERE bill_id = :b', ['b' => $ob]);
+Checks::true('the bill: 65.50, due in 10 days, term (days) 10, corrected once', $money2($obRow['total_amount']) === '65.50' && $obRow['due_date'] === $in(10)
+    && (int)$obRow['term_days'] === 10 && (int)$obRow['bill_edit_count'] === 1, json_encode($obRow));
+$wObR = WaterPosting::byEvent(WaterPosting::eventKey('one_time', $ob, 1));
+Checks::true('its invoice is replaced by the correction "-R1" for 65.50', $wObR && $wObR['status'] === 'posted' && $money2($q('SELECT total FROM transactions WHERE id = :t', ['t' => $wObR['txn_id']])) === '65.50', $wObR['status'] ?? 'missing');
+// a water bill not collected: its readings and tariff lines, the amount recomputed for another reading
+$wOpen = $row("SELECT br.reading_id, br.member_id, br.prev_reading, br.pres_reading FROM bill_readings br WHERE br.is_billed = 1 AND COALESCE(br.amount_paid, 0) = 0
+    AND COALESCE(br.bill_lifecycle_status, 'active') = 'active' AND NOT EXISTS (SELECT 1 FROM payment_transaction_items i WHERE i.source_type = 'water' AND i.source_id = br.reading_id)
+    ORDER BY br.reading_id LIMIT 1");
+if ($wOpen) {
+    $admin->get('water/views/billing_adjustments.php?edit=water-' . (int)$wOpen['reading_id']);
+    Checks::true('a water bill opens with its meter reading, consumption and the tariff lines', $admin->status === 200 && str_contains($admin->body, 'Meter reading')
+        && str_contains($admin->body, 'Previous reading') && str_contains($admin->body, 'name="pres_reading"') && str_contains($admin->body, 'Consumption range') && str_contains($admin->body, 'Amount due'));
+    $newPres = (int)$wOpen['pres_reading'] + 3;
+    $admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'water-' . (int)$wOpen['reading_id'], 'pres_reading' => $newPres]);
+    $expect = compute_water_billing_details(DB::pdo(), (int)$wOpen['member_id'], $newPres - (int)$wOpen['prev_reading'], true)['amount_due'];
+    Checks::true('preview: 3 m3 more is priced at the tariff, as the save prices it', ($admin->json['ok'] ?? false) === true && $money2($admin->json['bill']['total'] ?? -1) === $money2($expect)
+        && (int)($admin->json['bill']['water']['consumption'] ?? -1) === $newPres - (int)$wOpen['prev_reading'], json_encode($admin->json));
+    $admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'water-' . (int)$wOpen['reading_id'], 'pres_reading' => (int)$wOpen['prev_reading'] - 1]);
+    Checks::true('preview: a present reading below the previous one is refused', ($admin->json['ok'] ?? true) === false
+        && (str_contains((string)($admin->json['error'] ?? ''), 'lower than the previous reading') || str_contains((string)($admin->json['error'] ?? ''), 'cannot be negative')), json_encode($admin->json));
+}
+// an installment contract: its schedule, a corrected total spread again over the same due dates
+$admin->post('water/process/addInstallmentBill.php', ['csrf_token' => $admin->csrf(), 'member_id' => $E, 'bill_code_id' => $memCode, 'quantity' => 1, 'total_amount' => 600, 'term' => 3,
+    'payment_mode' => 'monthly', 'amortization_type' => 'fixed', 'start_date' => $today] + $cls);
+$inst2 = (int)$q('SELECT installment_id FROM installment_bills WHERE member_id = :m ORDER BY installment_id DESC LIMIT 1', ['m' => $E]);
+$admin->get('water/views/billing_adjustments.php?edit=installment-' . $inst2);
+Checks::true('an installment bill opens with its payment schedule', $admin->status === 200 && str_contains($admin->body, 'Payment schedule') && preg_match_all('/<td class="num mono" data-i="\d+">/', $admin->body) === 3);
+$admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'installment-' . $inst2, 'total_amount' => '601']);
+Checks::eq('preview: 601.00 spread again over the three due dates', '200.34, 200.33, 200.33',
+    implode(', ', array_map(fn($x) => $money2($x['amount']), $admin->json['bill']['schedule'] ?? [])));
+// the rights: Billing Adjustments and a Super Administrator
+$cas->get('water/views/billing_adjustments.php?edit=one_time-' . $ob);
+Checks::true('a cashier cannot open the bill editor', $cas->status === 403 || !str_contains($cas->body, 'id="beForm"'), (string)$cas->status);
+$cas->post('water/process/previewBillCorrection.php', ['csrf_token' => $cas->csrf(), 'bill' => 'one_time-' . $ob, 'total_amount' => '1']);
+Checks::true('...nor ask for a corrected bill', $cas->status === 403 || ($cas->json['ok'] ?? false) === false, (string)$cas->status);
+Checks::eq('trial balance after the corrections: debits = credits', 0.0, $tbDiff());
+
+// the Individual Statement of Account: a second billing period, so an account has unpaid water bills in two periods
+$x = $row("SELECT br.member_id, br.pres_reading FROM bill_readings br WHERE br.period_id = :p AND br.is_billed = 1 AND br.amount_due > COALESCE(br.amount_paid, 0)
+    AND COALESCE(br.bill_lifecycle_status, 'active') = 'active' ORDER BY br.reading_id LIMIT 1", ['p' => $pid]);
+$pEnd = substr((string)$period['end_date'], 0, 10);
+$p2Start = date('Y-m-d', strtotime($pEnd . ' +1 day'));
+$p2End = min(date('Y-m-d', strtotime($p2Start . ' +1 month -1 day')), $in(-1));
+$admin->post('water/process/addBillPeriod.php', ['csrf_token' => $admin->csrf(), 'date_from' => $p2Start, 'date_to' => $p2End, 'duration' => 1]);
+$pid2 = (int)$q("SELECT period_id FROM bill_periods WHERE period_id <> :p AND status = 'open' AND DATE(start_date) = :s ORDER BY period_id DESC LIMIT 1", ['p' => $pid, 's' => $p2Start]);
+Checks::true('a second billing period after the first (Bill Period Management)', $pid2 > 0 && $x !== null, $p2Start . ' to ' . $p2End);
+$X = (int)($x['member_id'] ?? 0);
+$admin->postJson('water/process/saveIndividualReading.php', ['period_id' => $pid2, 'member_id' => $X, 'pres_reading' => (int)($x['pres_reading'] ?? 0) + 7]);
+$admin->postJson('water/process/postBilling.php', ['action' => 'post', 'period_id' => $pid2, 'filter' => 'water', 'billing_date' => $today, 'term_days' => 15] + $cls);
+Checks::eq('the account has unpaid water bills in two billing periods', 2, (int)$q("SELECT COUNT(DISTINCT period_id) FROM bill_readings WHERE member_id = :m AND is_billed = 1
+    AND amount_due > COALESCE(amount_paid, 0) AND COALESCE(bill_lifecycle_status, 'active') = 'active'", ['m' => $X]));
+$admin->get('water/views/generate_soa.php');
+Checks::true('Generate SOA / Post Billing: the Individual Statement of Account tab', $admin->status === 200 && str_contains($admin->body, 'id="tabBtnIndividual"') && str_contains($admin->body, 'id="tab-individual"'));
+$admin->get('water/views/generate_soa.php?tab=individual');
+Checks::true('...?tab=individual opens on it', (bool)preg_match('/id="tab-individual" class="tab-pane active"/', $admin->body));
+$admin->get('water/views/generate_soa.php?view=soa&tab=individual');
+Checks::true('...and from Reports (Generate Statement of Account), beside the statement of one billing period', $admin->status === 200 && str_contains($admin->body, 'Statement by Billing Period')
+    && (bool)preg_match('/id="tab-individual" class="tab-pane active"/', $admin->body));
+$soa = 'water/process/getIndividualSoaData.php?context=generate_soa&';
+$xAcct = $row('SELECT account_number, lastname FROM water_accounts WHERE pkey = :p', ['p' => $X]);
+$admin->get($soa . 'action=search&kind=all&q=' . rawurlencode((string)$xAcct['account_number']));
+$hit = array_values(array_filter($admin->json['accounts'] ?? [], fn($a) => (int)$a['id'] === $X));
+Checks::true('the member or customer is found by the account number, with the unpaid invoices counted', $hit !== [] && (int)$hit[0]['open_count'] >= 2 && in_array($hit[0]['kind'], ['Member', 'Customer'], true), json_encode($hit));
+$admin->get($soa . 'action=search&kind=all&q=' . rawurlencode((string)$xAcct['lastname']));
+Checks::true('...and by the last name', (bool)array_filter($admin->json['accounts'] ?? [], fn($a) => (int)$a['id'] === $X));
+$admin->get($soa . 'action=invoices&account_id=' . $X . '&statement_date=' . $today);
+$xInv = $admin->json['invoices'] ?? [];
+$got = array_map(fn($i) => $i['key'], array_values(array_filter($xInv, fn($i) => $i['type'] === 'water')));
+$want = array_map(fn($r) => 'water:' . $r, DB::column("SELECT reading_id FROM bill_readings WHERE member_id = :m AND is_billed = 1 AND amount_due > COALESCE(amount_paid, 0)
+    AND COALESCE(bill_lifecycle_status, 'active') <> 'deleted' ORDER BY reading_id", ['m' => $X]));
+sort($got);
+sort($want);
+Checks::eq('every unpaid water bill is offered, whatever its billing period', implode(',', $want), implode(',', $got));
+$dbOpen = $money($q("SELECT COALESCE(SUM(amount_due - COALESCE(amount_paid, 0)), 0) FROM bill_readings WHERE member_id = :m AND is_billed = 1 AND amount_due > COALESCE(amount_paid, 0) AND COALESCE(bill_lifecycle_status, 'active') <> 'deleted'", ['m' => $X])
+    + $q("SELECT COALESCE(SUM(total_amount - COALESCE(amount_paid, 0)), 0) FROM one_time_bills WHERE member_id = :m AND status NOT IN ('cancelled', 'deleted') AND COALESCE(bill_lifecycle_status, 'active') <> 'deleted' AND total_amount > COALESCE(amount_paid, 0)", ['m' => $X])
+    + $q("SELECT COALESCE(SUM(s.amount - COALESCE(s.amount_paid, 0)), 0) FROM installment_schedules s JOIN installment_bills b ON b.installment_id = s.installment_id WHERE b.member_id = :m AND b.status NOT IN ('cancelled', 'deleted') AND COALESCE(b.bill_lifecycle_status, 'active') <> 'deleted' AND s.amount > COALESCE(s.amount_paid, 0)", ['m' => $X])
+    + $q("SELECT COALESCE(SUM(total_amount - COALESCE(amount_paid, 0)), 0) FROM recurring_bills WHERE member_id = :m AND status NOT IN ('cancelled', 'deleted') AND COALESCE(bill_lifecycle_status, 'active') <> 'deleted' AND total_amount > COALESCE(amount_paid, 0)", ['m' => $X]));
+$listed = $money(array_sum(array_map(fn($i) => (float)$i['balance'], array_filter($xInv, fn($i) => $i['type'] !== 'sharecap'))));
+Checks::eq('...with the balances of the bills on file (water, one-time, installment, recurring)', $dbOpen, $listed);
+$admin->get($soa . 'action=invoices&account_id=' . $E . '&statement_date=' . $today);
+$eBal = array_column($admin->json['invoices'] ?? [], 'balance', 'key');
+Checks::true('account E: the corrected one-time bill (65.50) and every unpaid amortization of its installment contracts', ($eBal['one_time:' . $ob] ?? '') === '65.50'
+    && count(array_filter(array_keys($eBal), fn($k) => str_starts_with((string)$k, 'installment:'))) >= 3, json_encode($eBal));
+$admin->get($soa . 'action=invoices&account_id=' . $X . '&statement_date=' . date('Y-m-d', strtotime($pEnd . ' -60 days')));
+Checks::eq('a statement dated before the bills lists none of them', 0, count(array_filter($admin->json['invoices'] ?? [], fn($i) => $i['type'] === 'water')));
+$admin->get($soa . 'action=invoices&account_id=' . $X . '&statement_date=2026-02-30');
+Checks::true('a statement date that is not a date is refused', ($admin->json['ok'] ?? true) === false, json_encode($admin->json));
+// the statement: only the invoices chosen, as they stand; another account's bill and a paid one are left off
+$pickW = $got[0] ?? 'water:0';
+$admin->get($soa . 'action=statement&account_id=' . $X . '&statement_date=' . $today . '&items=' . rawurlencode($pickW . ',water:999999999,one_time:' . $ob));
+$st = $admin->json;
+Checks::true('the statement lists only the invoice chosen of the account; one not unpaid and another account\'s bill are left off and named',
+    ($st['ok'] ?? false) === true && count($st['invoices'] ?? []) === 1 && ($st['invoices'][0]['key'] ?? '') === $pickW
+    && ($st['dropped'] ?? []) === ['water:999999999', 'one_time:' . $ob], json_encode(['n' => count($st['invoices'] ?? []), 'dropped' => $st['dropped'] ?? null]));
+Checks::true('...its total is that invoice\'s balance; the cooperative, the account and the General Manager are on it', ($st['totals']['total'] ?? '-') === ($st['invoices'][0]['balance'] ?? '')
+    && ($st['account']['id'] ?? 0) === $X && ($st['company']['name'] ?? '') !== '' && isset($st['signatories']['general_manager']));
+$admin->get($soa . 'action=statement&account_id=' . $X . '&statement_date=' . $today . '&items=');
+Checks::true('a statement with no invoice chosen is refused', ($admin->json['ok'] ?? true) === false);
+$admin->get('water/process/getSoaData.php?member_id=' . $X . '&period_id=' . $pid2 . '&statement_date=' . $today);
+Checks::eq('the statement of one billing period still lists that period\'s water bill', 1, count($admin->json['current']['Water Bill'] ?? []));
+// an installment amortization not yet due is listed, not ticked at first (an upcoming due)
+$admin->get($soa . 'action=invoices&account_id=' . $E . '&statement_date=' . $today);
+$upc = array_values(array_filter($admin->json['invoices'] ?? [], fn($i) => $i['type'] === 'installment' && $i['status'] === 'current'));
+$due = array_values(array_filter($admin->json['invoices'] ?? [], fn($i) => $i['type'] !== 'installment' || $i['status'] !== 'current'));
+Checks::true('an installment amortization not yet due is listed but not ticked at first; the others are', $upc !== [] && !array_filter($upc, fn($i) => $i['preselect'])
+    && !array_filter($due, fn($i) => !$i['preselect']), json_encode(array_map(fn($i) => [$i['key'], $i['status'], $i['preselect']], $admin->json['invoices'] ?? [])));
+// a member or customer with two water-service accounts: one name, both accounts, or one of them
+$pp = $row('SELECT party_id, MIN(pkey) AS a1, MAX(pkey) AS a2 FROM water_accounts WHERE party_id IS NOT NULL GROUP BY party_id HAVING COUNT(*) > 1 ORDER BY party_id LIMIT 1');
+if ($pp) {
+    $a2no = (string)$q('SELECT account_number FROM water_accounts WHERE pkey = :p', ['p' => $pp['a2']]);
+    $admin->get($soa . 'action=search&kind=all&q=' . rawurlencode($a2no));
+    $person = array_values(array_filter($admin->json['accounts'] ?? [], fn($a) => in_array((int)$pp['a2'], array_map(fn($x) => (int)$x['id'], $a['accounts']), true)));
+    Checks::true('a member or customer with two accounts is one name with both accounts', count($person) === 1 && count($person[0]['accounts']) === 2 && (int)$person[0]['id'] === (int)$pp['a1'], json_encode($person));
+    $admin->get($soa . 'action=invoices&account_id=' . $pp['a2'] . '&scope=all&statement_date=' . $today);
+    $all = $admin->json;
+    Checks::true('...all accounts: the invoices of both, each with its account', count($all['scope'] ?? []) === 2
+        && !array_filter($all['invoices'] ?? [], fn($i) => !in_array((int)$i['account_id'], [(int)$pp['a1'], (int)$pp['a2']], true)), json_encode($all['scope'] ?? null));
+    $keys = array_column($all['invoices'] ?? [], 'key');
+    Checks::eq('...no invoice twice (a share capital bill on the first account only)', count($keys), count(array_unique($keys)));
+    $admin->get($soa . 'action=invoices&account_id=' . $pp['a1'] . '&scope=' . $pp['a2'] . '&statement_date=' . $today);
+    Checks::true('...one account: its invoices only', ($admin->json['ok'] ?? false) && count($admin->json['scope'] ?? []) === 1
+        && !array_filter($admin->json['invoices'] ?? [], fn($i) => (int)$i['account_id'] !== (int)$pp['a2'] || $i['type'] === 'sharecap'), json_encode($admin->json['scope'] ?? $admin->json));
+    $admin->get($soa . 'action=invoices&account_id=' . $pp['a1'] . '&scope=' . $E . '&statement_date=' . $today);
+    Checks::true('...another person\'s account is refused', ($admin->json['ok'] ?? true) === false || (int)$E === (int)$pp['a1'] || (int)$E === (int)$pp['a2'], json_encode($admin->json));
+}
+// a recurring bill: the same due date keeps its term; a new one counts from the end of the service period
+$rb = $row('SELECT bill_id, due_date, term_days, billing_period_end FROM recurring_bills WHERE member_id = :m ORDER BY bill_id DESC LIMIT 1', ['m' => $F]);
+if ($rb) {
+    $admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'recurring-' . $rb['bill_id'], 'total_amount' => '80.00', 'due_date' => $rb['due_date']]);
+    $rbPrev = $admin->json['bill'] ?? [];
+    Checks::true('a recurring bill corrected with the same due date keeps its due date and term', ($admin->json['ok'] ?? false) === true
+        && array_key_exists('due_date', $rbPrev) && $rbPrev['due_date'] === null && array_key_exists('term_days', $rbPrev) && $rbPrev['term_days'] === null, json_encode($admin->json));
+    $nd = date('Y-m-d', strtotime($rb['due_date'] . ' +5 days'));
+    $admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'recurring-' . $rb['bill_id'], 'total_amount' => '80.00', 'due_date' => $nd]);
+    Checks::eq('...a new due date: the term counts from the end of its service period', (int)((strtotime($nd) - strtotime(substr((string)$rb['billing_period_end'], 0, 10))) / 86400),
+        (int)($admin->json['bill']['term_days'] ?? -1));
+    $admin->post('water/process/previewBillCorrection.php', ['csrf_token' => $admin->csrf(), 'bill' => 'recurring-' . $rb['bill_id'], 'total_amount' => '80.00',
+        'due_date' => date('Y-m-d', strtotime(substr((string)$rb['billing_period_end'], 0, 10) . ' -1 day'))]);
+    Checks::true('...a due date before the end of the service period is refused', ($admin->json['ok'] ?? true) === false || substr((string)$rb['billing_period_end'], 0, 10) <= $today, json_encode($admin->json));
+}
+$cas->get($soa . 'action=search&kind=all&q=a');
+Checks::true('a cashier (no Post Billing) cannot read the statement data', $cas->status === 403 || ($cas->json['ok'] ?? false) !== true, (string)$cas->status);
+
+// ======================================================================================== v49
+Checks::section('v49 Data Import Management and the Technical prerequisites step removed');
+$admin->get('water/views/import_management.php');
+Checks::eq('the Data Import Management page is gone', 404, $admin->status);
+$admin->post('water/process/stageImportCsv.php', ['csrf_token' => $admin->csrf()]);
+Checks::eq('...and its endpoints', 404, $admin->status);
+$admin->get('water/views/settings.php');
+Checks::true('Water Settings: no Data Import Management card', $admin->status === 200 && !str_contains($admin->body, 'Data Import Management'));
+$admin->get('index.php?p=admin.page_access');
+Checks::true('Page Access does not offer Data Import Management (its row stays in the database)', $admin->status === 200
+    && str_contains($admin->body, 'Water Settings') && !str_contains($admin->body, 'Data Import Management'));
+$admin->get('index.php?p=water.dashboard');
+Checks::true('the menu has no Data Import Management', $admin->status === 200 && !str_contains($admin->body, 'import_management'));
+$admin->get('water/process/getSetupReadiness.php?page=dashboard');
+$keys = array_column($admin->json['steps'] ?? [], 'key');
+Checks::true('the set-up guide: no Technical prerequisites step, the administrator first, 7 steps', ($admin->json['success'] ?? false) === true
+    && !in_array('technical', $keys, true) && ($keys[0] ?? '') === 'administrator' && (int)($admin->json['total_steps'] ?? 0) === 7, implode(',', $keys));
+Checks::true('...and nothing in it about storage/imports', !str_contains((string)json_encode($admin->json), 'storage/imports'));
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

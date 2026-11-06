@@ -79,8 +79,6 @@ final class Provision
         'discounts'                => 'Discounts (senior citizen, employees ...)',
         'discount_privilege_rules' => 'Discount privileges by bill code',
         'recurring_plans'          => 'Recurring billing plans',
-        'data_import_mapping_profiles' => 'Data Import Management profiles',
-        'data_import_mapping_rules'    => 'Data Import Management rules',
     ];
 
     /** COPY by subject, for the New company page (a table missing here is shown under "Other") */
@@ -92,8 +90,7 @@ final class Provision
         'Cooperative'         => ['member_types', 'coop_lists', 'sav_txn_codes', 'passbook_types', 'cda_report_mappings', 'cda_calendar',
                                   'addresstype', 'contactchannels', 'cities'],
         'Water billing'       => ['water_billing_settings', 'branches', 'ic_divisions', 'ic_segments', 'bill_codes', 'water_pipe_sizes', 'rate_code',
-                                  'water_meter_members', 'water_meter_discounts', 'discounts', 'discount_privilege_rules', 'recurring_plans',
-                                  'data_import_mapping_profiles', 'data_import_mapping_rules'],
+                                  'water_meter_members', 'water_meter_discounts', 'discounts', 'discount_privilege_rules', 'recurring_plans'],
     ];
 
     /** @return array<string, string[]> group => the descriptions of its copied set-up lists */

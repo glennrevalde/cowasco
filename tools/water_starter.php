@@ -176,37 +176,22 @@ function seed_water_starter(): array
             $done[] = 'institution profile: ' . Coop::coopName();
         }
 
-        // ---- 8. Data Import Management, ready for the former program's two files (Account Master, Billing Master)
-        $done = array_merge($done, seed_water_import_setup($ar, $fees, $materials, $adminId, $now));
+        // ---- 8. the charges the former program billed with the water bill, as bill codes and recurring plans
+        $done = array_merge($done, seed_water_charges($ar, $fees, $materials, $adminId, $now));
         return $done;
     });
 }
 
 /**
- * The set-up Data Import Management needs for the former water program's Account Master and Billing Master files:
- *   - the importer's mapping decisions at their documented defaults (the general-ledger policy: opening balances at the
- *     cut-over), so nothing has to be decided before the first upload; each can be changed on the page;
- *   - the bill codes and recurring plans of the charges the Billing Master carries besides water (Share Capital,
- *     Damayan, Funos, meter installation; the reconnection fee uses RECONNECTION FEE), each crediting an account of its
- *     own: share capital, Damayan and Funos are held as liabilities until they are credited where they belong;
- *   - the legacy water balances clearing account that offsets the opening balances;
- *   - the mapping profile "Former water program files": the former program's rate codes A, B, C and D mapped to the same
- *     tariffs it used (A residential associate, B residential regular, C commercial associate, D commercial regular, all
- *     1/2 inch), SeniorMaster to the Senior Citizen discount, the charge columns to the plans above.
+ * The charges the former water program billed with the water bill, each crediting an account of its own: share
+ * capital, Damayan and Funos are held as liabilities until they are credited where they belong; the meter installation
+ * and the reconnection fee (RECONNECTION FEE) are services. Each gets a bill code and a monthly recurring plan. Also the
+ * legacy water balances clearing account (Module Default Accounts > Water).
  * @return string[]
  */
-function seed_water_import_setup(int $ar, int $fees, int $materials, int $adminId, string $now): array
+function seed_water_charges(int $ar, int $fees, int $materials, int $adminId, string $now): array
 {
     $done = [];
-    require_once APP_ROOT . '/water/common/dataImportMappingHelpers.php';
-    if ((int)DB::value('SELECT COUNT(*) FROM data_import_mapping_rules') === 0) {
-        foreach (di_rule_catalog() as $key => $rule) {
-            DB::insert('data_import_mapping_rules', ['rule_key' => $key, 'rule_value' => $rule['default'], 'status' => $rule['default_status'],
-                'notes' => 'Default of the starter set-up', 'confirmed_by' => $rule['default_status'] === 'confirmed' ? ($adminId ?: null) : null,
-                'confirmed_at' => $rule['default_status'] === 'confirmed' ? $now : null, 'updated_at' => $now, 'version' => 1]);
-        }
-        $done[] = 'Data Import Management: ' . count(di_rule_catalog()) . ' mapping decisions at their defaults (ledger policy: opening balances at the cut-over)';
-    }
     WaterPosting::legacyClearingAccount();
     $done[] = 'account 39999 Legacy Water Balances Clearing (Module Default Accounts > Water > legacy balances clearing)';
 
@@ -223,7 +208,6 @@ function seed_water_import_setup(int $ar, int $fees, int $materials, int $adminI
     $damayan = $liability('2137', 'Damayan Contributions Payable', 'Damayan (mutual aid) contributions collected with water bills');
     $funos = $liability('2138', 'Funos Contributions Payable', 'Funos collected with water bills (a charge of the former water program), held until its treatment is decided');
 
-    $planIds = [];
     $billCode = function (string $code, string $description, string $type, int $credit, float $price) use ($ar, $adminId, $now): int {
         $id = DB::value('SELECT code_id FROM bill_codes WHERE code = :c', ['c' => $code]);
         if ($id) {
@@ -249,24 +233,9 @@ function seed_water_import_setup(int $ar, int $fees, int $materials, int $adminI
         'Recon Fee' => ['RECONNECTION FEE', 'Reconnection after a disconnection', 'Service', $fees, 300],
     ];
     foreach ($charges as $column => [$code, $description, $type, $credit, $amount]) {
-        $planIds[$column] = $plan($billCode($code, $description, $type, $credit, $amount), $amount);
+        $plan($billCode($code, $description, $type, $credit, $amount), $amount);
     }
-    $done[] = 'bill codes and recurring plans for the Billing Master charges: ' . implode(', ', array_column($charges, 0));
+    $done[] = 'bill codes and recurring plans of the former program\'s charges: ' . implode(', ', array_column($charges, 0));
 
-    if (!(int)DB::value("SELECT COUNT(*) FROM data_import_mapping_profiles WHERE profile_name = 'Former water program files'")) {
-        $options = [
-            'rate_map' => ['A' => 2, 'B' => 1, 'C' => 6, 'D' => 5],
-            'pipe_map' => ['A' => 2, 'B' => 2, 'C' => 2, 'D' => 2],
-            'default_pipe_size_id' => 2, 'address_mode' => 'source', 'default_city_id' => 0, 'default_zip' => 0,
-            'source_discount_id' => 0,
-            'senior_discount_id' => (int)(DB::value("SELECT discount_id FROM discounts WHERE discount_type = 'Senior Citizen'") ?: 0),
-            // the class of the imported bills and collections: the first active class (changeable on the import page)
-            'default_class_id' => (int)(Classes::ready() ? (DB::value('SELECT id FROM classes WHERE is_active = 1 ORDER BY sort_order, name LIMIT 1') ?: 0) : 0),
-            'stage_payments' => true, 'recurring_map' => $planIds, 'existing_account_mode' => 'skip',
-        ];
-        DB::insert('data_import_mapping_profiles', ['profile_name' => 'Former water program files', 'import_type' => 'any', 'version' => 1,
-            'options_json' => json_encode($options, JSON_UNESCAPED_SLASHES), 'created_by' => $adminId ?: null, 'created_at' => $now]);
-        $done[] = 'mapping profile "Former water program files" (rate codes A-D, senior discount, charge plans)';
-    }
     return $done;
 }

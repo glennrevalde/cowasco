@@ -4,6 +4,8 @@ declare(strict_types=1);
 $pageKey = 'admin.page_access';
 $mode = in_array(g('mode'), ['role', 'user', 'matrix'], true) ? g('mode') : (g('user_id') ? 'user' : 'role');
 $pages = DB::all('SELECT p.*, m.code AS module_code, m.name AS module_name FROM pages p JOIN modules m ON m.id = p.module_id ORDER BY m.sort_order, p.sort_order');
+// a page row of the database that the program no longer has (Data Import Management, removed in version 49) is not offered
+$pages = array_values(array_filter($pages, static fn(array $pg): bool => Access::pageDef((string)$pg['page_key']) !== null));
 $roles = DB::all('SELECT * FROM roles ORDER BY is_admin DESC, name');
 $byModule = [];
 foreach ($pages as $pg) {

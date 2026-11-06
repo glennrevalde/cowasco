@@ -2,7 +2,7 @@
 
 One side menu for the whole system, the same on the cooperative/accounting pages and on the water pages. Every page is
 listed with its page-access key (the key Page Access Configuration and User Role Configuration work on). A user sees
-only the pages given to his roles. Generated from the page registry of `coop_sql39_demo` on 2026-10-30.
+only the pages given to his roles. Generated from the page registry of `cowasco_sample` on 2026-11-07.
 
 There is one Accounting (Financial, Banking, reports), one Inventory and one Membership (Members & Others, Parties)
 section. The Water Billing menu holds only water operations; the former water accounting, inventory and user pages
@@ -46,11 +46,11 @@ are retired (table at the end) and open the page that replaces them.
 
 - **Reports** (8): Collection Summary `rpt.water_collection_summary`; Revenue by Billing Period `rpt.water_revenue_period`; Receivables by Source `rpt.water_receivables_source`; Payment History (Ledger) `rpt.water_payment_history`; Water Service Account Statement `rpt.water_account_statement`; Water Posting Log & Exceptions `rpt.water_posting_log`; Account Mapping Validation `rpt.water_mapping_check`; Water Reports `water.reports_management`
 - **Overview** (1): Water Dashboard `water.dashboard`
-- **Billing** (13): Billing Management `water.billing_management`; Bill Period Management `water.bill_period`; Bill Codes `water.bill_codes`; Reading Entry `water.reading_entry`; Reading History `water.reading_history`; Billing History `water.billing_history`; Generate SOA / Post Billing `water.generate_soa`; Billing List `water.billing_list`; Update Billing `water.update_billing`; Billing Adjustments `water.billing_adjustments`; Recurring Billing `water.recurring_bill`; Installment Billing `water.installment_bill`; One-Time Billing `water.one_time_billing`
-- **Service & Materials** (2): Water Service Accounts `water.member_list`; Material Issuance `water.item_issuance`
+- **Billing** (14): Billing Management `water.billing_management`; Bill Period Management `water.bill_period`; Bill Codes `water.bill_codes`; Reading Entry `water.reading_entry`; Reading History `water.reading_history`; Billing History `water.billing_history`; Generate SOA / Post Billing `water.generate_soa`; Billing List `water.billing_list`; Update Billing `water.update_billing`; Billing Adjustments `water.billing_adjustments`; Recurring Billing `water.recurring_bill`; Installment Billing `water.installment_bill`; One-Time Billing `water.one_time_billing`; Fixed Share Capital Billing `water.share_capital_billing`
+- **Service & Materials** (3): Water Service Accounts `water.member_list`; Address Sub-groups `water.address_subgroups`; Material Issuance `water.item_issuance`
 - **Collection** (4): Collection Management `water.collection_management`; Collections (Cashier) `water.water_bills_collection`; Payment History `water.payment_history`; Disconnection Management `water.disconnection_management`
 - **Rates & Discounts** (7): Rates Management `water.rates_management`; Water Rate Schedule `water.water_rates`; Water Meter Rates `water.water_meter`; Rate Codes `water.rate_codes`; Discount Management `water.discount_management`; General Discounts `water.discounts`; Discounted Accounts `water.discounted_members`
-- **Setup** (2): Water Settings `water.settings`; Data Import Management `water.import_management`
+- **Setup** (2): Water Settings `water.settings`; Receipt Layout Setup `water.receipt_layouts`
 
 ## Banking
 
@@ -150,4 +150,4 @@ The file still answers (old bookmarks keep working): it shows why the page is re
 | `water_rate_discounts.php` | General Discounts `water.discounts` | Configure all values directly in General Discounts. |
 | `print_meter_reading_list.php` | Meter Reading List Print `water.meter_reading_list_print` | Use Meter Reading List Print. |
 
-19 menus, 330 menu entries.
+19 menus, 332 menu entries.

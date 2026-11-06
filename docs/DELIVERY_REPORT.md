@@ -364,3 +364,43 @@ reconciliation: its subsidiary ledger of 2320 left out the accrued interest the 
 and the TD reports now deduct it. The water receipts print **Printed** or **Pre-Printed** (Company, Security & Closing
 Date > Water Billing), on forms set up on **Receipt Layout Setup** as passbooks are (paper, margins, where each entry
 prints, a test page). One migration (`UPGRADE_v46.txt`), for MySQL 5.5.
+
+## 23. Version 47: the additional requests for the Water + Coop systems (v17)
+
+The two requests of `ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v17.xlsx` (`docs/ADDITIONAL_MODULE_V17_CHECKLIST.md`).
+**Billing Adjustments > Edit** opens the bill itself instead of the small Edit Uncollected Bill box: the bill as it is
+printed (who it is billed to, its dates, its lines and totals; a water bill with its meter reading and tariff lines, an
+installment bill with its schedule), its correctable fields as boxes on it, worked out again as they are typed with the
+calculation the save uses, and saved with the class and a reason as before (the journal entry voided, a correction entry
+-R1 posted). A due date before the bill date is now refused, and the term and the disconnection date follow a corrected
+due date. **Generate SOA / Post Billing** (and Reports > Generate Statement of Account) has an **Individual Statement of
+Account**: a member or customer chosen by name, account number or member number, every invoice of theirs still unpaid
+whatever its billing period (water, one-time, installment amortizations, recurring, share capital), the ones ticked
+printed on one statement with their balances, what is overdue and the total amount due. No migration (`UPGRADE_v47.txt`).
+
+## 24. Version 48: a new company on the platform
+
+**Platform > New company** failed for every company at its last step ("The new database does not match the program:
+2026_12_01_water_billing.sql, 2027_01_24_account_types.sql"): the set-up (`app/Provision.php`) copied the template's
+tables but not the water module's two views, the account types or the business units, which the water and account-type
+upgrades had added since the platform was written. A new company now gets the views (from their definition in the water
+migration, `WaterSchema::ensureViews`), the account types and business units, the cooperative's lists and the water
+billing set-up of the template, links to what is not copied (sites, classes, items) cleared, the water institution
+profile with its own details, and none of the template's registered name, CDA number and signatories. A template that
+needs a program update is refused before anything is made. A failed company is set up again with **Set it up again**.
+The New company page groups the copied lists, and the platform's top bar fits a phone. New test `tests/platform/run.sh`
+(46 checks); every page of a new company opens without an error. No migration (`UPGRADE_v48.txt`).
+
+## 25. Version 49: Data Import Management and the Technical prerequisites step removed
+
+**Data Import Management** (Water Billing > Setup: the former water program's Account Master and Billing Master
+files) is removed: its page, its eight server actions, its two helper libraries and its upload folder
+`water/storage/imports`, the card on Water Settings, the registry entry (menu and page access), the starter's mapping
+decisions and profile, and the copy of its lists to a new company. Page Access and User Role Configuration offer only
+the pages the program has, so the page's row, which stays in the database, is not listed; a copy of its files left on
+a server is refused for every user. Its guide (`docs/WATER_IMPORT_FILES.md`), test and results are removed; the import
+history described in section 2 and in `docs/TEST_EVIDENCE.md` is that of the earlier versions. The **Technical
+prerequisites** step of the set-up guide is removed (it blocked every business transaction while
+`water/storage/imports` was missing or not writable); the guide has 7 required steps, from "Authorized administrator
+available". The imports on the billing pages and the cooperative's imports are unchanged. No migration
+(`UPGRADE_v49.txt`).

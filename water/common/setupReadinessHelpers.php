@@ -13,7 +13,7 @@
  * tutorial screens an operator has already seen.
  *
  * Requirement keys are stable identifiers. Each requirement returns:
- *   key, title, group ('technical'|'institution'|'operator'|'module'),
+ *   key, title, group ('institution'|'operator'|'module'),
  *   optional (bool), status ('ready'|'blocked'|'unknown'), message,
  *   destination (relative business page URL, or '' when no UI exists),
  *   destination_page_key, focus (CSS selector to spotlight), depends_on [],
@@ -92,25 +92,14 @@ if (!function_exists('sr_requirement_catalog')) {
     function sr_requirement_catalog(): array
     {
         return [
-            'technical' => [
-                'title' => 'Technical prerequisites',
-                'group' => 'technical',
-                'optional' => false,
-                'destination' => 'import_management.php',
-                'destination_page_key' => 'import_management',
-                'focus' => '.page-header',
-                'depends_on' => [],
-                'task' => 'Every business transaction',
-                'admin_only' => true,
-            ],
             'administrator' => [
                 'title' => 'Authorized administrator available',
-                'group' => 'technical',
+                'group' => 'institution',
                 'optional' => false,
                 'destination' => '',
                 'destination_page_key' => '',
                 'focus' => '',
-                'depends_on' => ['technical'],
+                'depends_on' => [],
                 'task' => 'Completing the remaining setup steps',
                 'admin_only' => true,
             ],
@@ -121,7 +110,7 @@ if (!function_exists('sr_requirement_catalog')) {
                 'destination' => 'institution_configuration.php',
                 'destination_page_key' => 'institution_configuration',
                 'focus' => 'form[action$="saveInstitutionConfiguration.php"]',
-                'depends_on' => ['technical', 'administrator'],
+                'depends_on' => ['administrator'],
                 'task' => 'Printing bills, receipts, statements and notices',
                 'admin_only' => false,
             ],
@@ -132,7 +121,7 @@ if (!function_exists('sr_requirement_catalog')) {
                 'destination' => 'organization_units.php',
                 'destination_page_key' => 'organization_units',
                 'focus' => '#branchesSection',
-                'depends_on' => ['technical', 'administrator'],
+                'depends_on' => ['administrator'],
                 'task' => 'Posting bills, collections and journals',
                 'admin_only' => false,
             ],
@@ -143,7 +132,7 @@ if (!function_exists('sr_requirement_catalog')) {
                 'destination' => 'chart_of_accounts.php',
                 'destination_page_key' => 'chart_of_accounts',
                 'focus' => '.page-header, h1',
-                'depends_on' => ['technical', 'administrator'],
+                'depends_on' => ['administrator'],
                 'task' => 'Ledger posting for every water transaction',
                 'admin_only' => false,
             ],
@@ -202,17 +191,6 @@ if (!function_exists('sr_requirement_catalog')) {
                 'task' => 'Material issuance and inventory bill codes (one-time and installment sales of materials)',
                 'admin_only' => false,
             ],
-            'import' => [
-                'title' => 'Import readiness',
-                'group' => 'module',
-                'optional' => true,
-                'destination' => 'import_management.php',
-                'destination_page_key' => 'import_management',
-                'focus' => '#mappingDecisionsPanel',
-                'depends_on' => ['bill_codes', 'tariff'],
-                'task' => 'Importing Account Master and Billing Master history',
-                'admin_only' => false,
-            ],
         ];
     }
 }
@@ -221,14 +199,12 @@ if (!function_exists('sr_requirement_catalog')) {
 if (!function_exists('sr_action_requirements')) {
     function sr_action_requirements(): array
     {
-        $core = ['technical', 'administrator', 'institution', 'organization', 'accounts', 'bill_codes'];
+        $core = ['administrator', 'institution', 'organization', 'accounts', 'bill_codes'];
         return [
             'billing' => array_merge($core, ['tariff', 'billing']),
             'collection' => array_merge($core, ['tariff', 'cash_collection']),
             'inventory' => array_merge($core, ['inventory']),
             'accounting' => $core,
-            'import' => array_merge($core, ['tariff', 'import']),
-            'import_members' => ['technical', 'administrator', 'import'],
         ];
     }
 }
@@ -240,7 +216,6 @@ if (!function_exists('sr_page_module')) {
         $map = [
             'cash_collection' => ['water_bills_collection', 'other_payments_collection', 'other_payments', 'collection_management', 'payment_history', 'collection_corrections', 'collection_receipt', 'generate_official_receipt'],
             'inventory' => ['item_issuance'],
-            'import' => ['import_management'],
         ];
         foreach ($map as $module => $pages) {
             if (in_array($pageKey, $pages, true)) return $module;
@@ -258,7 +233,7 @@ if (!function_exists('sr_setup_route_allowlist')) {
             'chart_of_accounts', 'book_types', 'bill_codes', 'water_meter', 'water_rates', 'rate_codes', 'rates_management',
             'bill_period', 'profile_cash_gl_configuration', 'user_configuration', 'collection_policy_configuration',
             'access_control', 'help_center', 'user_manual', 'profile', 'notifications', 'account_setup_required',
-            'import_management', 'discounts', 'discount_management', 'discounted_members', 'discount_privilege_rules',
+            'discounts', 'discount_management', 'discounted_members', 'discount_privilege_rules',
             'water_rate_discounts', 'member_list', 'recurring_bill',
         ];
     }
@@ -267,51 +242,6 @@ if (!function_exists('sr_setup_route_allowlist')) {
 /* -------------------------------------------------------------------------
  * Individual checks. Each returns [status, message, details[]].
  * ---------------------------------------------------------------------- */
-if (!function_exists('sr_check_technical')) {
-    function sr_check_technical(PDO $pdo): array
-    {
-        $details = [];
-        $problems = [];
-        try {
-            $version = (string)$pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
-        } catch (Throwable $e) { $version = ''; }
-        $details[] = 'Database server version: ' . ($version !== '' ? $version : 'unknown');
-        if ($version !== '' && version_compare(preg_replace('/[^0-9.].*$/', '', $version), '5.5.0', '<')) {
-            $problems[] = 'MySQL 5.5 or newer is required (found ' . $version . ').';
-        }
-        foreach (['pdo_mysql', 'mbstring', 'json', 'session'] as $ext) {
-            if (!extension_loaded($ext)) $problems[] = 'PHP extension ' . $ext . ' is not loaded.';
-        }
-        // the water tables plus the cooperative tables the water pages post to (one ledger, one inventory, one login)
-        $requiredTables = ['water_accounts', 'bill_readings', 'bill_periods', 'bill_codes', 'payment_transactions', 'payment_transaction_items',
-            'water_meter_members', 'water_pipe_sizes', 'rate_code', 'water_billing_settings', 'water_postings',
-            'accounts', 'transactions', 'journal_lines', 'items', 'item_site_stock', 'inventory_movements', 'sites',
-            'users', 'roles', 'user_roles', 'default_accounts', 'business_units'];
-        $missing = [];
-        foreach ($requiredTables as $table) if (!sr_table_exists($pdo, $table)) $missing[] = $table;
-        if ($missing) $problems[] = 'Missing database tables: ' . implode(', ', $missing) . '. Apply database/schema.sql and the migration files (database/migrations/2026_12_01_water_billing.sql).';
-        try {
-            $engines = $pdo->query("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME IN ('bill_readings','payment_transactions','transactions','journal_lines','inventory_movements','water_postings') AND ENGINE <> 'InnoDB'")->fetchAll(PDO::FETCH_COLUMN);
-            if ($engines) $problems[] = 'Transactional tables must use InnoDB: ' . implode(', ', $engines) . '.';
-        } catch (Throwable $e) {}
-        $storage = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'imports';
-        if (!is_dir($storage) || !is_writable($storage)) {
-            $problems[] = 'storage/imports is missing or not writable by PHP (needed only for source imports).';
-        } else {
-            $details[] = 'storage/imports is writable.';
-        }
-        if (class_exists('WaterPosting')) {
-            if (!WaterPosting::ready()) $problems[] = 'The water posting bridge table (water_postings) is not installed.';
-            else $details[] = 'Water documents are numbered and posted by the ledger (WaterPosting).';
-        }
-        $installIssues = array_filter($problems, static fn($p) => strpos($p, 'storage/imports') === false);
-        if ($problems) {
-            return ['blocked', ($installIssues ? 'Installation problem (not a business setting): ' : 'Server configuration problem: ') . implode(' ', $problems), $details];
-        }
-        return ['ready', 'Database schema, PHP extensions, transaction support and protected storage are in place.', $details];
-    }
-}
-
 if (!function_exists('sr_check_administrator')) {
     function sr_check_administrator(PDO $pdo): array
     {
@@ -640,34 +570,6 @@ if (!function_exists('sr_check_inventory')) {
     }
 }
 
-if (!function_exists('sr_check_import')) {
-    function sr_check_import(PDO $pdo): array
-    {
-        $details = [];
-        $problems = [];
-        $helper = __DIR__ . '/dataImportHelpers.php';
-        try {
-            if (is_file($helper)) require_once $helper;
-            if (function_exists('di_schema_ready') && !di_schema_ready($pdo)) $problems[] = 'The importer tables are not installed.';
-            elseif (function_exists('di_compatibility_issues')) {
-                $issues = di_compatibility_issues($pdo);
-                if ($issues) $problems[] = implode('; ', array_slice($issues, 0, 4));
-            }
-            if (function_exists('di_mapping_rules')) {
-                $rules = di_mapping_rules($pdo);
-                $unresolved = [];
-                foreach ($rules as $key => $rule) if (($rule['status'] ?? '') === 'unresolved') $unresolved[] = (string)($rule['label'] ?? $key);
-                $details[] = 'Mapping rules: ' . count($rules) . ' (unresolved: ' . count($unresolved) . ')';
-                if ($unresolved) $details[] = 'Unresolved: ' . implode(', ', array_slice($unresolved, 0, 6));
-            }
-        } catch (Throwable $e) {
-            return ['unknown', 'Import readiness could not be verified.', []];
-        }
-        if ($problems) return ['blocked', implode(' ', $problems), $details];
-        return ['ready', 'Importer schema is compatible; unresolved financial rules keep their rows in review.', $details];
-    }
-}
-
 /* -------------------------------------------------------------------------
  * Evaluation
  * ---------------------------------------------------------------------- */
@@ -683,7 +585,6 @@ if (!function_exists('sr_evaluate')) {
 
         $catalog = sr_requirement_catalog();
         $checks = [
-            'technical' => 'sr_check_technical',
             'administrator' => 'sr_check_administrator',
             'institution' => 'sr_check_institution',
             'organization' => 'sr_check_organization',
@@ -693,7 +594,6 @@ if (!function_exists('sr_evaluate')) {
             'cash_collection' => 'sr_check_cash_collection',
             'billing' => 'sr_check_billing',
             'inventory' => 'sr_check_inventory',
-            'import' => 'sr_check_import',
         ];
         $result = [];
         $step = 0;

@@ -5,14 +5,14 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 
 | Class | Files |
 |---|---:|
-| Cooperative system, unchanged | 699 |
-| Cooperative system, changed | 173 |
-| Water system, unchanged (under water/) | 28 |
-| Water system, adapted (under water/) | 223 |
-| New | 244 |
+| Cooperative system, unchanged | 694 |
+| Cooperative system, changed | 178 |
+| Water system, unchanged (under water/) | 26 |
+| Water system, adapted (under water/) | 212 |
+| New | 253 |
 | Cooperative files not shipped | 1 |
-| Water files not shipped | 48 |
-| **Shipped in total** | **1367** |
+| Water files not shipped | 61 |
+| **Shipped in total** | **1363** |
 
 ## New files
 
@@ -35,6 +35,9 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v44.txt`
 - `UPGRADE_v45.txt`
 - `UPGRADE_v46.txt`
+- `UPGRADE_v47.txt`
+- `UPGRADE_v48.txt`
+- `UPGRADE_v49.txt`
 - `app/AccountTypes.php`
 - `app/CsvImports.php`
 - `app/CsvReview.php`
@@ -128,6 +131,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `docs/ADDITIONAL_MODULE_V14_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V15_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V16_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V17_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V2_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V3_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V4_CHECKLIST.md`
@@ -147,7 +151,6 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `docs/RECONCILIATION_REPORT.md`
 - `docs/RETAINED_REPLACED_MATRIX.md`
 - `docs/TEST_EVIDENCE.md`
-- `docs/WATER_IMPORT_FILES.md`
 - `docs/WATER_INTEGRATION_DESIGN.md`
 - `docs/WATER_MIGRATION.md`
 - `modules/admin/_import_lib.php`
@@ -178,11 +181,13 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v43.php`
 - `tests/coop/cases_v44.php`
 - `tests/coop/cases_v46.php`
+- `tests/coop/cases_v47.php`
+- `tests/coop/cases_v49.php`
 - `tests/coop/cases_water.php`
+- `tests/platform/provision_test.php`
+- `tests/platform/run.sh`
 - `tests/water/RESULTS_BACKUP_RESTORE.md`
 - `tests/water/RESULTS_E2E.md`
-- `tests/water/RESULTS_IMPORT_FILES.md`
-- `tests/water/RESULTS_IMPORT_FILES_FULL_POSTING.md`
 - `tests/water/RESULTS_LEGACY_LEDGER_FIXTURE.md`
 - `tests/water/RESULTS_MIGRATIONS_TWICE.md`
 - `tests/water/backup_restore_test.php`
@@ -211,7 +216,6 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/water/evidence/rehearsal/counts_diff.txt`
 - `tests/water/evidence/rehearsal/counts_fresh.tsv`
 - `tests/water/fixture_water_reference.sql`
-- `tests/water/import_files_http.php`
 - `tests/water/migration_rehearsal.sh`
 - `tests/water/migrations_twice_test.php`
 - `tests/water/run_e2e.sh`
@@ -229,11 +233,14 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tools/water_migration_lib.php`
 - `tools/water_starter.php`
 - `water/common/.htaccess`
+- `water/common/accountProfileHelpers.php`
+- `water/common/billEditorHelpers.php`
 - `water/common/fonts.css`
 - `water/common/import-review.css`
 - `water/common/import-review.js`
 - `water/common/importReviewHelpers.php`
 - `water/common/incremental-search.js`
+- `water/common/individualSoaHelpers.php`
 - `water/common/nav_visibility.js`
 - `water/common/navbar_components.php`
 - `water/common/oneTimeBillImportHelpers.php`
@@ -246,7 +253,9 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `water/database/.htaccess`
 - `water/process/addressSubgroups.php`
 - `water/process/deleteReading.php`
+- `water/process/getIndividualSoaData.php`
 - `water/process/oneTimeBillImport.php`
+- `water/process/previewBillCorrection.php`
 - `water/process/runShareCapitalBilling.php`
 - `water/process/saveShareCapitalBilling.php`
 - `water/process/searchParties.php`
@@ -289,6 +298,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `app/PartyStatement.php`
 - `app/Passbook.php`
 - `app/Posting.php`
+- `app/Provision.php`
 - `app/Report.php`
 - `app/SavBatch.php`
 - `app/Savings.php`
@@ -350,6 +360,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `database/accounting_system_clean.sql`
 - `database/schema.sql`
 - `modules/admin/import.php`
+- `modules/admin/page_access.php`
 - `modules/admin/roles.php`
 - `modules/admin/settings.php`
 - `modules/banking/cash_voucher.php`
@@ -404,6 +415,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `modules/inventory/items.php`
 - `modules/party/center.php`
 - `modules/party/statement.php`
+- `modules/platform/new.php`
 - `modules/pos/approval_codes.php`
 - `modules/pos/register.php`
 - `modules/txn/_common.php`
@@ -430,7 +442,9 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `views/manual/chapters/08-point-of-sale.html`
 - `views/manual/chapters/09-banking.html`
 - `views/manual/chapters/11-administration.html`
+- `views/manual/chapters/12-company-owner.html`
 - `views/manual/chapters/13-cooperative.html`
+- `views/manual/chapters/13-super-admin.html`
 - `views/manual/chapters/14-appendices.html`
 - `views/manual/chapters/14-parties.html`
 - `views/manual/manual.json`
@@ -444,11 +458,11 @@ former `session_start()`, the integrated title and fonts, and (for the accountin
 bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 
 - `water/assets/`: 1
-- `water/common/`: 34
+- `water/common/`: 32
 - `water/database/`: 1
-- `water/process/`: 110
+- `water/process/`: 102
 - `water/resources/`: 1
-- `water/views/`: 76
+- `water/views/`: 75
 
 <details><summary>Every adapted water file</summary>
 
@@ -464,8 +478,6 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 - `water/common/businessRequestGuard.php`
 - `water/common/collectionReceiptHelpers.php`
 - `water/common/customerLedgerHelpers.php`
-- `water/common/dataImportHelpers.php`
-- `water/common/dataImportMappingHelpers.php`
 - `water/common/displayHelpers.php`
 - `water/common/helpCenterHelpers.php`
 - `water/common/institutionConfigurationHelpers.php`
@@ -525,7 +537,6 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 - `water/process/deleteWaterRateGroup.php`
 - `water/process/disconnectionHelpers.php`
 - `water/process/disconnectionNoticeHelpers.php`
-- `water/process/downloadImportIssues.php`
 - `water/process/downloadUserManual.php`
 - `water/process/editBatchOneTimeBill.php`
 - `water/process/editBillCode.php`
@@ -563,19 +574,15 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 - `water/process/paymentAdjustmentProcess.php`
 - `water/process/postBilling.php`
 - `water/process/recurringBillingProcess.php`
-- `water/process/refreshImportReconciliation.php`
 - `water/process/registerReceiptPrint.php`
 - `water/process/repairSetupPrerequisite.php`
-- `water/process/revalidateImportBatch.php`
 - `water/process/reverseItemIssuance.php`
-- `water/process/runImportChunk.php`
 - `water/process/runRecurringBilling.php`
 - `water/process/saveBatchReading.php`
 - `water/process/saveBranch.php`
 - `water/process/saveCollectionPolicyConfiguration.php`
 - `water/process/saveDiscountPrivilegeRule.php`
 - `water/process/saveDivision.php`
-- `water/process/saveImportMappingRule.php`
 - `water/process/saveIndividualReading.php`
 - `water/process/saveInstitutionConfiguration.php`
 - `water/process/saveItemIssuance.php`
@@ -588,12 +595,9 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 - `water/process/searchMembers.php`
 - `water/process/searchOtherReceivables.php`
 - `water/process/searchWaterBillReceivables.php`
-- `water/process/stageImportChunk.php`
-- `water/process/stageImportCsv.php`
 - `water/process/sysSequenceHelpers.php`
 - `water/process/toggleScheduleStatus.php`
 - `water/process/updateFreeCubic.php`
-- `water/process/updateImportBatchOptions.php`
 - `water/process/updateManualDisconnection.php`
 - `water/process/updateMemberRateCode.php`
 - `water/process/updateMemberSequence.php`
@@ -632,7 +636,6 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 - `water/views/generate_official_receipt.php`
 - `water/views/generate_soa.php`
 - `water/views/help_center.php`
-- `water/views/import_management.php`
 - `water/views/income_statement.php`
 - `water/views/installment_bill.php`
 - `water/views/institution_configuration.php`
@@ -684,7 +687,6 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 - `water/process/`: 12
 - `water/resources/`: 5
 - `water/seeders/`: 1
-- `water/storage/`: 2
 
 ## Not shipped
 
@@ -702,6 +704,8 @@ generated ones) and the former project notes and test evidence (`docs/`, `README
 `recommendations.txt`).
 
 - `README.md`: 1
+- `common/dataImportHelpers.php`: 1
+- `common/dataImportMappingHelpers.php`: 1
 - `database/01_reset_transactions_and_periods.sql`: 1
 - `database/02_full_reset_keep_operators.sql`: 1
 - `database/empty_memberlist.sql`: 1
@@ -714,14 +718,23 @@ generated ones) and the former project notes and test evidence (`docs/`, `README
 - `process/addInventoryAdjustment.php`: 1
 - `process/addPurchase.php`: 1
 - `process/addSupplier.php`: 1
+- `process/downloadImportIssues.php`: 1
 - `process/getLoginProfileOptions.php`: 1
 - `process/payAccountsPayable.php`: 1
+- `process/refreshImportReconciliation.php`: 1
+- `process/revalidateImportBatch.php`: 1
+- `process/runImportChunk.php`: 1
 - `process/saveAccessControl.php`: 1
+- `process/saveImportMappingRule.php`: 1
 - `process/saveReorderLevel.php`: 1
 - `process/saveUserConfiguration.php`: 1
+- `process/stageImportChunk.php`: 1
+- `process/stageImportCsv.php`: 1
+- `process/updateImportBatchOptions.php`: 1
 - `process/voidPurchase.php`: 1
 - `recommendations.txt`: 1
 - `resources/manuals/`: 2
 - `scenarios.txt`: 1
 - `seeders/truncate.sql`: 1
-- `storage/imports/`: 8
+- `storage/imports/`: 10
+- `views/import_management.php`: 1

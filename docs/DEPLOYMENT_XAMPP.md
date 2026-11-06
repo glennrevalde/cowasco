@@ -36,9 +36,9 @@ PHP and MySQL versions are separate: an old MySQL 5.5 server works, but the PHP 
    For a cut-over from a former water database (section 3) use `install.php` without `--water-starter` instead:
    the migration brings the former rates, bill codes and accounts, and stops when the water lists already hold rows.
 5. Open <http://localhost/gsmart/> and log in as **admin / Admin@12345**; you must choose a new password at once.
-6. To bring in the former water program's export files (Account Master and Billing Master CSV), use Water
-   Billing > Setup > Data Import Management on this installation: `docs/WATER_IMPORT_FILES.md` (about half an hour
-   for 70,000 bills; the page runs it in chunks).
+6. The former water program's export files (Account Master and Billing Master CSV) are no longer imported by the
+   program: Data Import Management was removed in version 49. A former water database is brought in with the
+   migration of section 3.
 7. Set up before the first water bill (the program refuses to bill until these are done and says which is missing):
    Water Billing > Water Settings (institution name and report signatories, collection policy with the penalty and
    compromise income accounts, organization units), Financial > Module Default Accounts (Water group),

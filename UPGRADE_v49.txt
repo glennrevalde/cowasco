@@ -1,0 +1,53 @@
+G-SMaRT Integrated Cooperative System - version 49 (2026-11-07)
+=================================================================
+
+Two things are taken out of the water billing module. This package holds only the files
+changed since version 48. Copy the folder over your installation, keeping the folder
+structure, and DELETE the files listed below (copying does not remove files).
+config/config.php is not included and is never changed. No migration: nothing to run
+on the database.
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed
+------------
+- Data Import Management is removed (Water Billing > Setup: the import of the former
+  water program's Account Master and Billing Master files). The menu entry, the card on
+  Water Settings, the page and its server actions are gone; Page Access and User Role
+  Configuration no longer list it. Records it imported before stay as they are. The
+  imports on the billing pages (Import Charges on One-Time Billing, Import on Fixed
+  Share Capital Billing) and the cooperative's own imports (members, savings, loans,
+  opening balances, items) are not affected.
+- The first step of the set-up guide, "Technical prerequisites", is removed. It blocked
+  every business transaction while water/storage/imports was missing or not writable,
+  a folder only Data Import Management used. The guide now has 7 required steps and
+  starts with "Authorized administrator available".
+- A new company (Platform > New company) no longer copies the Data Import Management
+  profiles and rules.
+
+Files to delete
+---------------
+In your copy of the program (and in your GitHub repository: git rm), then on the server:
+
+  water/views/import_management.php
+  water/process/downloadImportIssues.php
+  water/process/refreshImportReconciliation.php
+  water/process/revalidateImportBatch.php
+  water/process/runImportChunk.php
+  water/process/saveImportMappingRule.php
+  water/process/stageImportChunk.php
+  water/process/stageImportCsv.php
+  water/process/updateImportBatchOptions.php
+  water/common/dataImportHelpers.php
+  water/common/dataImportMappingHelpers.php
+  water/storage/            (the folder, with the files uploaded to it)
+  tests/water/import_files_http.php
+  tests/water/RESULTS_IMPORT_FILES.md
+  tests/water/RESULTS_IMPORT_FILES_FULL_POSTING.md
+  docs/WATER_IMPORT_FILES.md
+
+A copy of these files left on a server by mistake does nothing: the page and its server
+actions are refused for every user, administrators included.
+
+The database is not changed: the tables of the import (data_import_*) and the page's row
+stay, unused.
