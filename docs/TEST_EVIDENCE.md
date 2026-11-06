@@ -15,6 +15,17 @@ the supplied databases), the row says so.
 | Data | the supplied former water database (Marigondon NHS and STEC-STHS Multipurpose Cooperative: 6,888 water accounts, 361 legacy members, 7,872 savings transactions) and the supplied cooperative sample database (`database/accounting_system.sql`) |
 | Date | 14 October 2026 |
 
+## Version 50 (7 November 2026): an open billing period is not a step of the set-up guide
+
+Run on the code of this version, PHP 8.3.6 and MariaDB 10.11.14 (the SQL is written for MySQL 5.5).
+
+| Suite | Command | Result | File |
+|---|---|---|---|
+| Cooperative module (bcmath) | `DB_NAME=coop_t50 php tests/coop/run.php` | **157 passed, 0 failed**, 2,408 checks; new: "Version 50: no Billing readiness step; a reading or a posting still needs an open billing period" (billing actions need the 6 set-up steps only; with every period closed nothing in the guide mentions one; a reading of a closed period, posting bills of a closed period and a reading without a period refused); the version 49 cases count 6 steps | `tests/coop/RESULTS.md` |
+| Cooperative module (pure PHP) | `DB_NAME=coop_t50p php tests/coop/run.php --pure-php` | **157 passed, 0 failed**, 2,408 checks | `tests/coop/RESULTS_pure_php.md` |
+| Water end to end over HTTP | `bash tests/water/run_e2e.sh mnssmc_test coop_e2e50 8097` | **406 passed, 0 failed**; new section v50: no Billing readiness step; every period closed: the guide on Reading Entry complete, the page saying no period is open, a reading for a closed period refused | `tests/water/RESULTS_E2E.md` |
+| Reading Entry in the browser | the sample database (set-up complete) with its periods closed for the check, 1366 and 390 px | no set-up guide; "No open reading periods found. Please create or open a reading period first." and Continue off; no console error, no sideways scrolling | — |
+
 ## Version 49 (7 November 2026): Data Import Management and the Technical prerequisites step removed
 
 Run on the code of this version, PHP 8.3.6 and MariaDB 10.11.14 (the SQL is written for MySQL 5.5).

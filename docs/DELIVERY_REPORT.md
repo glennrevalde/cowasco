@@ -404,3 +404,10 @@ prerequisites** step of the set-up guide is removed (it blocked every business t
 `water/storage/imports` was missing or not writable); the guide has 7 required steps, from "Authorized administrator
 available". The imports on the billing pages and the cooperative's imports are unchanged. No migration
 (`UPGRADE_v49.txt`).
+
+## 26. Version 50: an open billing period is not a step of the set-up guide
+
+The **Billing readiness** step ("No open billing period exists for new readings") is removed from the water set-up
+guide (`water/common/setupReadinessHelpers.php`): the guide has 6 required steps, and billing actions need those only.
+Reading Entry says itself when no period is open and keeps Continue off; saving a reading (`wr_lock_open_period`) and
+posting bills (`bp_assert_open`) refuse a period that is not open, as before. No migration (`UPGRADE_v50.txt`).

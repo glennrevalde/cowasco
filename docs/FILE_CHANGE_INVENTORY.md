@@ -9,10 +9,10 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 | Cooperative system, changed | 178 |
 | Water system, unchanged (under water/) | 26 |
 | Water system, adapted (under water/) | 212 |
-| New | 253 |
+| New | 255 |
 | Cooperative files not shipped | 1 |
 | Water files not shipped | 61 |
-| **Shipped in total** | **1363** |
+| **Shipped in total** | **1365** |
 
 ## New files
 
@@ -38,6 +38,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v47.txt`
 - `UPGRADE_v48.txt`
 - `UPGRADE_v49.txt`
+- `UPGRADE_v50.txt`
 - `app/AccountTypes.php`
 - `app/CsvImports.php`
 - `app/CsvReview.php`
@@ -183,6 +184,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v46.php`
 - `tests/coop/cases_v47.php`
 - `tests/coop/cases_v49.php`
+- `tests/coop/cases_v50.php`
 - `tests/coop/cases_water.php`
 - `tests/platform/provision_test.php`
 - `tests/platform/run.sh`

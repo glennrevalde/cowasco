@@ -28,7 +28,8 @@ test('Version 49: the set-up guide has no Technical prerequisites or Import read
             check(isset($catalog[$k]), "action $action needs $k, a step that exists");
         }
     }
-    eq(sr_core_keys(), ['administrator', 'institution', 'organization', 'accounts', 'bill_codes', 'tariff', 'billing'], 'the required steps');
+    // version 50 also takes out Billing readiness (an open billing period): tests/coop/cases_v50.php
+    eq(sr_core_keys(), ['administrator', 'institution', 'organization', 'accounts', 'bill_codes', 'tariff'], 'the required steps');
     check(!in_array('import_management', sr_setup_route_allowlist(), true), 'Data Import Management is not a set-up route');
     eq(sr_page_module('import_management'), null, 'no module of the guide starts on the import page');
     $all = sr_evaluate($pdo, true);
@@ -37,7 +38,7 @@ test('Version 49: the set-up guide has no Technical prerequisites or Import read
         check(stripos((string)$item['message'], 'storage/imports') === false, "$key says nothing about storage/imports");
     }
     $summary = sr_summary($pdo, 'dashboard', true);
-    eq($summary['total_steps'], 7, 'the guide has 7 required steps (8 before)');
+    eq($summary['total_steps'], 6, 'the guide has 6 required steps (8 before version 49)');
     eq($summary['steps'][0]['key'], 'administrator', 'its first step');
 });
 

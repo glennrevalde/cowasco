@@ -1,0 +1,18 @@
+G-SMaRT Integrated Cooperative System - version 50 (2026-11-07)
+=================================================================
+
+This package holds only the files changed since version 49. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is
+never changed. No migration: nothing to run on the database. The only program file is
+water/common/setupReadinessHelpers.php; the rest are tests and notes.
+
+What changed
+------------
+- An open billing period is no longer a step of the water set-up guide. "Billing
+  readiness" ("No open billing period exists for new readings") blocked Reading Entry,
+  Post Billing and the other billing pages until a period was open. The guide now has 6
+  required steps and disappears once they are done. Without an open period Reading
+  Entry says so itself ("No open reading periods found. Please create or open a reading
+  period first.") and its Continue button stays off; saving a reading and posting bills
+  still refuse a period that is not open, as before. A period is created on Water
+  Billing > Billing > Bill Period Management.

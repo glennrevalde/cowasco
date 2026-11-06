@@ -169,17 +169,6 @@ if (!function_exists('sr_requirement_catalog')) {
                 'task' => 'Collections and receipts',
                 'admin_only' => false,
             ],
-            'billing' => [
-                'title' => 'Billing readiness',
-                'group' => 'institution',
-                'optional' => false,
-                'destination' => 'bill_period.php',
-                'destination_page_key' => 'bill_period',
-                'focus' => 'form[action$="addBillPeriod.php"]',
-                'depends_on' => ['tariff'],
-                'task' => 'Recording readings and generating water bills',
-                'admin_only' => false,
-            ],
             'inventory' => [
                 'title' => 'Inventory bill codes linked to the Item List',
                 'group' => 'module',
@@ -201,7 +190,9 @@ if (!function_exists('sr_action_requirements')) {
     {
         $core = ['administrator', 'institution', 'organization', 'accounts', 'bill_codes'];
         return [
-            'billing' => array_merge($core, ['tariff', 'billing']),
+            // an open billing period is not a set-up step: Reading Entry says when there is none, and saving a
+            // reading or posting bills refuses a period that is not open (wr_lock_open_period, bp_assert_open)
+            'billing' => array_merge($core, ['tariff']),
             'collection' => array_merge($core, ['tariff', 'cash_collection']),
             'inventory' => array_merge($core, ['inventory']),
             'accounting' => $core,
@@ -522,27 +513,6 @@ if (!function_exists('sr_check_cash_collection')) {
     }
 }
 
-if (!function_exists('sr_check_billing')) {
-    function sr_check_billing(PDO $pdo): array
-    {
-        $details = [];
-        $problems = [];
-        try {
-            $open = (int)sr_scalar($pdo, "SELECT COUNT(*) FROM bill_periods WHERE status = 'open'");
-            if ($open <= 0) $problems[] = 'No open billing period exists for new readings.';
-            else $details[] = 'Open billing periods: ' . $open;
-            $activeMembers = (int)sr_scalar($pdo, "SELECT COUNT(*) FROM water_accounts WHERE status = 'A'");
-            $unmapped = (int)sr_scalar($pdo, "SELECT COUNT(*) FROM water_accounts WHERE status = 'A' AND (rc_id IS NULL OR rc_id <= 0)");
-            $details[] = 'Active members: ' . $activeMembers . ' (without a rate code: ' . $unmapped . ')';
-            if ($activeMembers > 0 && $unmapped === $activeMembers) $problems[] = 'No active member has a rate code / pipe size mapping yet (Water Service Accounts → rate code).';
-        } catch (Throwable $e) {
-            return ['unknown', 'Billing readiness could not be verified.', []];
-        }
-        if ($problems) return ['blocked', implode(' ', $problems), $details];
-        return ['ready', 'An open period exists and member tariff mappings are available.', $details];
-    }
-}
-
 if (!function_exists('sr_check_inventory')) {
     function sr_check_inventory(PDO $pdo): array
     {
@@ -592,7 +562,6 @@ if (!function_exists('sr_evaluate')) {
             'bill_codes' => 'sr_check_bill_codes',
             'tariff' => 'sr_check_tariff',
             'cash_collection' => 'sr_check_cash_collection',
-            'billing' => 'sr_check_billing',
             'inventory' => 'sr_check_inventory',
         ];
         $result = [];

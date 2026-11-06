@@ -255,6 +255,7 @@ require __DIR__ . '/cases_v44.php';
 require __DIR__ . '/cases_v46.php';
 require __DIR__ . '/cases_v47.php';
 require __DIR__ . '/cases_v49.php';
+require __DIR__ . '/cases_v50.php';
 
 // ---------------------------------------------------------------------------------------- summary
 $pass = count(array_filter($results, fn($r) => $r['ok']));

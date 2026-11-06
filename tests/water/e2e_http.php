@@ -1211,9 +1211,26 @@ $admin->get('index.php?p=water.dashboard');
 Checks::true('the menu has no Data Import Management', $admin->status === 200 && !str_contains($admin->body, 'import_management'));
 $admin->get('water/process/getSetupReadiness.php?page=dashboard');
 $keys = array_column($admin->json['steps'] ?? [], 'key');
-Checks::true('the set-up guide: no Technical prerequisites step, the administrator first, 7 steps', ($admin->json['success'] ?? false) === true
-    && !in_array('technical', $keys, true) && ($keys[0] ?? '') === 'administrator' && (int)($admin->json['total_steps'] ?? 0) === 7, implode(',', $keys));
+Checks::true('the set-up guide: no Technical prerequisites step, the administrator first, 6 steps (no Billing readiness since v50)', ($admin->json['success'] ?? false) === true
+    && !in_array('technical', $keys, true) && ($keys[0] ?? '') === 'administrator' && (int)($admin->json['total_steps'] ?? 0) === 6, implode(',', $keys));
 Checks::true('...and nothing in it about storage/imports', !str_contains((string)json_encode($admin->json), 'storage/imports'));
+
+Checks::section('v50 An open billing period is not a step of the set-up guide');
+Checks::true('the guide has no Billing readiness step', !in_array('billing', $keys, true), implode(',', $keys));
+$openPeriods = DB::column("SELECT period_id FROM bill_periods WHERE status = 'open'");
+DB::run("UPDATE bill_periods SET status = 'closed' WHERE status = 'open'");
+$admin->get('water/process/getSetupReadiness.php?page=reading_entry');
+Checks::true('with no open period, the guide on Reading Entry is complete (nothing blocks the page)', ($admin->json['complete'] ?? false) === true
+    && !str_contains((string)json_encode($admin->json), 'open billing period'), (string)json_encode($admin->json['current'] ?? null));
+$admin->get('water/views/reading_entry.php');
+Checks::true('Reading Entry says itself that no period is open', $admin->status === 200 && str_contains($admin->body, 'No open reading periods found'));
+$closedPeriod = (int)$q('SELECT period_id FROM bill_periods ORDER BY period_id DESC LIMIT 1');
+$admin->postJson('water/process/saveIndividualReading.php', ['period_id' => $closedPeriod, 'member_id' => $A, 'pres_reading' => 999999]);
+Checks::true('a reading for a period that is not open is refused', ($admin->json['success'] ?? true) === false
+    && str_contains((string)($admin->json['message'] ?? $admin->json['error'] ?? ''), 'closed'), $admin->status . ' ' . substr($admin->body, 0, 200));
+if ($openPeriods) {
+    DB::run("UPDATE bill_periods SET status = 'open' WHERE period_id IN (" . implode(',', array_map('intval', $openPeriods)) . ')');
+}
 
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
