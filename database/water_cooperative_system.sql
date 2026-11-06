@@ -17,8 +17,8 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-CREATE DATABASE cowasco;
-USE cowasco;
+CREATE DATABASE IF NOT EXISTS `cowasco` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `cowasco`;
 
 -- ----------------------------
 -- Table structure for accounts
@@ -45,7 +45,7 @@ CREATE TABLE `accounts`  (
   INDEX `ix_acc_with_sl`(`with_sl`) USING BTREE,
   INDEX `fk_accounts_parent`(`parent_id`) USING BTREE,
   CONSTRAINT `fk_accounts_parent` FOREIGN KEY (`parent_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 147 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 147 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of accounts
@@ -185,7 +185,7 @@ CREATE TABLE `addresses`  (
   PRIMARY KEY (`pkey`) USING BTREE,
   INDEX `idx_addresses_city_status`(`city_id`, `status`) USING BTREE,
   INDEX `idx_addresses_street`(`street`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this table will contain the detailed address' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this table will contain the detailed address';
 
 -- ----------------------------
 -- Records of addresses
@@ -235,7 +235,7 @@ CREATE TABLE `addresstype`  (
   `status` varchar(1) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'A',
   PRIMARY KEY (`pkey`) USING BTREE,
   UNIQUE INDEX `name_UNIQUE`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'types of address' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'types of address';
 
 -- ----------------------------
 -- Records of addresstype
@@ -270,7 +270,7 @@ CREATE TABLE `approval_codes`  (
   INDEX `ix_approval_codes_status`(`status`, `expires_at`) USING BTREE,
   INDEX `ix_approval_codes_issued`(`issued_by`, `issued_at`) USING BTREE,
   CONSTRAINT `fk_apc_issuer` FOREIGN KEY (`issued_by`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for asset_categories
@@ -292,7 +292,7 @@ CREATE TABLE `asset_categories`  (
   CONSTRAINT `fk_ac_asset` FOREIGN KEY (`asset_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_ac_accum` FOREIGN KEY (`accum_dep_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_ac_exp` FOREIGN KEY (`dep_expense_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of asset_categories
@@ -322,7 +322,7 @@ CREATE TABLE `asset_depreciation`  (
   INDEX `fk_ad_txn`(`txn_id`) USING BTREE,
   CONSTRAINT `fk_ad_asset` FOREIGN KEY (`asset_id`) REFERENCES `fixed_assets` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_ad_txn` FOREIGN KEY (`txn_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of asset_depreciation
@@ -348,7 +348,7 @@ CREATE TABLE `asset_locations`  (
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_asset_locations_name`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of asset_locations
@@ -404,7 +404,7 @@ CREATE TABLE `asset_maintenance`  (
   CONSTRAINT `fk_maint_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_maint_txn` FOREIGN KEY (`txn_id`) REFERENCES `transactions` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_maint_schedule` FOREIGN KEY (`schedule_id`) REFERENCES `asset_pm_schedules` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of asset_maintenance
@@ -428,7 +428,7 @@ CREATE TABLE `asset_maintenance_labor`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_mlabor_maint`(`maintenance_id`) USING BTREE,
   CONSTRAINT `fk_mlabor_maint` FOREIGN KEY (`maintenance_id`) REFERENCES `asset_maintenance` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of asset_maintenance_labor
@@ -459,7 +459,7 @@ CREATE TABLE `asset_maintenance_parts`  (
   INDEX `ix_mparts_maint`(`maintenance_id`) USING BTREE,
   INDEX `ix_mparts_partno`(`part_no`) USING BTREE,
   CONSTRAINT `fk_mparts_maint` FOREIGN KEY (`maintenance_id`) REFERENCES `asset_maintenance` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of asset_maintenance_parts
@@ -484,7 +484,7 @@ CREATE TABLE `asset_maintenance_photos`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_mphotos_maint`(`maintenance_id`) USING BTREE,
   CONSTRAINT `fk_mphotos_maint` FOREIGN KEY (`maintenance_id`) REFERENCES `asset_maintenance` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for asset_meter_readings
@@ -499,7 +499,7 @@ CREATE TABLE `asset_meter_readings`  (
   `entered_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`asset_id`, `period_year`, `period_month`) USING BTREE,
   CONSTRAINT `fk_amr_asset` FOREIGN KEY (`asset_id`) REFERENCES `fixed_assets` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of asset_meter_readings
@@ -528,7 +528,7 @@ CREATE TABLE `asset_pm_log`  (
   INDEX `ix_pmlog_asset`(`asset_id`, `done_date`) USING BTREE,
   CONSTRAINT `fk_pmlog_schedule` FOREIGN KEY (`schedule_id`) REFERENCES `asset_pm_schedules` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_pmlog_asset` FOREIGN KEY (`asset_id`) REFERENCES `fixed_assets` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for asset_pm_schedules
@@ -557,7 +557,7 @@ CREATE TABLE `asset_pm_schedules`  (
   INDEX `ix_pm_asset`(`asset_id`) USING BTREE,
   INDEX `ix_pm_due`(`is_active`, `next_due_date`) USING BTREE,
   CONSTRAINT `fk_pm_asset` FOREIGN KEY (`asset_id`) REFERENCES `fixed_assets` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of asset_pm_schedules
@@ -597,7 +597,7 @@ CREATE TABLE `audit_trail`  (
   INDEX `ix_audit_record`(`record_type`, `record_id`) USING BTREE,
   INDEX `ix_audit_action`(`action`) USING BTREE,
   INDEX `ix_audit_module`(`module`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 607 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 607 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of audit_trail
@@ -1225,7 +1225,7 @@ CREATE TABLE `backup_log`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_bl_action`(`action`, `created_at`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for bank_reconciliations
@@ -1256,7 +1256,7 @@ CREATE TABLE `bank_reconciliations`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_br_account`(`account_id`, `statement_date`) USING BTREE,
   CONSTRAINT `fk_br_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of bank_reconciliations
@@ -1283,7 +1283,7 @@ CREATE TABLE `bill_adjustments`  (
   PRIMARY KEY (`adjustment_id`) USING BTREE,
   INDEX `idx_bill_adjustments_bill`(`bill_type`, `bill_id`) USING BTREE,
   INDEX `idx_bill_adjustments_date`(`business_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for bill_codes
@@ -1314,7 +1314,7 @@ CREATE TABLE `bill_codes`  (
   INDEX `fk_bc_ast`(`asset_account`) USING BTREE,
   INDEX `idx_bill_codes_allow_discount`(`allow_member_discount`) USING BTREE,
   INDEX `ix_bill_codes_item`(`item_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of bill_codes
@@ -1349,7 +1349,7 @@ CREATE TABLE `bill_periods`  (
   INDEX `idx_closed_by`(`closed_by`) USING BTREE,
   INDEX `idx_bill_periods_start_print`(`start_date`, `period_id`) USING BTREE,
   INDEX `idx_bill_periods_date_range`(`start_date`, `end_date`, `status`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of bill_periods
@@ -1425,7 +1425,7 @@ CREATE TABLE `bill_readings`  (
   INDEX `idx_water_collectible_balance`(`member_id`, `is_billed`, `is_paid`, `bill_lifecycle_status`, `due_date`) USING BTREE,
   CONSTRAINT `fk_readings_member` FOREIGN KEY (`member_id`) REFERENCES `water_accounts` (`pkey`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_readings_period` FOREIGN KEY (`period_id`) REFERENCES `bill_periods` (`period_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 66 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 66 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of bill_readings
@@ -1504,7 +1504,7 @@ CREATE TABLE `billing_groups`  (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of billing_groups
@@ -1528,7 +1528,7 @@ CREATE TABLE `branches`  (
   PRIMARY KEY (`pkey`) USING BTREE,
   UNIQUE INDEX `name_UNIQUE`(`name`) USING BTREE,
   INDEX `name_idx`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of branches
@@ -1553,7 +1553,7 @@ CREATE TABLE `budget_lines`  (
   CONSTRAINT `fk_bl_budget` FOREIGN KEY (`budget_id`) REFERENCES `budgets` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_bl_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_bl_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for budgets
@@ -1578,7 +1578,7 @@ CREATE TABLE `budgets`  (
   INDEX `ix_budget_customer`(`customer_id`) USING BTREE,
   CONSTRAINT `fk_budget_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_budget_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for business_units
@@ -1600,7 +1600,7 @@ CREATE TABLE `business_units`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_business_units_code`(`code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of business_units
@@ -1641,7 +1641,7 @@ CREATE TABLE `bussinessprofile`  (
   `modifiedBy` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `isdeleted` tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'This table describes the company information' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'This table describes the company information';
 
 -- ----------------------------
 -- Records of bussinessprofile
@@ -1664,7 +1664,7 @@ CREATE TABLE `cda_calendar`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_cda_calendar_title`(`title`) USING BTREE,
   INDEX `ix_cda_calendar_due`(`is_active`, `due_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of cda_calendar
@@ -1693,7 +1693,7 @@ CREATE TABLE `cda_compliance`  (
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_cda_compliance_year`(`report_year`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for cda_report_mappings
@@ -1710,7 +1710,7 @@ CREATE TABLE `cda_report_mappings`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_cda_report_mappings_field`(`report`, `field_code`) USING BTREE,
   INDEX `ix_cda_report_mappings_report`(`report`, `sort_order`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 33 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 33 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of cda_report_mappings
@@ -1760,7 +1760,7 @@ CREATE TABLE `cities`  (
   `status` varchar(1) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'A',
   PRIMARY KEY (`pkey`) USING BTREE,
   INDEX `idx_cities_status_city`(`status`, `city`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 146 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this table will hold the address information' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 146 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this table will hold the address information';
 
 -- ----------------------------
 -- Records of cities
@@ -1926,7 +1926,7 @@ CREATE TABLE `classes`  (
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_classes_name`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of classes
@@ -1953,7 +1953,7 @@ CREATE TABLE `companyofficers`  (
   `modifiedBy` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `isdeleted` tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of companyofficers
@@ -1974,7 +1974,7 @@ CREATE TABLE `contactchannels`  (
   `status` varchar(1) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'A',
   PRIMARY KEY (`pkey`) USING BTREE,
   INDEX `idx_contactchannels_status_name`(`status`, `name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'table that stores mode of contact' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'table that stores mode of contact';
 
 -- ----------------------------
 -- Records of contactchannels
@@ -2004,7 +2004,7 @@ CREATE TABLE `coop_branches`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_coop_branches_code`(`code`) USING BTREE,
   INDEX `ix_coop_branches_class`(`class_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of coop_branches
@@ -2030,7 +2030,7 @@ CREATE TABLE `coop_imports`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_coop_imports_txn`(`txn_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for coop_lists
@@ -2046,7 +2046,7 @@ CREATE TABLE `coop_lists`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_coop_lists_name`(`list_key`, `name`) USING BTREE,
   INDEX `ix_coop_lists_key`(`list_key`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of coop_lists
@@ -2101,7 +2101,7 @@ CREATE TABLE `coop_officers`  (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_coop_officers_body`(`body`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for coop_receipt_lines
@@ -2118,7 +2118,7 @@ CREATE TABLE `coop_receipt_lines`  (
   `amount` decimal(15, 2) NOT NULL DEFAULT 0.00,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_coop_receipt_lines_receipt`(`receipt_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 331 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 331 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of coop_receipt_lines
@@ -2482,7 +2482,7 @@ CREATE TABLE `coop_receipts`  (
   UNIQUE INDEX `uq_coop_receipts_txn`(`txn_id`) USING BTREE,
   INDEX `ix_coop_receipts_member`(`member_id`) USING BTREE,
   INDEX `ix_coop_receipts_shift`(`shift_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 161 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 161 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of coop_receipts
@@ -2656,7 +2656,7 @@ CREATE TABLE `customer_types`  (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of customer_types
@@ -2717,7 +2717,7 @@ CREATE TABLE `customers`  (
   CONSTRAINT `fk_cust_type` FOREIGN KEY (`customer_type_id`) REFERENCES `customer_types` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_cust_rep` FOREIGN KEY (`sales_rep_id`) REFERENCES `sales_reps` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_cust_bg` FOREIGN KEY (`billing_group_id`) REFERENCES `billing_groups` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 42 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 42 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of customers
@@ -2801,7 +2801,7 @@ CREATE TABLE `data_import_batches`  (
   PRIMARY KEY (`batch_id`) USING BTREE,
   INDEX `idx_data_import_batch_status`(`status`, `created_at`) USING BTREE,
   INDEX `idx_data_import_batch_hash`(`source_sha256`, `import_type`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for data_import_mapping_profiles
@@ -2817,7 +2817,7 @@ CREATE TABLE `data_import_mapping_profiles`  (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`profile_id`) USING BTREE,
   UNIQUE INDEX `uq_import_profile_version`(`profile_name`, `import_type`, `version`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for data_import_mapping_rules
@@ -2833,7 +2833,7 @@ CREATE TABLE `data_import_mapping_rules`  (
   `updated_at` datetime NOT NULL,
   `version` int(11) NOT NULL DEFAULT 1,
   PRIMARY KEY (`rule_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for data_import_rows
@@ -2865,7 +2865,7 @@ CREATE TABLE `data_import_rows`  (
   INDEX `idx_data_import_account`(`external_account_no`) USING BTREE,
   INDEX `idx_data_import_source_key`(`source_key`) USING BTREE,
   CONSTRAINT `fk_data_import_rows_batch` FOREIGN KEY (`batch_id`) REFERENCES `data_import_batches` (`batch_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for default_accounts
@@ -2879,7 +2879,7 @@ CREATE TABLE `default_accounts`  (
   PRIMARY KEY (`setting_key`) USING BTREE,
   INDEX `fk_da_account`(`account_id`) USING BTREE,
   CONSTRAINT `fk_da_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of default_accounts
@@ -2976,7 +2976,7 @@ CREATE TABLE `discount_privilege_rules`  (
   INDEX `idx_dpr_discount`(`discount_id`) USING BTREE,
   INDEX `idx_dpr_bill_code`(`bill_code_id`) USING BTREE,
   INDEX `idx_dpr_active_module`(`is_active`, `module_context`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of discount_privilege_rules
@@ -2999,7 +2999,7 @@ CREATE TABLE `discounted_members`  (
   INDEX `idx_discounted_members_member_discount`(`member_id`, `discount_id`) USING BTREE,
   CONSTRAINT `fk_discounted_members_discount` FOREIGN KEY (`discount_id`) REFERENCES `discounts` (`discount_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_discounted_members_member` FOREIGN KEY (`member_id`) REFERENCES `water_accounts` (`pkey`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of discounted_members
@@ -3038,7 +3038,7 @@ CREATE TABLE `discounts`  (
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`discount_id`) USING BTREE,
   UNIQUE INDEX `uq_discount_type`(`discount_type`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of discounts
@@ -3068,7 +3068,7 @@ CREATE TABLE `dist_batch_lines`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_dist_batch_lines_batch`(`batch_id`) USING BTREE,
   INDEX `ix_dist_batch_lines_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for dist_batches
@@ -3106,7 +3106,7 @@ CREATE TABLE `dist_batches`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_dist_batches_no`(`batch_no`) USING BTREE,
   INDEX `ix_dist_batches_period`(`period_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for dist_periods
@@ -3141,7 +3141,7 @@ CREATE TABLE `dist_periods`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_dist_periods_year`(`fiscal_year`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for document_prints
@@ -3159,7 +3159,7 @@ CREATE TABLE `document_prints`  (
   `printed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_doc_prints_ref`(`ref_type`, `ref_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for document_reissues
@@ -3181,7 +3181,7 @@ CREATE TABLE `document_reissues`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_document_reissues_txn`(`txn_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for document_templates
@@ -3200,7 +3200,7 @@ CREATE TABLE `document_templates`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_doc_templates_key`(`doc_key`, `effective_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for entity_notes
@@ -3218,7 +3218,7 @@ CREATE TABLE `entity_notes`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_notes_entity`(`entity_type`, `entity_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of entity_notes
@@ -3280,7 +3280,7 @@ CREATE TABLE `fixed_assets`  (
   CONSTRAINT `fk_fa_vendor` FOREIGN KEY (`vendor_id`) REFERENCES `vendors` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_fa_acq` FOREIGN KEY (`acquisition_txn_id`) REFERENCES `transactions` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_fa_disp` FOREIGN KEY (`disposal_txn_id`) REFERENCES `transactions` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of fixed_assets
@@ -3298,7 +3298,7 @@ CREATE TABLE `global_billing_sequence`  (
   `ref_number` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`ref_number`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 87 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 87 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of global_billing_sequence
@@ -3401,7 +3401,7 @@ CREATE TABLE `ic_divisions`  (
   `datelastmodified` datetime NULL DEFAULT NULL,
   `status` varchar(1) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'A',
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of ic_divisions
@@ -3419,7 +3419,7 @@ CREATE TABLE `ic_segments`  (
   `datelastmodified` datetime NULL DEFAULT NULL,
   `status` varchar(1) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'A',
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of ic_segments
@@ -3443,7 +3443,7 @@ CREATE TABLE `import_batches`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_ib_type`(`import_type`, `created_at`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for installment_bills
@@ -3492,7 +3492,7 @@ CREATE TABLE `installment_bills`  (
   INDEX `idx_installment_lifecycle`(`bill_lifecycle_status`, `status`, `member_id`) USING BTREE,
   CONSTRAINT `fk_installment_bill_code` FOREIGN KEY (`bill_code_id`) REFERENCES `bill_codes` (`code_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_installment_member` FOREIGN KEY (`member_id`) REFERENCES `water_accounts` (`pkey`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of installment_bills
@@ -3522,7 +3522,7 @@ CREATE TABLE `installment_schedules`  (
   INDEX `idx_installment_schedules_installment_status_due`(`installment_id`, `status`, `due_date`) USING BTREE,
   INDEX `fk_installment_marked_operator`(`marked_by`) USING BTREE,
   CONSTRAINT `fk_installment_schedule` FOREIGN KEY (`installment_id`) REFERENCES `installment_bills` (`installment_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of installment_schedules
@@ -3553,7 +3553,7 @@ CREATE TABLE `inventory_issuance_items`  (
   INDEX `idx_issuance_item_asset`(`asset_account`) USING BTREE,
   CONSTRAINT `fk_issuance_item_code` FOREIGN KEY (`code_id`) REFERENCES `bill_codes` (`code_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_issuance_item_header` FOREIGN KEY (`issuance_id`) REFERENCES `inventory_issuances` (`issuance_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of inventory_issuance_items
@@ -3597,7 +3597,7 @@ CREATE TABLE `inventory_issuances`  (
   INDEX `idx_inventory_issuance_status`(`status`) USING BTREE,
   INDEX `idx_inventory_issuance_expense`(`expense_account_id`) USING BTREE,
   INDEX `ix_inventory_issuances_txn`(`txn_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of inventory_issuances
@@ -3632,7 +3632,7 @@ CREATE TABLE `inventory_movements`  (
   CONSTRAINT `fk_im_txn` FOREIGN KEY (`txn_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_im_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_im_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 113 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 113 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of inventory_movements
@@ -3754,7 +3754,7 @@ CREATE TABLE `item_categories`  (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` varchar(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of item_categories
@@ -3779,7 +3779,7 @@ CREATE TABLE `item_components`  (
   INDEX `fk_ic_comp`(`component_item_id`) USING BTREE,
   CONSTRAINT `fk_ic_parent` FOREIGN KEY (`parent_item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_ic_comp` FOREIGN KEY (`component_item_id`) REFERENCES `items` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of item_components
@@ -3805,7 +3805,7 @@ CREATE TABLE `item_site_stock`  (
   INDEX `fk_iss_site`(`site_id`) USING BTREE,
   CONSTRAINT `fk_iss_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_iss_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of item_site_stock
@@ -3903,7 +3903,7 @@ CREATE TABLE `items`  (
   CONSTRAINT `fk_items_uom` FOREIGN KEY (`uom_set_id`) REFERENCES `uom_sets` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_items_suom` FOREIGN KEY (`sales_uom_id`) REFERENCES `uom_units` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_items_puom` FOREIGN KEY (`purchase_uom_id`) REFERENCES `uom_units` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 31 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of items
@@ -3949,7 +3949,7 @@ CREATE TABLE `jointmember`  (
   `accountno` int(11) NULL DEFAULT NULL,
   `Status` varchar(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'A',
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for journal_lines
@@ -3985,7 +3985,7 @@ CREATE TABLE `journal_lines`  (
   CONSTRAINT `fk_jl_other_name` FOREIGN KEY (`other_name_id`) REFERENCES `other_names` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_jl_txn` FOREIGN KEY (`txn_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_jl_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1183 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1183 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of journal_lines
@@ -5174,7 +5174,7 @@ CREATE TABLE `legacy_access_control_pages`  (
   PRIMARY KEY (`page_key`) USING BTREE,
   UNIQUE INDEX `uq_access_control_pages_file`(`file_name`) USING BTREE,
   INDEX `idx_access_control_pages_group`(`module_group`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_access_control_preset_pages
@@ -5185,7 +5185,7 @@ CREATE TABLE `legacy_access_control_preset_pages`  (
   `page_key` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`preset_key`, `page_key`) USING BTREE,
   INDEX `idx_access_control_preset_pages_page`(`page_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_access_control_presets
@@ -5198,7 +5198,7 @@ CREATE TABLE `legacy_access_control_presets`  (
   `created_at` datetime NOT NULL,
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`preset_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_accounts_payable
@@ -5224,7 +5224,7 @@ CREATE TABLE `legacy_accounts_payable`  (
   UNIQUE INDEX `uq_ap_purchase`(`purchase_id`) USING BTREE,
   INDEX `idx_ap_supplier`(`supplier_id`) USING BTREE,
   INDEX `idx_ap_status`(`status`, `due_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_accounts_payable_payments
@@ -5244,7 +5244,7 @@ CREATE TABLE `legacy_accounts_payable_payments`  (
   PRIMARY KEY (`ap_payment_id`) USING BTREE,
   UNIQUE INDEX `uq_appay_request_key`(`request_key`) USING BTREE,
   INDEX `idx_appay_ap`(`ap_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_book_types
@@ -5260,7 +5260,7 @@ CREATE TABLE `legacy_book_types`  (
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`book_type_id`) USING BTREE,
   UNIQUE INDEX `book_type_key`(`book_type_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_chartofaccntstbl
@@ -5281,7 +5281,7 @@ CREATE TABLE `legacy_chartofaccntstbl`  (
   PRIMARY KEY (`AccntID`) USING BTREE,
   INDEX `ParentAccntIdx`(`ParentAccnt`, `CashFlowType`) USING BTREE,
   INDEX `BaseAccntIdx`(`BaseAccnt`, `ParentAccnt`, `CashFlowType`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = latin1 COLLATE = latin1_swedish_ci;
 
 -- ----------------------------
 -- Table structure for legacy_inventory_adjustments
@@ -5300,7 +5300,7 @@ CREATE TABLE `legacy_inventory_adjustments`  (
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`adjustment_id`) USING BTREE,
   INDEX `idx_inv_adj_code`(`code_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_inventory_purchase_items
@@ -5319,7 +5319,7 @@ CREATE TABLE `legacy_inventory_purchase_items`  (
   INDEX `idx_purchase_item_code`(`code_id`) USING BTREE,
   INDEX `idx_purchase_item_asset`(`asset_account`) USING BTREE,
   CONSTRAINT `fk_purchase_item_code` FOREIGN KEY (`code_id`) REFERENCES `bill_codes` (`code_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_inventory_purchases
@@ -5352,7 +5352,7 @@ CREATE TABLE `legacy_inventory_purchases`  (
   INDEX `idx_purchase_journal`(`journal_head_id`, `journal_entry_id`) USING BTREE,
   INDEX `idx_purchase_void_journal`(`void_journal_head_id`, `void_journal_entry_id`) USING BTREE,
   INDEX `idx_purchase_created_by`(`created_by`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_inventory_reorder_levels
@@ -5365,7 +5365,7 @@ CREATE TABLE `legacy_inventory_reorder_levels`  (
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`code_id`) USING BTREE,
   CONSTRAINT `fk_reorder_bill_code` FOREIGN KEY (`code_id`) REFERENCES `bill_codes` (`code_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_inventory_stock_movements
@@ -5389,7 +5389,7 @@ CREATE TABLE `legacy_inventory_stock_movements`  (
   INDEX `idx_stock_ref`(`ref_type`, `ref_id`) USING BTREE,
   INDEX `idx_stock_created_by`(`created_by`) USING BTREE,
   CONSTRAINT `fk_stock_code` FOREIGN KEY (`code_id`) REFERENCES `bill_codes` (`code_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_journal_voucher_voids
@@ -5414,7 +5414,7 @@ CREATE TABLE `legacy_journal_voucher_voids`  (
   INDEX `idx_jv_void_replacement`(`replacement_jvid`) USING BTREE,
   INDEX `idx_jv_void_source`(`source_type`, `source_id`) USING BTREE,
   INDEX `idx_jv_void_ref`(`trans_ref_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_journalentries
@@ -5444,7 +5444,7 @@ CREATE TABLE `legacy_journalentries`  (
   INDEX `AccountsIdx`(`AccountID`, `TransactionDate`, `JournalHeadID`) USING BTREE,
   INDEX `SubsidiaryIdx`(`SLType`, `SLCode`, `TransactionDate`, `AccountID`) USING BTREE,
   INDEX `TransRefIdx`(`TransRefID`, `Status`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = latin1 COLLATE = latin1_swedish_ci;
 
 -- ----------------------------
 -- Table structure for legacy_journalvoucher
@@ -5462,7 +5462,7 @@ CREATE TABLE `legacy_journalvoucher`  (
   `DivisionID` tinyint(4) NULL DEFAULT NULL,
   PRIMARY KEY (`JVID`) USING BTREE,
   UNIQUE INDEX `JournalEntryID_UNIQUE`(`JVEntryID`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = latin1 COLLATE = latin1_swedish_ci;
 
 -- ----------------------------
 -- Table structure for legacy_operator
@@ -5482,7 +5482,7 @@ CREATE TABLE `legacy_operator`  (
   `modifiedby` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `date_modified` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_operator_profile
@@ -5497,7 +5497,7 @@ CREATE TABLE `legacy_operator_profile`  (
   UNIQUE INDEX `uq_operator_profile_assignment`(`operatorID`, `profID`) USING BTREE,
   INDEX `operator_idx`(`operatorID`) USING BTREE,
   INDEX `profile_idx`(`profID`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_operator_profile_page_permissions
@@ -5513,7 +5513,7 @@ CREATE TABLE `legacy_operator_profile_page_permissions`  (
   PRIMARY KEY (`operator_profile_id`, `page_key`) USING BTREE,
   INDEX `idx_opp_page`(`page_key`) USING BTREE,
   INDEX `idx_opp_granted_by`(`granted_by_operator_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_postingmethod
@@ -5524,7 +5524,7 @@ CREATE TABLE `legacy_postingmethod`  (
   `name` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `status` char(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'A',
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'This table holds the records of all postings types' ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'This table holds the records of all postings types';
 
 -- ----------------------------
 -- Table structure for legacy_profile
@@ -5543,7 +5543,7 @@ CREATE TABLE `legacy_profile`  (
   `modifiedby` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `date_modified` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`profID`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_savaccnttransaction
@@ -5567,7 +5567,7 @@ CREATE TABLE `legacy_savaccnttransaction`  (
   PRIMARY KEY (`savtransHeadID`) USING BTREE,
   INDEX `fk_savaccount_idx`(`savaccountno`) USING BTREE,
   INDEX `fk_savTransCode_idx`(`savTransCode`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_savingsaccount_param
@@ -5582,7 +5582,7 @@ CREATE TABLE `legacy_savingsaccount_param`  (
   PRIMARY KEY (`pkey`) USING BTREE,
   INDEX `frelatedparamkey_idx`(`relatedparamkey`) USING BTREE,
   INDEX `fkeysavAccountno_idx`(`savsaccountno`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_savingsaccounts
@@ -5620,7 +5620,7 @@ CREATE TABLE `legacy_savingsaccounts`  (
   INDEX `branchId_idx`(`branchid`) USING BTREE,
   INDEX `fkeybranchID_idx`(`branchid`) USING BTREE,
   INDEX `savAccount_idx`(`branchid`, `memberid`, `savingsid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_savingsinterest
@@ -5639,7 +5639,7 @@ CREATE TABLE `legacy_savingsinterest`  (
   PRIMARY KEY (`IntKey`, `savingskey`) USING BTREE,
   INDEX `fk_savingsId_idx`(`savingskey`) USING BTREE,
   INDEX `fk_posting_idx`(`postingMethod`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this table holds records of interest rates configure per savings, each savings product can hold 1 or many interest rates' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this table holds records of interest rates configure per savings, each savings product can hold 1 or many interest rates';
 
 -- ----------------------------
 -- Table structure for legacy_savingsrestrictions
@@ -5661,7 +5661,7 @@ CREATE TABLE `legacy_savingsrestrictions`  (
   PRIMARY KEY (`pkey`) USING BTREE,
   INDEX `fk_savaccountNo_idx`(`savaccountNo`) USING BTREE,
   INDEX `fk_restrictionType_idx`(`type`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'Savings Restrictions' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'Savings Restrictions';
 
 -- ----------------------------
 -- Table structure for legacy_savingstranscode
@@ -5684,7 +5684,7 @@ CREATE TABLE `legacy_savingstranscode`  (
   `datelastmodified` datetime NULL DEFAULT NULL,
   `status` varchar(1) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'A',
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_savrestrictiontype
@@ -5700,7 +5700,7 @@ CREATE TABLE `legacy_savrestrictiontype`  (
   `dateModified` datetime NULL DEFAULT NULL,
   `isdeleted` tinyint(4) NOT NULL,
   PRIMARY KEY (`pkey`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'Table for savings restrictions type.' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'Table for savings restrictions type.';
 
 -- ----------------------------
 -- Table structure for legacy_subsidiaryledger
@@ -5716,7 +5716,7 @@ CREATE TABLE `legacy_subsidiaryledger`  (
   UNIQUE INDEX `pkey_UNIQUE`(`pkey`) USING BTREE,
   INDEX `slcode_type_idx`(`slcode`, `sltype`, `isdeleted`) USING BTREE,
   INDEX `slName_idx`(`slname`, `isdeleted`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for legacy_suppliers
@@ -5734,7 +5734,7 @@ CREATE TABLE `legacy_suppliers`  (
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`supplier_id`) USING BTREE,
   UNIQUE INDEX `uq_supplier_name`(`supplier_name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for loan_accounts
@@ -5804,7 +5804,7 @@ CREATE TABLE `loan_accounts`  (
   INDEX `ix_loan_accounts_product`(`product_id`) USING BTREE,
   INDEX `ix_loan_accounts_branch`(`branch_id`) USING BTREE,
   INDEX `ix_loan_accounts_app`(`application_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_accounts
@@ -5838,7 +5838,7 @@ CREATE TABLE `loan_adjustments`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_adjustments_loan`(`loan_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for loan_application_docs
@@ -5854,7 +5854,7 @@ CREATE TABLE `loan_application_docs`  (
   `remarks` varchar(160) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_app_docs_app`(`application_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_application_docs
@@ -5909,7 +5909,7 @@ CREATE TABLE `loan_applications`  (
   INDEX `ix_loan_applications_member`(`member_id`) USING BTREE,
   INDEX `ix_loan_applications_status`(`status`) USING BTREE,
   INDEX `ix_loan_applications_branch`(`branch_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_applications
@@ -5938,7 +5938,7 @@ CREATE TABLE `loan_approval_matrix`  (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_lam_level`(`level_no`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_approval_matrix
@@ -5962,7 +5962,7 @@ CREATE TABLE `loan_approvals`  (
   `acted_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_approvals_app`(`application_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_approvals
@@ -5988,7 +5988,7 @@ CREATE TABLE `loan_charge_ranges`  (
   `value` decimal(15, 4) NOT NULL DEFAULT 0.0000,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_lcr_charge`(`charge_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_charge_ranges
@@ -6013,7 +6013,7 @@ CREATE TABLE `loan_charges`  (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_loan_charges_code`(`code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_charges
@@ -6040,7 +6040,7 @@ CREATE TABLE `loan_charges_applied`  (
   `how` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'deducted',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_charges_applied_loan`(`loan_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_charges_applied
@@ -6090,7 +6090,7 @@ CREATE TABLE `loan_ci`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_ci_app`(`application_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for loan_ci_lines
@@ -6108,7 +6108,7 @@ CREATE TABLE `loan_ci_lines`  (
   `amount` decimal(15, 2) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_ci_lines_ci`(`ci_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for loan_collaterals
@@ -6128,7 +6128,7 @@ CREATE TABLE `loan_collaterals`  (
   `released_on` date NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_collaterals_app`(`application_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_collaterals
@@ -6149,7 +6149,7 @@ CREATE TABLE `loan_comakers`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_comakers_app`(`application_id`) USING BTREE,
   INDEX `ix_loan_comakers_member`(`comaker_member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_comakers
@@ -6171,7 +6171,7 @@ CREATE TABLE `loan_notices`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_notices_loan`(`loan_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for loan_payment_alloc
@@ -6186,7 +6186,7 @@ CREATE TABLE `loan_payment_alloc`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_lpa_txn`(`loan_txn_id`) USING BTREE,
   INDEX `ix_lpa_schedule`(`schedule_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 59 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 59 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_payment_alloc
@@ -6259,7 +6259,7 @@ CREATE TABLE `loan_product_charges`  (
   `charge_id` int(10) UNSIGNED NOT NULL,
   `sort_order` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`product_id`, `charge_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_product_charges
@@ -6285,7 +6285,7 @@ CREATE TABLE `loan_product_rates`  (
   `rate` decimal(9, 4) NOT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_lpr_product`(`product_id`, `effective_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_product_rates
@@ -6349,7 +6349,7 @@ CREATE TABLE `loan_products`  (
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_loan_products_code`(`code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_products
@@ -6377,7 +6377,7 @@ CREATE TABLE `loan_schedule`  (
   `paid_on` date NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_loan_schedule`(`loan_id`, `inst_no`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 109 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 109 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_schedule
@@ -6524,7 +6524,7 @@ CREATE TABLE `loan_txns`  (
   INDEX `ix_loan_txns_loan`(`loan_id`, `txn_date`, `id`) USING BTREE,
   INDEX `ix_loan_txns_txn`(`txn_id`) USING BTREE,
   INDEX `ix_loan_txns_shift`(`shift_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 66 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 66 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of loan_txns
@@ -6614,7 +6614,7 @@ CREATE TABLE `loan_waivers`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_loan_waivers_loan`(`loan_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for manual_disconnection_logs
@@ -6639,7 +6639,7 @@ CREATE TABLE `manual_disconnection_logs`  (
   INDEX `idx_mdl_action`(`action`) USING BTREE,
   INDEX `idx_mdl_source`(`bill_source_type`, `bill_source_id`) USING BTREE,
   INDEX `idx_mdl_action_at`(`action_at`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_assets
@@ -6653,7 +6653,7 @@ CREATE TABLE `member_assets`  (
   `amount` decimal(15, 2) NOT NULL DEFAULT 0.00,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_assets_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_attendance
@@ -6668,7 +6668,7 @@ CREATE TABLE `member_attendance`  (
   `remarks` varchar(160) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_attendance_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_beneficiaries
@@ -6686,7 +6686,7 @@ CREATE TABLE `member_beneficiaries`  (
   `is_primary` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_beneficiaries_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_clusters
@@ -6699,7 +6699,7 @@ CREATE TABLE `member_clusters`  (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_member_clusters_name`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_contacts
@@ -6715,7 +6715,7 @@ CREATE TABLE `member_contacts`  (
   `is_primary` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_contacts_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_dependents
@@ -6734,7 +6734,7 @@ CREATE TABLE `member_dependents`  (
   `is_dependent` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_dependents_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_documents
@@ -6756,7 +6756,7 @@ CREATE TABLE `member_documents`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_documents_member`(`member_id`) USING BTREE,
   INDEX `ix_member_documents_expiry`(`expires_on`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_finances
@@ -6771,7 +6771,7 @@ CREATE TABLE `member_finances`  (
   `spouse_amount` decimal(15, 2) NOT NULL DEFAULT 0.00,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_finances_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 25 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 25 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of member_finances
@@ -6814,7 +6814,7 @@ CREATE TABLE `member_notes`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_notes_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_relatives
@@ -6827,7 +6827,7 @@ CREATE TABLE `member_relatives`  (
   `relationship` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_relatives_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_representatives
@@ -6841,7 +6841,7 @@ CREATE TABLE `member_representatives`  (
   `rep_member_id` int(10) UNSIGNED NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_reps_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_segments
@@ -6853,7 +6853,7 @@ CREATE TABLE `member_segments`  (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_member_segments_name`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for member_status_history
@@ -6871,7 +6871,7 @@ CREATE TABLE `member_status_history`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_member_status_member`(`member_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 25 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 25 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of member_status_history
@@ -6916,7 +6916,7 @@ CREATE TABLE `member_types`  (
   `sort_order` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_member_types_code`(`code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of member_types
@@ -6947,7 +6947,7 @@ CREATE TABLE `memberaddress`  (
   INDEX `idx_memberaddress_member_status_type`(`member_key`, `status`, `address_type_key`) USING BTREE,
   CONSTRAINT `FK_Address_ID` FOREIGN KEY (`address_key`) REFERENCES `addresses` (`pkey`) ON DELETE RESTRICT ON UPDATE NO ACTION,
   CONSTRAINT `FK_Address_Type` FOREIGN KEY (`address_type_key`) REFERENCES `addresstype` (`pkey`) ON DELETE RESTRICT ON UPDATE NO ACTION
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this holds the member address information' ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this holds the member address information';
 
 -- ----------------------------
 -- Records of memberaddress
@@ -7000,7 +7000,7 @@ CREATE TABLE `membercontactchannels`  (
   PRIMARY KEY (`activefromdate`, `memberkey`, `conchannelkey`) USING BTREE,
   INDEX `idx_mcc_member_status_to`(`memberkey`, `status`, `activetodate`) USING BTREE,
   INDEX `idx_mcc_contactdata`(`contactdata`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this table store member contact information' ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'this table store member contact information';
 
 -- ----------------------------
 -- Records of membercontactchannels
@@ -7127,7 +7127,7 @@ CREATE TABLE `members`  (
   INDEX `ix_members_cluster`(`cluster_id`) USING BTREE,
   INDEX `ix_members_mobile`(`mobile`) USING BTREE,
   INDEX `ix_members_party`(`party_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of members
@@ -7170,7 +7170,7 @@ CREATE TABLE `membershipinfo`  (
   INDEX `segment_idx`(`segmentationKey`, `status`) USING BTREE,
   INDEX `status_idx`(`status`) USING BTREE,
   INDEX `membership_idx`(`membershipDate`, `membershipStatus`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for memorized_reports
@@ -7191,7 +7191,7 @@ CREATE TABLE `memorized_reports`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `fk_mr_user`(`created_by`) USING BTREE,
   CONSTRAINT `fk_mr_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for memorized_txns
@@ -7222,7 +7222,7 @@ CREATE TABLE `memorized_txns`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_mt_due`(`is_active`, `next_date`) USING BTREE,
   INDEX `ix_mt_type`(`txn_type`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for modules
@@ -7236,7 +7236,7 @@ CREATE TABLE `modules`  (
   `sort_order` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_modules_code`(`code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 29 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 29 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of modules
@@ -7317,7 +7317,7 @@ CREATE TABLE `one_time_bills`  (
   INDEX `idx_one_time_lifecycle`(`bill_lifecycle_status`, `status`, `member_id`) USING BTREE,
   CONSTRAINT `fk_one_time_bill_code` FOREIGN KEY (`bill_code_id`) REFERENCES `bill_codes` (`code_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_one_time_member` FOREIGN KEY (`member_id`) REFERENCES `water_accounts` (`pkey`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of one_time_bills
@@ -7340,7 +7340,7 @@ CREATE TABLE `operator_notification_reads`  (
   `read_at` datetime NOT NULL,
   PRIMARY KEY (`operator_id`, `notification_key`) USING BTREE,
   INDEX `idx_notification_read_at`(`read_at`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for other_names
@@ -7365,7 +7365,7 @@ CREATE TABLE `other_names`  (
   INDEX `ix_other_names_name`(`name`) USING BTREE,
   INDEX `ix_other_names_member`(`member_id`) USING BTREE,
   INDEX `ix_other_names_party`(`party_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of other_names
@@ -7404,7 +7404,7 @@ CREATE TABLE `pages`  (
   UNIQUE INDEX `uq_pages_key`(`page_key`) USING BTREE,
   INDEX `fk_pages_module`(`module_id`) USING BTREE,
   CONSTRAINT `fk_pages_module` FOREIGN KEY (`module_id`) REFERENCES `modules` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 519 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 519 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of pages
@@ -7800,7 +7800,7 @@ CREATE TABLE `parties`  (
   INDEX `ix_parties_tin`(`tin`) USING BTREE,
   INDEX `ix_parties_mobile`(`mobile`) USING BTREE,
   INDEX `ix_parties_email`(`email`(100)) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 71 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 71 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of parties
@@ -7876,7 +7876,7 @@ CREATE TABLE `party_crosswalk`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_party_crosswalk_src`(`source`, `source_id`) USING BTREE,
   INDEX `ix_party_crosswalk_party`(`party_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 128 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 128 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of party_crosswalk
@@ -8010,7 +8010,7 @@ CREATE TABLE `party_match_reviews`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_party_match_pair`(`party_a`, `party_b`) USING BTREE,
   INDEX `ix_party_match_status`(`status`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for party_role_log
@@ -8029,7 +8029,7 @@ CREATE TABLE `party_role_log`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_party_role_log_party`(`party_id`, `created_at`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 113 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 113 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of party_role_log
@@ -8150,7 +8150,7 @@ CREATE TABLE `passbook_prints`  (
   `printed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_passbook_prints_account`(`account_id`, `ledger`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for passbook_types
@@ -8179,7 +8179,7 @@ CREATE TABLE `passbook_types`  (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_passbook_types_name`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of passbook_types
@@ -8206,7 +8206,7 @@ CREATE TABLE `payment_adjustments`  (
   PRIMARY KEY (`adjustment_id`) USING BTREE,
   INDEX `idx_payment_adjustments_transaction`(`transaction_id`) USING BTREE,
   CONSTRAINT `fk_payment_adjustment_transaction` FOREIGN KEY (`transaction_id`) REFERENCES `payment_transactions` (`transaction_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of payment_adjustments
@@ -8230,7 +8230,7 @@ CREATE TABLE `payment_applications`  (
   INDEX `ix_pa_target`(`target_txn_id`) USING BTREE,
   CONSTRAINT `fk_pa_payment` FOREIGN KEY (`payment_txn_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_pa_target` FOREIGN KEY (`target_txn_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 90 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 90 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of payment_applications
@@ -8338,7 +8338,7 @@ CREATE TABLE `payment_methods`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `fk_pm_account`(`clearing_account_id`) USING BTREE,
   CONSTRAINT `fk_pm_account` FOREIGN KEY (`clearing_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of payment_methods
@@ -8377,7 +8377,7 @@ CREATE TABLE `payment_transaction_items`  (
   INDEX `idx_pti_source`(`source_type`, `source_id`) USING BTREE,
   INDEX `idx_pti_active_source`(`source_type`, `source_id`, `allocation_status`) USING BTREE,
   CONSTRAINT `fk_pti_transaction` FOREIGN KEY (`transaction_id`) REFERENCES `payment_transactions` (`transaction_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 75 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 75 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of payment_transaction_items
@@ -8500,7 +8500,7 @@ CREATE TABLE `payment_transactions`  (
   INDEX `idx_payment_transactions_receipt`(`receipt_no`) USING BTREE,
   INDEX `idx_payment_transactions_date`(`payment_date`) USING BTREE,
   INDEX `idx_payment_transactions_member_date`(`member_id`, `payment_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 56 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 56 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of payment_transactions
@@ -8584,7 +8584,7 @@ CREATE TABLE `payment_withholdings`  (
   CONSTRAINT `fk_pw_payment` FOREIGN KEY (`payment_txn_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_pw_target` FOREIGN KEY (`target_txn_id`) REFERENCES `transactions` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT,
   CONSTRAINT `fk_pw_wht` FOREIGN KEY (`wht_id`) REFERENCES `withholding_taxes` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of payment_withholdings
@@ -8608,7 +8608,7 @@ CREATE TABLE `pos_cash_drops`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `fk_cd_shift`(`shift_id`) USING BTREE,
   CONSTRAINT `fk_cd_shift` FOREIGN KEY (`shift_id`) REFERENCES `pos_shifts` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of pos_cash_drops
@@ -8647,7 +8647,7 @@ CREATE TABLE `pos_readings`  (
   INDEX `fk_pr_shift`(`shift_id`) USING BTREE,
   CONSTRAINT `fk_pr_term` FOREIGN KEY (`terminal_id`) REFERENCES `pos_terminals` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_pr_shift` FOREIGN KEY (`shift_id`) REFERENCES `pos_shifts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of pos_readings
@@ -8681,7 +8681,7 @@ CREATE TABLE `pos_shifts`  (
   INDEX `fk_shift_user`(`cashier_id`) USING BTREE,
   CONSTRAINT `fk_shift_term` FOREIGN KEY (`terminal_id`) REFERENCES `pos_terminals` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_shift_user` FOREIGN KEY (`cashier_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of pos_shifts
@@ -8704,7 +8704,7 @@ CREATE TABLE `pos_tenders`  (
   INDEX `fk_pt_pm`(`payment_method_id`) USING BTREE,
   CONSTRAINT `fk_pt_txn` FOREIGN KEY (`txn_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_pt_pm` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of pos_tenders
@@ -8741,7 +8741,7 @@ CREATE TABLE `pos_terminals`  (
   CONSTRAINT `fk_term_class` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_term_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_term_cash` FOREIGN KEY (`cash_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of pos_terminals
@@ -8761,7 +8761,7 @@ CREATE TABLE `price_level_items`  (
   INDEX `fk_pli_item`(`item_id`) USING BTREE,
   CONSTRAINT `fk_pli_level` FOREIGN KEY (`price_level_id`) REFERENCES `price_levels` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_pli_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of price_level_items
@@ -8780,7 +8780,7 @@ CREATE TABLE `price_levels`  (
   `valid_to` date NULL DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of price_levels
@@ -8819,7 +8819,7 @@ CREATE TABLE `process_formula_lines`  (
   CONSTRAINT `fk_pfl_formula` FOREIGN KEY (`formula_id`) REFERENCES `process_formulas` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_pfl_item` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_pfl_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of process_formula_lines
@@ -8858,7 +8858,7 @@ CREATE TABLE `process_formulas`  (
   UNIQUE INDEX `uq_pf_code`(`code`) USING BTREE,
   INDEX `fk_pf_site`(`site_id`) USING BTREE,
   CONSTRAINT `fk_pf_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of process_formulas
@@ -8878,7 +8878,7 @@ CREATE TABLE `rate_code`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`rc_id`) USING BTREE,
   INDEX `idx_rate_code_code`(`rc_code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of rate_code
@@ -8916,7 +8916,7 @@ CREATE TABLE `receipt_documents`  (
   CONSTRAINT `fk_rd_vendor` FOREIGN KEY (`vendor_id`) REFERENCES `vendors` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_rd_account` FOREIGN KEY (`account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_rd_txn` FOREIGN KEY (`linked_txn_id`) REFERENCES `transactions` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of receipt_documents
@@ -8940,7 +8940,7 @@ CREATE TABLE `reconciliation_discrepancies`  (
   `changed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_rd_account`(`account_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for reconciliation_items
@@ -8953,7 +8953,7 @@ CREATE TABLE `reconciliation_items`  (
   `cleared` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`reconciliation_id`, `txn_id`) USING BTREE,
   CONSTRAINT `fk_ri_rec` FOREIGN KEY (`reconciliation_id`) REFERENCES `bank_reconciliations` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of reconciliation_items
@@ -8983,7 +8983,7 @@ CREATE TABLE `recurring_bill_payments`  (
   INDEX `idx_recurring_payment_bill`(`bill_id`) USING BTREE,
   INDEX `idx_recurring_payment_created_by`(`created_by`) USING BTREE,
   CONSTRAINT `fk_recurring_payment_bill` FOREIGN KEY (`bill_id`) REFERENCES `recurring_bills` (`bill_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for recurring_bills
@@ -9046,7 +9046,7 @@ CREATE TABLE `recurring_bills`  (
   CONSTRAINT `fk_recurring_bill_member` FOREIGN KEY (`member_id`) REFERENCES `water_accounts` (`pkey`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_recurring_bill_plan` FOREIGN KEY (`plan_id`) REFERENCES `recurring_plans` (`plan_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_recurring_bill_subscription` FOREIGN KEY (`subscription_id`) REFERENCES `recurring_subscriptions` (`subscription_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of recurring_bills
@@ -9085,7 +9085,7 @@ CREATE TABLE `recurring_plans`  (
   INDEX `idx_recurring_plan_status`(`status`) USING BTREE,
   INDEX `idx_recurring_plan_created_by`(`created_by`) USING BTREE,
   CONSTRAINT `fk_recurring_plan_bill_code` FOREIGN KEY (`bill_code_id`) REFERENCES `bill_codes` (`code_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of recurring_plans
@@ -9114,7 +9114,7 @@ CREATE TABLE `recurring_subscriptions`  (
   INDEX `idx_recurring_sub_created_by`(`created_by`) USING BTREE,
   CONSTRAINT `fk_recurring_sub_member` FOREIGN KEY (`member_id`) REFERENCES `water_accounts` (`pkey`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_recurring_sub_plan` FOREIGN KEY (`plan_id`) REFERENCES `recurring_plans` (`plan_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Records of recurring_subscriptions
@@ -9142,7 +9142,7 @@ CREATE TABLE `report_layouts`  (
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_rl_report`(`report_key`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for role_page_access
@@ -9161,7 +9161,7 @@ CREATE TABLE `role_page_access`  (
   INDEX `fk_rpa_page`(`page_id`) USING BTREE,
   CONSTRAINT `fk_rpa_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_rpa_page` FOREIGN KEY (`page_id`) REFERENCES `pages` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of role_page_access
@@ -10529,7 +10529,7 @@ CREATE TABLE `role_sites`  (
   INDEX `fk_rs_site`(`site_id`) USING BTREE,
   CONSTRAINT `fk_rs_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_rs_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of role_sites
@@ -10547,7 +10547,7 @@ CREATE TABLE `role_special_permissions`  (
   `perm_value` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`role_id`, `perm_key`) USING BTREE,
   CONSTRAINT `fk_rsp_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of role_special_permissions
@@ -10643,7 +10643,7 @@ CREATE TABLE `roles`  (
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_roles_name`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of roles
@@ -10680,7 +10680,7 @@ CREATE TABLE `sales_reps`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `fk_rep_user`(`user_id`) USING BTREE,
   CONSTRAINT `fk_rep_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sales_reps
@@ -10729,7 +10729,7 @@ CREATE TABLE `sav_accounts`  (
   INDEX `ix_sav_accounts_product`(`product_id`) USING BTREE,
   INDEX `ix_sav_accounts_status`(`status`) USING BTREE,
   INDEX `ix_sav_accounts_branch`(`branch_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sav_accounts
@@ -10777,7 +10777,7 @@ CREATE TABLE `sav_batch_lines`  (
   `error_text` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_sav_batch_lines_batch`(`batch_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for sav_batches
@@ -10800,7 +10800,7 @@ CREATE TABLE `sav_batches`  (
   `posted_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_sav_batches_no`(`batch_no`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for sav_holds
@@ -10818,7 +10818,7 @@ CREATE TABLE `sav_holds`  (
   `released_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_sav_holds_account`(`account_id`, `released_at`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for sav_interest_lines
@@ -10838,7 +10838,7 @@ CREATE TABLE `sav_interest_lines`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_sav_interest_lines_run`(`run_id`) USING BTREE,
   INDEX `ix_sav_interest_lines_account`(`account_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sav_interest_lines
@@ -10876,7 +10876,7 @@ CREATE TABLE `sav_interest_runs`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_sav_interest_runs`(`product_id`, `period_to`, `status`) USING BTREE,
   INDEX `ix_sav_interest_runs_txn`(`txn_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sav_interest_runs
@@ -10899,7 +10899,7 @@ CREATE TABLE `sav_product_rates`  (
   `posting_method` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'quarterly',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_spr_product`(`product_id`, `effective_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sav_product_rates
@@ -10962,7 +10962,7 @@ CREATE TABLE `sav_products`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_sav_products_code`(`code`) USING BTREE,
   INDEX `ix_sav_products_type`(`product_type`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sav_products
@@ -10991,7 +10991,7 @@ CREATE TABLE `sav_txn_codes`  (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_sav_txn_codes_code`(`code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 28 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 28 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sav_txn_codes
@@ -11060,7 +11060,7 @@ CREATE TABLE `sav_txns`  (
   INDEX `ix_sav_txns_ref`(`ref_type`, `ref_id`) USING BTREE,
   INDEX `ix_sav_txns_shift`(`shift_id`) USING BTREE,
   INDEX `ix_sav_txns_clearing`(`is_cleared`, `clearing_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 222 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 222 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sav_txns
@@ -11297,7 +11297,7 @@ CREATE TABLE `sequences`  (
   `next_no` int(10) UNSIGNED NOT NULL DEFAULT 1,
   `pad` tinyint(4) NOT NULL DEFAULT 5,
   PRIMARY KEY (`seq_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sequences
@@ -11354,7 +11354,7 @@ CREATE TABLE `settings`  (
   `setting_value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`setting_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of settings
@@ -11472,7 +11472,7 @@ CREATE TABLE `setup_tutorial_progress`  (
   `first_seen_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`operator_id`, `requirement_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for sites
@@ -11487,7 +11487,7 @@ CREATE TABLE `sites`  (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_sites_code`(`code`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of sites
@@ -11514,7 +11514,7 @@ CREATE TABLE `syssequence`  (
   `SeqStatus` varchar(2) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'A' COMMENT 'A-Active or I-Inactive',
   PRIMARY KEY (`pkey`) USING BTREE,
   UNIQUE INDEX `SeqName_UNIQUE`(`SeqName`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'This table holds the sequence numbering for transaction and records' ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'This table holds the sequence numbering for transaction and records';
 
 -- ----------------------------
 -- Records of syssequence
@@ -11539,7 +11539,7 @@ CREATE TABLE `tax_codes`  (
   INDEX `fk_tax_purch`(`purchase_account_id`) USING BTREE,
   CONSTRAINT `fk_tax_sales` FOREIGN KEY (`sales_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_tax_purch` FOREIGN KEY (`purchase_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of tax_codes
@@ -11564,7 +11564,7 @@ CREATE TABLE `td_accruals`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_td_accruals`(`placement_id`, `period_to`) USING BTREE,
   INDEX `ix_td_accruals_txn`(`txn_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for td_placements
@@ -11605,7 +11605,7 @@ CREATE TABLE `td_placements`  (
   UNIQUE INDEX `uq_td_certificate`(`certificate_no`) USING BTREE,
   INDEX `ix_td_account`(`account_id`) USING BTREE,
   INDEX `ix_td_status`(`status`, `maturity_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of td_placements
@@ -11639,7 +11639,7 @@ CREATE TABLE `teller_shifts`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_teller_shifts_user`(`user_id`, `status`) USING BTREE,
   INDEX `ix_teller_shifts_date`(`business_date`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of teller_shifts
@@ -11658,7 +11658,7 @@ CREATE TABLE `terms`  (
   `discount_days` int(11) NOT NULL DEFAULT 0,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of terms
@@ -11735,7 +11735,7 @@ CREATE TABLE `transaction_lines`  (
   CONSTRAINT `fk_tl_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_tl_cust` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_tl_uom` FOREIGN KEY (`uom_id`) REFERENCES `uom_units` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 825 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 825 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of transaction_lines
@@ -12655,7 +12655,7 @@ CREATE TABLE `transactions`  (
   CONSTRAINT `fk_txn_terms` FOREIGN KEY (`terms_id`) REFERENCES `terms` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_txn_rep` FOREIGN KEY (`sales_rep_id`) REFERENCES `sales_reps` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_txn_pm` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 407 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 407 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of transactions
@@ -13080,7 +13080,7 @@ CREATE TABLE `uom_sets`  (
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_uom_sets_name`(`name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of uom_sets
@@ -13108,7 +13108,7 @@ CREATE TABLE `uom_units`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uq_uom_units`(`set_id`, `code`) USING BTREE,
   CONSTRAINT `fk_uom_units_set` FOREIGN KEY (`set_id`) REFERENCES `uom_sets` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of uom_units
@@ -13150,7 +13150,7 @@ CREATE TABLE `user_page_overrides`  (
   INDEX `fk_upo_page`(`page_id`) USING BTREE,
   CONSTRAINT `fk_upo_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_upo_page` FOREIGN KEY (`page_id`) REFERENCES `pages` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of user_page_overrides
@@ -13169,7 +13169,7 @@ CREATE TABLE `user_roles`  (
   INDEX `fk_ur_role`(`role_id`) USING BTREE,
   CONSTRAINT `fk_ur_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_ur_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of user_roles
@@ -13204,7 +13204,7 @@ CREATE TABLE `user_sites`  (
   INDEX `fk_us_site`(`site_id`) USING BTREE,
   CONSTRAINT `fk_us_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_us_site` FOREIGN KEY (`site_id`) REFERENCES `sites` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of user_sites
@@ -13223,7 +13223,7 @@ CREATE TABLE `user_terminals`  (
   INDEX `fk_ut_term`(`terminal_id`) USING BTREE,
   CONSTRAINT `fk_ut_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_ut_term` FOREIGN KEY (`terminal_id`) REFERENCES `pos_terminals` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of user_terminals
@@ -13266,7 +13266,7 @@ CREATE TABLE `users`  (
   INDEX `ix_users_approval`(`approval_status`) USING BTREE,
   INDEX `ix_users_pos_site`(`pos_default_site_id`) USING BTREE,
   INDEX `ix_users_pos_class`(`pos_default_class_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 19 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of users
@@ -13324,7 +13324,7 @@ CREATE TABLE `vendors`  (
   CONSTRAINT `fk_vend_terms` FOREIGN KEY (`terms_id`) REFERENCES `terms` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_vend_exp` FOREIGN KEY (`default_expense_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_vend_tax` FOREIGN KEY (`tax_code_id`) REFERENCES `tax_codes` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of vendors
@@ -13394,7 +13394,7 @@ CREATE TABLE `water_accounts`  (
   INDEX `ix_water_accounts_customer`(`customer_id`) USING BTREE,
   CONSTRAINT `fk_members_pipe_size` FOREIGN KEY (`pipe_size_id`) REFERENCES `water_pipe_sizes` (`pipe_size_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_members_rate_code` FOREIGN KEY (`rc_id`) REFERENCES `rate_code` (`rc_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'This table hold information of members.' ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = 'This table hold information of members.';
 
 -- ----------------------------
 -- Records of water_accounts
@@ -13448,7 +13448,7 @@ CREATE TABLE `water_audit_logs`  (
   PRIMARY KEY (`log_id`) USING BTREE,
   INDEX `idx_audit_user`(`user_id`) USING BTREE,
   INDEX `idx_audit_action`(`action`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 228 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 228 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of water_audit_logs
@@ -13692,7 +13692,7 @@ CREATE TABLE `water_billing_settings`  (
   `created_at` datetime NOT NULL,
   `updated_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`setting_key`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of water_billing_settings
@@ -13732,7 +13732,7 @@ CREATE TABLE `water_coa_map`  (
   `note` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`legacy_accnt_id`) USING BTREE,
   INDEX `ix_water_coa_map_account`(`account_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for water_meter_discounted_members
@@ -13750,7 +13750,7 @@ CREATE TABLE `water_meter_discounted_members`  (
   INDEX `fk_wmdm_discount`(`wmdiscount_id`) USING BTREE,
   CONSTRAINT `fk_wmdm_discount` FOREIGN KEY (`wmdiscount_id`) REFERENCES `water_meter_discounts` (`wmdiscount_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_wmdm_member` FOREIGN KEY (`member_id`) REFERENCES `water_accounts` (`pkey`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for water_meter_discounts
@@ -13768,7 +13768,7 @@ CREATE TABLE `water_meter_discounts`  (
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`wmdiscount_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of water_meter_discounts
@@ -13797,7 +13797,7 @@ CREATE TABLE `water_meter_members`  (
   INDEX `idx_wmm_rc_pipe_range`(`rc_id`, `pipe_size_id`, `from_cb`, `to_cb`) USING BTREE,
   INDEX `fk_wmm_pipe_size`(`pipe_size_id`) USING BTREE,
   CONSTRAINT `fk_wmm_pipe_size` FOREIGN KEY (`pipe_size_id`) REFERENCES `water_pipe_sizes` (`pipe_size_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 69 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 69 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of water_meter_members
@@ -13873,7 +13873,7 @@ CREATE TABLE `water_migration_log`  (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `ix_water_migration_log_run`(`run_id`, `phase`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for water_pipe_sizes
@@ -13892,7 +13892,7 @@ CREATE TABLE `water_pipe_sizes`  (
   UNIQUE INDEX `uq_water_pipe_size_code`(`size_code`) USING BTREE,
   UNIQUE INDEX `uq_water_pipe_size_label`(`size_label`) USING BTREE,
   INDEX `idx_water_pipe_size_active_diameter`(`is_active`, `diameter_inches`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of water_pipe_sizes
@@ -13936,7 +13936,7 @@ CREATE TABLE `water_postings`  (
   INDEX `ix_water_postings_txn`(`txn_id`) USING BTREE,
   INDEX `ix_water_postings_account`(`water_account_id`) USING BTREE,
   INDEX `ix_water_postings_party`(`party_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 154 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 154 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of water_postings
@@ -14117,7 +14117,7 @@ CREATE TABLE `water_rates`  (
   PRIMARY KEY (`rate_id`) USING BTREE,
   INDEX `fk_wr_discount`(`discount_id`) USING BTREE,
   CONSTRAINT `fk_wr_discount` FOREIGN KEY (`discount_id`) REFERENCES `discounts` (`discount_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- ----------------------------
 -- Table structure for water_user_map
@@ -14129,7 +14129,7 @@ CREATE TABLE `water_user_map`  (
   `user_id` int(10) UNSIGNED NULL DEFAULT NULL,
   `note` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`legacy_operator_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for withholding_taxes
@@ -14157,7 +14157,7 @@ CREATE TABLE `withholding_taxes`  (
   INDEX `fk_wht_receivable`(`receivable_account_id`) USING BTREE,
   CONSTRAINT `fk_wht_payable` FOREIGN KEY (`payable_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_wht_receivable` FOREIGN KEY (`receivable_account_id`) REFERENCES `accounts` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of withholding_taxes
