@@ -18,12 +18,19 @@ declare(strict_types=1);
  *   - the complete structure: every table with its columns, keys, indexes and foreign keys, exactly as the
  *     template has them today (SHOW CREATE TABLE), with the counters starting from 1;
  *   - the audit trail protection triggers (database/triggers.sql);
- *   - the set-up lists in COPY (chart of accounts, module default accounts, tax codes, the withholding tax table,
- *     terms, payment methods, price levels, units of measure, item and customer types, fixed asset categories, the roles with their
- *     page access and special permissions, the pages and modules, the numbering, and the settings);
+ *   - the water module's two compatibility views (chartofaccntstbl, operator), from their definition in the water
+ *     migration (WaterSchema), since SHOW CREATE TABLE copies tables only;
+ *   - the set-up lists in COPY (chart of accounts and its account types, module default accounts, tax codes, the
+ *     withholding tax table, terms, payment methods, price levels, units of measure, item and customer types, fixed
+ *     asset categories, the roles with their page access and special permissions, the pages and modules, the
+ *     numbering, the settings, the business units, the cooperative's lists and the water billing set-up);
+ *   - the water module's institution profile with the new company's name, address, phone, e-mail and TIN;
  *   - one inventory site, "Main".
- * Nothing else: no customers, suppliers, items, employees or users, no transactions, balances, journals,
- * payments, budgets, audit trail or history. Its only user is the Company Owner created with it.
+ * Nothing else: no customers, suppliers, items, members, employees or users, no products, classes, transactions,
+ * balances, journals, payments, budgets, audit trail or history. Its only user is the Company Owner created with it.
+ *
+ * The template has to be at the program's version (Schema::pendingOn): create() and retry() refuse an out-of-date
+ * template before anything is made, so a failed check of the new database always means the copy itself is incomplete.
  */
 final class Provision
 {
@@ -49,11 +56,83 @@ final class Provision
         'uom_units'                => 'Units of measure (units)',
         'asset_categories'         => 'Fixed asset categories and their accounts',
         'withholding_taxes'        => 'Withholding Tax Table (BIR Reports)',
+        'account_types'            => 'Account types of the chart of accounts',
+        'business_units'           => 'Business units, the Water Utility among them (no usual site, since the template\'s sites are not copied)',
+        'member_types'             => 'Member types',
+        'coop_lists'               => 'Cooperative lists (ID types, documents, loan purposes, collateral types, account classes)',
+        'sav_txn_codes'            => 'Savings transaction codes',
+        'passbook_types'           => 'Passbook types and their designs',
+        'cda_report_mappings'      => 'CDA report lines',
+        'cda_calendar'             => 'CDA reporting calendar',
+        'addresstype'              => 'Address types',
+        'contactchannels'          => 'Contact channels',
+        'cities'                   => 'Cities',
+        'branches'                 => 'Water organization units: branches (no class, since classes are not copied)',
+        'ic_divisions'             => 'Water organization units: divisions',
+        'ic_segments'              => 'Water organization units: segments',
+        'water_billing_settings'   => 'Water billing settings (accounts, penalty, collection rules)',
+        'bill_codes'               => 'Bill codes (an Inventory bill code without its item, since items are not copied: link it again on Bill Codes)',
+        'water_pipe_sizes'         => 'Water pipe sizes',
+        'rate_code'                => 'Water rate codes',
+        'water_meter_members'      => 'Water rates (the tariff lines of each rate code and pipe size)',
+        'water_meter_discounts'    => 'Water meter discounts',
+        'discounts'                => 'Discounts (senior citizen, employees ...)',
+        'discount_privilege_rules' => 'Discount privileges by bill code',
+        'recurring_plans'          => 'Recurring billing plans',
+        'data_import_mapping_profiles' => 'Data Import Management profiles',
+        'data_import_mapping_rules'    => 'Data Import Management rules',
+    ];
+
+    /** COPY by subject, for the New company page (a table missing here is shown under "Other") */
+    private const COPY_GROUPS = [
+        'Company and access'  => ['settings', 'modules', 'pages', 'roles', 'role_page_access', 'role_special_permissions', 'sequences'],
+        'Accounting'          => ['accounts', 'account_types', 'default_accounts', 'terms', 'tax_codes', 'payment_methods', 'withholding_taxes',
+                                  'asset_categories', 'business_units'],
+        'Sales and inventory' => ['price_levels', 'customer_types', 'billing_groups', 'item_categories', 'uom_sets', 'uom_units'],
+        'Cooperative'         => ['member_types', 'coop_lists', 'sav_txn_codes', 'passbook_types', 'cda_report_mappings', 'cda_calendar',
+                                  'addresstype', 'contactchannels', 'cities'],
+        'Water billing'       => ['water_billing_settings', 'branches', 'ic_divisions', 'ic_segments', 'bill_codes', 'water_pipe_sizes', 'rate_code',
+                                  'water_meter_members', 'water_meter_discounts', 'discounts', 'discount_privilege_rules', 'recurring_plans',
+                                  'data_import_mapping_profiles', 'data_import_mapping_rules'],
+    ];
+
+    /** @return array<string, string[]> group => the descriptions of its copied set-up lists */
+    public static function copyGroups(): array
+    {
+        $out = [];
+        $seen = [];
+        foreach (self::COPY_GROUPS as $group => $tables) {
+            foreach ($tables as $t) {
+                if (isset(self::COPY[$t])) {
+                    $out[$group][] = self::COPY[$t];
+                    $seen[$t] = true;
+                }
+            }
+        }
+        foreach (self::COPY as $t => $what) {
+            if (!isset($seen[$t])) {
+                $out['Other'][] = $what;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * What the copy cannot keep: links to the template's sites, classes and items, which are not copied.
+     * table => [column, ...] set to NULL on the copy (only where the column exists).
+     */
+    private const UNLINK = [
+        'business_units' => ['default_site_id'],
+        'branches'       => ['class_id'],
+        'bill_codes'     => ['item_id'],
     ];
 
     /** settings that describe the template company itself, replaced or cleared on the copy */
     private const COMPANY_SETTINGS = ['company_name', 'company_address', 'company_tin', 'company_phone', 'company_email', 'company_logo', 'closing_date',
-        'bir_zip_code', 'bir_signatory_name', 'bir_signatory_title', 'bir_signatory_tin'];
+        'bir_zip_code', 'bir_signatory_name', 'bir_signatory_title', 'bir_signatory_tin',
+        // the cooperative's registered name (printed instead of the company name when set), its CDA number and signatories
+        'coop_registered_name', 'coop_cda_reg_no', 'coop_signatory_chair', 'coop_signatory_gm', 'coop_signatory_treasurer',
+        'coop_signatory_bookkeeper', 'coop_signatory_loans'];
 
     // ================================================================== Company 1
 
@@ -149,6 +228,7 @@ final class Provision
         if (!$template || $template['status'] !== 'active' || (string)$template['db_name'] === '') {
             fail('Choose an active company to copy the set-up from.');
         }
+        self::checkTemplate($template);
         if ($m->value('SELECT id FROM companies WHERE name = :n', ['n' => $data['name']])) {
             fail('There is already a company named ' . $data['name'] . '.');
         }
@@ -179,6 +259,7 @@ final class Provision
         if (!$template || $template['status'] !== 'active') {
             fail('The company its set-up was copied from is not active any more.');
         }
+        self::checkTemplate($template);
         if ($owner) {
             self::checkOwner($owner, Sql::to((string)$template['db_name']));
         }
@@ -210,6 +291,23 @@ final class Provision
         });
         Master::forget($companyId);
         Master::log('company_deleted', $companyId, 'Failed company record deleted: ' . $c['name']);
+    }
+
+    /**
+     * Refuses a template that still needs a program update, before anything is made: its copy would not match the
+     * program, and the check of the new database would fail at the end.
+     */
+    private static function checkTemplate(array $template): void
+    {
+        try {
+            $pending = Schema::pendingOn(Sql::to((string)$template['db_name']));
+        } catch (PDOException $e) {
+            fail('The database of ' . $template['name'] . ' cannot be read: ' . $e->getMessage());
+        }
+        if ($pending) {
+            fail($template['name'] . ' needs a database update first (Database updates): ' . implode(', ', array_map('basename', $pending))
+                . '. A company copied from it would not match the program.');
+        }
     }
 
     /** Checks an owner account before anything is created */
@@ -298,8 +396,27 @@ final class Provision
             $new->exec('UPDATE sequences SET next_no = 1');
             $new->exec('UPDATE accounts SET bank_account_no = NULL');
             $new->exec('UPDATE roles SET all_sites = 1');
+            foreach (self::UNLINK as $t => $cols) {
+                foreach ($cols as $col) {
+                    if (in_array($t, $tables, true) && (int)$new->value('SELECT COUNT(*) FROM information_schema.columns
+                            WHERE table_schema = DATABASE() AND table_name = :t AND column_name = :c', ['t' => $t, 'c' => $col])) {
+                        $new->exec("UPDATE `$t` SET `$col` = NULL");
+                    }
+                }
+            }
             if (!(int)$new->value('SELECT COUNT(*) FROM sites')) {
                 $new->insert('sites', ['code' => 'MAIN', 'name' => 'Main', 'site_type' => 'warehouse', 'is_active' => 1]);
+            }
+            // the water module's institution (its bills and statements are headed with it): the new company itself
+            if (in_array('bussinessprofile', $tables, true)) {
+                $new->insert('bussinessprofile', [
+                    'pkey' => 1, 'name' => mb_substr((string)$c['name'], 0, 200), 'description' => '',
+                    'address1' => mb_substr(trim(str_replace(["\r\n", "\n"], ', ', (string)$c['address'])), 0, 200), 'address2' => '',
+                    'telephoneNo' => mb_substr((string)$c['phone'], 0, 20), 'tinNo' => mb_substr((string)$c['tin'], 0, 45),
+                    'email' => mb_substr((string)$c['email'], 0, 100), 'IsBranch' => 0, 'parentBusProfID' => 0,
+                    'dateCreated' => date('Y-m-d H:i:s'), 'createdBy' => 'platform', 'isdeleted' => 0,
+                ]);
+                $copied[] = 'water institution profile ' . $c['name'];
             }
             $log($step, true, implode(', ', $copied) . '; site MAIN added');
 
@@ -309,7 +426,17 @@ final class Provision
             $log($step, $triggerProblem === '', $triggerProblem === '' ? 'Audit trail protection in place'
                 : 'Not in place (the company works; the audit trail can then be changed directly in the database): ' . $triggerProblem);
 
-            // 6. the Company Owner
+            // 6. the water module's compatibility views (tables only were copied above)
+            if (in_array('water_accounts', $tables, true)) {
+                $step = 'views';
+                if (($viewProblem = WaterSchema::ensureViews($new->pdo)) !== '') {
+                    throw new RuntimeException('The water module\'s views ' . implode(' and ', WaterSchema::VIEWS) . ' could not be made: ' . $viewProblem
+                        . ' (the database user needs the CREATE VIEW right).');
+                }
+                $log($step, true, 'Views ' . implode(', ', WaterSchema::VIEWS) . ' made');
+            }
+
+            // 7. the Company Owner
             $step = 'owner_account';
             $ownerId = null;
             if ($owner) {
@@ -319,7 +446,7 @@ final class Provision
                 $log($step, true, 'No owner yet: the Super Admin assigns one later');
             }
 
-            // 7. check the result before anyone can use it
+            // 8. check the result before anyone can use it
             $step = 'verify';
             $newTables = (int)$new->value("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'");
             if ($newTables !== count($tables)) {
@@ -327,7 +454,7 @@ final class Provision
             }
             if ($pending = Schema::pendingOn($new)) {
                 throw new RuntimeException('The new database does not match the program: ' . implode(', ', array_map('basename', $pending))
-                    . ' (bring the template company up to date first).');
+                    . ' (the copy of ' . $template['name'] . ' is incomplete).');
             }
             foreach (['transactions', 'journal_lines', 'customers', 'vendors', 'items', 'audit_trail'] as $t) {
                 if (in_array($t, $tables, true) && (int)$new->value("SELECT COUNT(*) FROM `$t`") > 0) {
@@ -339,7 +466,7 @@ final class Provision
                 'verified_at' => date('Y-m-d H:i:s')], 'company_id = :c', ['c' => $companyId]);
             $log($step, true, "$newTables tables, structure matches the program, no records copied beyond the set-up lists");
 
-            // 8. who belongs to it, its files, and the first line of its audit trail
+            // 9. who belongs to it, its files, and the first line of its audit trail
             $step = 'register';
             $m->update('companies', ['owner_user_id' => $ownerId], 'id = :id', ['id' => $companyId]);
             Membership::sync($companyId, $new);
@@ -352,7 +479,7 @@ final class Provision
             ]);
             $log($step, true, 'Company registered with its database, code and owner');
 
-            // 9. ready
+            // 10. ready
             $step = 'activate';
             $m->update('companies', ['status' => 'active', 'activated_at' => date('Y-m-d H:i:s'), 'last_error' => null, 'updated_at' => date('Y-m-d H:i:s')],
                 'id = :id', ['id' => $companyId]);
