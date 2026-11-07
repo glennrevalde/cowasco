@@ -15,6 +15,20 @@ the supplied databases), the row says so.
 | Data | the supplied former water database (Marigondon NHS and STEC-STHS Multipurpose Cooperative: 6,888 water accounts, 361 legacy members, 7,872 savings transactions) and the supplied cooperative sample database (`database/accounting_system.sql`) |
 | Date | 14 October 2026 |
 
+## Version 52 (7 November 2026): the request of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v18.xlsx
+
+Run on PHP 8.3.6, on MariaDB 10.11.14 and on MySQL 8.0.46 (its default settings). See
+`docs/ADDITIONAL_MODULE_V18_CHECKLIST.md`.
+
+| Suite | Command | Result | File |
+|---|---|---|---|
+| Cooperative module (bcmath, pure PHP) on MariaDB | `DB_NAME=coop_t52 php tests/coop/run.php` (and `--pure-php`) | **159 passed, 0 failed**, 2,429 checks on both engines; new: "Version 52: a member's price level on Customer Defaults decides the price of the items the member buys" (19 checks) | `tests/coop/RESULTS.md`, `tests/coop/RESULTS_pure_php.md` |
+| Cooperative module on MySQL 8 | the same with the MySQL 8 connection | **159 passed, 0 failed**, 2,429 checks on both engines | `tests/coop/RESULTS_MYSQL8.md`, `tests/coop/RESULTS_pure_php_MYSQL8.md` |
+| Water end to end over HTTP, MariaDB and MySQL 8 | `bash tests/water/run_e2e.sh mnssmc_test coop_e2e52 8097` (and on MySQL 8) | **418 passed, 0 failed** on both; new section v52: the Price level on the member's page with the cooperative's levels, the whole member form saved as a browser sends it, saved on the member's customer record and audited, the price an invoice asks for 15% off, shown chosen when opened again, cleared | `tests/water/RESULTS_E2E.md`, `tests/water/RESULTS_E2E_MYSQL8.md` |
+| A new company | `bash tests/platform/run.sh` | **46 passed, 0 failed** | — |
+| The member's tab and the POS in the browser | the sample database, 1366 and 390 px | Santos, Maria given "Members 10% off" on Customer Defaults and saved ("Member saved."), shown chosen again; at the POS with her as the customer: "Price level: Members 10% off", Laptop 14-inch 39,990.00 sold at 35,991.00 (a walk-in: 39,990.00); the field one per line on a phone; no console error, no sideways scrolling | — |
+| The pages around it | Playwright crawl of the 34 member, customer, POS and price pages at 1366 and 390 px | **34 of 34 at both widths** without a PHP or JavaScript error or sideways scrolling | — |
+
 ## Version 51 (7 November 2026): Billing List on MySQL 8
 
 Run on PHP 8.3.6, on MariaDB 10.11.14 and on **MySQL 8.0.46** (Ubuntu's build, its default settings: sql_mode

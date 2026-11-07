@@ -1,11 +1,11 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-07 13:20:54 (12 s)
+- **Run:** 2026-11-07 15:28:13 (11.5 s)
 - **Server:** http://127.0.0.1:8099
 - **Database:** coop_e2e_m8 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Database server:** MySQL 8.0.46 (Ubuntu), default sql_mode (ONLY_FULL_GROUP_BY, STRICT_TRANS_TABLES, NO_ZERO_IN_DATE, NO_ZERO_DATE, ERROR_FOR_DIVISION_BY_ZERO, NO_ENGINE_SUBSTITUTION), innodb_strict_mode on
 - **Environment:** PHP 8.3.6, 8.0.46-0ubuntu0.24.04.4
-- **Result:** 411 passed, 0 failed, 411 checks
+- **Result:** 418 passed, 0 failed, 418 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -98,13 +98,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261107-132043-363B | COL-20261107-132043-363B | PASS |
+| payment number = official receipt number | COL-20261107-152802-967E | COL-20261107-152802-967E | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 229 | 229 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261107-132043-363B | COL-20261107-132043-363B | PASS |
+| retry of the same request returns the same receipt | COL-20261107-152802-967E | COL-20261107-152802-967E | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -408,7 +408,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok 7af0c B | E2E Purok 7af0c B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok 7c048 B | E2E Purok 7c048 B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -501,6 +501,18 @@
 | a date range with no bill: none listed, no error | yes | yes | PASS |
 | a date range around every bill: all listed | yes | yes | PASS |
 | a "date" that is not one is ignored, not an error | yes | yes | PASS |
+
+## v52 Price level on the member's Customer Defaults (Member Center)
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| the member's Customer Defaults tab has a Price level with the cooperative's levels | yes | yes | PASS |
+| ...in the form the member is saved with | yes | yes | PASS |
+| saved from the member form on the member's own customer record | 11 | 11 | PASS |
+| ...with a line in the audit trail | yes | yes | PASS |
+| an invoice, sales receipt or order for the member asks for the price at the member's level (15% off) | 33991.50 | 33991.50 | PASS |
+| opened again: the level is shown chosen | yes | yes | PASS |
+| cleared from the form: the member pays the members' level of the line of business, else the standard price | yes | yes | PASS |
 
 ## 7.4c Period close
 

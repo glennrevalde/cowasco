@@ -419,3 +419,11 @@ compared with the bill date as `(?='' OR bill_date>=?)`, which MySQL 8 refuses (
 or invalid date filter is now bound as NULL (`? IS NULL OR ...`). The suites were run on MySQL 8.0.46 with its default
 settings as well as on MariaDB: the cooperative tests, the water end-to-end tests and a crawl of every page; a new
 test scans every file for a date compared with a filter that can be empty. No migration (`UPGRADE_v51.txt`).
+
+## 28. Version 52: the request of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v18.xlsx
+
+One request: a **Price level** on the member's **Customer Defaults** (Member Center), to decide what the member pays
+for the items. It is kept on the member's own customer record (`customers.price_level_id`, `app/MemberDefaults.php`,
+`modules/coop/member.php`), so invoices, sales receipts, sales orders, estimates, statement charges, batch invoices and
+the POS price the member's items by it, before the members' level of the line of business; water bills keep the price
+of their bill codes. See `docs/ADDITIONAL_MODULE_V18_CHECKLIST.md`. No migration (`UPGRADE_v52.txt`).

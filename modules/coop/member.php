@@ -773,7 +773,7 @@ if ($tab === 'profile'):
   ?>
   <div class="<?= $pane('customer') ?>" id="tCustomer">
     <input type="hidden" name="customer_defaults_sent" value="1" <?= $dis($cEdit) ?>>
-    <p class="small text-muted mb-2">Used when the member buys from the cooperative (invoices, sales receipts, the POS, statements). The member is the customer: no separate customer record is filled in.<?= $custRow ? ' Customer record: ' . (Access::page('cust.center') ? '<a href="' . h(url('cust.center', ['id' => $custRow['id']])) . '">' . h($custRow['name']) . '</a>' : h($custRow['name'])) . '.' : '' ?></p>
+    <p class="small text-muted mb-2">Used when the member buys from the cooperative (invoices, sales receipts, the POS, statements). The price level sets the member's prices of the items. The member is the customer: no separate customer record is filled in.<?= $custRow ? ' Customer record: ' . (Access::page('cust.center') ? '<a href="' . h(url('cust.center', ['id' => $custRow['id']])) . '">' . h($custRow['name']) . '</a>' : h($custRow['name'])) . '.' : '' ?></p>
     <fieldset <?= $dis($cEdit) ?>><div class="row g-2">
       <?= select_field('cust_terms_id', 'Payment terms', Lookup::terms(), fv('cust_terms_id', $cRec), ['class' => 'col-md-4', 'blank' => '']) ?>
       <?= input_field('cust_credit_limit', 'Credit limit (0 = none)', fv('cust_credit_limit', $cRec, '0'), ['class' => 'col-6 col-md-4', 'type' => 'number', 'extra' => 'min="0"']) ?>
@@ -791,6 +791,7 @@ if ($tab === 'profile'):
       ?>
       <?= multi_check_field('cust_wht_ids', 'Taxes this customer withholds', $whtOpts, $whtVals, ['all' => 'None withheld', 'noun' => 'taxes', 'class' => 'col-md-4', 'id' => 'mCustWht']) ?>
       <?php endif; ?>
+      <?= select_field('cust_price_level_id', 'Price level', MemberDefaults::priceLevelOptions(isset($custRow['price_level_id']) ? (int)$custRow['price_level_id'] : null), fv('cust_price_level_id', $cRec), ['class' => 'col-md-4', 'blank' => MemberDefaults::memberPriceLabel()]) ?>
       <?php if ($m && !Access::can('cust.center', 'approve') && !Access::isAdmin()): ?>
         <?= input_field('cust_change_reason', 'Reason for a credit limit change', fv('cust_change_reason'), ['class' => 'col-md-8']) ?>
       <?php endif; ?>
