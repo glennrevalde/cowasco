@@ -427,3 +427,26 @@ for the items. It is kept on the member's own customer record (`customers.price_
 `modules/coop/member.php`), so invoices, sales receipts, sales orders, estimates, statement charges, batch invoices and
 the POS price the member's items by it, before the members' level of the line of business; water bills keep the price
 of their bill codes. See `docs/ADDITIONAL_MODULE_V18_CHECKLIST.md`. No migration (`UPGRADE_v52.txt`).
+
+## 29. Version 53: the accounting update (G-SMaRT Accounting versions 26 to 34)
+
+The accounting side of the program brought up to G-SMaRT Accounting version 34: Ending Inventory - POS Cashier and the
+date-and-time filters of the inventory movement reports (v26); item groups with a group price, a price variance account
+and their own sales reports (v27); the card and e-wallet balances of Make Deposits with their details (v28); Sort by,
+the comparative statements and the Report Center search (v29); the order of a day's stock and the Inventory Center
+history (v30); the average cost on the books (v31); receipts ticked to settle and the menu name Financial (v32); Trial
+Balance by Class and Statement of Cash Flows by Class (v33); journal entries to Undeposited Funds on Make Deposits (v34).
+
+How it was merged: each accounting change was taken against the cooperative source the program grew from (accounting
+version 25 plus the cooperative versions 26 and 27), hunk by hunk; an accounting hunk that would have removed a
+cooperative change (lines of business, parties and the printed counterparty, locked posted documents, the
+cooperative transaction types, the member and line-of-business price levels, the Excel export) was left out, and the
+result was merged three ways into version 52. Where both sides changed the same thing they were joined: the cash flow
+statements by class follow the program's account types (Financial > Account Types) and the inter-unit elimination;
+the Trial Balance by Class's Total columns and the comparative income statements eliminate as the plain statements do;
+the water collection report keeps its date-time boxes beside the accounting reports' time boxes; the Inventory Center
+keeps the average after each line worked out in date order (now in the new day order); an item group's price follows
+the member's price level; the no-cost check leaves out the documents the water module posts from its own records. The
+accounting's six migrations are one script, `database/migrations/2027_04_04_accounting_update.sql` (safe to run
+again, MySQL 5.5), registered in the update check and the installer; the two bundled databases were upgraded with it
+and written again. The accounting's own upgrade notes are in `docs/accounting/`. See `UPGRADE_v53.txt`.

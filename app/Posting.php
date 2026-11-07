@@ -48,7 +48,9 @@ final class Posting
 
             if ($posts) {
                 $engine = new self($t);
+                Stock::$settlements = [];
                 $engine->build();
+                $engine->settled();
                 $engine->write();
                 if ($watch) {
                     self::stockAfter($watch);
@@ -567,16 +569,42 @@ final class Posting
         if (!$from || !$to || $from === $to) {
             fail('Choose two different sites for the transfer.');
         }
-        foreach ($this->lines() as $l) {
-            if (!Stock::isTracked($l['item_type']) || abs((float)$l['qty']) <= 0) {
-                continue;
+        // v31: stock moved between sites is not a new receipt: an item below zero at all sites keeps its shortfall
+        Stock::$settleShortfall = false;
+        try {
+            foreach ($this->lines() as $l) {
+                if (!Stock::isTracked($l['item_type']) || abs((float)$l['qty']) <= 0) {
+                    continue;
+                }
+                $q = abs((float)$l['qty']);
+                $value = Stock::move((int)$this->t['id'], (int)$l['id'], $this->t['txn_date'], (int)$l['item_id'], $from, -$q);
+                Stock::move((int)$this->t['id'], (int)$l['id'], $this->t['txn_date'], (int)$l['item_id'], $to, $q, null, 0.0, -$value);
+                $this->setLineCost((int)$l['id'], -$value);
             }
-            $q = abs((float)$l['qty']);
-            $value = Stock::move((int)$this->t['id'], (int)$l['id'], $this->t['txn_date'], (int)$l['item_id'], $from, -$q);
-            Stock::move((int)$this->t['id'], (int)$l['id'], $this->t['txn_date'], (int)$l['item_id'], $to, $q, null, 0.0, -$value);
-            $this->setLineCost((int)$l['id'], -$value);
+        } finally {
+            Stock::$settleShortfall = true;
         }
         // same asset account on both sides: total inventory value does not change
+    }
+
+    /**
+     * v31: a receipt into stock that had been sold or used below zero settles that shortfall at the cost received
+     * (Stock::move). The difference between what the shortfall was costed at and what it really cost goes to cost of
+     * goods sold: Dr Cost of goods sold / Cr Inventory when it cost more (the other way round when less), so the
+     * average of what is left is the cost received and is not blown up by a few units carrying the whole difference.
+     */
+    private function settled(): void
+    {
+        foreach (Stock::$settlements as $s) {
+            $acc = DB::row('SELECT cogs_account_id, asset_account_id FROM items WHERE id = :i', ['i' => $s['item_id']]) ?: [];
+            $cogs = (int)(($acc['cogs_account_id'] ?? null) ?: Accts::get('cogs'));
+            $asset = (int)(($acc['asset_account_id'] ?? null) ?: Accts::get('inventory_asset'));
+            $meta = ['item_id' => $s['item_id'], 'site_id' => $s['site_id'], 'customer_id' => null,
+                'memo' => 'Stock sold below zero, settled at the cost received ' . ($this->t['txn_no'] ?? '')];
+            $this->add($cogs, (float)$s['amount'], $meta);
+            $this->add($asset, -(float)$s['amount'], $meta);
+        }
+        Stock::$settlements = [];
     }
 
     private function build_assembly(): void
@@ -678,6 +706,28 @@ final class Posting
         }
         $pool = r2($materials + $extra);
         $alloc = Processing::allocate($outputs, $pool, (string)($t['alloc_method'] ?: Processing::defaultMethod((string)$t['process_type'])));
+        // v29: an input with no unit cost, or a co-product / by-product received at no cost, is not posted
+        if (Settings::get('block_zero_cost_processing', '1') === '1') {
+            $noCost = [];
+            $codes = DB::pairs('SELECT l.id, i.code FROM transaction_lines l JOIN items i ON i.id = l.item_id WHERE l.txn_id = :t', ['t' => $t['id']]);
+            foreach ($lines as $l) {
+                if ($l['line_kind'] === 'input' && (float)DB::value('SELECT cost_amount FROM transaction_lines WHERE id = :id', ['id' => $l['id']]) <= 0.0) {
+                    $noCost['in'][] = $codes[$l['id']] ?? ($l['description'] ?: 'an input');
+                }
+            }
+            foreach ($outputs as $lineId => $o) {
+                if ($o['role'] !== 'scrap' && (float)($alloc['rows'][$lineId]['unit'] ?? 0) <= 0.0) {
+                    $noCost['out'][] = $codes[$lineId] ?? ($o['line']['description'] ?: 'an output');
+                }
+            }
+            if ($noCost) {
+                fail('The processing order cannot be posted with no unit cost: '
+                    . (!empty($noCost['in']) ? 'the input' . (count($noCost['in']) > 1 ? 's ' : ' ') . implode(', ', $noCost['in']) . ' ha' . (count($noCost['in']) > 1 ? 've' : 's') . ' no unit cost or average unit cost' : '')
+                    . (!empty($noCost['in']) && !empty($noCost['out']) ? ', and ' : '')
+                    . (!empty($noCost['out']) ? 'the output' . (count($noCost['out']) > 1 ? 's ' : ' ') . implode(', ', $noCost['out']) . ' would be received at no cost' : '')
+                    . '. Enter the unit cost of the inputs (Inventory > Item List) or receive them at their cost first, and give every co-product and by-product a share of the cost; or save the order as pending.');
+            }
+        }
         foreach ($outputs as $lineId => $o) {
             $l = $o['line'];
             $r = $alloc['rows'][$lineId];

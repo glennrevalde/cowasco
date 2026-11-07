@@ -198,6 +198,9 @@ final class ReportLayout
      * Returns ['options' => [...], 'order' => [key, ...], 'hidden' => [key, ...], 'hidden_explicit' => bool,
      *          'labels' => [key => heading], 'layout' => the saved row or null]
      */
+    /** Report key => options a report starts with until a layout is saved (Report::define 'layout_defaults') */
+    public static array $reportDefaults = [];
+
     public static function current(string $reportKey): array
     {
         $layout = null;
@@ -208,7 +211,7 @@ final class ReportLayout
             $layout = self::defaultFor($reportKey);
         }
         $c = $layout ? self::unpack($layout)
-            : ['options' => self::defaults(), 'order' => [], 'hidden' => [], 'labels' => [], 'hidden_explicit' => false];
+            : ['options' => array_merge(self::defaults(), array_intersect_key(self::$reportDefaults[$reportKey] ?? [], self::OPTIONS)), 'order' => [], 'hidden' => [], 'labels' => [], 'hidden_explicit' => false];
 
         // anything in the address wins, so a change can be seen before it is saved
         foreach (self::OPTIONS as $k => [$label, $kind]) {

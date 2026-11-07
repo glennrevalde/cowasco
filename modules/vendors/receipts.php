@@ -137,6 +137,84 @@ if ($a === 'update' && is_post()) {
     redirect(url($pageKey, ['status' => g('status')]));
 }
 
+// ------------------------------------------------------------------ Receipt List: every saved receipt, by date
+if ($a === 'list') {
+    $presets = ['' => 'Custom', 'today' => 'Today', 'this_week' => 'This week', 'this_month' => 'This month', 'last_month' => 'Last month',
+        'this_quarter' => 'This quarter', 'last_quarter' => 'Last quarter', 'this_year' => 'This fiscal year', 'last_year' => 'Last fiscal year', 'all' => 'All dates'];
+    $preset = isset($presets[(string)g('dates')]) ? (string)g('dates') : (g('from') || g('to') ? '' : 'this_month');
+    [$from, $to] = $preset !== '' ? Report::preset($preset) : [gdate('from', date('Y-m-01')), gdate('to', date('Y-m-t'))];
+    $basis = g('basis') === 'uploaded' ? 'uploaded' : 'receipt';
+    $st = g('status');
+    $vid = gint('vendor_id');
+    $q = trim((string)g('q'));
+    $dateCol = $basis === 'uploaded' ? 'DATE(r.uploaded_at)' : 'COALESCE(r.receipt_date, DATE(r.uploaded_at))';
+    $sql = "SELECT r.*, v.name AS vendor, u.username, CONCAT(a.code, ' - ', a.name) AS account
+              FROM receipt_documents r LEFT JOIN vendors v ON v.id = r.vendor_id LEFT JOIN users u ON u.id = r.uploaded_by LEFT JOIN accounts a ON a.id = r.account_id
+             WHERE $dateCol BETWEEN :f AND :t";
+    $params = ['f' => $from, 't' => $to];
+    if (in_array($st, ['for_review', 'matched', 'created', 'rejected'], true)) {
+        $sql .= ' AND r.status = :s';
+        $params['s'] = $st;
+    }
+    if ($vid) {
+        $sql .= ' AND r.vendor_id = :v';
+        $params['v'] = $vid;
+    }
+    if ($q !== '') {
+        $sql .= ' AND (r.original_name LIKE :q OR r.memo LIKE :q2 OR v.name LIKE :q3)';
+        $params += ['q' => "%$q%", 'q2' => "%$q%", 'q3' => "%$q%"];
+    }
+    $list = DB::all($sql . ' ORDER BY ' . $dateCol . ' DESC, r.id DESC LIMIT 1000', $params);
+    $statusNames = ['for_review' => 'For review', 'matched' => 'Matched', 'created' => 'Created', 'rejected' => 'Rejected'];
+    if (g('export') === 'csv' && Access::can($pageKey, 'print')) {
+        Audit::log('export', 'vend', 'list', null, 'Receipt List', ['page_key' => $pageKey]);
+        csv_download('receipt_list.csv', ['Receipt date', 'Uploaded', 'File', 'Source', 'Vendor', 'Amount', 'Account', 'Memo', 'Status', 'Transaction', 'Uploaded by'], array_map(fn($r) => [
+            $r['receipt_date'], $r['uploaded_at'], $r['original_name'], $r['source'], $r['vendor'], $r['amount'], $r['account'], $r['memo'],
+            $statusNames[$r['status']] ?? $r['status'], ($lt = $r['linked_txn_id'] ? Txn::load((int)$r['linked_txn_id']) : null) ? Txn::ref($lt) : '', $r['username'],
+        ], $list));
+    }
+    $total = array_sum(array_map(fn($r) => (float)$r['amount'], $list));
+    layout_start('Receipt List', ['actions' => btn_link(url($pageKey), 'Receipt Management', 'btn-outline-secondary', 'arrow-left')
+        . (Access::can($pageKey, 'print') ? ' ' . btn_link(current_url(['export' => 'csv']), 'Export', 'btn-outline-secondary', 'download') : '')]);
+    ?>
+    <form class="card card-body mb-3 filters" method="get">
+      <input type="hidden" name="p" value="<?= h($pageKey) ?>"><input type="hidden" name="a" value="list">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-auto"><label class="form-label">Dates</label><select class="form-select form-select-sm" name="dates" data-no-combo onchange="if(this.value){this.form.from.value='';this.form.to.value='';}this.form.submit()"><?= options($presets, $preset) ?></select></div>
+        <div class="col-6 col-md-auto"><label class="form-label">Date of</label><select class="form-select form-select-sm" name="basis" data-no-combo><?= options(['receipt' => 'The receipt', 'uploaded' => 'The upload'], $basis) ?></select></div>
+        <div class="col-6 col-md-auto"><label class="form-label">From</label><input class="form-control form-control-sm" type="date" name="from" value="<?= h($from) ?>" onchange="this.form.dates.value=''"></div>
+        <div class="col-6 col-md-auto"><label class="form-label">To</label><input class="form-control form-control-sm" type="date" name="to" value="<?= h($to) ?>" onchange="this.form.dates.value=''"></div>
+        <div class="col-6 col-md-auto"><label class="form-label">Status</label><select class="form-select form-select-sm" name="status" data-no-combo><?= options($statusNames, $st, 'All') ?></select></div>
+        <div class="col-6 col-md-auto"><label class="form-label">Vendor</label><select class="form-select form-select-sm" name="vendor_id" style="max-width:240px"><?= options(Lookup::vendors(), $vid, 'All') ?></select></div>
+        <div class="col-12 col-md-auto"><label class="form-label">Search</label><input class="form-control form-control-sm" name="q" value="<?= h($q) ?>" placeholder="File, vendor, memo"></div>
+        <div class="col-12 col-md-auto"><button class="btn btn-sm btn-primary">Refresh</button></div>
+      </div>
+    </form>
+    <div class="card"><div class="table-responsive"><table class="table table-sm table-hover mb-0 receipt-list">
+      <thead><tr><th>Date</th><th>Receipt</th><th>Vendor</th><th class="num">Amount</th><th>Account</th><th>Status</th><th>Transaction</th><th>Uploaded</th></tr></thead>
+      <tbody>
+      <?php if (!$list): ?><tr><td colspan="8" class="text-center text-muted py-3">No receipts in this period.</td></tr><?php endif; ?>
+      <?php foreach ($list as $r): ?>
+        <tr>
+          <td class="text-nowrap"><?= h(fdate($r['receipt_date'] ?: substr((string)$r['uploaded_at'], 0, 10))) ?></td>
+          <td><a href="<?= h(url($pageKey, ['a' => 'file', 'id' => $r['id']])) ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text"></i> <?= h(mb_strimwidth((string)$r['original_name'], 0, 48, '…')) ?></a>
+            <?php if ($r['memo']): ?><div class="small text-muted"><?= h(mb_strimwidth((string)$r['memo'], 0, 60, '…')) ?></div><?php endif; ?></td>
+          <td><?= h($r['vendor']) ?></td>
+          <td class="num"><?= $r['amount'] !== null ? money($r['amount']) : '' ?></td>
+          <td class="small"><?= h($r['account']) ?></td>
+          <td><?= h($statusNames[$r['status']] ?? $r['status']) ?><?= $r['status'] === 'for_review' ? ' <a class="small" href="' . h(url($pageKey, ['status' => 'for_review'])) . '">review</a>' : '' ?></td>
+          <td><?= $r['linked_txn_id'] ? Txn::link((int)$r['linked_txn_id']) : '' ?></td>
+          <td class="small text-muted text-nowrap"><?= h(fdatetime($r['uploaded_at'])) ?><br><?= h($r['source']) ?>, <?= h($r['username']) ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+      <?php if ($list): ?><tfoot><tr class="fw-semibold"><td colspan="3"><?= count($list) ?> receipt(s)</td><td class="num"><?= money($total) ?></td><td colspan="4"></td></tr></tfoot><?php endif; ?>
+    </table></div></div>
+    <?php
+    layout_end();
+    return;
+}
+
 $status = g('status', 'for_review');
 $docs = DB::all(
     'SELECT r.*, v.name AS vendor, u.username FROM receipt_documents r LEFT JOIN vendors v ON v.id = r.vendor_id LEFT JOIN users u ON u.id = r.uploaded_by'
@@ -145,7 +223,7 @@ $docs = DB::all(
 );
 $counts = DB::pairs('SELECT status, COUNT(*) FROM receipt_documents GROUP BY status');
 
-layout_start('Receipt Management');
+layout_start('Receipt Management', ['actions' => btn_link(url($pageKey, ['a' => 'list']), 'Receipt List', 'btn-outline-secondary', 'list-ul')]);
 ?>
 <?php if (Access::can($pageKey, 'create')): ?>
 <div class="card mb-3"><div class="card-body">

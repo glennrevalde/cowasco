@@ -93,6 +93,7 @@ function seed_master_data(): void
         ['4020', 'Delivery Income', 'Income', null, null],
         ['4050', 'Sales Returns and Allowances', 'Income', 'Debit', null],
         ['4060', 'Sales Discounts', 'Income', 'Debit', null],
+        ['4070', 'Item Group Price Variance', 'Income', null, null],
         ['4110', 'Reimbursable Expense Income', 'Income', null, null],
         ['4100', 'Finance Charge Income', 'Other Income', null, null],
         ['4200', 'Interest Income', 'Other Income', null, null],
@@ -137,6 +138,7 @@ function seed_master_data(): void
         'merchant_fees' => '6080', 'interest_income' => '4200', 'retained_earnings' => '3200', 'opening_equity' => '3900',
         'gain_loss_disposal' => '4300', 'processing_variance' => '5100', 'processing_absorbed' => '5200',
         'cvat_withheld' => '1315', 'wht_payable' => '2110', 'vat_withheld_payable' => '2115', 'vendor_advances' => '1410',
+        'group_price_variance' => '4070',
     ];
     foreach (Accts::KEYS as $key => [$label, $module]) {
         if ($module === 'coop') {
@@ -306,7 +308,7 @@ function seed_master_data(): void
         ],
         'Cashier' => [
             'desc' => 'POS sales, returns, and cash drops at the assigned terminal only.',
-            'pages' => ['home.dashboard' => '', 'pos.register' => 'CP', 'pos.shifts' => 'CP', 'pos.receipts' => 'CDP'],
+            'pages' => ['home.dashboard' => '', 'pos.register' => 'CP', 'pos.shifts' => 'CP', 'pos.receipts' => 'CDP', 'rpt.pos_ending_inventory' => 'P'],
             'special' => ['view_costs' => '0', 'max_discount_pct' => '5', 'max_price_override_pct' => '0', 'max_amount' => '0'],
             'sites' => ['ST1', 'ST2'],
         ],
@@ -478,7 +480,7 @@ function seed_master_data(): void
     $mk(['item_type' => 'discount', 'code' => 'DISC-AMT', 'name' => 'Fixed Discount', 'description' => 'Discount', 'sales_price' => 100,
         'income_account_id' => $acct['4060'], 'cat' => 'Charges']);
     $mk(['item_type' => 'subtotal', 'code' => 'SUBTOTAL', 'name' => 'Subtotal', 'description' => 'Subtotal', 'tax_code_id' => null]);
-    $mk(['item_type' => 'group', 'code' => 'GRP-WFH', 'name' => 'Work-from-Home Bundle', 'description' => 'Laptop + mouse + backpack', 'tax_code_id' => null, 'cat' => 'Bundles']);
+    $mk(['item_type' => 'group', 'code' => 'GRP-WFH', 'name' => 'Work-from-Home Bundle', 'description' => 'Laptop + mouse + backpack', 'tax_code_id' => null, 'cat' => 'Bundles', 'sales_price' => 40000]);
     foreach ([['LAP-001', 1], ['MOU-001', 1], ['BAG-001', 1]] as [$c, $q]) {
         DB::insert('item_components', ['parent_item_id' => $item['GRP-WFH'], 'component_item_id' => $item[$c], 'qty' => $q]);
     }

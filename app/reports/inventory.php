@@ -44,6 +44,8 @@ function inv_position(string $asof, ?int $siteId = null): array
 
 Report::define('qoh_by_site', [
     'filters' => array_merge(['asof', 'site', 'item'], INV_ITEM_FILTERS),
+    // leave out the items with nothing on hand at the sites shown (v29)
+    'checks' => ['exclude_zero' => 'Exclude zero qty'],
     'run' => function (array $f): array {
         // a site chosen: only its column (and its total)
         $sites = inv_sites($f['site_id'] ?: null);
@@ -74,10 +76,21 @@ Report::define('qoh_by_site', [
                 $r['total'] += $q;
                 $tot['s' . $sid] = ($tot['s' . $sid] ?? 0) + $q;
             }
+            if (($f['exclude_zero'] ?? '') === '1') {
+                $any = false;
+                foreach ($sites as $sid => $_) {
+                    $any = $any || abs((float)$r['s' . $sid]) >= 0.00001;
+                }
+                if (!$any) {
+                    // nothing on hand anywhere shown: it adds nothing to the totals either
+                    continue;
+                }
+            }
             $tot['total'] += $r['total'];
             $rows[] = $r;
         }
-        return ['columns' => $cols, 'rows' => $rows, 'totals' => $tot];
+        return ['columns' => $cols, 'rows' => $rows, 'totals' => $tot,
+            'notes' => ($f['exclude_zero'] ?? '') === '1' ? 'Items with no quantity on hand at the sites shown are left out.' : ''];
     },
 ]);
 
@@ -203,6 +216,9 @@ Report::define('inv_valuation_detail', [
             if (!$moves && abs((float)$open['q']) < 0.00001) {
                 continue;
             }
+            // v30: on one date, the stock received before the stock used or sold (as the Inventory Center and the rebuild)
+            $rk = Stock::dayRanks(array_column($moves, 'txn_id'));
+            usort($moves, fn($a, $b) => [$a['txn_date'], $rk[(int)$a['txn_id']] ?? 1, (int)$a['txn_id'], (int)$a['id']] <=> [$b['txn_date'], $rk[(int)$b['txn_id']] ?? 1, (int)$b['txn_id'], (int)$b['id']]);
             $q = (float)$open['q'];
             $v = (float)$open['v'];
             $rows[] = ['type' => $i['code'] . ' - ' . $i['name'], '_class' => 'group-row'];
@@ -225,6 +241,117 @@ Report::define('inv_valuation_detail', [
                 ['key' => 'onhand', 'label' => 'On hand', 'type' => 'qty'], ['key' => 'avg', 'label' => 'Avg cost', 'type' => 'money', 'sensitive' => 'cost'],
                 ['key' => 'assetval', 'label' => 'Asset value', 'type' => 'money', 'sensitive' => 'cost']],
             'rows' => $rows,
+        ];
+    },
+]);
+
+// ---------------------------------------------------------------------- v31: what moved the average cost
+
+/**
+ * Average Cost Changes (v31): every movement that changed an item's weighted average cost (all sites), in the order the
+ * costs were worked out, with the average before and after, the change and what caused it. Made to find the sudden
+ * jumps: a processing order or bill received while the item was below zero, a disassembly whose outputs carry a share of
+ * the cost far from their average, a back-dated entry, a value adjustment.
+ */
+Report::define('avg_cost_changes', [
+    'filters' => array_merge(['range', 'item'], INV_ITEM_FILTERS),
+    'default_dates' => 'this_month',
+    'sortable' => false,
+    'extra_filters' => [
+        'min_pct' => ['Change of at least', fn() => ['1' => '1%', '5' => '5%', '10' => '10%', '25' => '25%', '50' => '50%', '100' => '100%'], 'Any change'],
+    ],
+    'checks' => ['proc_only' => 'Processing, disassembly and builds only'],
+    'run' => function (array $f): array {
+        $min = ($f['min_pct'] ?? '') !== '' ? (float)$f['min_pct'] : 0.0;
+        $procTypes = [Processing::TXN_TYPE, 'build_assembly'];
+        $rows = [];
+        $count = 0;
+        $byCause = [];
+        foreach (inv_items($f['item_id'], $f) as $i) {
+            $moves = DB::all(
+                'SELECT m.*, t.txn_type, t.txn_no, s.code AS site FROM inventory_movements m JOIN transactions t ON t.id = m.txn_id JOIN sites s ON s.id = m.site_id
+                  WHERE m.item_id = :i AND m.txn_date <= :t ORDER BY m.id',
+                ['i' => $i['id'], 't' => $f['to']]
+            );
+            $q = 0.0;
+            $prevAvg = null;
+            $latest = '';
+            $out = [];
+            foreach ($moves as $m) {
+                $mq = (float)$m['qty'];
+                $before = $q;
+                $q += $mq;
+                $after = (float)$m['avg_after'];
+                $was = $prevAvg;
+                $prevAvg = $after;
+                $backdated = $latest !== '' && $m['txn_date'] < $latest;
+                $latest = max($latest, (string)$m['txn_date']);
+                if ($m['txn_date'] < $f['from'] || $was === null) {
+                    continue;
+                }
+                $change = round($after - $was, 4);
+                if (abs($change) < 0.00005) {
+                    continue;
+                }
+                $pct = $was > 0.00005 ? round($change / $was * 100, 2) : null;
+                if ($min > 0 && $pct !== null && abs($pct) < $min) {
+                    continue;
+                }
+                $isProc = in_array($m['txn_type'], $procTypes, true);
+                if (($f['proc_only'] ?? '') === '1' && !$isProc) {
+                    continue;
+                }
+                if (abs($mq) < 0.00005) {
+                    $cause = $m['txn_type'] === 'inventory_adjustment' ? 'Value adjustment' : 'Stock sold below zero, settled at the cost received';
+                } elseif ($mq > 0) {
+                    if ($before < -0.00005) {
+                        $cause = 'Received while ' . qty(-$before) . ' short (below zero); the shortfall was settled at this cost';
+                    } elseif ($m['txn_type'] === Processing::TXN_TYPE) {
+                        $cause = 'Processing output at its share of the cost';
+                    } elseif ($m['txn_type'] === 'build_assembly') {
+                        $cause = 'Built at the cost of its components';
+                    } else {
+                        $cause = 'Received at a cost different from the average';
+                    }
+                } else {
+                    $cause = $q < 0.00005 ? 'The last of the stock went out with the value left' : 'Taken out at a cost different from the average';
+                }
+                if ($backdated) {
+                    $cause = 'Entered after later-dated movements; ' . lcfirst($cause);
+                }
+                $byCause[$isProc ? 'proc' : 'other'] = ($byCause[$isProc ? 'proc' : 'other'] ?? 0) + 1;
+                $out[] = [
+                    'type' => Txn::label($m['txn_type']), 'date' => $m['txn_date'], 'num' => $m['txn_no'], 'site' => $m['site'],
+                    'qty' => $mq, 'unit' => abs($mq) >= 0.00005 ? (float)$m['unit_cost'] : '', 'before_qty' => round($before, 4),
+                    'avg_before' => $was, 'avg_after' => $after, 'change' => $change, 'pct' => $pct ?? '', 'cause' => $cause,
+                    '_links' => ['num' => Report::txnLink(['txn_id' => $m['txn_id'], 'txn_type' => $m['txn_type']])],
+                    '_class' => $pct !== null && abs($pct) >= 25 ? 'avg-jump' : '',
+                ];
+            }
+            if ($out) {
+                $rows[] = ['type' => $i['code'] . ' - ' . $i['name'], '_class' => 'group-row'];
+                array_push($rows, ...$out);
+                $rows[] = ['type' => 'Average now ' . $i['code'], 'avg_after' => (float)$i['avg_cost'], '_class' => 'subtotal-row'];
+                $count += count($out);
+            }
+        }
+        return [
+            'grouped' => true,
+            'columns' => [['key' => 'type', 'label' => 'Type'], ['key' => 'date', 'label' => 'Date', 'type' => 'date'], ['key' => 'num', 'label' => 'Num'],
+                ['key' => 'site', 'label' => 'Site'], ['key' => 'qty', 'label' => 'Qty', 'type' => 'qty'],
+                ['key' => 'unit', 'label' => 'Unit cost', 'type' => 'money', 'sensitive' => 'cost'],
+                ['key' => 'before_qty', 'label' => 'On hand before', 'type' => 'qty'],
+                ['key' => 'avg_before', 'label' => 'Avg before', 'type' => 'money', 'sensitive' => 'cost'],
+                ['key' => 'avg_after', 'label' => 'Avg after', 'type' => 'money', 'sensitive' => 'cost'],
+                ['key' => 'change', 'label' => 'Change', 'type' => 'money', 'sensitive' => 'cost'],
+                ['key' => 'pct', 'label' => 'Change %', 'type' => 'pct', 'sensitive' => 'cost'],
+                ['key' => 'cause', 'label' => 'What moved it']],
+            'rows' => $rows,
+            'notes' => $count . ' change' . ($count === 1 ? '' : 's') . ($byCause ? ' (' . (int)($byCause['proc'] ?? 0) . ' by processing orders, disassemblies and builds)' : '') . '. '
+                . 'The average cost of an item is its remaining value divided by its remaining quantity (all sites), worked out in the order the transactions were entered. '
+                . 'It moves when stock comes in at another cost: a bill, an item receipt, the outputs of a processing order or disassembly (each output takes its share of the cost of the inputs), a build. '
+                . 'Changes of 25% or more are shown in red. A back-dated entry is costed at the average of the day it was entered, not of its date: '
+                . 'run Utilities: Verify &amp; Rebuild Data (Rebuild data) to work every cost out again in date order.',
         ];
     },
 ]);
@@ -334,8 +461,11 @@ Report::define('stock_status_site', [
 
 Report::define('physical_worksheet', [
     'filters' => array_merge(['asof', 'site'], INV_ITEM_FILTERS, ['blind']),
+    // v33: items with no quantity on hand (at the site, as of the date) can be left off the sheet
+    'checks' => ['exclude_zero' => 'Exclude zero qty'],
     'run' => function (array $f): array {
         $blind = $f['blind'] === '1';
+        $noZero = ($f['exclude_zero'] ?? '') === '1';
         $asof = $f['asof'];
         $siteId = $f['site_id'] ? (int)$f['site_id'] : null;
         // the system quantity: on hand now for today (or later), or every movement up to and including an earlier day
@@ -345,6 +475,9 @@ Report::define('physical_worksheet', [
         foreach (inv_items(null, $f) as $i) {
             $id = (int)$i['id'];
             $sys = $past ? (float)($pos[$id]['qty'] ?? 0) : Stock::onHand($id, $siteId);
+            if ($noZero && abs($sys) < 0.00005) {
+                continue;
+            }
             $rows[] = ['item' => $i['code'], 'desc' => $i['name'], 'vendor' => $i['vendor'], 'unit' => $i['unit'],
                 'onhand' => $blind ? '' : $sys, 'count' => '', '_html' => ['count' => '<span style="display:inline-block;width:90px;border-bottom:1px solid #333">&nbsp;</span>'],
                 '_ref' => ['item' => $id]];
@@ -355,6 +488,7 @@ Report::define('physical_worksheet', [
             'rows' => $rows,
             'notes' => ($siteId ? 'Site: ' . h(DB::value('SELECT name FROM sites WHERE id = :id', ['id' => $siteId])) . '. ' : 'All sites. ')
                 . ($blind ? 'Blind count: system quantities are hidden.' : 'System quantities as of ' . h(fdate($asof)) . ($past ? ' (every movement up to the end of that day).' : '.'))
+                . ($noZero ? ' Items with no quantity on hand' . ($siteId ? ' at this site' : '') . ' are left out.' : '')
                 . ' Counted by: ____________ Date: ____________',
             'footer' => Access::can('inv.physical_count', 'create') ? '<a class="btn btn-sm btn-primary no-print" href="' . h(url('inv.physical_count', ['site_id' => $siteId])) . '">Enter counts</a>' : '',
         ];

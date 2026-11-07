@@ -18,6 +18,23 @@ function grid_row_buttons(bool $removable = true, string $removeHtml = ''): stri
         . ($removeHtml !== '' ? $removeHtml : ($removable ? '<button type="button" class="btn btn-sm btn-link text-danger p-0" data-remove-row title="Remove" aria-label="Remove the line"><i class="bi bi-x-lg"></i></button>' : '')) . '</td>';
 }
 
+/**
+ * The hidden fields that keep a line in its item group: on a group shown as one line, which group of the document it
+ * is and the ids of its saved lines; on a line of a group shown as the items in it, its group, price and role.
+ */
+function grid_group_fields(array $l, callable $n): string
+{
+    if (empty($l['group_ref'])) {
+        return '';
+    }
+    $f = fn(string $k, $v) => '<input type="hidden" name="' . $n($k) . '" value="' . h((string)$v) . '">';
+    if (!empty($l['_group']) || isset($l['group_line_ids'])) {
+        return $f('group_ref', $l['group_ref']) . $f('group_line_ids', $l['group_line_ids'] ?? '') . $f('group_src_ids', $l['group_src_ids'] ?? '');
+    }
+    return $f('group_ref', $l['group_ref']) . $f('group_item_id', $l['group_item_id'] ?? '') . $f('group_qty', $l['group_qty'] ?? '')
+        . $f('group_rate', $l['group_rate'] ?? '') . $f('group_role', $l['group_role'] ?? '');
+}
+
 function grid_item_options(array $items, $selected): string
 {
     $out = '<option value=""></option>';
@@ -68,6 +85,7 @@ function item_grid(array $lines, array $opt): string
         $html .= '<td class="col-item"><input type="hidden" name="' . $n('id') . '" value="' . h($l['id'] ?? '') . '">'
             . '<input type="hidden" name="' . $n('source_line_id') . '" value="' . h($l['source_line_id'] ?? '') . '">'
             . '<input type="hidden" name="' . $n('account_id') . '" value="' . h($l['account_id'] ?? '') . '">'
+            . grid_group_fields($l, $n)
             . '<select class="form-select form-select-sm" data-f="item_id" name="' . $n('item_id') . '">' . grid_item_options($items, $l['item_id'] ?? '') . '</select></td>';
         $html .= '<td class="col-desc"><input class="form-control form-control-sm" data-f="description" name="' . $n('description') . '" value="' . h($l['description'] ?? '') . '">'
             . ($isSub ? '<span class="small text-muted">Subtotal: <span data-subtotal></span></span>' : '<span data-subtotal class="d-none"></span>') . '</td>';

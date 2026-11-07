@@ -51,7 +51,7 @@ layout_start('Inventory Center', ['actions' => page_link('inv.items', ['a' => 'n
             <td><a href="<?= h(url($pageKey, ['id' => $r['id'], 'site_id' => $siteId])) ?>"><?= h($r['code']) ?></a><div class="small text-muted"><?= h($r['name']) ?></div></td>
             <td class="num <?= (float)$r['on_hand'] < 0 ? 'neg' : '' ?>"><?= qty($r['on_hand']) ?></td><td class="num"><?= qty($so) ?></td>
             <td class="num"><?= qty((float)$r['on_hand'] - $so) ?></td><td class="num"><?= qty($po) ?></td>
-            <td class="num"><?= $low ? '<span class="badge text-bg-warning">' . qty($r['reorder_point']) . '</span>' : qty($r['reorder_point']) ?></td></tr>
+            <td class="num"><?= $low ? '<span class="inv-low" title="At or below the reorder point">' . qty($r['reorder_point']) . '</span>' : qty($r['reorder_point']) ?></td></tr>
         <?php endforeach; ?>
         </tbody>
       </table><div class="p-3 small text-muted" id="itemNone">No item matches. Press Enter to search the server, or scan again.</div></div>
@@ -63,15 +63,29 @@ layout_start('Inventory Center', ['actions' => page_link('inv.items', ['a' => 'n
       $bySite = DB::all('SELECT s.name, s.id, COALESCE(x.qty_on_hand,0) AS qty FROM sites s LEFT JOIN item_site_stock x ON x.site_id = s.id AND x.item_id = :i WHERE s.is_active = 1' . ($siteId ? ' AND s.id = :sid' : '') . ' ORDER BY s.id', ['i' => $sel['id']] + ($siteId ? ['sid' => $siteId] : []));
       $onHandAll = Stock::onHand((int)$sel['id']);
       $onHand = $siteId ? Stock::onHand((int)$sel['id'], $siteId) : $onHandAll;
-      $moves = DB::all(
-          'SELECT m.*, t.txn_type, t.txn_no, t.id AS tid, s.name AS site FROM inventory_movements m JOIN transactions t ON t.id = m.txn_id JOIN sites s ON s.id = m.site_id
-            WHERE m.item_id = :i' . ($siteId ? ' AND m.site_id = :sid' : '') . ' ORDER BY m.txn_date DESC, m.id DESC LIMIT 100', ['i' => $sel['id']] + ($siteId ? ['sid' => $siteId] : []));
-      // the balances after each movement in the order of the transaction dates (a back-dated one in its place)
+      // v30: the history in the order things happened (by date; on one date the stock that came in before the stock
+      // that went out), with the balance after each line counted from the item's very first movement
+      $all = Stock::history((int)$sel['id'], $siteId);
+      $histTotal = count($all);
+      $histEnd = $all ? (float)end($all)['balance'] : 0.0;
+      $histOff = round($onHand - $histEnd, 4);
+      $hFrom = gdate('hfrom');
+      $hTo = gdate('hto');
+      $hShow = in_array(g('hist'), ['100', '500', 'all'], true) ? g('hist') : '100';
+      $window = array_values(array_filter($all, fn($m) => (!$hFrom || $m['txn_date'] >= $hFrom) && (!$hTo || $m['txn_date'] <= $hTo)));
+      if ($hShow !== 'all' && count($window) > (int)$hShow) {
+          $window = array_slice($window, -(int)$hShow);
+      }
+      // what the item held before the first line shown, and after the last one
+      $firstIdx = $window ? array_search($window[0]['id'], array_column($all, 'id'), true) : false;
+      $broughtForward = $firstIdx !== false && $firstIdx > 0 ? (float)$all[$firstIdx - 1]['balance'] : ($firstIdx === 0 ? 0.0 : null);
+      $hiddenBefore = $firstIdx !== false ? (int)$firstIdx : 0;
+      $moves = array_reverse($window);
+      // the average cost after each line, worked out in the same order (a back-dated movement in its place): the figure
+      // stored with a movement is the one of the moment it was recorded
       $afterOf = Stock::balancesAfter((int)$sel['id'], $siteId, (float)$sel['avg_cost']);
       foreach ($moves as &$mv) {
-          $a = $afterOf[(int)$mv['id']] ?? ['qty' => (float)$mv['qty_after'], 'avg' => (float)$mv['avg_after']];
-          $mv['qty_after'] = $a['qty'];
-          $mv['avg_after'] = $a['avg'];
+          $mv['avg_after'] = $afterOf[(int)$mv['id']]['avg'] ?? (float)$mv['avg_after'];
       }
       unset($mv);
       $openDocs = DB::all(
@@ -90,7 +104,7 @@ layout_start('Inventory Center', ['actions' => page_link('inv.items', ['a' => 'n
       </div>
       <div class="row small mt-2">
         <div class="col-sm-3">Sales price: <strong><?= money($sel['sales_price']) ?></strong></div>
-        <?php if ($viewCosts): ?><div class="col-sm-3">Average cost: <strong><?= money($sel['avg_cost']) ?></strong></div><div class="col-sm-3">Value<?= $siteId ? ' here' : '' ?>: <strong><?= money($onHand * (float)$sel['avg_cost']) ?></strong></div><?php endif; ?>
+        <?php if ($viewCosts): ?><div class="col-sm-3">Average cost: <strong><?= money($sel['avg_cost']) ?></strong></div><div class="col-sm-3">Value<?= $siteId ? ' here' : '' ?>: <strong><?= money($siteId ? $onHand * (float)$sel['avg_cost'] : Stock::valueOnHand((int)$sel['id'])) ?></strong></div><?php endif; ?>
         <div class="col-sm-3">Reorder point: <strong><?= qty($sel['reorder_point']) ?></strong><?= $sel['item_type'] === 'assembly' ? ', build point ' . qty($sel['build_point']) : '' ?></div>
         <div class="col-sm-3">On sales order: <strong><?= qty(Stock::onSalesOrder((int)$sel['id'], $siteId)) ?></strong></div>
         <div class="col-sm-3">On purchase order: <strong><?= qty(Stock::onPurchaseOrder((int)$sel['id'], $siteId)) ?></strong></div>
@@ -103,6 +117,7 @@ layout_start('Inventory Center', ['actions' => page_link('inv.items', ['a' => 'n
         <?= $sel['item_type'] === 'assembly' ? page_link('inv.build', ['a' => 'new', 'item_id' => $sel['id']], 'Build', 'btn-outline-success', 'hammer', 'create') : '' ?>
         <?= Stock::isTracked($sel['item_type']) ? page_link('inv.process', ['a' => 'new', 'item_id' => $sel['id']], $sel['item_type'] === 'assembly' ? 'Disassemble' : 'Process / break down', 'btn-outline-success', 'diagram-3', 'create') : '' ?>
         <?= page_link('rpt.inv_valuation_detail', ['item_id' => $sel['id']], 'Valuation detail', 'btn-outline-secondary', 'bar-chart') ?>
+        <?= page_link('rpt.avg_cost_changes', ['item_id' => $sel['id'], 'dates' => 'all'], 'Average cost changes', 'btn-outline-secondary', 'graph-up-arrow') ?>
       </div>
     </div></div>
     <div class="row g-3 mb-3">
@@ -116,14 +131,35 @@ layout_start('Inventory Center', ['actions' => page_link('inv.items', ['a' => 'n
     <?php if ($comps): ?>
       <div class="card mb-3"><div class="card-header">Bill of materials</div><table class="table table-sm mb-0"><?php foreach ($comps as $c): ?><tr><td><?= h($c['code']) ?></td><td><?= h($c['name']) ?></td><td class="num"><?= qty($c['qty']) ?></td></tr><?php endforeach; ?></table></div>
     <?php endif; ?>
-    <div class="card"><div class="card-header">Transaction history<?= $siteId ? ' at ' . h($siteName) : '' ?><span class="small text-muted fw-normal ms-2">latest 100</span></div><div class="table-responsive" style="max-height:380px"><table class="table table-sm table-tight mb-0">
-      <thead><tr><th>Date</th><th>Transaction</th><?= $siteId ? '' : '<th>Site</th>' ?><th class="num">Qty</th><?= $viewCosts ? '<th class="num">Unit cost</th><th class="num">Value</th><th class="num">Avg after</th>' : '' ?><th class="num"<?= $siteId ? ' title="Quantity at ' . h($siteName) . ' after the transaction"' : '' ?>><?= $siteId ? h($siteName) . ' after' : 'On hand after' ?></th></tr></thead>
-      <?php foreach ($moves as $m): $after = (float)$m['qty_after']; ?>
-        <tr><td><?= h(fdate($m['txn_date'])) ?></td><td class="wrap-link"><?= Txn::link(['id' => $m['tid'], 'txn_type' => $m['txn_type'], 'txn_no' => $m['txn_no']], Txn::label($m['txn_type']) . ' ' . $m['txn_no']) ?></td><?= $siteId ? '' : '<td>' . h($m['site']) . '</td>' ?>
+    <?php $histUrl = fn(array $x) => url($pageKey, array_merge(['id' => $selId, 'q' => $q, 'site_id' => $siteId, 'hist' => $hShow, 'hfrom' => $hFrom, 'hto' => $hTo], $x)); ?>
+    <div class="card inv-hist"><div class="card-header inv-hist-head">
+      <div><span class="fw-semibold">Transaction history<?= $siteId ? ' at ' . h($siteName) : '' ?></span>
+        <span class="small text-muted ms-1"><?= count($moves) ?> of <?= $histTotal ?> movement<?= $histTotal === 1 ? '' : 's' ?>, newest first</span></div>
+      <form class="inv-hist-filter" method="get"><input type="hidden" name="p" value="<?= h($pageKey) ?>"><input type="hidden" name="id" value="<?= (int)$selId ?>">
+        <?php if ($q !== ''): ?><input type="hidden" name="q" value="<?= h($q) ?>"><?php endif; ?><?php if ($siteId): ?><input type="hidden" name="site_id" value="<?= (int)$siteId ?>"><?php endif; ?>
+        <input class="form-control form-control-sm" type="date" name="hfrom" value="<?= h((string)$hFrom) ?>" aria-label="From date">
+        <input class="form-control form-control-sm" type="date" name="hto" value="<?= h((string)$hTo) ?>" aria-label="To date">
+        <select class="form-select form-select-sm" name="hist" aria-label="How many" onchange="this.form.submit()"><?= options(['100' => 'Latest 100', '500' => 'Latest 500', 'all' => 'All'], $hShow) ?></select>
+        <button class="btn btn-sm btn-outline-secondary">Show</button>
+      </form></div>
+      <?php if (abs($histOff) >= 0.00005): ?>
+      <div class="alert alert-warning small m-2 py-2">The quantity on hand<?= $siteId ? ' at ' . h($siteName) : '' ?> (<?= qty($onHand) ?>) differs from the total of its movements (<?= qty($histEnd) ?>) by <?= qty($histOff) ?>. Run <?= page_link('admin.utilities', [], 'Utilities: Verify & Rebuild Data', 'btn-link btn-sm p-0 align-baseline') ?: 'Utilities: Verify &amp; Rebuild Data' ?> to put them right.</div>
+      <?php endif; ?>
+      <div class="table-responsive" style="max-height:420px"><table class="table table-sm table-tight mb-0">
+      <thead><tr><th>Date</th><th>Transaction</th><?= $siteId ? '' : '<th>Site</th>' ?><th class="num">Qty</th><?= $viewCosts ? '<th class="num">Unit cost</th><th class="num">Value</th><th class="num">Avg after</th>' : '' ?><th class="num" title="<?= $siteId ? 'Quantity at ' . h($siteName) : 'Quantity at all sites' ?> after the transaction, counted from the first movement"><?= $siteId ? h($siteName) . ' after' : 'On hand after' ?></th></tr></thead>
+      <?php foreach ($moves as $m): $after = (float)$m['balance']; ?>
+        <tr><td><?= h(fdate($m['txn_date'])) ?></td><td class="wrap-link"><?= Txn::link(['id' => $m['tid'], 'txn_type' => $m['txn_type'], 'txn_no' => $m['txn_no']], Txn::label($m['txn_type']) . ' ' . $m['txn_no']) ?><?php if (abs((float)$m['qty']) < 0.00005): ?><div class="small text-muted"><?= $m['txn_type'] === 'inventory_adjustment' ? 'Value adjustment' : 'Below-zero stock settled at this cost' ?></div><?php endif; ?></td><?= $siteId ? '' : '<td>' . h($m['site']) . '</td>' ?>
           <td class="num"><?= qty($m['qty']) ?></td><?php if ($viewCosts): ?><td class="num"><?= money($m['unit_cost']) ?></td><td class="num"><?= money($m['total_cost']) ?></td><td class="num"><?= money($m['avg_after']) ?></td><?php endif; ?><td class="num<?= $after < -0.00001 ? ' neg' : '' ?>"><?= qty($after) ?></td></tr>
       <?php endforeach; ?>
-      <?php if (!$moves): ?><tr><td colspan="8" class="text-muted text-center py-3">No movements<?= $siteId ? ' at ' . h($siteName) : '' ?>.</td></tr><?php endif; ?>
-    </table></div></div>
+      <?php if ($moves && $broughtForward !== null): $span = ($siteId ? 3 : 4) + ($viewCosts ? 3 : 0); ?>
+        <tr class="inv-hist-bf"><td colspan="<?= $span ?>"><?= $hiddenBefore
+            ? 'Balance before ' . h(fdate($window[0]['txn_date'])) . ': ' . $hiddenBefore . ' earlier movement' . ($hiddenBefore === 1 ? '' : 's') . ' not shown. <a href="' . h($histUrl(['hist' => 'all', 'hfrom' => null, 'hto' => null])) . '">Show all</a>'
+            : 'Opening balance: the first movement of the item' . ($siteId ? ' at ' . h($siteName) : '') ?></td>
+          <td class="num<?= $broughtForward < -0.00001 ? ' neg' : '' ?>"><?= qty($broughtForward) ?></td></tr>
+      <?php endif; ?>
+      <?php if (!$moves): ?><tr><td colspan="8" class="text-muted text-center py-3">No movements<?= $siteId ? ' at ' . h($siteName) : '' ?><?= $hFrom || $hTo ? ' in these dates' : '' ?>.</td></tr><?php endif; ?>
+    </table></div>
+    <div class="card-body small text-muted py-2">On one date, the stock received (bills, receipts, returns, adjustments up) is listed before the stock used or sold that day (processing, builds and transfers, then sales), and the balance after each line counts every movement from the first one<?= $siteId ? ' at this site' : '' ?>.</div></div>
   <?php else: ?><p class="text-muted">No inventory items yet.</p><?php endif; ?>
   </div>
 </div>

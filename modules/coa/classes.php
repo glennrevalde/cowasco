@@ -74,7 +74,9 @@ $canEdit = Access::can($pageKey, 'edit');
 $canDelete = Access::can($pageKey, 'delete');
 
 layout_start('Class List', ['actions' => page_link('rpt.income_statement_class', [], 'Income Statement by Class', 'btn-outline-secondary', 'bar-chart')
-    . ' ' . page_link('rpt.balance_sheet_class', [], 'Balance Sheet by Class', 'btn-outline-secondary', 'columns-gap')]);
+    . ' ' . page_link('rpt.balance_sheet_class', [], 'Balance Sheet by Class', 'btn-outline-secondary', 'columns-gap')
+    . ' ' . page_link('rpt.trial_balance_class', [], 'Trial Balance by Class', 'btn-outline-secondary', 'list-columns-reverse')
+    . ' ' . page_link('rpt.cash_flow_class', [], 'Cash Flows by Class', 'btn-outline-secondary', 'cash-stack')]);
 ?>
 <p class="text-muted small">Classes split the books your own way: by branch, department, project or product line. Name them anything you like and rename them whenever you need to.
   Every transaction form has a Class box, and the financial reports can be filtered by class or shown with one column per class.</p>

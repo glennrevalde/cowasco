@@ -251,6 +251,121 @@ function fin_block_rows(array $blocks, array $cols, callable $row, int $indent, 
 }
 
 /**
+ * Trial Balance by Class (v33): the trial balance as of a date, with each class's debit and credit side by side (the
+ * classes with activity, then Unclassified), and the Total debit and credit, which is the plain Trial Balance. As there:
+ * income and expense accounts show the fiscal year to date, and the net income of earlier years is in Retained Earnings.
+ * "One column per class" shows each class's net balance (debits less credits) in a single column instead.
+ */
+Report::define('trial_balance_class', [
+    'filters' => ['asof'],
+    'checks' => ['net_only' => 'One column per class (debit less credit)'],
+    'sortable' => false,
+    'run' => function (array $f): array {
+        $asof = $f['asof'];
+        $netOnly = ($f['net_only'] ?? '') === '1';
+        $fy = Report::fiscalYearStart($asof);
+        $re = Accts::get('retained_earnings');
+        $plIds = array_flip(array_map('intval', DB::column("SELECT id FROM accounts WHERE category IN ('Income','Expense')")));
+        $bal = [];
+        $used = [];
+        $add = function (int $acct, string $k, float $v) use (&$bal, &$used) {
+            $bal[$acct][$k] = ($bal[$acct][$k] ?? 0.0) + $v;
+            if (abs($v) >= 0.005) {
+                $used[$k] = true;
+            }
+        };
+        // balance sheet accounts: everything up to the date; income and expense: the fiscal year to date
+        foreach (DB::all('SELECT account_id, COALESCE(class_id, 0) AS cls,
+                                 SUM(debit - credit) AS bs, SUM(CASE WHEN txn_date >= :fy THEN debit - credit ELSE 0 END) AS pl
+                            FROM journal_lines WHERE txn_date <= :t GROUP BY account_id, COALESCE(class_id, 0)', ['t' => $asof, 'fy' => $fy]) as $r) {
+            $acct = (int)$r['account_id'];
+            $add($acct, 'c' . (int)$r['cls'], (float)(isset($plIds[$acct]) ? $r['pl'] : $r['bs']));
+        }
+        // the net income of earlier fiscal years belongs to Retained Earnings, class by class
+        foreach (fin_net_income_by_class(null, date('Y-m-d', strtotime("$fy -1 day"))) as $k => $v) {
+            $add($re, $k, -$v);
+        }
+        $buckets = fin_class_buckets($used);
+        // the Total columns are the Trial Balance: the whole cooperative, the balances between its lines of business
+        // eliminated as they are there (fin_balances); the class columns show the entries as booked
+        $netTotal = BusinessUnits::eliminate(array_map(fn($v) => array_sum($v), $bal));
+        // no Type column here: with a debit and a credit per class the table is wide enough already
+        $columns = [['key' => 'account', 'label' => 'Account']];
+        foreach ($buckets as $k => $label) {
+            if ($netOnly) {
+                $columns[] = ['key' => $k, 'label' => $label, 'type' => 'money'];
+            } else {
+                $columns[] = ['key' => $k . '_dr', 'label' => $label . ' Debit', 'type' => 'money'];
+                $columns[] = ['key' => $k . '_cr', 'label' => $label . ' Credit', 'type' => 'money'];
+            }
+        }
+        $columns[] = ['key' => 'debit', 'label' => 'Total Debit', 'type' => 'money'];
+        $columns[] = ['key' => 'credit', 'label' => 'Total Credit', 'type' => 'money'];
+        $rows = [];
+        $tot = ['account' => 'TOTAL', 'debit' => 0.0, 'credit' => 0.0];
+        $side = [];
+        foreach (fin_accounts() as $a) {
+            $vals = $bal[(int)$a['id']] ?? [];
+            $net = (float)($netTotal[(int)$a['id']] ?? 0.0);
+            if (abs($net) < 0.005 && !array_filter($vals, fn($v) => abs($v) >= 0.005)) {
+                continue;
+            }
+            $isPl = isset($plIds[(int)$a['id']]);
+            $link = Report::link('rpt.general_ledger', ['account_id' => $a['id'], 'from' => $isPl ? $fy : '2000-01-01', 'to' => $asof, 'dates' => 'custom']);
+            $row = ['account' => $a['code'] . ' - ' . $a['name'], '_links' => ['account' => $link]];
+            foreach ($buckets as $k => $_) {
+                $v = r2($vals[$k] ?? 0.0);
+                $cid = (int)substr($k, 1) ?: Classes::UNCLASSIFIED;
+                if ($netOnly) {
+                    $row[$k] = abs($v) >= 0.005 ? $v : '';
+                    $tot[$k] = ($tot[$k] ?? 0.0) + $v;
+                    if ($link && abs($v) >= 0.005) {
+                        $row['_links'][$k] = $link . '&class_id=' . $cid;
+                    }
+                } else {
+                    $row[$k . '_dr'] = $v > 0 ? $v : '';
+                    $row[$k . '_cr'] = $v < 0 ? -$v : '';
+                    $tot[$k . '_dr'] = ($tot[$k . '_dr'] ?? 0.0) + max(0, $v);
+                    $tot[$k . '_cr'] = ($tot[$k . '_cr'] ?? 0.0) + max(0, -$v);
+                    if ($link && abs($v) >= 0.005) {
+                        $row['_links'][$k . ($v > 0 ? '_dr' : '_cr')] = $link . '&class_id=' . $cid;
+                    }
+                }
+                $side[$k] = ($side[$k] ?? 0.0) + $v;
+            }
+            $net = r2($net);
+            $row['debit'] = $net > 0 ? $net : '';
+            $row['credit'] = $net < 0 ? -$net : '';
+            $tot['debit'] += max(0, $net);
+            $tot['credit'] += max(0, -$net);
+            $rows[] = $row;
+        }
+        foreach ($tot as $k => $v) {
+            if ($k !== 'account') {
+                $tot[$k] = r2($v);
+            }
+        }
+        $off = [];
+        foreach ($buckets as $k => $label) {
+            if (abs(r2($side[$k] ?? 0.0)) >= 0.01) {
+                $off[] = $label;
+            }
+        }
+        $note = fin_class_note(null) . 'Income and expense accounts show fiscal year-to-date activity from ' . fdate($fy) . '; earlier years\' net income is included in Retained Earnings. '
+            . 'Entries without a class are under Unclassified; the Total columns are the Trial Balance of the whole company.';
+        if (abs($tot['debit'] - $tot['credit']) >= 0.01) {
+            $note .= ' <strong class="text-danger">Out of balance!</strong>';
+        } elseif ($off) {
+            $note .= ' The debits and credits of ' . h(implode(', ', $off)) . ' differ on their own: some entries carry a different class on each side (journal entry or cash voucher lines with their own class, or payments applied across classes).';
+        }
+        if (!Classes::inUse()) {
+            $note .= ' No classes are set up yet, so everything is unclassified. Add classes under Financial, Class List.';
+        }
+        return ['columns' => $columns, 'rows' => $rows, 'totals' => $tot, 'notes' => $note];
+    },
+]);
+
+/**
  * Balance sheet rows for one or more amount columns.
  *  $cols  : column keys (['amount'] for the plain statement; class buckets plus 'total' for the by-class one)
  *  $bal   : column key => [account id => net debit balance]
@@ -591,6 +706,133 @@ Report::define('income_statement_class', [
 ]);
 
 /**
+ * Statement of cash flows rows (indirect method) for one or more amount columns: the Statement of Cash Flows (one
+ * column) and the Statement of Cash Flows by Class (v33: one column per class and a Total). Every balance sheet account
+ * is counted once, in the section its account type is linked to (Financial > Account Types); the accounts counted as
+ * cash and cash equivalents (fin_cash_accounts) give the cash at the beginning and at the end. Accumulated
+ * depreciation (a credit Fixed Asset account in investing) goes back to operating activities, a non-cash charge.
+ *  $cols   : column keys (['amount'], or class buckets plus 'total')
+ *  $change : column key => [account id => net debit change in the period]
+ *  $ni     : column key => net income of the period
+ *  $begin  : column key => cash balance at the start of the period
+ *  $link   : fn(array $account): ?string, the drill-down of an account
+ * Returns [rows, column key => net cash increase].
+ */
+function fin_cash_flow_rows(array $cols, array $change, array $ni, array $begin, ?callable $link = null): array
+{
+    $byId = array_column(fin_accounts(), null, 'id');
+    $flowOf = fn(array $a): string => fin_flow_of($a, $byId);
+    $isDepr = fn(array $a): bool => $flowOf($a) === 'investing' && $a['account_type'] === 'Fixed Asset' && $a['normal_balance'] === 'Credit';
+    $vals = fn(array $row, array $v) => $row + array_map(fn($x) => r2((float)$x), array_intersect_key($v + array_fill_keys($cols, 0.0), array_flip($cols)));
+    $link ??= fn(array $a) => null;
+    $tot = [];
+    foreach ($cols as $k) {
+        $tot['op'][$k] = (float)($ni[$k] ?? 0.0);
+        $tot['inv'][$k] = 0.0;
+        $tot['fin'][$k] = 0.0;
+    }
+    // depreciation set apart: a non-cash adjustment to operating activities
+    $depr = [];
+    foreach ($byId as $a) {
+        if (!in_array($a['category'], ['Asset', 'Liability', 'Equity'], true) || !$isDepr($a)) {
+            continue;
+        }
+        $v = [];
+        $any = false;
+        foreach ($cols as $k) {
+            $v[$k] = -($change[$k][$a['id']] ?? 0.0);
+            $any = $any || abs($v[$k]) >= 0.005;
+        }
+        if (!$any) {
+            continue;
+        }
+        $r = $vals(['name' => $a['code'] . ' - ' . $a['name'] . ' (depreciation)', '_class' => 'indent-1'], $v);
+        if ($u = $link($a)) {
+            $r['_links'] = ['name' => $u];
+        }
+        $depr[] = $r;
+        foreach ($cols as $k) {
+            $tot['op'][$k] += $v[$k];
+        }
+    }
+    $row = function (string $name, ?array $v, string $class, ?string $url) use ($vals) {
+        $r = ['name' => $name, '_class' => $class];
+        if ($v !== null) {
+            $r = $vals($r, $v);
+        }
+        if ($url) {
+            $r['_links'] = ['name' => $url];
+        }
+        return $r;
+    };
+    $bases = array_keys(array_filter(AccountTypes::BASE, fn($b) => $b[0] !== 'Income' && $b[0] !== 'Expense'));
+    $lines = [];
+    foreach (['operating' => 'op', 'investing' => 'inv', 'financing' => 'fin'] as $flow => $g) {
+        // the accounts whose type is linked to this section (the bases of every balance sheet type)
+        $valsOf = function (array $a) use ($flow, $flowOf, $isDepr, $change, $cols): array {
+            $in = $flowOf($a) === $flow && !$isDepr($a);
+            $out = [];
+            foreach ($cols as $k) {
+                $out[$k] = $in ? -($change[$k][$a['id']] ?? 0.0) : 0.0;
+            }
+            return $out;
+        };
+        $blocks = array_values(array_filter(fin_classify($bases, $valsOf, $cols),
+            fn($b) => ($b['type']['cash_flow'] ?: AccountTypes::defaultCashFlow($b['type']['base_type'])) === $flow));
+        [$lines[$g], $t] = fin_block_rows($blocks, $cols, $row, 1, true, $link, null, fn($n) => 'Net change in ' . $n);
+        foreach ($cols as $k) {
+            $tot[$g][$k] += $t[$k] ?? 0.0;
+        }
+    }
+    $rows = [['name' => 'OPERATING ACTIVITIES', '_class' => 'group-row'], $vals(['name' => 'Net Income', '_class' => 'indent-1'], $ni)];
+    $rows = array_merge($rows, $depr, $lines['op']);
+    $rows[] = $vals(['name' => 'Net cash provided by operating activities', '_class' => 'subtotal-row'], $tot['op']);
+    $rows[] = ['name' => 'INVESTING ACTIVITIES', '_class' => 'group-row'];
+    $rows = array_merge($rows, $lines['inv']);
+    $rows[] = $vals(['name' => 'Net cash provided by investing activities', '_class' => 'subtotal-row'], $tot['inv']);
+    $rows[] = ['name' => 'FINANCING ACTIVITIES', '_class' => 'group-row'];
+    $rows = array_merge($rows, $lines['fin']);
+    $rows[] = $vals(['name' => 'Net cash provided by financing activities', '_class' => 'subtotal-row'], $tot['fin']);
+    $net = [];
+    $endv = [];
+    foreach ($cols as $k) {
+        $net[$k] = r2($tot['op'][$k] + $tot['inv'][$k] + $tot['fin'][$k]);
+        $endv[$k] = r2(($begin[$k] ?? 0.0) + $net[$k]);
+    }
+    $rows[] = $vals(['name' => 'NET CASH INCREASE (DECREASE) FOR THE PERIOD', '_class' => 'total-row'], $net);
+    $rows[] = $vals(['name' => 'Cash at beginning of period'], $begin);
+    $rows[] = $vals(['name' => 'CASH AT END OF PERIOD', '_class' => 'total-row'], $endv);
+    return [$rows, $net];
+}
+
+/** The cash flow section of a balance sheet account: cash, operating, investing or financing (its account type's) */
+function fin_flow_of(array $a, ?array $byId = null): string
+{
+    $byId ??= array_column(fin_accounts(), null, 'id');
+    $t = AccountTypes::forAccount(AccountTypes::mainOf($a, $byId));
+    return $t['cash_flow'] ?: (AccountTypes::defaultCashFlow($t['base_type']) ?: 'operating');
+}
+
+/** The accounts counted as cash and cash equivalents (their account type's cash flow section is cash) */
+function fin_cash_accounts(): array
+{
+    $byId = array_column(fin_accounts(), null, 'id');
+    $ids = [];
+    foreach ($byId as $a) {
+        if (in_array($a['category'], ['Asset', 'Liability', 'Equity'], true) && fin_flow_of($a, $byId) === 'cash') {
+            $ids[] = (int)$a['id'];
+        }
+    }
+    return $ids ?: [0];
+}
+
+/** The names of the account types counted as cash and cash equivalents (the note of the cash flow statements) */
+function fin_cash_type_names(): string
+{
+    return implode(', ', array_values(array_map(fn($t) => $t['name'], array_filter(AccountTypes::all(), fn($t) => $t['cash_flow'] === 'cash')))) ?: 'none';
+}
+
+/**
  * The Statement of Cash Flows (indirect method). Every balance sheet account is counted once, in the section its account
  * type is linked to (Chart of Accounts > Account Types): the cash and cash equivalents give the cash at the beginning
  * and at the end; the changes of the others are operating, investing or financing activities, listed by account type
@@ -606,83 +848,92 @@ Report::define('cash_flow', [
         $to = $f['to'];
         $cls = $f['class_id'] ?: null;
         [$csql, $cp] = Classes::sqlFilter($cls, '');
-        $change = fin_balances($from, $to, $cls);
-        $ni = fin_net_income($from, $to, $cls);
-        $byId = array_column(fin_accounts(), null, 'id');
-        $flowOf = function (array $a) use ($byId): string {
-            $t = AccountTypes::forAccount(AccountTypes::mainOf($a, $byId));
-            return $t['cash_flow'] ?: (AccountTypes::defaultCashFlow($t['base_type']) ?: 'operating');
-        };
-        // the accounts of each section; depreciation set apart
-        $cash = [];
-        $depr = [];
-        $tot = ['op' => $ni, 'inv' => 0.0, 'fin' => 0.0];
-        $sectionOf = ['operating' => 'op', 'investing' => 'inv', 'financing' => 'fin'];
-        foreach (fin_accounts() as $a) {
-            if (!in_array($a['category'], ['Asset', 'Liability', 'Equity'], true)) {
-                continue;
-            }
-            $flow = $flowOf($a);
-            if ($flow === 'cash') {
-                $cash[] = (int)$a['id'];
-                continue;
-            }
-            $v = -($change[$a['id']] ?? 0.0);
-            if ($flow === 'investing' && $a['account_type'] === 'Fixed Asset' && $a['normal_balance'] === 'Credit' && abs($v) >= 0.005) {
-                // depreciation is a non-cash adjustment to operating activities
-                $depr[] = ['name' => $a['code'] . ' - ' . $a['name'] . ' (depreciation)', 'amount' => r2($v), '_class' => 'indent-1',
-                    '_links' => ['name' => Report::link('rpt.general_ledger', ['account_id' => $a['id'], 'from' => $from, 'to' => $to, 'dates' => 'custom', 'class_id' => $cls])]];
-                $tot['op'] += $v;
-            }
-        }
-        $isDepr = fn(array $a): bool => $flowOf($a) === 'investing' && $a['account_type'] === 'Fixed Asset' && $a['normal_balance'] === 'Credit';
-        $row = function (string $name, ?array $vals, string $class, ?string $url) {
-            $r = ['name' => $name, '_class' => $class];
-            if ($vals !== null) {
-                $r['amount'] = r2($vals['amount'] ?? 0);
-            }
-            if ($url) {
-                $r['_links'] = ['name' => $url];
-            }
-            return $r;
-        };
-        $link = fn(array $a) => Report::link('rpt.general_ledger', ['account_id' => $a['id'], 'from' => $from, 'to' => $to, 'dates' => 'custom', 'class_id' => $cls]);
-        $lines = [];
-        foreach ($sectionOf as $flow => $g) {
-            // the accounts whose type is linked to this section (the bases of every balance sheet type)
-            $vals = function (array $a) use ($flow, $flowOf, $isDepr, $change): array {
-                return ['amount' => $flowOf($a) === $flow && !$isDepr($a) ? -($change[$a['id']] ?? 0.0) : 0.0];
-            };
-            $blocks = array_values(array_filter(fin_classify(array_keys(array_filter(AccountTypes::BASE, fn($b) => $b[0] !== 'Income' && $b[0] !== 'Expense')), $vals, ['amount']),
-                fn($b) => ($b['type']['cash_flow'] ?: AccountTypes::defaultCashFlow($b['type']['base_type'])) === $flow));
-            [$lines[$g], $t] = fin_block_rows($blocks, ['amount'], $row, 1, true, $link, null, fn($n) => 'Net change in ' . $n);
-            $tot[$g] += $t['amount'];
-        }
-        $rows = [['name' => 'OPERATING ACTIVITIES', '_class' => 'group-row'], ['name' => 'Net Income', 'amount' => r2($ni), '_class' => 'indent-1']];
-        $rows = array_merge($rows, $depr, $lines['op']);
-        $rows[] = ['name' => 'Net cash provided by operating activities', 'amount' => r2($tot['op']), '_class' => 'subtotal-row'];
-        $rows[] = ['name' => 'INVESTING ACTIVITIES', '_class' => 'group-row'];
-        $rows = array_merge($rows, $lines['inv']);
-        $rows[] = ['name' => 'Net cash provided by investing activities', 'amount' => r2($tot['inv']), '_class' => 'subtotal-row'];
-        $rows[] = ['name' => 'FINANCING ACTIVITIES', '_class' => 'group-row'];
-        $rows = array_merge($rows, $lines['fin']);
-        $rows[] = ['name' => 'Net cash provided by financing activities', 'amount' => r2($tot['fin']), '_class' => 'subtotal-row'];
-        $net = r2($tot['op'] + $tot['inv'] + $tot['fin']);
-        [$in, $p] = DB::in('b', $cash ?: [0]);
+        [$in, $p] = DB::in('b', fin_cash_accounts());
         $begin = (float)DB::value("SELECT COALESCE(SUM(debit - credit),0) FROM journal_lines WHERE account_id IN $in AND txn_date < :f $csql", $p + ['f' => $from] + $cp);
         $end = (float)DB::value("SELECT COALESCE(SUM(debit - credit),0) FROM journal_lines WHERE account_id IN $in AND txn_date <= :t $csql", $p + ['t' => $to] + $cp);
-        $rows[] = ['name' => 'NET CASH INCREASE (DECREASE) FOR THE PERIOD', 'amount' => $net, '_class' => 'total-row'];
-        $rows[] = ['name' => 'Cash at beginning of period', 'amount' => r2($begin)];
-        $rows[] = ['name' => 'CASH AT END OF PERIOD', 'amount' => r2($begin + $net), '_class' => 'total-row'];
-        $cashTypes = array_values(array_map(fn($t) => $t['name'], array_filter(AccountTypes::all(), fn($t) => $t['cash_flow'] === 'cash')));
+        $link = fn(array $a) => Report::link('rpt.general_ledger', ['account_id' => $a['id'], 'from' => $from, 'to' => $to, 'dates' => 'custom', 'class_id' => $cls]);
+        [$rows, $netCols] = fin_cash_flow_rows(['amount'], ['amount' => fin_balances($from, $to, $cls)], ['amount' => fin_net_income($from, $to, $cls)], ['amount' => r2($begin)], $link);
+        $net = $netCols['amount'];
         return [
             'grouped' => true,
             'columns' => [['key' => 'name', 'label' => ''], ['key' => 'amount', 'label' => 'Amount', 'type' => 'money']],
             'rows' => $rows,
-            'notes' => fin_class_note($cls) . 'Indirect method. Cash = the accounts of the types counted as cash and cash equivalents (' . h(implode(', ', $cashTypes) ?: 'none') . '); '
+            'notes' => fin_class_note($cls) . 'Indirect method. Cash = the accounts of the types counted as cash and cash equivalents (' . h(fin_cash_type_names()) . '); '
                 . 'every other balance sheet account is an operating, investing or financing activity by its account type (Financial &gt; Account Types).'
                 . (abs(r2($begin + $net) - r2($end)) >= 0.01 ? ' <strong class="text-danger">Does not tie to the cash accounts (' . money($end) . ').</strong>' : ''),
         ];
+    },
+]);
+
+/**
+ * Statement of Cash Flows by Class (v33): the statement of cash flows with one column per class (the classes with
+ * activity, then Unclassified) and a Total column, which is the plain statement. Each class column works out its own
+ * net income, changes in the balance sheet accounts and cash balances from the entries carrying that class; the
+ * sections follow the account types (Financial > Account Types), as on the plain statement.
+ */
+Report::define('cash_flow_class', [
+    'filters' => ['range'],
+    'default_dates' => 'year_to_date',
+    'sortable' => false,
+    'run' => function (array $f): array {
+        $from = $f['from'];
+        $to = $f['to'];
+        $change = [];
+        $used = [];
+        foreach (DB::all('SELECT account_id, COALESCE(class_id, 0) AS cls, SUM(debit - credit) AS net FROM journal_lines
+                           WHERE txn_date BETWEEN :f AND :t GROUP BY account_id, COALESCE(class_id, 0)', ['f' => $from, 't' => $to]) as $r) {
+            $k = 'c' . (int)$r['cls'];
+            $change[$k][(int)$r['account_id']] = (float)$r['net'];
+            $change['total'][(int)$r['account_id']] = ($change['total'][(int)$r['account_id']] ?? 0.0) + (float)$r['net'];
+            if (abs((float)$r['net']) >= 0.005) {
+                $used[$k] = true;
+            }
+        }
+        // the Total column is the plain statement: the whole cooperative, its lines of business netted (as fin_balances)
+        $change['total'] = BusinessUnits::eliminate($change['total'] ?? []);
+        $ni = fin_net_income_by_class($from, $to);
+        $ni['total'] = array_sum($ni);
+        [$in, $p] = DB::in('b', fin_cash_accounts());
+        $begin = ['total' => 0.0];
+        $end = ['total' => 0.0];
+        foreach (DB::all("SELECT COALESCE(class_id, 0) AS cls, SUM(CASE WHEN txn_date < :f THEN debit - credit ELSE 0 END) AS b, SUM(debit - credit) AS e
+                            FROM journal_lines WHERE account_id IN $in AND txn_date <= :t GROUP BY COALESCE(class_id, 0)", $p + ['f' => $from, 't' => $to]) as $r) {
+            $k = 'c' . (int)$r['cls'];
+            $begin[$k] = r2((float)$r['b']);
+            $end[$k] = r2((float)$r['e']);
+            $begin['total'] += (float)$r['b'];
+            $end['total'] += (float)$r['e'];
+            if (abs((float)$r['b']) >= 0.005 || abs((float)$r['e']) >= 0.005) {
+                $used[$k] = true;
+            }
+        }
+        $begin['total'] = r2($begin['total']);
+        $buckets = fin_class_buckets($used);
+        $cols = array_merge(array_keys($buckets), ['total']);
+        $link = fn(array $a) => Report::link('rpt.general_ledger', ['account_id' => $a['id'], 'from' => $from, 'to' => $to, 'dates' => 'custom']);
+        [$rows, $net] = fin_cash_flow_rows($cols, $change, $ni, $begin, $link);
+        $columns = [['key' => 'name', 'label' => '']];
+        foreach ($buckets as $k => $label) {
+            $columns[] = ['key' => $k, 'label' => $label, 'type' => 'money'];
+        }
+        $columns[] = ['key' => 'total', 'label' => 'Total', 'type' => 'money'];
+        $off = [];
+        foreach ($cols as $k) {
+            if (abs(r2(($begin[$k] ?? 0.0) + $net[$k]) - r2($end[$k] ?? 0.0)) >= 0.01) {
+                $off[] = $k === 'total' ? 'Total' : $buckets[$k];
+            }
+        }
+        $note = 'One column per class; entries without a class are under Unclassified, and Total is the Statement of Cash Flows of the whole company. Indirect method. Cash = the accounts of the types counted as cash and cash equivalents ('
+            . h(fin_cash_type_names()) . '); every other balance sheet account is an operating, investing or financing activity by its account type (Financial &gt; Account Types).';
+        if (in_array('Total', $off, true)) {
+            $note .= ' <strong class="text-danger">The total does not tie to the cash accounts (' . money($end['total']) . ').</strong>';
+        } elseif ($off) {
+            $note .= ' The columns ' . h(implode(', ', $off)) . ' do not tie to their own cash balances: some entries carry a different class on each side (journal entry or cash voucher lines with their own class, or payments applied across classes).';
+        }
+        if (!Classes::inUse()) {
+            $note .= ' No classes are set up yet, so everything is unclassified. Add classes under Financial, Class List.';
+        }
+        return ['grouped' => true, 'columns' => $columns, 'rows' => $rows, 'notes' => $note];
     },
 ]);
 

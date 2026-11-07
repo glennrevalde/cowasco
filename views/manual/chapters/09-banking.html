@@ -624,7 +624,7 @@
 <h2 id="pg-bank-deposits">Make Deposits<a class="man-hash" href="#pg-bank-deposits" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>Make Deposits records money you put in the bank: customer payments and sales receipts waiting in Undeposited Funds, the cash of closed POS shifts, the settlement of card and e-wallet sales by the provider, and other money such as loan proceeds or an owner's contribution. One deposit matches one deposit slip.</p>
 <p><strong>Where to find it:</strong> Banking &gt; Make Deposits opens a new deposit. The <strong>Deposits list</strong> button shows the saved deposits. <strong>Edit</strong> on a saved deposit opens it again to change it (see <a href="#sec-edit-deposit">Edit a deposit</a>).</p>
-<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_deposits__main.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_deposits__main.jpg" alt="The Make Deposits form" width="1094" height="1037" loading="lazy" decoding="async"></a><figcaption>The Make Deposits form</figcaption></figure>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_deposits__main.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_deposits__main.jpg" alt="The Make Deposits form" width="1094" height="1114" loading="lazy" decoding="async"></a><figcaption>The Make Deposits form</figcaption></figure>
 <h4 id="s-fields_2">Fields<a class="man-hash" href="#s-fields_2" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <div class="table-responsive man-table"><table class="table table-sm">
 <thead>
@@ -656,7 +656,7 @@
 </tr>
 </tbody>
 </table></div>
-<p><strong>Payments waiting to be deposited (Undeposited Funds):</strong> the customer payments and sales receipts that were put in Undeposited Funds and are not in a deposit yet. Tick the ones on your deposit slip; the box in the heading ticks them all.</p>
+<p><strong>Payments waiting to be deposited (Undeposited Funds):</strong> the customer payments and sales receipts that were put in Undeposited Funds and are not in a deposit yet, and the journal entries that post to Undeposited Funds (see below). Tick the ones on your deposit slip; the box in the heading ticks them all.</p>
 <div class="table-responsive man-table"><table class="table table-sm">
 <thead>
 <tr>
@@ -667,15 +667,15 @@
 <tbody>
 <tr>
 <td>Date, Type, No.</td>
-<td>The payment or sales receipt. Click the number to open it.</td>
+<td>The payment, sales receipt or journal entry. Click the number to open it.</td>
 </tr>
 <tr>
 <td>Received from</td>
-<td>The customer.</td>
+<td>The customer. For a journal entry, its name, or else the description of its Undeposited Funds line (or its memo).</td>
 </tr>
 <tr>
 <td>Method</td>
-<td>The payment method, for example Check.</td>
+<td>The payment method, for example Check. For a journal entry: <strong>Debit, adds</strong> or <strong>Credit, deducts</strong>.</td>
 </tr>
 <tr>
 <td>Ref.</td>
@@ -683,13 +683,19 @@
 </tr>
 <tr>
 <td>Amount</td>
-<td>The amount of the payment.</td>
+<td>The amount of the payment. For a journal entry, its net amount on Undeposited Funds: a credit shows in red in brackets and is taken off the deposit.</td>
 </tr>
 </tbody>
 </table></div>
+<h4 id="sec-deposit-journal">Journal entries to Undeposited Funds<a class="man-hash" href="#sec-deposit-journal" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>A journal entry that debits or credits Undeposited Funds is usually an adjustment of what the POS or the collections bring to the bank: a cash overage, a shortage, a correction of a payment. Such entries (made on <a href="manual.php?c=chart-of-accounts#pg-coa-journal">Make Journal Entries</a>, opening balance entries included) are listed with the payments, with their net amount on Undeposited Funds. A <strong>debit</strong> to Undeposited Funds adds to the deposit; a <strong>credit</strong> deducts from it. Tick it with the payments or POS cash it adjusts: <strong>Items selected</strong> and <strong>Deposit total</strong> add the debits and take off the credits.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_deposits__journal.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_deposits__journal.jpg" alt="Two journal entries crediting Undeposited Funds (120.00 in red, deducts) and one debiting it (500.00, adds)" width="1094" height="212" loading="lazy" decoding="async"></a><figcaption>Two journal entries crediting Undeposited Funds (120.00 in red, deducts) and one debiting it (500.00, adds)</figcaption></figure>
+<p>Once deposited, the entry leaves the list, as a payment does, and it cannot be voided or deleted until it is taken off the deposit (<strong>Edit</strong> on the deposit) or the deposit is voided. If the entry is changed after it was deposited, editing the deposit shows its new amount with "was" and the old one under it; saving the deposit takes the new amount.</p>
+<div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>JE-00007 debits Undeposited Funds ₱500.00 for a cash overage, and JE-00006 credits it ₱120.00 for a short collection. Ticked with customer payment PMT-00005 of ₱95,294.00, the deposit is ₱95,674.00: ₱95,294.00 + ₱500.00 − ₱120.00.</p></div>
 <p><strong>POS cash from closed shifts</strong> (shown when there are some): the cash of each closed POS shift not deposited yet. <strong>To deposit</strong> is the <strong>Counted</strong> cash, less the opening float (<strong>Less float</strong>: it stays in the drawer for the next shift), plus the cash drops (<strong>Plus drops</strong>: cash taken out of the drawer during the shift). Tick the shifts you are depositing. The business date opens the shift, and a shift whose closing entries were corrected says so under its terminal; the figures are always the shift's figures as they are now.</p>
 <div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>The cashier of POB1 Counter 2 opened with a float of ₱3,000.00 and closed the register with ₱9,170.48 counted, against ₱12,170.48 expected: a shortage of ₱3,000.00. The supervisor finds the drawer held ₱12,170.48 (the cashier had left out the float) and corrects <strong>Cash counted</strong> to 12,170.48. The shortage entry is voided, and Make Deposits now shows the shift with <strong>Counted</strong> 12,170.48, <strong>Less float</strong> 3,000.00 and <strong>To deposit</strong> 9,170.48: the cash sales of the day, while the ₱3,000.00 float stays in the drawer. Before the correction the shift showed 6,170.48 to deposit.</p></div>
-<p><strong>Card and e-wallet settlements</strong> (shown when a card or e-wallet clearing account has a balance): the provider pays out card and e-wallet sales in one amount, less its fee.</p>
+<p><strong>Card and e-wallet settlements:</strong> the provider pays out card and e-wallet sales in one amount, less its fee. The table has one row for each clearing account: the account of every card or e-wallet payment method (<a href="manual.php?c=chart-of-accounts#pg-coa-lists">Terms, Tax Codes &amp; Other Lists</a> &gt; Payment Methods, <strong>POS clearing account</strong>) and the module default accounts <strong>Card Clearing</strong> and <strong>E-wallet Clearing</strong>, used by a method that names no account. Each account is listed once, with the payment methods that use it under its name, so E-wallet Clearing shared by GCash and Maya is one row carrying the balance of both.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_deposits__settlements.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_deposits__settlements.jpg" alt="Card and e-wallet settlements: each clearing account once, its payment methods, the unsettled balance and the Details button" width="1046" height="272" loading="lazy" decoding="async"></a><figcaption>Card and e-wallet settlements: each clearing account once, its payment methods, the unsettled balance and the Details button</figcaption></figure>
 <div class="table-responsive man-table"><table class="table table-sm">
 <thead>
 <tr>
@@ -704,11 +710,15 @@
 </tr>
 <tr>
 <td>Unsettled</td>
-<td>The balance still waiting in the clearing account.</td>
+<td>What the provider has not paid out yet: the balance of the clearing account in the General Ledger on the deposit <strong>Date</strong>, its debits (card and e-wallet sales and payments) less its credits (settlements and refunds). It is the same figure as the <a href="manual.php?c=chart-of-accounts#pg-rpt-trial_balance">Trial Balance</a> for that date. Changing the <strong>Date</strong> changes it. A credit balance, in red, means more was settled than was received.</td>
+</tr>
+<tr>
+<td>Details</td>
+<td>Opens the <strong>Card and e-wallet balance details</strong> of the account (see below): what the unsettled balance is made of.</td>
 </tr>
 <tr>
 <td>Gross settled</td>
-<td>The sales amount the provider is settling. It cannot be more than <strong>Unsettled</strong>.</td>
+<td>The sales amount the provider is settling. It cannot be more than <strong>Unsettled</strong> on the deposit date. Type it, or tick <strong>Settle</strong> on the receipts the provider paid in <strong>Details</strong>: their total goes into this box, which then shows "2 receipts ticked" under it and cannot be typed over. <strong>Clear</strong> takes the ticks off so the amount can be typed again.</td>
 </tr>
 <tr>
 <td>Fee deducted</td>
@@ -720,6 +730,46 @@
 </tr>
 </tbody>
 </table></div>
+<h4 id="sec-clearing-details">Card and e-wallet balance details<a class="man-hash" href="#sec-clearing-details" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>Details</strong> beside an unsettled balance opens a window that explains it, as of the deposit date. <strong>Open as a page</strong> shows the same on a page of its own (Banking &gt; Make Deposits, <strong>Details</strong>), where you can choose another <strong>Clearing account</strong> or <strong>As of</strong> date and <strong>Print</strong> it.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_deposits__clearing_details.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_deposits__clearing_details.jpg" alt="The balance details of 1065 E-wallet Clearing: the sources, the sales by payment method, the receipts not yet settled and the latest settlements" width="1094" height="930" loading="lazy" decoding="async"></a><figcaption>The balance details of 1065 E-wallet Clearing: the sources, the sales by payment method, the receipts not yet settled and the latest settlements</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Part</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The balance</td>
+<td>The unsettled amount, with the payment methods of the account, the total received (debits) and the total settled and refunded (credits). <strong>General Ledger</strong> and <strong>Trial Balance</strong> open those reports for the account and date.</td>
+</tr>
+<tr>
+<td>What the balance is made of</td>
+<td>The postings to the account by source: <strong>POS sales</strong>, <strong>POS returns refunded</strong>, <strong>Customer payments</strong>, <strong>Sales receipts</strong>, <strong>Settlements deposited to the bank</strong>, journal entries and others, each with the number of <strong>Documents</strong>, what was <strong>Received (debit)</strong>, what was <strong>Settled / refunded (credit)</strong> and the <strong>Net</strong>. The last line, <strong>Balance on</strong> the date, is the unsettled amount.</td>
+</tr>
+<tr>
+<td>Card and e-wallet sales by payment method</td>
+<td>For each payment method of the account (GCash and Maya on E-wallet Clearing): the <strong>POS sales</strong> paid with it, the <strong>POS refunds</strong>, the <strong>Payments and sales receipts</strong> and the <strong>Net received</strong>.</td>
+</tr>
+<tr>
+<td>Receipts not yet settled</td>
+<td>The sales the provider still owes. A settlement whose receipts were ticked settles those receipts; a settlement entered as an amount only is taken against the oldest receipts first. So the list holds the latest receipts that make up the balance, newest first: <strong>Date</strong>, <strong>Document</strong> (click to open it), <strong>Customer / terminal</strong>, <strong>Method</strong>, <strong>Reference</strong> (the approval or reference number typed at the counter), <strong>Amount</strong> and <strong>Unsettled</strong>, and, in the window opened from Make Deposits, <strong>Settle</strong> (see below). The oldest one may be partly settled. The total equals the balance.</td>
+</tr>
+<tr>
+<td>Latest settlements and other credits</td>
+<td>The last 25 deposits and other entries that took money out of the account, with their description (the provider's reference and, for a settlement whose receipts were ticked, how many). The General Ledger has all of them.</td>
+</tr>
+</tbody>
+</table></div>
+<div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>E-wallet Clearing holds ₱16,113.44: a GCash sale of ₱1,564.64 and a Maya sale of ₱14,548.80. GCash and Maya settle ₱10,000.00. The balance becomes ₱6,113.44, and <strong>Receipts not yet settled</strong> shows the Maya sale of ₱14,548.80 with ₱6,113.44 unsettled: the ₱10,000.00 paid for the GCash sale and ₱8,435.36 of the Maya sale. The Trial Balance shows ₱6,113.44 on 1065 E-wallet Clearing too.</p></div>
+<h4 id="sec-clearing-settle">Ticking the receipts a settlement pays<a class="man-hash" href="#sec-clearing-settle" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The provider's settlement report lists the sales it pays. As the cash of the closed POS shifts is ticked for a deposit, those sales can be ticked: in the window opened by <strong>Details</strong> on Make Deposits, <strong>Receipts not yet settled</strong> has a <strong>Settle</strong> column with a tick box on every receipt and one in the heading that ticks them all. A click anywhere on the row ticks it too (not on its document link). The bar at the bottom of the window shows the <strong>Gross settled</strong> so far and how many receipts are ticked, and the same amount goes into <strong>Gross settled</strong> on the deposit at once. <strong>Done</strong> closes the window; opening <strong>Details</strong> again shows the ticks as they were.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_deposits__settle.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_deposits__settle.jpg" alt="Details of 1060 Card Clearing with three receipts ticked under Settle and Gross settled 6,983.00 in the bar at the bottom" width="1094" height="809" loading="lazy" decoding="async"></a><figcaption>Details of 1060 Card Clearing with three receipts ticked under Settle and Gross settled 6,983.00 in the bar at the bottom</figcaption></figure>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_deposits__settle_gross.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_deposits__settle_gross.jpg" alt="Back on Make Deposits: Gross settled 6,983.00 with 3 receipts ticked and Clear under it" width="1046" height="305" loading="lazy" decoding="async"></a><figcaption>Back on Make Deposits: Gross settled 6,983.00 with 3 receipts ticked and Clear under it</figcaption></figure>
+<p>When the deposit is saved, the ticked receipts are settled: they leave <strong>Receipts not yet settled</strong>, and the settlement line of the deposit says how many receipts were ticked ("Provider settlement BDO-77 (2 receipts ticked)"). The receipts that were not ticked stay on the list, whatever their date. Voiding or deleting the deposit makes its receipts unsettled again; editing it keeps them settled as long as the deposit still holds the settlement amount on that clearing account. Changing the deposit <strong>Date</strong> takes the ticks off, because what is unsettled depends on the date: tick them again. The <strong>Open as a page</strong> view has no tick boxes.</p>
+<div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>The bank's card settlement report pays POS Sale MK1-00000012 (₱3,996.00), MK1-00000010 (₱1,998.00) and MK1-00000009 (₱989.00 still unsettled of ₱999.00). Tick the three under <strong>Settle</strong>: <strong>Gross settled</strong> becomes ₱6,983.00. Type the fee, save, and MK1-00000011 (₱2,997.00) is the only card sale left unsettled.</p></div>
 <p><strong>Other receipts (loan proceeds, owner contributions, interest…):</strong> three rows for money that did not come through a customer payment.</p>
 <div class="table-responsive man-table"><table class="table table-sm">
 <thead>
@@ -784,6 +834,14 @@
 <li>Type the <strong>Gross settled</strong>, the <strong>Fee deducted</strong> and the provider's <strong>Reference</strong>.</li>
 <li>Save. The bank receives the gross less the fee.</li>
 </ol>
+<p><strong>To settle the receipts on the provider's report:</strong></p>
+<ol>
+<li>Click <strong>Details</strong> beside the clearing account.</li>
+<li>Under <strong>Receipts not yet settled</strong>, tick <strong>Settle</strong> on each receipt the provider paid.</li>
+<li>Check the <strong>Gross settled</strong> at the bottom against the provider's report, and click <strong>Done</strong>.</li>
+<li>Type the <strong>Fee deducted</strong> and the <strong>Reference</strong>, and save.</li>
+</ol>
+<p><strong>To see what an unsettled balance is made of:</strong> click <strong>Details</strong> beside it. Compare <strong>Receipts not yet settled</strong> with the provider's statement to find the sales still to be paid out.</p>
 <div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>GCash settles ₱16,113.44 of e-wallet sales and deducts a fee of ₱322.27. Type 16,113.44 in <strong>Gross settled</strong> and 322.27 in <strong>Fee deducted</strong> on 1065 E-wallet Clearing; the deposit total is ₱15,791.17.</p></div>
 <p><strong>To deposit other money:</strong> fill a row of <strong>Other receipts</strong> with <strong>Received from</strong>, <strong>From account</strong>, <strong>Memo</strong> and <strong>Amount</strong>, then save.</p>
 <p><strong>To keep some cash out of the deposit:</strong> type the <strong>Cash back amount</strong> and choose where it goes in <strong>Cash back goes to</strong>.</p>
@@ -863,8 +921,13 @@
 <li>"Select the payments to deposit or enter other receipts." A deposit needs at least one item.</li>
 <li>"A selected payment was already deposited or changed. Refresh and try again." Someone else deposited it, or it was changed, while you had the page open.</li>
 <li>"A selected POS shift was already deposited."</li>
-<li>"Settlement for 1060 Card Clearing is more than its balance."</li>
+<li>"Settlement for 1060 - Card Clearing (50,000.00) is more than its unsettled balance on 10/21/2026 (43,556.24)." The settlement is checked against the balance on the deposit date; click <strong>Details</strong> to see it.</li>
+<li>"The fee deducted for Card Clearing is more than the gross settled."</li>
+<li>"Gross settled for Card Clearing (6,984.00) is not the total of the 3 receipt(s) ticked to settle (6,983.00). Open Details to change the ticks, or clear them to type the amount."</li>
+<li>"POS Sale MK1-00000012 is not unsettled on 10/30/2026 any more. Open Details again and tick the receipts once more." Another deposit settled it while you had the page open.</li>
+<li>"Enter the gross amount settled for E-wallet Clearing with its fee." A fee was typed without the gross amount.</li>
 <li>"Other receipts need both an account and an amount."</li>
+<li>"The items ticked add up to less than zero (-120.00): a journal entry that credits Undeposited Funds deducts from the payments or POS cash it adjusts. Tick them on the same deposit."</li>
 <li>A payment that is in a deposit cannot be voided or deleted: "It is included in deposit DEP-00001. Remove it from the deposit first." Take it off the deposit with <strong>Edit</strong>, or void the deposit.</li>
 <li>Payments that were deposited straight to a bank account on <a href="manual.php?c=customers#pg-cust-payments">Receive Payments</a> or <a href="manual.php?c=customers#pg-cust-sales_receipts">Enter Sales Receipts</a> do not pass through Undeposited Funds and do not appear here.</li>
 </ul>

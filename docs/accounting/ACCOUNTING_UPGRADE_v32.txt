@@ -1,0 +1,56 @@
+G-SMaRT Accounting - version 32 (2026-12-03)
+=============================================
+
+This package holds only the files that were added or changed since version 31.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run database/migrations/2026_12_03_settle_receipts_financial_menu.sql once on every
+company database (phpMyAdmin > Import, Navicat > Execute SQL File, or the mysql
+command). It is written for MySQL 5.5 and is safe to run twice. Until it is run, the
+program stops after log-in and names it. (If 2026_11_26_average_cost_books.sql of
+version 31 was not run yet, run it first.) It:
+ 1. adds the table clearing_settlements: the card and e-wallet receipts a settlement
+    was ticked for. It starts empty; the settlements already made stay as they are;
+ 2. renames the menu "Financial Set-up & Reports" to "Financial".
+Nothing is deleted and no amount changes.
+
+The file 2026_11_12_comparative_statements_menu.sql of version 29 is changed too: it
+now gives the menu its version 29 name only while it is still called "Chart of
+Accounts", so running it again does not undo the new name.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/css/app.css.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v32.xlsx")
+------------------------------------------------------------------------
+ 1. Banking > Make Deposits > Card and e-wallet settlements > Details:
+    "Receipts not yet settled" has a Settle column, with a tick box on every receipt
+    and one in the heading that ticks them all (a click on the row ticks it too).
+    - The total of the receipts ticked shows in Gross settled on the deposit at once,
+      and in a bar at the bottom of the window with the number of receipts ticked.
+    - Under Gross settled: "3 receipts ticked" and Clear. While receipts are ticked
+      the box cannot be typed over; Clear takes the ticks off.
+    - When the deposit is saved, the ticked receipts are settled: they leave
+      "Receipts not yet settled", as a POS shift leaves "POS cash from closed shifts"
+      once its cash is deposited. The settlement line says how many receipts were
+      ticked ("Provider settlement BDO-77 (2 receipts ticked)").
+    - A settlement typed as an amount only still works, taken against the oldest
+      receipts first, as before.
+    - Voiding or deleting the deposit makes its receipts unsettled again. Editing it
+      keeps them settled while the deposit still holds that settlement amount.
+    - Changing the deposit date takes the ticks off (what is unsettled depends on
+      the date).
+    - Checked on saving: "Gross settled for Card Clearing (6,984.00) is not the total
+      of the 3 receipt(s) ticked to settle (6,983.00)..." and "POS Sale MK1-00000012
+      is not unsettled on 10/30/2026 any more..." (another deposit settled it).
+    - On a phone the Settle column stays in view while the table scrolls sideways.
+ 2. The menu "Financial Set-up & Reports" is now called "Financial", in the sidebar,
+    Page Access Configuration, the audit trail filter, the messages that point to
+    its pages (Module Default Accounts, Set Up Budgets, Class List) and the user's
+    manual. The Report Center card keeps the name "Financial Reports".
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v32.docx) are updated for all of the above.

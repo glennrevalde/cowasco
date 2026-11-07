@@ -96,6 +96,9 @@ run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_03_14_share_capital_bil
 run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_03_21_share_capital_terms_batch.sql');
 // version 46: Regular - Joint, Address Sub-groups and Receipt Layout Setup
 run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_03_28_regular_joint_subgroups_receipts.sql');
+// version 53, the accounting update (item groups, Receive Items lists, receipts ticked to settle, the average cost on
+// the books, the new reports and their page access)
+run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_04_accounting_update.sql');
 // the passbooks installed with the program: the savings passbook and the loan passbook of the former program, each
 // with its own design (Cooperative > Passbook Types)
 foreach (['Regular Passbook' => 'savings', 'Loan Passbook' => 'loan'] as $pbName => $pbLedger) {

@@ -5,14 +5,14 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 
 | Class | Files |
 |---|---:|
-| Cooperative system, unchanged | 694 |
-| Cooperative system, changed | 178 |
+| Cooperative system, unchanged | 663 |
+| Cooperative system, changed | 209 |
 | Water system, unchanged (under water/) | 26 |
 | Water system, adapted (under water/) | 212 |
-| New | 263 |
+| New | 324 |
 | Cooperative files not shipped | 1 |
 | Water files not shipped | 61 |
-| **Shipped in total** | **1373** |
+| **Shipped in total** | **1434** |
 
 ## New files
 
@@ -41,9 +41,12 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v50.txt`
 - `UPGRADE_v51.txt`
 - `UPGRADE_v52.txt`
+- `UPGRADE_v53.txt`
 - `app/AccountTypes.php`
+- `app/Clearing.php`
 - `app/CsvImports.php`
 - `app/CsvReview.php`
+- `app/ItemGroups.php`
 - `app/JournalEdits.php`
 - `app/LoanImport.php`
 - `app/LoanTxn.php`
@@ -57,6 +60,8 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `app/WaterReceiptLayout.php`
 - `app/WaterSchema.php`
 - `app/XlsxReader.php`
+- `app/reports/comparative.php`
+- `app/reports/item_groups.php`
 - `app/reports/water.php`
 - `assets/js/csv_review.js`
 - `assets/js/datefield.js`
@@ -69,16 +74,29 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/js/passbook_run.js`
 - `assets/js/savings.js`
 - `assets/js/subgroup_manager.js`
+- `assets/manual/img/admin_settings__item_groups.jpg`
+- `assets/manual/img/admin_settings__no_cost.jpg`
+- `assets/manual/img/bank_deposits__clearing_details.jpg`
+- `assets/manual/img/bank_deposits__journal.jpg`
+- `assets/manual/img/bank_deposits__settle.jpg`
+- `assets/manual/img/bank_deposits__settle_gross.jpg`
+- `assets/manual/img/bank_deposits__settlements.jpg`
 - `assets/manual/img/coa_account_types__edit.jpg`
 - `assets/manual/img/coa_account_types__main.jpg`
 - `assets/manual/img/coa_account_types__new.jpg`
 - `assets/manual/img/coop_member__water.jpg`
 - `assets/manual/img/coop_members__import.jpg`
 - `assets/manual/img/coop_passbooks__test.jpg`
+- `assets/manual/img/cust_invoices__edit_groups.jpg`
+- `assets/manual/img/cust_invoices__from_so_group.jpg`
+- `assets/manual/img/cust_invoices__view_details.jpg`
+- `assets/manual/img/cust_invoices__view_groups.jpg`
 - `assets/manual/img/dist_isc__basis.jpg`
 - `assets/manual/img/dist_isc__delete.jpg`
 - `assets/manual/img/dist_isc__remove.jpg`
 - `assets/manual/img/dist_pr__basis.jpg`
+- `assets/manual/img/inv_center__history.jpg`
+- `assets/manual/img/inv_items__group_pricing.jpg`
 - `assets/manual/img/inv_items__import.jpg`
 - `assets/manual/img/loan_accounts__import.jpg`
 - `assets/manual/img/loan_accounts__imported.jpg`
@@ -93,9 +111,40 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/manual/img/loan_release__form.jpg`
 - `assets/manual/img/loan_release__voucher.jpg`
 - `assets/manual/img/loan_vouchers__main.jpg`
+- `assets/manual/img/pos_receipts__return_group.jpg`
+- `assets/manual/img/pos_register__group_cart.jpg`
+- `assets/manual/img/pos_register__group_search.jpg`
+- `assets/manual/img/pos_register__receipt_group.jpg`
+- `assets/manual/img/pos_shifts__shift_endinv.jpg`
+- `assets/manual/img/rpt_avg_cost_changes__report.jpg`
 - `assets/manual/img/rpt_balance_sheet_summary__report.jpg`
+- `assets/manual/img/rpt_cash_flow_class__report.jpg`
+- `assets/manual/img/rpt_cmp_bs_custom__report.jpg`
+- `assets/manual/img/rpt_cmp_bs_month__report.jpg`
+- `assets/manual/img/rpt_cmp_bs_quarter__report.jpg`
+- `assets/manual/img/rpt_cmp_bs_year__report.jpg`
+- `assets/manual/img/rpt_cmp_is_custom__report.jpg`
+- `assets/manual/img/rpt_cmp_is_month__report.jpg`
+- `assets/manual/img/rpt_cmp_is_quarter__report.jpg`
+- `assets/manual/img/rpt_cmp_is_year__report.jpg`
+- `assets/manual/img/rpt_income_customer_summary__sorted.jpg`
 - `assets/manual/img/rpt_income_statement_summary__report.jpg`
+- `assets/manual/img/rpt_inv_movement_detail__shift.jpg`
+- `assets/manual/img/rpt_inv_movement_summary__times.jpg`
 - `assets/manual/img/rpt_loan_soa__find.jpg`
+- `assets/manual/img/rpt_pos_ending_inventory__cashier.jpg`
+- `assets/manual/img/rpt_pos_ending_inventory__desc.jpg`
+- `assets/manual/img/rpt_pos_ending_inventory__report.jpg`
+- `assets/manual/img/rpt_pos_ending_inventory__slip.jpg`
+- `assets/manual/img/rpt_pos_ending_inventory__slip_desc.jpg`
+- `assets/manual/img/rpt_pos_sales_item_group__details.jpg`
+- `assets/manual/img/rpt_pos_sales_item_group__report.jpg`
+- `assets/manual/img/rpt_qoh_by_site__exclude_zero.jpg`
+- `assets/manual/img/rpt_sales_inv_movement__shift_nonzero.jpg`
+- `assets/manual/img/rpt_sales_item_group__details.jpg`
+- `assets/manual/img/rpt_sales_item_group__report.jpg`
+- `assets/manual/img/rpt_sales_item_summary__sorted.jpg`
+- `assets/manual/img/rpt_trial_balance_class__report.jpg`
 - `assets/manual/img/sav_accounts__hold.jpg`
 - `assets/manual/img/sav_accounts__import.jpg`
 - `assets/manual/img/sav_accounts__menu.jpg`
@@ -104,6 +153,9 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/manual/img/sav_td__caiw.jpg`
 - `assets/manual/img/sav_transact__batch.jpg`
 - `assets/manual/img/sav_transact__pages.jpg`
+- `assets/manual/img/vend_receipts__list.jpg`
+- `assets/manual/img/vend_receipts__list_button.jpg`
+- `assets/manual/img/vend_receive_bill__list.jpg`
 - `assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css`
 - `assets/vendor/bootstrap-icons/font/fonts/bootstrap-icons.woff`
 - `assets/vendor/bootstrap-icons/font/fonts/bootstrap-icons.woff2`
@@ -126,6 +178,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `database/migrations/2027_03_14_share_capital_billing.sql`
 - `database/migrations/2027_03_21_share_capital_terms_batch.sql`
 - `database/migrations/2027_03_28_regular_joint_subgroups_receipts.sql`
+- `database/migrations/2027_04_04_accounting_update.sql`
 - `database/seeds/water_reference.sql`
 - `docs/ADDITIONAL_MODULE_V10_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V11_CHECKLIST.md`
@@ -157,6 +210,13 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `docs/TEST_EVIDENCE.md`
 - `docs/WATER_INTEGRATION_DESIGN.md`
 - `docs/WATER_MIGRATION.md`
+- `docs/accounting/ACCOUNTING_UPGRADE_v28.txt`
+- `docs/accounting/ACCOUNTING_UPGRADE_v29.txt`
+- `docs/accounting/ACCOUNTING_UPGRADE_v30.txt`
+- `docs/accounting/ACCOUNTING_UPGRADE_v31.txt`
+- `docs/accounting/ACCOUNTING_UPGRADE_v32.txt`
+- `docs/accounting/ACCOUNTING_UPGRADE_v33.txt`
+- `docs/accounting/ACCOUNTING_UPGRADE_v34.txt`
 - `modules/admin/_import_lib.php`
 - `modules/coa/account_types.php`
 - `modules/coa/je_edits.php`
@@ -192,6 +252,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v50.php`
 - `tests/coop/cases_v51.php`
 - `tests/coop/cases_v52.php`
+- `tests/coop/cases_v53.php`
 - `tests/coop/cases_water.php`
 - `tests/platform/provision_test.php`
 - `tests/platform/run.sh`
@@ -303,13 +364,17 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `app/Maintenance.php`
 - `app/Manual.php`
 - `app/Members.php`
+- `app/Memorized.php`
 - `app/Names.php`
 - `app/Party.php`
 - `app/PartyStatement.php`
 - `app/Passbook.php`
 - `app/Posting.php`
+- `app/Processing.php`
 - `app/Provision.php`
+- `app/Receipt.php`
 - `app/Report.php`
+- `app/ReportLayout.php`
 - `app/SavBatch.php`
 - `app/Savings.php`
 - `app/Schema.php`
@@ -325,21 +390,35 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `app/reports/coop.php`
 - `app/reports/coop_loans.php`
 - `app/reports/coop_savings.php`
+- `app/reports/customers.php`
 - `app/reports/finance.php`
+- `app/reports/income_expense.php`
+- `app/reports/inventory.php`
+- `app/reports/movement.php`
 - `app/reports/party.php`
+- `app/reports/pos.php`
+- `app/reports/processing.php`
 - `app/reports/subsidiary.php`
 - `assets/css/app.css`
 - `assets/js/app.js`
 - `assets/js/coop.js`
+- `assets/manual/img/bank_deposits__main.jpg`
 - `assets/manual/img/coa_accounts__edit.jpg`
 - `assets/manual/img/coa_accounts__main.jpg`
 - `assets/manual/img/coa_accounts__new.jpg`
+- `assets/manual/img/coa_classes__main.jpg`
 - `assets/manual/img/coop_members__main.jpg`
 - `assets/manual/img/coop_passbooks__main.jpg`
 - `assets/manual/img/dist_batches__main.jpg`
 - `assets/manual/img/dist_isc__main.jpg`
 - `assets/manual/img/home_dashboard__full.jpg`
+- `assets/manual/img/home_reports__main.jpg`
+- `assets/manual/img/inv_center__detail.jpg`
+- `assets/manual/img/inv_center__site.jpg`
 - `assets/manual/img/inv_items__main.jpg`
+- `assets/manual/img/inv_process__main.jpg`
+- `assets/manual/img/inv_process__print.jpg`
+- `assets/manual/img/inv_process__view.jpg`
 - `assets/manual/img/loan_accounts__main.jpg`
 - `assets/manual/img/loan_adjustments__main.jpg`
 - `assets/manual/img/loan_application__view.jpg`
@@ -355,6 +434,8 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/manual/img/rpt_balance_sheet__report.jpg`
 - `assets/manual/img/rpt_cash_flow__report.jpg`
 - `assets/manual/img/rpt_income_statement__report.jpg`
+- `assets/manual/img/rpt_physical_worksheet__report.jpg`
+- `assets/manual/img/rpt_pos_sales_hour__report.jpg`
 - `assets/manual/img/sav_accounts__main.jpg`
 - `assets/manual/img/sav_accounts__view.jpg`
 - `assets/manual/img/sav_passbook__main.jpg`
@@ -365,6 +446,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/manual/img/teller_or__main.jpg`
 - `assets/manual/img/teller_receipts__main.jpg`
 - `assets/manual/img/teller_shift__main.jpg`
+- `assets/manual/img/vend_receive_items__list.jpg`
 - `config/config.php`
 - `database/accounting_system.sql`
 - `database/accounting_system_clean.sql`
@@ -374,7 +456,9 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `modules/admin/roles.php`
 - `modules/admin/settings.php`
 - `modules/banking/cash_voucher.php`
+- `modules/banking/deposits.php`
 - `modules/coa/accounts.php`
+- `modules/coa/classes.php`
 - `modules/coa/journal.php`
 - `modules/coop/_coop.php`
 - `modules/coop/api.php`
@@ -423,15 +507,21 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `modules/inventory/adjust.php`
 - `modules/inventory/center.php`
 - `modules/inventory/items.php`
+- `modules/inventory/process.php`
 - `modules/party/center.php`
 - `modules/party/statement.php`
 - `modules/platform/new.php`
 - `modules/pos/approval_codes.php`
+- `modules/pos/receipts.php`
 - `modules/pos/register.php`
+- `modules/pos/shifts.php`
+- `modules/reports/center.php`
 - `modules/txn/_common.php`
 - `modules/txn/_grids.php`
 - `modules/txn/page.php`
 - `modules/vendors/center.php`
+- `modules/vendors/receipts.php`
+- `modules/vendors/receive.php`
 - `tests/coop/RESULTS.md`
 - `tests/coop/RESULTS_pure_php.md`
 - `tests/coop/cases.php`
@@ -439,9 +529,11 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_party.php`
 - `tests/coop/run.php`
 - `tools/coop_demo.php`
+- `tools/demo_data.php`
 - `tools/export_sql.php`
 - `tools/install.php`
 - `tools/lib.php`
+- `tools/seed.php`
 - `views/layout.php`
 - `views/manual/chapters/01-getting-started.html`
 - `views/manual/chapters/02-home-and-reports.html`

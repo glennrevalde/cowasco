@@ -85,6 +85,12 @@ final class Access
         return self::registry()['modules'];
     }
 
+    /** The name of a module's card on the Report Center: its own (registry 'report_center_names') or the module's */
+    public static function reportCenterName(string $code): string
+    {
+        return (string)(self::registry()['report_center_names'][$code] ?? (self::modules()[$code][0] ?? $code));
+    }
+
     public static function menuAliases(): array
     {
         return self::registry()['menu_aliases'];

@@ -1,0 +1,82 @@
+G-SMaRT Integrated Cooperative System - version 53 (2026-11-07)
+=================================================================
+
+The accounting update: the accounting side of the program brought up to G-SMaRT Accounting
+version 34 (its versions 26 to 34). The cooperative and water features that work through the
+accounting (members, their price levels, savings, loans, teller, share capital, water bills
+and collections) keep working as before.
+
+This package holds only the files changed or added since version 52. Copy the folder over
+your installation, keeping the folder structure. config/config.php is not included and is
+never changed. Works on MySQL 5.5 and MySQL 8 as before.
+
+What to run on the database (once)
+----------------------------------
+  database/migrations/2027_04_04_accounting_update.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         mysql -u root -p your_database < database/migrations/2027_04_04_accounting_update.sql
+
+Back up the database first. The script is safe to run more than once. Until it is run the
+program stops with "Database update needed" and names this file. On the platform (several
+companies), Super Admin > Database updates runs it on every company.
+
+It adds: the item group columns and the table item_group_sales, the account 4070 Item Group
+Price Variance (or the first free of 4071, 4075, 4080, 4090) as the module default account,
+transactions.received_via, the table clearing_settlements, and fourteen report pages with
+their page access (each given to the roles that open the report beside it). It also sets the
+quantity on hand of every item at every site to the total of its movements and the average
+cost to the value left over the quantity left (nothing is deleted, no posted amount changes).
+
+After copying the files and running the script, press Ctrl+F5 once in the browser, then run
+System Administration > Utilities: Verify & Rebuild Data > Verify data. If it lists items
+"costed out of order", run Rebuild data (costs).
+
+What is new (the details are in docs/accounting/ACCOUNTING_UPGRADE_v28.txt ... v34.txt and in
+the manual)
+----------------------------------------------------------------------------------------
+Point of Sale and inventory reports
+- Ending Inventory - POS Cashier (Point of Sale > Reports): what the outlet holds at the end
+  of a cashier's shift, by item code or by description, printed on the roll printer; a
+  Shift box fills in the dates and times. Shifts, Cash Drops & Readings links to it.
+- A time after each date on the inventory movement reports (shifts of a 24-hour business),
+  a Cashier filter, "Exclude zero sales", "Exclude zero qty" on Quantity on Hand by Site and
+  on the Physical Inventory Worksheet, and totals on POS Sales by Hour.
+Item groups
+- An item group has a Group price, its Consolidated price (its items at their own prices)
+  and the Price variance with its GL account. Sold as one line on estimates, sales orders,
+  invoices, sales receipts, statement charges, credit memos and at the POS; saved as its
+  items plus one price variance line; shown "by item group" or "item details".
+- A member pays the group at the member's price level, as for any item (the member's own
+  level, else the members' level of the line of business).
+- Sales by Item Group and POS Sales by Item Group. System Administration > Company, Security
+  & Closing Date: Track Item Group Sales transactions, Adopt the Group Price in the Item Group.
+Sales with no cost
+- An inventory part (or an item of a group) with no unit cost and no average cost is not
+  sold from a sales form or the POS ("Block sales of items with no unit cost", on by default),
+  and a processing order is not posted with an input or output at no cost. Water bills and
+  the other documents the water module posts from its own records are not checked.
+Purchases
+- Receive Items List and Receive Items and Enter Bills List; the Receipt List button.
+Banking
+- Make Deposits: the card and e-wallet balances are their General Ledger balances on the
+  deposit date, with a Details window (what the balance is made of, the receipts not yet
+  settled). Tick Settle on the receipts the provider paid: their total goes into Gross
+  settled and they leave the unsettled list when the deposit is saved.
+- Journal entries to Undeposited Funds are listed on Make Deposits (a debit adds, a credit
+  deducts).
+- A payment on account taken at the POS with a card or e-wallet goes to its clearing account.
+Financial reports
+- Comparative Income Statement and Balance Sheet by Month, Quarter, Year and Custom Range /
+  Date; Trial Balance by Class; Statement of Cash Flows by Class (the Class List has buttons
+  for both). The Statement of Cash Flows by Class follows the account types (Financial >
+  Account Types) as the plain statement does; its Total column is the plain statement, the
+  Trial Balance by Class's Total columns the Trial Balance, both with the balances between
+  the lines of business eliminated.
+- Sort by on the sales reports; the Report Center with a search box and a Financial Reports
+  card.
+Inventory costing
+- On one date the stock received is counted before the stock used or sold. The Inventory
+  Center history is in that order, with dates, Latest 100 / 500 / All and the balance brought
+  forward. A receipt into stock sold below zero settles the shortfall at the cost received
+  (the difference to cost of goods sold). New report Average Cost Changes.

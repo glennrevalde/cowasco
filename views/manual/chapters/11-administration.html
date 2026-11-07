@@ -762,11 +762,29 @@
 </thead>
 <tbody>
 <tr>
+<td><strong>Track Item Group Sales transactions</strong></td>
+<td>Ticked (the standard): every item group sold is recorded in a table of its own, as a group (how many groups, at what price, for how much), for <a href="manual.php?c=customers#pg-rpt-sales_item_group">Sales by Item Group</a> and <a href="manual.php?c=point-of-sale#pg-rpt-pos_sales_item_group">POS Sales by Item Group</a>. Cleared: groups sold are not recorded there (their items are still recorded as always).</td>
+</tr>
+<tr>
+<td><strong>Adopt the Group Price in the Item Group</strong></td>
+<td>Ticked (the standard): the <strong>Group price</strong> of an item group is its price on estimates, sales orders, sales receipts, invoices and POS sales; the difference from the prices of its items goes to its price variance account. Cleared (or a group without a group price): a group is sold at its consolidated price, the sum of the prices of its items. See <a href="manual.php?c=inventory#sec-item-groups">Item groups: group price and price variance</a>.</td>
+</tr>
+<tr>
 <td><strong>Allow selling or moving stock below zero (with warning)</strong></td>
 <td>Ticked (the standard): a document that takes an item below zero at a site is saved, with a yellow message naming the items now below zero. Cleared: such a document is refused with "Not enough stock: …", whether it is an invoice, a sales receipt, a POS sale, a transfer, an adjustment or any other document that takes stock out; and a processing order on <a href="manual.php?c=inventory#pg-inv-process">Disassemble / Process Items</a> whose outputs were already used cannot be voided or deleted.</td>
 </tr>
+<tr>
+<td><strong>Block sales of items with no unit cost (inventory parts and the items of item groups)</strong></td>
+<td>Ticked (the standard): an invoice, sales receipt, statement charge or POS sale is refused when it sells an inventory part or assembly that has neither a <strong>Unit cost</strong> on its item form nor an average unit cost, because its cost of goods sold would be zero and its profit overstated. An item group is sold as its items, so the items of the group are checked too. The message names the items and the group they are in. Cleared: such sales are saved as before. See <a href="manual.php?c=customers#sec-no-cost-sales">Items with no unit cost</a>.</td>
+</tr>
+<tr>
+<td><strong>Block posting processing orders with no unit cost (inputs, co-products and by-products)</strong></td>
+<td>Ticked (the standard): <strong>Save and post</strong> and <strong>Complete and post</strong> on <a href="manual.php?c=inventory#pg-inv-process">Disassemble / Process Items</a> are refused when an input has no unit cost or average unit cost, or a co-product or by-product would be received at no cost (scrap may be). <strong>Save as pending</strong> is still allowed. Cleared: such orders are posted as before.</td>
+</tr>
 </tbody>
 </table></div>
+<figure class="man-fig man-fig-narrow"><a class="man-zoom" href="assets/manual/img/admin_settings__no_cost.jpg" title="Click to enlarge"><img src="assets/manual/img/admin_settings__no_cost.jpg" alt="Inventory and POS: the two unit cost checks" width="527" height="282" loading="lazy" decoding="async"></a><figcaption>Inventory and POS: the two unit cost checks</figcaption></figure>
+<figure class="man-fig man-fig-narrow"><a class="man-zoom" href="assets/manual/img/admin_settings__item_groups.jpg" title="Click to enlarge"><img src="assets/manual/img/admin_settings__item_groups.jpg" alt="Inventory and POS: the two item group options" width="527" height="235" loading="lazy" decoding="async"></a><figcaption>Inventory and POS: the two item group options</figcaption></figure>
 <p>Only a save that lowers the quantity is checked, so older documents can still be corrected while an item is below zero. The <strong>No negative quantities on hand</strong> check on <a href="#pg-admin-utilities">Utilities: Verify &amp; Rebuild Data</a> and the <a href="manual.php?c=inventory#pg-rpt-negative_inventory">Negative Inventory Listing</a> show the items below zero.</p>
 <h4 id="s-pos-receipt-wording">POS receipt wording<a class="man-hash" href="#s-pos-receipt-wording" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <div class="table-responsive man-table"><table class="table table-sm">
@@ -926,7 +944,7 @@
 <li>Every save is recorded in the audit trail as a <strong>Settings Change</strong> listing each setting's old and new value.</li>
 </ul>
 <h2 id="pg-admin-utilities">Utilities: Verify &amp; Rebuild Data<a class="man-hash" href="#pg-admin-utilities" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
-<p>Verify Data checks that the books, the customer and vendor balances, and inventory agree with each other. Rebuild Data repairs what it can: it replays inventory transactions in date order so costs and cost of sales match the dates, and it refreshes document balances. Run the checks at every month-end before you close the books.</p>
+<p>Verify Data checks that the books, the customer and vendor balances, and inventory agree with each other. Rebuild Data repairs what it can: it replays inventory transactions in date order, on each date the stock received before the stock used or sold, so costs and cost of sales match the dates, and it refreshes document balances. Run the checks at every month-end before you close the books.</p>
 <p><strong>Where to find it:</strong> System Administration &gt; Utilities: Verify &amp; Rebuild Data. The <strong>Verify &amp; Rebuild Data</strong> button on Backup &amp; Restore also opens it.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/admin_utilities__main.jpg" title="Click to enlarge"><img src="assets/manual/img/admin_utilities__main.jpg" alt="The Verify data checks with one warning, and the Rebuild data box below them" width="1094" height="1200" loading="lazy" decoding="async"></a><figcaption>The Verify data checks with one warning, and the Rebuild data box below them</figcaption></figure>
 <h4 id="s-verify-data">Verify data<a class="man-hash" href="#s-verify-data" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
@@ -967,8 +985,8 @@
 </tr>
 <tr>
 <td><strong>Quantities on hand match the movements</strong></td>
-<td>Each item's quantity at each site against the movements that make it up.</td>
-<td>Rebuild data recalculates quantities.</td>
+<td>Each item's quantity at each site against the movements that make it up, including a site that has movements but no quantity row.</td>
+<td>Rebuild data recalculates quantities. Since version 53 the average cost is always worked out on the movements, and an item whose quantities differ is put right the next time it moves.</td>
 </tr>
 <tr>
 <td><strong>Average cost matches the value on hand</strong> (warning)</td>
@@ -977,7 +995,7 @@
 </tr>
 <tr>
 <td><strong>Inventory entered in date order</strong> (warning)</td>
-<td>Items with movements recorded after later-dated ones, such as a purchase entered late but dated early.</td>
+<td>Items with movements recorded after later-dated ones, such as a purchase entered late but dated early, or, on one date, stock used or sold before that day's receipt was entered (a processing order typed before the bill of the same day).</td>
 <td>Rebuild data replays them in date order.</td>
 </tr>
 <tr>
@@ -1019,7 +1037,7 @@
 <tbody>
 <tr>
 <td><strong>Recalculate inventory costs</strong></td>
-<td>Replays every inventory transaction in date order (by date, then in the order entered). Average costs, item values and the cost of sales on past sales are restated. The sales amounts, quantities and the rest of the ledger are untouched.</td>
+<td>Replays every inventory transaction in date order: by date; on one date, first the transactions that only bring stock in (bills, item receipts, returns, adjustments up), then those that take some out and put some in (processing orders, builds, transfers), then those that only take it out (sales, adjustments down); then in the order entered. Average costs, item values and the cost of sales on past sales are restated. The sales amounts, quantities and the rest of the ledger are untouched.</td>
 </tr>
 <tr>
 <td><strong>Refresh document balances and statuses</strong></td>

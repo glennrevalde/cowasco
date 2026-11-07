@@ -1,0 +1,70 @@
+G-SMaRT Accounting - version 28 (2026-11-12)
+=============================================
+
+This package holds only the files that were added or changed since version 27.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No database update this time: there is no new migration, and no table or column
+changes. database/accounting_system.sql and accounting_system_clean.sql are
+unchanged. (If the 2026_11_05 migration of version 27 was not run yet, run it.)
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/css/app.css.
+
+What is new or corrected (the requests of "ADDITIONAL_REVISED FEATURES ... v28.xlsx")
+--------------------------------------------------------------------------------------
+Make Deposits: card and e-wallet settlements
+ 1. E-wallet Clearing on Make Deposits did not agree with the General Ledger:
+    it showed twice its balance (74,670.70 against 37,335.35 on the Trial
+    Balance). The cause: the list of clearing accounts was joined to the payment
+    methods, and E-wallet Clearing is the clearing account of two methods (GCash
+    and Maya), so every ledger line of the account was counted once per method.
+    Corrected: each clearing account is listed once, with the payment methods that
+    use it under its name, and Unsettled is the balance of the account in the
+    General Ledger. Only the figure shown was wrong; the books were not affected.
+ 2. The balances, checked and corrected for Card Clearing and E-wallet Clearing:
+    - Unsettled is the General Ledger balance on the deposit Date (the same
+      figure the Trial Balance shows for that date). Changing the Date updates it,
+      and a settlement is checked against the balance on the deposit date: a
+      deposit dated before the sales cannot settle them.
+    - The module default accounts Card Clearing and E-wallet Clearing are always
+      listed: a card or e-wallet method with no clearing account of its own posts
+      its sales there, and before they were left off the list.
+    - Every clearing account is shown, also with a zero balance; a credit balance
+      (more settled than received) is shown in red.
+    - A payment on account taken at the POS register with a card or e-wallet
+      method that has no clearing account went to Undeposited Funds, while a POS
+      sale paid the same way went to the clearing account. It now goes to Card
+      Clearing / E-wallet Clearing too, like the sale. Payments already saved are
+      not changed.
+    - A fee with no gross amount, and a fee larger than the gross, are refused
+      with a message.
+ 3. A Details button beside each unsettled balance opens the card and e-wallet
+    balance details (also as a page that can be printed, with another account or
+    as-of date): the balance with its payment methods; what it is made of by
+    source (POS sales, POS returns refunded, customer payments, sales receipts,
+    settlements deposited, journal entries) with documents, debits, credits and
+    net; the card and e-wallet sales by payment method; the receipts not yet
+    settled (the latest receipts that make up the balance, settlements being taken
+    against the oldest receipts first, each with its date, document, customer or
+    terminal, method, reference, amount and unsettled part); and the latest 25
+    settlements. Links open the General Ledger and the Trial Balance of the
+    account.
+
+Processing Order
+ 4. The unit cost of each input on the printed PROCESSING ORDER (Item,
+    Description, Qty, Unit cost, Cost).
+ 5. The variance quantity, Input Quantity less Output Quantity, on the printout
+    ("Variance qty (inputs less outputs)", under the cost variance; also printed
+    for users who may not see costs), on the saved order (a line under Total
+    outputs and a Quantity summary box), live on the entry form (a Total inputs row
+    and a Variance qty row under the outputs), as a column of the Processing
+    Orders list and its CSV export, and on the Processing & Disassembly Register
+    (Variance qty; Input qty and Output qty can be added in Modify Report). For
+    example 5.02 kg of pork cut into 2.3 kg and 2.7 kg: variance qty 0.02.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v28.docx) are updated for all of the above.

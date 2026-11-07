@@ -186,6 +186,10 @@ if ($a === 'new' || $a === 'edit') {
         if (Access::viewCosts()) {
             $d['cost'] = round(pnum('cost'), 4);
         }
+        // an item group: the account its price variance (group price less consolidated price) goes to
+        if ($type === 'group' && ItemGroups::ready()) {
+            $d['group_variance_account_id'] = pint('group_variance_account_id');
+        }
         if ($d['code'] === '' || $d['name'] === '') {
             fail('Enter the item code and name.');
         }
@@ -338,6 +342,34 @@ if ($a === 'new' || $a === 'edit') {
       <?= check_field('is_active', 'Active', fv('is_active', $it, 1), 'col-md-2') ?>
       <?php endif; ?>
       <?php if (BusinessUnits::ready()): ?><?= check_field('patronage_eligible', 'Counts for patronage refund', fv('patronage_eligible', $it, 0), 'col-md-3') ?><?php endif; ?>
+      <?php if ($type === 'group'):
+          // the group price, the consolidated price (the items of the group at their own prices) and the difference
+          $consolidated = 0.0;
+          foreach ($components as $c) {
+              $consolidated += (float)$c['qty'] * (float)(item_cache((int)$c['component_item_id'])['sales_price'] ?? 0);
+          }
+          $groupPrice = (float)fv('sales_price', $it, '0');
+          $incomeAccts = Accts::ofType(['Income', 'Other Income', 'Expense', 'Other Expense', 'Cost of Goods Sold']);
+      ?>
+      <div class="col-12"><div class="group-pricing" id="groupPricing">
+        <div class="group-pricing-row">
+          <div class="gp-field"><label class="form-label" for="f_sales_price">Group price</label>
+            <input class="form-control form-control-sm text-end" type="number" step="0.0001" min="0" id="f_sales_price" name="sales_price" value="<?= h(rtrim(rtrim(number_format($groupPrice, 4, '.', ''), '0'), '.')) ?>">
+            <div class="form-text">The price followed on estimates, sales orders, invoices, sales receipts and POS sales<?= ItemGroups::adopt() ? '' : ' (when "Adopt the Group Price" is switched on)' ?>.</div></div>
+          <div class="gp-field"><label class="form-label">Consolidated price</label>
+            <div class="form-control form-control-sm text-end gp-readout" id="gpConsolidated"><?= money($consolidated) ?></div>
+            <div class="form-text">The sum of the prices of the items in the group.</div></div>
+          <div class="gp-field"><label class="form-label">Price variance</label>
+            <div class="form-control form-control-sm text-end gp-readout" id="gpVariance"><?= money($groupPrice - $consolidated) ?></div>
+            <div class="form-text">Group price less consolidated price.</div></div>
+          <?php if (ItemGroups::ready()): ?>
+          <div class="gp-field gp-account"><label class="form-label" for="f_gvar">Price variance GL account</label>
+            <select class="form-select form-select-sm" id="f_gvar" name="group_variance_account_id"><?= options($incomeAccts, fv('group_variance_account_id', $it, ''), 'Module default (Item Group Price Variance)') ?></select>
+            <div class="form-text">Where the price variance of each group sold is recorded.</div></div>
+          <?php endif; ?>
+        </div>
+      </div></div>
+      <?php endif; ?>
     </div></div>
     <?php if ($uomSets): ?>
     <script>
@@ -392,6 +424,8 @@ if ($a === 'new' || $a === 'edit') {
         <?php if (!in_array($type, ['group', 'payment'], true)): ?>
           <?= select_field('income_account_id', $type === 'discount' ? 'Discount account' : 'Income account', $allAccts, fv('income_account_id', $it, Accts::get($type === 'discount' ? 'sales_discounts' : 'sales_income')), ['class' => 'col-md-8']) ?>
           <?= select_field('tax_code_id', 'Tax code', Lookup::taxCodes(), fv('tax_code_id', $it), ['blank' => 'None', 'class' => 'col-md-4']) ?>
+        <?php elseif ($type === 'group'): ?>
+          <?= select_field('tax_code_id', 'Tax code of the price variance', Lookup::taxCodes(), fv('tax_code_id', $it), ['blank' => 'The one most items of the group have', 'class' => 'col-12 col-md-8']) ?>
         <?php endif; ?>
       </div></div></div>
     </div>
@@ -418,7 +452,8 @@ if ($a === 'new' || $a === 'edit') {
 
     <?php if (in_array($type, ['assembly', 'group'], true)): ?>
     <div class="card my-3"><div class="card-header"><?= $type === 'assembly' ? 'Bill of materials (components, labor and overhead per unit)' : 'Items in this group' ?></div><div class="card-body">
-      <table class="table table-sm" id="compTable"><thead><tr><th>Item</th><th class="num">Qty</th><?= $viewCosts && $type === 'assembly' ? '<th class="num">Avg / std cost</th><th class="num">Total</th>' : '' ?><th></th></tr></thead><tbody>
+      <?php $compPrices = $type === 'group' ? array_map('floatval', DB::pairs("SELECT id, sales_price FROM items WHERE is_active = 1 OR id IN (SELECT component_item_id FROM item_components WHERE parent_item_id = :p)", ['p' => $it['id'] ?? 0])) : []; ?>
+      <div class="table-responsive"><table class="table table-sm comp-table" id="compTable"<?= $type === 'group' ? ' data-prices="' . h(json_encode($compPrices)) . '"' : '' ?>><thead><tr><th>Item</th><th class="num">Qty</th><?= $viewCosts && $type === 'assembly' ? '<th class="num">Avg / std cost</th><th class="num">Total</th>' : '' ?><?= $type === 'group' ? '<th class="num">Price</th><th class="num">Amount</th>' : '' ?><th></th></tr></thead><tbody>
       <?php $bomTotal = 0.0; $rowsC = $components ?: [['component_item_id' => '', 'qty' => '']]; foreach ($rowsC as $i => $c):
           $ci = !empty($c['component_item_id']) ? item_cache((int)$c['component_item_id']) : null;
           $unitCost = $ci ? (in_array($ci['item_type'], ['inventory', 'assembly'], true) ? (float)$ci['avg_cost'] : (float)$ci['cost']) : 0;
@@ -427,14 +462,72 @@ if ($a === 'new' || $a === 'edit') {
         <tr><td><select class="form-select form-select-sm" name="comp[<?= $i ?>][item_id]"><?= options($compItems, $c['component_item_id'], '') ?></select></td>
           <td><input class="form-control form-control-sm text-end" name="comp[<?= $i ?>][qty]" value="<?= h($c['qty'] !== '' ? qty($c['qty']) : '') ?>"></td>
           <?php if ($viewCosts && $type === 'assembly'): ?><td class="num"><?= money($unitCost) ?></td><td class="num"><?= money($unitCost * to_num($c['qty'])) ?></td><?php endif; ?>
-          <td><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove()"><i class="bi bi-x-lg"></i></button></td></tr>
+          <?php if ($type === 'group'): $cp = (float)($ci['sales_price'] ?? 0); ?><td class="num" data-comp-price><?= money($cp) ?></td><td class="num" data-comp-amount><?= money($cp * to_num($c['qty'])) ?></td><?php endif; ?>
+          <td><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove();document.dispatchEvent(new Event('comp:changed'))" aria-label="Remove"><i class="bi bi-x-lg"></i></button></td></tr>
       <?php endforeach; ?>
       </tbody>
       <?php if ($viewCosts && $type === 'assembly'): ?><tfoot><tr class="fw-semibold"><td colspan="3" class="text-end">Total component cost</td><td class="num"><?= money($bomTotal) ?></td><td></td></tr></tfoot><?php endif; ?>
-      </table>
-      <template id="compTpl"><tr><td><select class="form-select form-select-sm" name="comp[__i__][item_id]"><?= options($compItems, null, '') ?></select></td><td><input class="form-control form-control-sm text-end" name="comp[__i__][qty]" value="1"></td><?= $viewCosts && $type === 'assembly' ? '<td></td><td></td>' : '' ?><td><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove()"><i class="bi bi-x-lg"></i></button></td></tr></template>
-      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="const t=document.getElementById('compTpl').innerHTML.replace(/__i__/g,'n'+Date.now());document.querySelector('#compTable tbody').insertAdjacentHTML('beforeend',t)"><i class="bi bi-plus"></i> Add component</button>
+      <?php if ($type === 'group'): ?><tfoot><tr class="fw-semibold"><td colspan="3" class="text-end">Sum of the individual prices (consolidated price)</td><td class="num" id="compSum"><?= money($consolidated) ?></td><td></td></tr></tfoot><?php endif; ?>
+      </table></div>
+      <template id="compTpl"><tr><td><select class="form-select form-select-sm" name="comp[__i__][item_id]"><?= options($compItems, null, '') ?></select></td><td><input class="form-control form-control-sm text-end" name="comp[__i__][qty]" value="1"></td><?= $viewCosts && $type === 'assembly' ? '<td></td><td></td>' : '' ?><?= $type === 'group' ? '<td class="num" data-comp-price></td><td class="num" data-comp-amount></td>' : '' ?><td><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove();document.dispatchEvent(new Event('comp:changed'))" aria-label="Remove"><i class="bi bi-x-lg"></i></button></td></tr></template>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="const t=document.getElementById('compTpl').innerHTML.replace(/__i__/g,'n'+Date.now());document.querySelector('#compTable tbody').insertAdjacentHTML('beforeend',t);document.dispatchEvent(new Event('comp:changed'))"><i class="bi bi-plus"></i> <?= $type === 'group' ? 'Add item' : 'Add component' ?></button>
     </div></div>
+    <?php if ($type === 'group'): ?>
+    <script>
+    (function () {
+      // the price and amount of each item of the group, their sum (the consolidated price) and the price variance follow what is typed
+      const { num, fmt } = AppFmt;
+      const table = document.getElementById('compTable');
+      const prices = JSON.parse(table.dataset.prices || '{}');
+      const priceIn = document.getElementById('f_sales_price');
+      function recalc() {
+        let sum = 0;
+        table.querySelectorAll('tbody tr').forEach((tr) => {
+          const sel = tr.querySelector('select'), q = tr.querySelector('input[name$="[qty]"]');
+          const p = sel && sel.value ? num(prices[sel.value]) : 0;
+          const amt = Math.round(p * num(q ? q.value : 0) * 100) / 100;
+          sum += amt;
+          const pc = tr.querySelector('[data-comp-price]'), ac = tr.querySelector('[data-comp-amount]');
+          if (pc) pc.textContent = sel && sel.value ? fmt(p) : '';
+          if (ac) ac.textContent = sel && sel.value ? fmt(amt) : '';
+        });
+        sum = Math.round(sum * 100) / 100;
+        document.getElementById('compSum').textContent = fmt(sum);
+        document.getElementById('gpConsolidated').textContent = fmt(sum);
+        const v = Math.round((num(priceIn ? priceIn.value : 0) - sum) * 100) / 100;
+        const vb = document.getElementById('gpVariance');
+        vb.textContent = fmt(v);
+        vb.classList.toggle('neg', v < 0);
+      }
+      table.addEventListener('change', recalc);
+      table.addEventListener('input', recalc);
+      if (priceIn) priceIn.addEventListener('input', recalc);
+      document.addEventListener('comp:changed', recalc);
+      recalc();
+    })();
+    </script>
+    <?php if ($it && ItemGroups::ready()):
+        // the groups sold, as groups (Sales by Item Group)
+        $y0 = Report::fiscalYearStart(today());
+        $sold = DB::row("SELECT COALESCE(SUM(CASE WHEN g.txn_type IN ('credit_memo','pos_return') THEN -g.qty ELSE g.qty END),0) AS q,
+                                COALESCE(SUM(CASE WHEN g.txn_type IN ('credit_memo','pos_return') THEN -g.amount ELSE g.amount END),0) AS a,
+                                COALESCE(SUM(CASE WHEN g.txn_date >= :m THEN CASE WHEN g.txn_type IN ('credit_memo','pos_return') THEN -g.qty ELSE g.qty END ELSE 0 END),0) AS qm
+                           FROM item_group_sales g JOIN transactions t ON t.id = g.txn_id
+                          WHERE g.group_item_id = :i AND t.is_voided = 0 AND t.is_pending = 0 AND t.status <> 'suspended' AND g.txn_date >= :y
+                            AND g.txn_type IN ('invoice','sales_receipt','statement_charge','pos_sale','credit_memo','pos_return')",
+            ['i' => $it['id'], 'y' => $y0, 'm' => date('Y-m-01')]);
+    ?>
+    <div class="card my-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2"><span>Sold as a group</span>
+      <?= Access::page('rpt.sales_item_group') ? btn_link(url('rpt.sales_item_group', ['item_id' => $it['id'], 'dates' => 'this_year']), 'Sales by Item Group', 'btn-outline-secondary', 'bar-chart') : '' ?></div>
+      <div class="card-body"><div class="group-sold">
+        <div><div class="small text-muted">Groups sold this month</div><div class="fs-5 fw-semibold"><?= qty($sold['qm']) ?></div></div>
+        <div><div class="small text-muted">Groups sold this fiscal year</div><div class="fs-5 fw-semibold"><?= qty($sold['q']) ?></div></div>
+        <div><div class="small text-muted">Sales of the group this fiscal year</div><div class="fs-5 fw-semibold"><?= money($sold['a']) ?></div></div>
+      </div>
+      <?php if (!ItemGroups::track()): ?><div class="small text-muted mt-2">"Track Item Group Sales transactions" is switched off (System Administration &gt; Company, Security &amp; Closing Date), so new sales of groups are not counted here.</div><?php endif; ?>
+      </div></div>
+    <?php endif; ?>
+    <?php endif; ?>
     <?php endif; ?>
 
     <?php if (in_array($type, ['inventory', 'assembly', 'non_inventory', 'service', 'other_charge'], true) && Lookup::priceLevels()):

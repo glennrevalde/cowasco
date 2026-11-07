@@ -52,7 +52,7 @@ function pos_group(array $f, callable $keyFn, string $label, ?callable $refFn = 
 Report::define('pos_sales_item', [
     'filters' => ['range', 'terminal', 'site', 'cashier', 'item', 'category', 'item_type', 'pref_vendor'],
     'default_dates' => 'today',
-    'run' => fn(array $f) => pos_group($f, fn($l) => $l['item_code'] . ' - ' . $l['item_name'], 'Item', fn($l) => ['item' => (int)$l['item_id']]),
+    'run' => fn(array $f) => pos_group($f, fn($l) => $l['item_code'] ? $l['item_code'] . ' - ' . $l['item_name'] : $l['item_label'], 'Item', fn($l) => ['item' => (int)$l['item_id']]),
 ]);
 
 Report::define('pos_sales_category', [
@@ -219,15 +219,18 @@ Report::define('pos_sales_hour', [
         $bars = [];
         $rows = [];
         $tot = 0.0;
+        $cnt = 0;
         foreach ($data as $d) {
             $label = sprintf('%02d:00–%02d:59', $d['hr'], $d['hr']);
             $bars[$label] = r2($d['net']);
             $rows[] = ['hour' => $label, 'count' => (int)$d['cnt'], 'amount' => r2($d['net']), 'avg' => $d['cnt'] ? r2($d['net'] / $d['cnt']) : 0];
             $tot += $d['net'];
+            $cnt += (int)$d['cnt'];
         }
+        // v33: the total of the Transactions column too, and the average sale of all of them
         return ['chart' => ['bars' => $bars, 'bars_title' => 'Net sales by hour'],
             'columns' => [['key' => 'hour', 'label' => 'Hour'], ['key' => 'count', 'label' => 'Transactions', 'type' => 'int'], ['key' => 'amount', 'label' => 'Net sales', 'type' => 'money'], ['key' => 'avg', 'label' => 'Average sale', 'type' => 'money']],
-            'rows' => $rows, 'totals' => ['hour' => 'TOTAL', 'amount' => r2($tot)]];
+            'rows' => $rows, 'totals' => ['hour' => 'TOTAL', 'count' => $cnt, 'amount' => r2($tot), 'avg' => $cnt ? r2($tot / $cnt) : 0]];
     },
 ]);
 

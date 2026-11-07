@@ -1,0 +1,102 @@
+G-SMaRT Accounting - version 31 (2026-11-26)
+=============================================
+
+This package holds only the files that were added or changed since version 30.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run database/migrations/2026_11_26_average_cost_books.sql once on every company
+database (phpMyAdmin > Import, Navicat > Execute SQL File, or the mysql command).
+It is written for MySQL 5.5, adds no table or column, changes no posted amount and is
+safe to run twice. Until it is run, the program stops after log-in and names it.
+It does three things:
+ 1. sets the quantities on hand by site (item_site_stock) to the totals of the
+    inventory movements;
+ 2. sets every average cost to the remaining value divided by the remaining quantity;
+ 3. adds the report Inventory > Reports > Average Cost Changes, for the roles that may
+    open Inventory Valuation Detail.
+
+Then, once, as an administrator:
+ - press Ctrl+F5 in the browser (new assets/css/app.css);
+ - System Administration > Utilities: Verify & Rebuild Data > Rebuild data (costs).
+   The processing orders and sales that were costed at the overstated averages
+   (for example PRC-00355 and PRC-00356 at 462.69) are costed again in date order,
+   and so are the cuts they produced. Then click Verify Data: "Quantities on hand
+   match the movements" and "Average cost matches the value on hand" must be OK.
+
+What was wrong (the requests of "ADDITIONAL_REVISED FEATURES ... v31.xlsx")
+----------------------------------------------------------------------------
+Item 607 Pork Carcass: bills at 225.00 (BILL-00204, -00210, -00211, -00212) showed
+averages after of 625.64 and 462.69, the processing orders PRC-00355 and PRC-00356
+took the carcass out at 462.69, and the Inventory Center said "The quantity on hand
+(-4.81) differs from the total of its movements (91.86) by -96.67."
+
+ - Cause: the average was the value of the movements divided by the quantity of the
+   quick-lookup table item_site_stock, and that table had 96.67 kg less than the
+   movements. That happened like this: a processing order that uses all of a bill
+   leaves the site at zero; Rebuild Data removed the site rows that were at zero; when
+   the processing order (or the bill) was saved again later, its old movement was
+   reversed with an UPDATE of a row that was no longer there, so nothing was taken
+   off, and the new movement then added the row again with -96.67. From then on every
+   receipt divided the right value by a quantity 96.67 too small. In a test copy, a
+   bill of 96.67, a processing order of 96.67, Rebuild Data, the order saved again and
+   then bills of 91.86, 59.10 and 37.22 at 225.00 give exactly -4.81 against 91.86,
+   then averages of 625.64 and 462.69, the figures of the screenshot. With version 31
+   the same steps give 225.00 every time.
+ - It is fixed in three places: the average cost is now always worked out on the
+   quantity of the movements (the "accumulated remaining value divided by the
+   existing quantity balance"); the table is always written with an insert-or-update,
+   so a removed row is added back; and an item whose table still differs is put right
+   the next time it moves (the migration puts all of them right at once).
+
+How processing orders (Disassemble / Process Items) move the average cost
+--------------------------------------------------------------------------
+Processing orders were where the jumps showed, for these reasons:
+ 1. They used whole bills, which left sites at zero, the case that let the
+    quantities table drift (above, fixed).
+ 2. Their inputs go out at the average of all sites, so a wrong input average passes
+    into every output (the cuts of PRC-00355/356 inherited 462.69). Rebuild data
+    costs them again.
+ 3. Outputs received while they were below zero (cuts sold at the counter before the
+    processing order was entered): the whole difference between the old average and
+    the new cost stayed on the few units left. Example: 9.9 kg sold below zero at
+    225.00, then 10 kg received at 300.00 gave an average of 7,725.00 on the 0.1 kg
+    left. Now the receipt settles the shortfall at its own cost and posts the
+    difference to cost of goods sold (742.50 in the example): Dr Cost of Goods Sold,
+    Cr Inventory, memo "Stock sold below zero, settled at the cost received". The
+    average stays 300.00. The same applies to the input when a processing order is
+    entered before the day's bill, and to every receipt (bills, item receipts,
+    builds, adjustments up, returns). Transfers between sites settle nothing.
+ 4. Each output takes its share of the cost by the allocation method. With Physical
+    units or Weight / measure every kilo costs the same (trimmings as much as chops);
+    with Relative sales value or Fixed percentages the dearer cuts take more and the
+    unit costs are steadier from order to order; with Current average cost
+    (difference to variance) the outputs come in at their own average, which then
+    does not move. When yields or shares change from one order to the next, the
+    output averages move with them: that is correct costing, not an error.
+ 5. A saved order is costed at the averages of the moment it is saved, not of its
+    date, and saving an old order again issues its inputs at today's average. Rebuild
+    data works every cost out again in date order.
+
+What is changed
+ 1. Costing (app/Stock.php, app/Posting.php): the average on the movements, the
+    quantities table kept in step, shortfalls settled at the cost received, and a
+    fix of the "Quantity and total value" adjustment, which read a cost it did not
+    have when the item had no average yet.
+ 2. New report Inventory > Reports > Average Cost Changes: every transaction that
+    changed an item's average, in the order the costs were worked out, with Qty, Unit
+    cost, On hand before, Avg before, Avg after, Change, Change % (25% or more in
+    red) and What moved it; filters Change of at least (1% to 100%) and Processing,
+    disassembly and builds only. The Inventory Center has an "Average cost changes"
+    button for the item.
+ 3. Inventory Center: Value (all sites) is the remaining value of the movements; a
+    history line with no quantity says "Value adjustment" or "Below-zero stock
+    settled at this cost"; the reorder figure of an item at or below its reorder
+    point is shown in plain orange text instead of a badge.
+ 4. Utilities: Verify Data also counts a site that has movements but no quantity
+    row; Rebuild data ends by checking every quantity against its movements.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v31.docx) are updated for all of the above.

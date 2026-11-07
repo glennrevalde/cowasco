@@ -563,6 +563,11 @@ function load_demo_data(): void
     DB::update('pos_shifts', ['status' => 'closed', 'closed_at' => $yday . ' 21:05:00', 'closed_by' => $super, 'expected_cash' => $sum['expected_cash'],
         'counted_cash' => $counted, 'over_short' => -20, 'over_short_txn_id' => $os], 'id = :id', ['id' => $shift1]);
     Audit::log('shift_close', 'pos', 'shift', $shift1, 'Z-reading', ['amount' => $counted, 'approved_by' => 'supervisor', 'reason' => 'Short by 20.00']);
+    // yesterday's sales, return and void were rung up during the shift (the reports by date and time follow them)
+    foreach (DB::column('SELECT id FROM transactions WHERE pos_shift_id = :s ORDER BY id', ['s' => $shift1]) as $k => $tid) {
+        $min = 9 * 60 + 12 + $k * 97;
+        DB::run('UPDATE transactions SET created_at = :c WHERE id = :id', ['c' => $yday . ' ' . sprintf('%02d:%02d:00', min(20, intdiv($min, 60)), $min % 60), 'id' => $tid]);
+    }
     // today's shift stays open
     Auth::actAs($cashier);
     $shift2 = DB::insert('pos_shifts', ['terminal_id' => $term, 'cashier_id' => $cashier, 'business_date' => today(), 'opening_float' => 2000]);

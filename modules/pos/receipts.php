@@ -30,12 +30,55 @@ if ($a === 'return') {
               WHERE rl.source_line_id = :l AND r.txn_type = 'pos_return' AND r.is_voided = 0", ['l' => $l['id']]);
     }
     unset($l);
-    handle_post(function () use ($sale, $lines, $terminal, $shift, $pageKey) {
+    // item groups are returned as groups: their items and their price variance in the same proportion
+    $display = ItemGroups::ready() ? ItemGroups::collapse($lines) : $lines;
+    foreach ($display as &$d) {
+        if (!empty($d['_group'])) {
+            $done = null;
+            foreach ($d['_members'] as $m) {
+                $per = $d['group_qty'] > 0 ? (float)$m['qty'] / $d['group_qty'] : 0;
+                $back = $per > 0 ? (float)$m['returned'] / $per : 0;
+                $done = $done === null ? $back : min($done, $back);
+            }
+            $d['returned'] = round((float)$done, 4);
+        }
+    }
+    unset($d);
+    handle_post(function () use ($sale, $lines, $display, $terminal, $shift, $pageKey) {
         if (!$terminal || !$shift) {
             fail('Open a shift on your terminal before processing returns.');
         }
         $rows = [];
+        foreach ($display as $g) {
+            if (empty($g['_group'])) {
+                continue;
+            }
+            $q = to_num($_POST['retg'][$g['group_ref']] ?? 0);
+            if ($q <= 0) {
+                continue;
+            }
+            if ($q > (float)$g['group_qty'] - (float)$g['returned'] + 0.00001) {
+                fail('You cannot return more than was sold of ' . $g['item_code'] . '.');
+            }
+            $share = (float)$g['group_qty'] > 0 ? $q / (float)$g['group_qty'] : 0;
+            $tags = ['group_item_id' => $g['group_item_id'], 'group_ref' => $g['group_ref'], 'group_qty' => $q, 'group_rate' => $g['group_rate']];
+            foreach (array_merge($g['_members'], $g['_variance'] ? [$g['_variance']] : []) as $m) {
+                $isVar = ($m['group_role'] ?? '') === 'variance';
+                $mq = $isVar ? 0.0 : round((float)$m['qty'] * $share, 4);
+                $amount = $isVar ? r2((float)$m['amount'] * $share) : r2($mq * (float)$m['rate']);
+                $rows[] = $tags + [
+                    'group_role' => $isVar ? 'variance' : 'member',
+                    'line_kind' => 'item', 'item_id' => $m['item_id'], 'account_id' => $m['account_id'], 'description' => $m['description'], 'qty' => $mq, 'rate' => $m['rate'],
+                    'discount_pct' => 0, 'amount' => $amount, 'tax_code_id' => $m['tax_code_id'],
+                    'tax_amount' => r2($amount * tax_rate($m['tax_code_id'] ? (int)$m['tax_code_id'] : null) / 100),
+                    'site_id' => $terminal['site_id'], 'source_line_id' => $isVar ? null : $m['id'],
+                ];
+            }
+        }
         foreach ($lines as $l) {
+            if (!empty($l['group_ref']) && ItemGroups::ready()) {
+                continue;
+            }
             $q = to_num($_POST['ret'][$l['id']] ?? 0);
             if ($q <= 0) {
                 continue;
@@ -74,7 +117,8 @@ if ($a === 'return') {
             DB::insert('pos_tenders', ['txn_id' => $rid, 'payment_method_id' => $methodId, 'amount' => $total, 'reference' => 'Refund']);
             $saved = Txn::load($rid);
             return Txn::save('pos_return', ['txn_date' => $saved['txn_date'], 'status' => 'completed'], array_map(fn($l) => array_intersect_key($l, array_flip([
-                'id', 'line_kind', 'item_id', 'description', 'qty', 'rate', 'discount_pct', 'discount_amount', 'amount', 'tax_code_id', 'tax_amount', 'site_id', 'source_line_id',
+                'id', 'line_kind', 'item_id', 'account_id', 'description', 'qty', 'rate', 'discount_pct', 'discount_amount', 'amount', 'tax_code_id', 'tax_amount', 'site_id', 'source_line_id',
+                'group_item_id', 'group_ref', 'group_qty', 'group_rate', 'group_role',
             ])), Txn::lines($rid)), $rid, ['reason' => p('reason'), 'approved_by' => $approver['username'] ?? null, 'audit_action' => 'refund']);
         });
         flash('success', 'Return processed. Refund: ' . money($total));
@@ -86,9 +130,15 @@ if ($a === 'return') {
       <?= csrf_field() ?>
       <p class="small">Sold <?= h(fdatetime($sale['created_at'])) ?>, total <?= money($sale['total']) ?>. For account customers you can also issue a credit memo from the Customers module.</p>
       <table class="table table-sm"><thead><tr><th>Item</th><th class="num">Sold</th><th class="num">Already returned</th><th class="num">Price</th><th class="num">Return qty</th></tr></thead>
-      <?php foreach ($lines as $l): ?>
+      <?php foreach ($display as $l): if (empty($l['item_id'])) { continue; } ?>
+        <?php if (!empty($l['_group'])): ?>
+        <tr><td><?= h($l['item_code'] . ' - ' . $l['description']) ?><div class="small text-muted">Item group: <?= h(implode(', ', array_map(fn($m) => qty($m['qty']) . ' ' . $m['description'], $l['_members']))) ?></div></td>
+          <td class="num"><?= qty($l['group_qty']) ?></td><td class="num"><?= qty($l['returned']) ?></td><td class="num"><?= money($l['group_rate']) ?></td>
+          <td><input class="form-control form-control-sm text-end ms-auto" style="width:90px" name="retg[<?= (int)$l['group_ref'] ?>]" value="<?= h($_POST['retg'][$l['group_ref']] ?? '') ?>" aria-label="Groups returned"></td></tr>
+        <?php else: ?>
         <tr><td><?= h($l['item_code'] . ' - ' . $l['description']) ?></td><td class="num"><?= qty($l['qty']) ?></td><td class="num"><?= qty($l['returned']) ?></td><td class="num"><?= money($l['rate']) ?></td>
           <td><input class="form-control form-control-sm text-end ms-auto" style="width:90px" name="ret[<?= (int)$l['id'] ?>]" value="<?= h($_POST['ret'][$l['id']] ?? '') ?>"></td></tr>
+        <?php endif; ?>
       <?php endforeach; ?>
       </table>
       <div class="row g-2">

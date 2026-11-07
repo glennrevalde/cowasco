@@ -60,6 +60,7 @@ return [
         'coa.default_accounts' => ['coa', 'Module Default Accounts', 'setup', 'Setup', 'coa/default_accounts.php', [], 1],
         'coa.lists'            => ['coa', 'Terms, Tax Codes & Other Lists', 'setup', 'Setup', 'coa/lists.php', [], 1],
         'rpt.trial_balance'    => ['coa', 'Trial Balance', 'report', 'Reports', 'reports/run.php', ['report' => 'trial_balance'], 1],
+        'rpt.trial_balance_class' => ['coa', 'Trial Balance by Class', 'report', 'Reports', 'reports/run.php', ['report' => 'trial_balance_class'], 1],
         'rpt.balance_sheet'    => ['coa', 'Balance Sheet', 'report', 'Reports', 'reports/run.php', ['report' => 'balance_sheet'], 1],
         'rpt.balance_sheet_summary' => ['coa', 'Balance Sheet Summary', 'report', 'Reports', 'reports/run.php', ['report' => 'balance_sheet_summary'], 1],
         'rpt.balance_sheet_class' => ['coa', 'Balance Sheet by Class', 'report', 'Reports', 'reports/run.php', ['report' => 'balance_sheet_class'], 1],
@@ -71,7 +72,16 @@ return [
         'rpt.income_statement' => ['coa', 'Income Statement', 'report', 'Reports', 'reports/run.php', ['report' => 'income_statement'], 1],
         'rpt.income_statement_summary' => ['coa', 'Income Statement Summary', 'report', 'Reports', 'reports/run.php', ['report' => 'income_statement_summary'], 1],
         'rpt.income_statement_class' => ['coa', 'Income Statement by Class', 'report', 'Reports', 'reports/run.php', ['report' => 'income_statement_class'], 1],
+        'rpt.cmp_is_month'     => ['coa', 'Comparative Income Statement by Month', 'report', 'Reports', 'reports/run.php', ['report' => 'cmp_is_month'], 1],
+        'rpt.cmp_is_quarter'   => ['coa', 'Comparative Income Statement by Quarter', 'report', 'Reports', 'reports/run.php', ['report' => 'cmp_is_quarter'], 1],
+        'rpt.cmp_is_year'      => ['coa', 'Comparative Income Statement by Year', 'report', 'Reports', 'reports/run.php', ['report' => 'cmp_is_year'], 1],
+        'rpt.cmp_is_custom'    => ['coa', 'Comparative Income Statement by Custom Range', 'report', 'Reports', 'reports/run.php', ['report' => 'cmp_is_custom'], 1],
+        'rpt.cmp_bs_month'     => ['coa', 'Comparative Balance Sheet by Month', 'report', 'Reports', 'reports/run.php', ['report' => 'cmp_bs_month'], 1],
+        'rpt.cmp_bs_quarter'   => ['coa', 'Comparative Balance Sheet by Quarter', 'report', 'Reports', 'reports/run.php', ['report' => 'cmp_bs_quarter'], 1],
+        'rpt.cmp_bs_year'      => ['coa', 'Comparative Balance Sheet by Year', 'report', 'Reports', 'reports/run.php', ['report' => 'cmp_bs_year'], 1],
+        'rpt.cmp_bs_custom'    => ['coa', 'Comparative Balance Sheet by Custom Date', 'report', 'Reports', 'reports/run.php', ['report' => 'cmp_bs_custom'], 1],
         'rpt.cash_flow'        => ['coa', 'Statement of Cash Flows', 'report', 'Reports', 'reports/run.php', ['report' => 'cash_flow'], 1],
+        'rpt.cash_flow_class'  => ['coa', 'Statement of Cash Flows by Class', 'report', 'Reports', 'reports/run.php', ['report' => 'cash_flow_class'], 1],
         'rpt.general_ledger'   => ['coa', 'General Ledger', 'report', 'Reports', 'reports/run.php', ['report' => 'general_ledger'], 1],
         'rpt.subsidiary_ledger'    => ['coa', 'Subsidiary Ledger', 'report', 'Reports', 'reports/run.php', ['report' => 'subsidiary_ledger'], 1],
         'rpt.schedule_of_accounts' => ['coa', 'Schedule of Accounts', 'report', 'Reports', 'reports/run.php', ['report' => 'schedule_of_accounts'], 1],
@@ -128,6 +138,7 @@ return [
         'rpt.income_customer_detail'  => ['cust', 'Income by Customer Detail', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'income_customer_detail'], 1],
         'rpt.sales_item_summary'     => ['cust', 'Sales by Item Summary', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_item_summary'], 1],
         'rpt.sales_item_detail'      => ['cust', 'Sales by Item Detail', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_item_detail'], 1],
+        'rpt.sales_item_group'       => ['cust', 'Sales by Item Group', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_item_group'], 1],
         'rpt.sales_rep_summary'      => ['cust', 'Sales by Rep Summary', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_rep_summary'], 1],
         'rpt.sales_rep_detail'       => ['cust', 'Sales by Rep Detail', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_rep_detail'], 1],
         'rpt.inventory_sales_site'   => ['cust', 'Inventory Sales by Site', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'inventory_sales_site'], 1],
@@ -177,6 +188,7 @@ return [
         'rpt.inv_valuation_summary'=> ['inv', 'Inventory Valuation Summary', 'report', 'Inventory Reports', 'reports/run.php', ['report' => 'inv_valuation_summary'], 1],
         'rpt.inv_valuation_site'   => ['inv', 'Inventory Valuation Summary by Site', 'report', 'Inventory Reports', 'reports/run.php', ['report' => 'inv_valuation_site'], 1],
         'rpt.inv_valuation_detail' => ['inv', 'Inventory Valuation Detail', 'report', 'Inventory Reports', 'reports/run.php', ['report' => 'inv_valuation_detail'], 1],
+        'rpt.avg_cost_changes'     => ['inv', 'Average Cost Changes', 'report', 'Inventory Reports', 'reports/run.php', ['report' => 'avg_cost_changes'], 1],
         'rpt.stock_status_item'    => ['inv', 'Inventory Stock Status by Item', 'report', 'Inventory Reports', 'reports/run.php', ['report' => 'stock_status_item'], 1],
         'rpt.stock_status_vendor'  => ['inv', 'Inventory Stock Status by Vendor', 'report', 'Inventory Reports', 'reports/run.php', ['report' => 'stock_status_vendor'], 1],
         'rpt.stock_status_site'    => ['inv', 'Inventory Stock Status by Site', 'report', 'Inventory Reports', 'reports/run.php', ['report' => 'stock_status_site'], 1],
@@ -201,6 +213,7 @@ return [
         'pos.terminals'       => ['pos', 'POS Terminals', 'setup', 'Setup', 'pos/terminals.php', [], 1],
         'rpt.pos_sales_txn'      => ['pos', 'POS Sales by Transaction No. (detail)', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_sales_txn'], 1],
         'rpt.pos_sales_item'     => ['pos', 'POS Sales by Item', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_sales_item'], 1],
+        'rpt.pos_sales_item_group' => ['pos', 'POS Sales by Item Group', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_sales_item_group'], 1],
         'rpt.pos_sales_category' => ['pos', 'POS Sales by Category', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_sales_category'], 1],
         'rpt.pos_sales_cashier'  => ['pos', 'POS Sales by Cashier & Payment Method', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_sales_cashier'], 1],
         // folded into the report above; kept so memorized reports and saved links still open
@@ -210,6 +223,7 @@ return [
         'rpt.pos_readings'       => ['pos', 'X- and Z-Reading Summary', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_readings'], 1],
         'rpt.pos_discount_log'   => ['pos', 'POS Discount Log', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_discount_log'], 1],
         'rpt.pos_void_log'       => ['pos', 'POS Void and Refund Log', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_void_log'], 1],
+        'rpt.pos_ending_inventory' => ['pos', 'Ending Inventory - POS Cashier', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_ending_inventory'], 1],
 
         // ---------------- Banking
         'bank.write_checks'   => ['bank', 'Write Checks', 'transaction', 'Transactions', 'txn/page.php', ['type' => 'check'], 1],
@@ -395,6 +409,12 @@ return [
     'menu_aliases' => [
         // Material Issuance (water module) moves the one cooperative stock ledger: also offered under Inventory
         'inv' => ['vend.purchase_orders', 'vend.receive_items', 'water.item_issuance'],
+    ],
+
+    // A module's card on the Report Center may carry a name of its own (v29): the reports of the
+    // Financial menu are the "Financial Reports"
+    'report_center_names' => [
+        'coa' => 'Financial Reports',
     ],
 
     // Pages that any logged-in user can open (not access-controlled)

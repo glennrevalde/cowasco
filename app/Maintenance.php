@@ -58,17 +58,18 @@ final class Maintenance
         $add('Inventory ledger matches the inventory movements', abs($invGl - $mv) < 0.05,
             'Ledger ' . money($invGl) . ', movements ' . money($mv), 'Rebuild data recalculates inventory costs.');
 
+        // v31: a site with movements but no quantity row is counted too (that is how the quantities used to drift)
         $qtyBad = DB::all(
-            'SELECT i.code, s.site_id, s.qty_on_hand, COALESCE(m.q, 0) AS moved
-               FROM item_site_stock s
-               JOIN items i ON i.id = s.item_id
-               LEFT JOIN (SELECT item_id, site_id, SUM(qty) q FROM inventory_movements GROUP BY item_id, site_id) m
-                      ON m.item_id = s.item_id AND m.site_id = s.site_id
-              WHERE ABS(s.qty_on_hand - COALESCE(m.q, 0)) > 0.0001 LIMIT 20'
+            'SELECT i.code, x.site_id, SUM(x.q) AS qty_on_hand, SUM(x.m) AS moved
+               FROM (SELECT item_id, site_id, qty_on_hand AS q, 0 AS m FROM item_site_stock
+                     UNION ALL SELECT item_id, site_id, 0, SUM(qty) FROM inventory_movements GROUP BY item_id, site_id) x
+               JOIN items i ON i.id = x.item_id
+              GROUP BY i.code, x.item_id, x.site_id
+             HAVING ABS(SUM(x.q) - SUM(x.m)) > 0.0001 LIMIT 20'
         );
         $add('Quantities on hand match the movements', !$qtyBad,
             $qtyBad ? count($qtyBad) . ' item/site row(s) differ: ' . implode(', ', array_map(fn($r) => $r['code'], $qtyBad)) : 'All quantities agree',
-            'Rebuild data recalculates quantities from the movements.');
+            'Rebuild data recalculates quantities from the movements (and the average costs on them).');
 
         $drift = self::costDrift();
         $add('Average cost matches the value on hand', !$drift,
@@ -78,9 +79,9 @@ final class Maintenance
         $out_of_order = self::outOfDateOrder();
         $add('Inventory entered in date order', !$out_of_order,
             $out_of_order
-                ? count($out_of_order) . ' item(s) have movements recorded out of date order: ' . implode(', ', array_slice(array_column($out_of_order, 'code'), 0, 8))
+                ? count($out_of_order) . ' item(s) have movements recorded out of date order (an earlier date entered later, or stock taken out before the same day\'s receipt was entered): ' . implode(', ', array_slice(array_column($out_of_order, 'code'), 0, 8))
                 : 'Every item was costed in date order',
-            'Rebuild data replays them in date order so the cost of sales matches the dates.', 'warning');
+            'Rebuild data replays them in date order, the stock received on a date before the stock used or sold that day, so the cost of sales matches.', 'warning');
 
         $neg = DB::all('SELECT i.code, st.name AS site, s.qty_on_hand FROM item_site_stock s JOIN items i ON i.id = s.item_id JOIN sites st ON st.id = s.site_id WHERE s.qty_on_hand < -0.00001 LIMIT 20');
         $add('No negative quantities on hand', !$neg,
@@ -150,17 +151,23 @@ final class Maintenance
         return $out;
     }
 
-    /** Items whose movements were recorded in a different order than their dates */
+    /**
+     * Items whose movements were costed in a different order than they happened: an earlier date entered after a later
+     * one, or (v30) on one date, stock taken out before the stock that came in that day was entered (Stock::dayRanks).
+     */
     public static function outOfDateOrder(): array
     {
         $out = [];
         $prev = [];
-        foreach (DB::all('SELECT item_id, txn_date, id FROM inventory_movements ORDER BY item_id, id') as $m) {
+        $moves = DB::all('SELECT item_id, txn_id, txn_date, id FROM inventory_movements ORDER BY item_id, id');
+        $ranks = Stock::dayRanks(array_column($moves, 'txn_id'));
+        foreach ($moves as $m) {
             $i = (int)$m['item_id'];
-            if (isset($prev[$i]) && $m['txn_date'] < $prev[$i]) {
+            $key = [$m['txn_date'], $ranks[(int)$m['txn_id']] ?? 1];
+            if (isset($prev[$i]) && $key < $prev[$i]) {
                 $out[$i] = true;
             }
-            $prev[$i] = $m['txn_date'];
+            $prev[$i] = $key;
         }
         if (!$out) {
             return [];
@@ -183,12 +190,15 @@ final class Maintenance
                 $cogsAccounts = array_map('intval', DB::column("SELECT DISTINCT COALESCE(cogs_account_id, :d) FROM items WHERE item_type IN ('inventory','assembly')", ['d' => Accts::get('cogs')]));
                 [$cIn, $cP] = DB::in('a', $cogsAccounts ?: [0]);
 
-                // transactions that moved inventory, oldest first (by date, then by entry order)
+                // transactions that moved inventory, oldest first: by date, then (v30) the ones bringing stock in before
+                // the ones taking it out on the same date (Stock::dayRanks), then by entry order
                 $txns = DB::all(
                     'SELECT DISTINCT m.txn_id AS id, t.txn_date, t.txn_no, t.txn_type
                        FROM inventory_movements m JOIN transactions t ON t.id = m.txn_id
                       ORDER BY t.txn_date, m.txn_id'
                 );
+                $ranks = Stock::dayRanks(array_column($txns, 'id'));
+                usort($txns, fn($a, $b) => [$a['txn_date'], $ranks[(int)$a['id']] ?? 1, (int)$a['id']] <=> [$b['txn_date'], $ranks[(int)$b['id']] ?? 1, (int)$b['id']]);
                 $before = [];
                 foreach ($txns as $t) {
                     $before[(int)$t['id']] = (float)DB::value(
@@ -211,6 +221,8 @@ final class Maintenance
                 } finally {
                     Posting::$stockCheck = true;
                 }
+                // v31: and every quick-lookup quantity agrees with the movements it came from
+                Stock::resync();
                 DB::run('DELETE FROM item_site_stock WHERE qty_on_hand = 0');
 
                 foreach ($txns as $t) {

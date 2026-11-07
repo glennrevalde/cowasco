@@ -563,20 +563,21 @@
 <div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>The report lists up to 5,000 transactions. When more were found, a note under the title says <strong>Only the first 5,000 of</strong> the total <strong>are listed here. Narrow the search on the Find page to see the rest.</strong> The tools of the report are explained in <a href="#sec-reports">Working with reports</a>.</p></div>
 <h2 id="pg-home-reports">Report Center<a class="man-hash" href="#pg-home-reports" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>The Report Center lists every report you may open, grouped by module, and your memorized reports. It is the quickest way to find a report when you are not sure which module it belongs to.</p>
-<p><strong>Where to find it:</strong> Home &gt; Report Center, or the <strong>Report Center</strong> button on the Home page and on the Memorized Reports page.</p>
-<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/home_reports__main.jpg" title="Click to enlarge"><img src="assets/manual/img/home_reports__main.jpg" alt="The Report Center with two memorized reports at the top and a card for each module" width="1094" height="1500" loading="lazy" decoding="async"></a><figcaption>The Report Center with two memorized reports at the top and a card for each module</figcaption></figure>
+<p><strong>Where to find it:</strong> Home &gt; Report Center, or the <strong>Report Center</strong> button on the Home page and on the Memorized Reports page. Its <strong>Memorized Reports</strong> button opens the list of memorized reports.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/home_reports__main.jpg" title="Click to enlarge"><img src="assets/manual/img/home_reports__main.jpg" alt="The Report Center: the search box, then a card for each menu (Financial Reports, Members &amp; Others, Teller, Savings &amp; Deposits, Loans and the others)" width="1094" height="1500" loading="lazy" decoding="async"></a><figcaption>The Report Center: the search box, then a card for each menu</figcaption></figure>
 <h4 id="s-what-the-page-shows_1">What the page shows<a class="man-hash" href="#s-what-the-page-shows_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <ul>
 <li>A line reminding you that every report can be filtered, customized, drilled into, memorized, printed or saved as PDF, exported and e-mailed.</li>
-<li><strong>Memorized reports</strong>: a button for each report you memorized and each report other users shared, shown as the group, an arrow and the name, for example <strong>Month-end › Monthly Income Statement</strong>. The card appears once there is at least one.</li>
-<li>A card for each module (<strong>Home</strong>, <strong>Financial</strong>, <strong>Fixed Assets</strong>, <strong>Customers</strong>, <strong>Vendors</strong>, <strong>Inventory</strong>, <strong>Point of Sale</strong>, <strong>Banking</strong>, <strong>BIR Reports</strong>, <strong>System Administration</strong>), listing its reports. Large modules divide them under headings such as <strong>CUSTOMER AND RECEIVABLES REPORTS</strong> and <strong>SALES REPORTS</strong>.</li>
+<li><strong>Find a report by name</strong>: type part of a name, for example "comparative" or "aging", and the cards keep only the reports whose names have every word you typed. The count under the box says how many are shown ("8 of 182 reports"). Clear the box to see them all again.</li>
+<li><strong>Memorized reports</strong>: each report you memorized and each report other users shared, under its group (for example <strong>Month-end</strong>), with the report it is based on under its name ("Income Statement, shared"). The card appears once there is at least one.</li>
+<li>A card for each module, listing its reports: <strong>Home</strong>, <strong>Financial Reports</strong> (the reports of the <strong>Financial</strong> menu: the trial balances, balance sheets, income statements, the comparative statements, cash flow, ledgers and journal), <strong>Fixed Assets</strong>, <strong>Customers</strong>, <strong>Vendors</strong>, <strong>Inventory</strong>, <strong>Point of Sale</strong>, <strong>Banking</strong>, <strong>BIR Reports</strong>, <strong>System Administration</strong> and the cooperative and water billing menus your role opens. Large modules divide them under headings such as <strong>CUSTOMER AND RECEIVABLES REPORTS</strong> and <strong>SALES REPORTS</strong>.</li>
 </ul>
 <h4 id="s-step-by-step-open-a-report">Step by step: open a report<a class="man-hash" href="#s-step-by-step-open-a-report" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <ol>
 <li>Open <strong>Home &gt; Report Center</strong>.</li>
 <li>Click the name of the report. It opens with its usual dates and filters.</li>
 </ol>
-<p>To open a memorized report, click its button under <strong>Memorized reports</strong>. It opens with the dates, filters and layout that were memorized.</p>
+<p>To open a memorized report, click its name under <strong>Memorized reports</strong>. It opens with the dates, filters and layout that were memorized.</p>
 <h4 id="s-good-to-know_3">Good to know<a class="man-hash" href="#s-good-to-know_3" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <ul>
 <li>Only the reports your role allows are listed, so a module card may be short or missing.</li>
@@ -649,6 +650,10 @@
 <td>The first and last day of the period.</td>
 </tr>
 <tr>
+<td><strong>From date and time</strong> / <strong>To date and time</strong></td>
+<td>On the inventory movement reports, the sales report through inventory movement and Ending Inventory - POS Cashier: a time after each date, to see one shift of a day (see <a href="manual.php?c=inventory#sec-inv-movement-times">Dates with times, cashier and shift</a>). Empty times mean the whole days.</td>
+</tr>
+<tr>
 <td>Drop-downs such as <strong>Customer</strong>, <strong>Vendor</strong>, <strong>Item</strong>, <strong>Site</strong>, <strong>Account</strong>, <strong>Sales rep</strong></td>
 <td>Limit the report to one of them. <strong>All</strong> means no limit.</td>
 </tr>
@@ -666,7 +671,7 @@
 </tr>
 <tr>
 <td>Tick boxes</td>
-<td>Report-specific choices, for example <strong>Include estimates and sales orders</strong>.</td>
+<td>Report-specific choices, for example <strong>Include estimates and sales orders</strong>, <strong>Exclude zero sales</strong> or <strong>Exclude inventory with zero balance</strong>. Ticking one runs the report at once.</td>
 </tr>
 <tr>
 <td><strong>Search</strong></td>
@@ -784,6 +789,8 @@
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_qoh_by_site__filtered.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_qoh_by_site__filtered.jpg" alt="Quantity on Hand by Site for one site and one category, with the filters Site, Category, Item type and Preferred supplier" width="1094" height="769" loading="lazy" decoding="async"></a><figcaption>Quantity on Hand by Site for one site and one category, with the filters Site, Category, Item type and Preferred supplier</figcaption></figure>
 <h3 id="s-sorting">Sorting<a class="man-hash" href="#s-sorting" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>On most reports the column headings are links. Click a heading to sort by it; a small triangle shows the order (up for ascending, down for descending). Click the same heading again to reverse the order. Reports divided into groups with subtotals, such as the financial statements, and a few others whose order matters (the check register and the audit reports, for example) keep their own order, and their headings are plain text.</p>
+<p><strong>Sort by</strong> (with <strong>Increasing</strong> or <strong>Decreasing</strong> beside it) is in the filter bar of the sales and income reports: <a href="manual.php?c=customers#pg-rpt-income_customer_summary">Income by Customer Summary</a> (Qty sold, Sales, Cost of sales, Income / (loss), Margin %), <a href="manual.php?c=customers#pg-rpt-sales_item_summary">Sales by Item Summary</a> (Qty, Amount, % of sales, COGS, Gross margin, Margin %), <a href="manual.php?c=customers#pg-rpt-inventory_sales_site">Inventory Sales by Site</a> (Qty sold, Sales, Cost of sales), <a href="manual.php?c=customers#pg-rpt-sales_item_group">Sales by Item Group</a> and <a href="manual.php?c=point-of-sale#pg-rpt-pos_sales_item_group">POS Sales by Item Group</a> (Qty, Total). Choosing a column or an order refreshes the report at once, and the heading line says "Sorted by Amount, decreasing". On a report divided into groups, the groups and their totals keep their places and the lines are sorted inside each group; lines without a figure (no cost on a service item, for example) come last whichever the order. <strong>Default order</strong> puts the report back in its own order. The sort is kept when the report is memorized, and the column headings of these reports sort the same way.</p>
+<p>Cost columns are offered in <strong>Sort by</strong> only to users who may view costs.</p>
 <h3 id="s-drilling-down-to-the-detail">Drilling down to the detail<a class="man-hash" href="#s-drilling-down-to-the-detail" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>Words and numbers in blue are links to the detail behind them:</p>
 <ul>

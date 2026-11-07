@@ -121,6 +121,70 @@ final class Receipt
         return self::finish($o);
     }
 
+    /**
+     * A short report on the roll printer (Ending Inventory - POS Cashier): the heading lines, a two-column list
+     * (name on the left, figure on the right), the total, the signature lines and the foot text.
+     *
+     * @param string[] $head  centred lines under the company name (the first in bold)
+     * @param string[] $info  left-aligned lines (cut-off, site, cashier)
+     * @param array    $cols  [left heading, right heading]
+     * @param array    $rows  [[left, right], ...]
+     * @param array    $total [left, right] or []
+     * @param array    $signs [[caption, name], ...]
+     * @param string[] $foot  lines at the foot
+     */
+    public static function reportOps(array $head, array $info, array $cols, array $rows, array $total, array $signs, array $foot): array
+    {
+        $s = Settings::all();
+        $w = self::width();
+        $o = [['op' => 'text', 'text' => (string)$s['company_name'], 'align' => 'center', 'bold' => 1]];
+        foreach (array_values($head) as $i => $l) {
+            foreach (self::wrap((string)$l, $w) as $part) {
+                $o[] = ['op' => 'text', 'text' => $part, 'align' => 'center', 'bold' => $i === 0 ? 1 : 0];
+            }
+        }
+        $o[] = ['op' => 'rule'];
+        foreach ($info as $l) {
+            foreach (self::wrap((string)$l, $w) as $part) {
+                $o[] = ['op' => 'text', 'text' => $part];
+            }
+        }
+        $o[] = ['op' => 'rule'];
+        $o[] = ['op' => 'cols', 'left' => (string)$cols[0], 'right' => (string)$cols[1], 'bold' => 1];
+        foreach ($rows as [$left, $right]) {
+            $right = (string)$right;
+            $room = max(8, $w - mb_strlen($right) - 1);
+            $parts = self::wrap((string)$left, $room) ?: [''];
+            $last = array_pop($parts);
+            foreach ($parts as $part) {
+                $o[] = ['op' => 'text', 'text' => $part];
+            }
+            $o[] = ['op' => 'cols', 'left' => $last, 'right' => $right];
+        }
+        if ($total) {
+            $o[] = ['op' => 'rule'];
+            $o[] = ['op' => 'cols', 'left' => (string)$total[0], 'right' => (string)$total[1], 'bold' => 1];
+        }
+        foreach ($signs as [$caption, $name]) {
+            $o[] = ['op' => 'feed', 'n' => 1];
+            $o[] = ['op' => 'text', 'text' => (string)$caption];
+            $o[] = ['op' => 'feed', 'n' => 1];
+            $o[] = ['op' => 'text', 'text' => str_repeat('_', max(10, $w - 4)), 'align' => 'center'];
+            if ((string)$name !== '') {
+                $o[] = ['op' => 'text', 'text' => (string)$name, 'align' => 'center'];
+            }
+        }
+        if ($foot) {
+            $o[] = ['op' => 'rule'];
+            foreach ($foot as $l) {
+                foreach (self::wrap((string)$l, $w) as $part) {
+                    $o[] = ['op' => 'text', 'text' => $part, 'align' => 'center'];
+                }
+            }
+        }
+        return self::finish($o);
+    }
+
     /** The short receipt the "Test print" button on the settings page sends */
     public static function testOps(): array
     {

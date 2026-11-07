@@ -29,6 +29,7 @@ final class Accts
         'cogs'                => ['Cost of Goods Sold', 'inv'],
         'inventory_adjustment'=> ['Inventory Adjustment (Shrinkage)', 'inv'],
         'processing_variance' => ['Processing / Disassembly Variance', 'inv'],
+        'group_price_variance'=> ['Item Group Price Variance', 'inv'],
         'processing_absorbed' => ['Processing Labor & Overhead Absorbed', 'inv'],
         'cash_on_hand'        => ['Cash on Hand (Register)', 'pos'],
         'cash_over_short'     => ['Cash Over and Short', 'pos'],

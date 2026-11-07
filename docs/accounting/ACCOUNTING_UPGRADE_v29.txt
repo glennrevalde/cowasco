@@ -1,0 +1,99 @@
+G-SMaRT Accounting - version 29 (2026-11-12)
+=============================================
+
+This package holds only the files that were added or changed since version 28.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run ONE new migration on your database (phpMyAdmin: select the database > Import;
+Navicat: Execute SQL File), after backing it up:
+
+    database/migrations/2026_11_12_comparative_statements_menu.sql
+
+It renames the menu "Chart of Accounts" to "Financial Set-up & Reports" and adds the
+eight comparative report pages, given to the roles that may open the Income Statement
+(the four income statements) and the Balance Sheet (the four balance sheets), each
+with its print right. No table or column is added, nothing is deleted and no amount
+changes. Written for MySQL 5.5, safe to run twice. With several companies, run it on
+every company database (Super Admin: Companies > Database updates > Update all
+companies). Until it is run, the program shows a page naming it.
+
+database/accounting_system.sql and accounting_system_clean.sql (new installs only)
+include the change. Do NOT import those two files over a live database.
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/css/app.css.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v29.xlsx")
+--------------------------------------------------------------------------
+Sort by (Increasing / Decreasing)
+ 1. Income by Customer Summary: Sort by Qty sold, Sales, Cost of sales,
+    Income / (loss) or Margin %.
+ 2. Sales by Item Summary: Sort by Qty, Amount, % of sales, COGS, Gross margin or
+    Margin %. The item types (Inventory, Assembly, Service...) and their totals keep
+    their places; the items are sorted inside each type.
+ 3. Inventory Sales by Site: Sort by Qty sold, Sales or Cost of sales, inside each
+    site.
+ 4. Sales by Item Group (and POS Sales by Item Group): Sort by Qty or Total; with the
+    item details or the transactions shown, they move with their group.
+    The Sort by box and the Increasing / Decreasing box are in the filter bar and
+    refresh the report at once; the heading line says "Sorted by Amount, decreasing";
+    the column headings of these reports sort the same way. Lines without a figure
+    (no cost on a service item) come last. Cost columns are offered only to users
+    who may view costs. Default order puts the report back in its own order. A
+    memorized report keeps its sort.
+
+Quantity on Hand by Site
+ 5. "Exclude zero qty": leaves out the items with nothing on hand at the sites
+    shown (one site chosen: what that site does not hold).
+
+Financial Set-up & Reports
+ 6. The menu "Chart of Accounts" is now "Financial Set-up & Reports" (its pages keep
+    their names; Chart of Accounts is still the first list in it), and on the
+    Report Center its card is "Financial Reports". The Report Center also has a
+    "Find a report by name" box and a Memorized Reports button.
+ 7. Eight new reports in Financial Set-up & Reports > Reports (and the Financial
+    Reports card):
+      Comparative Income Statement by Month        one column per month
+      Comparative Income Statement by Quarter      one column per quarter
+      Comparative Income Statement by Year         one column per fiscal year
+      Comparative Income Statement by Custom Range up to 4 ranges of your own
+      Comparative Balance Sheet by Month           at the end of each month
+      Comparative Balance Sheet by Quarter         at the end of each quarter
+      Comparative Balance Sheet by Year            at the end of each fiscal year
+      Comparative Balance Sheet by Custom Date     as of up to 4 dates of your own
+    Filters: Dates / From / To (or the ranges / dates) and Class. The income
+    statements have a Total column (not the custom one: its ranges may overlap). The
+    last two columns are the change from the period before (first range or date less
+    the second on the custom reports) and the % change. Each column agrees with the
+    Income Statement or the Balance Sheet run for that period or date, and every
+    account figure opens its General Ledger for that column. The year reports open on
+    the last three fiscal years; the custom ones on this month beside the same month
+    last year, and on today beside the end of the last fiscal year.
+
+Unit costs
+ 8. Sales of an Inventory Part (or assembly), or of an Item Group with such an item
+    in it, are refused when the item has neither a Unit cost (Item List) nor an
+    average unit cost: invoices, sales receipts, statement charges and POS sales. The
+    message names the items and their group. An item that has a unit cost but no
+    stock received yet now goes out at that unit cost (it went out at no cost).
+    Estimates and sales orders are not checked.
+ 9. A processing order (Disassemble / Process Items) is not posted - Save and post,
+    Complete and post - while an input has no unit cost or average unit cost, or a
+    co-product or by-product would be received at no cost (scrap may be). The input
+    shows "no unit cost" in red on the form and the output's Unit cost box is
+    outlined in red. Save as pending is still allowed.
+    Both checks can be switched off in System Administration > Company, Security &
+    Closing Date > Inventory and POS: "Block sales of items with no unit cost" and
+    "Block posting processing orders with no unit cost" (both on as delivered).
+
+Notes
+ - modules/reports/center.php (the Report Center page) is included as a whole new
+   file: it was rewritten for the Financial Reports card and the search box.
+ - The settings and the messages that named the Chart of Accounts menu now say
+   Financial Set-up & Reports.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v29.docx) are updated for all of the above.

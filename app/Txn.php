@@ -153,11 +153,9 @@ final class Txn
 
     // ------------------------------------------------------------------ save
 
-    /**
-     * @param array $h     header columns
-     * @param array $lines line rows (may include 'id' of an existing line)
-     * @param array $opt   reason, approved_by, keep_totals, audit_action, applications
-     */
+    /** The sales documents that take stock out and post its cost (v29: they may not sell an item with no cost) */
+    public const COSTED_SALES = ['invoice', 'sales_receipt', 'statement_charge', 'pos_sale'];
+
     /**
      * A posted document while "Lock posted documents" is on: what it posts (amounts, accounts, names, dates, lines)
      * is changed only by a user with the edit_posted_documents permission, with a reason, and it is deleted only by
@@ -186,6 +184,54 @@ final class Txn
         return md5(json_encode([$h, $l, $a]));
     }
 
+    /**
+     * Refuses a sale of an inventory part or assembly that has neither a unit cost (Item List) nor an average unit
+     * cost: its cost of goods sold would be zero and its profit overstated. Item groups are sold as their items, so
+     * the items of a group are checked too. Switched off with the setting "Block sales of items with no unit cost".
+     */
+    public static function assertCosted(string $type, array $lines): void
+    {
+        if (!in_array($type, self::COSTED_SALES, true) || Settings::get('block_zero_cost_sales', '1') !== '1') {
+            return;
+        }
+        $ids = [];
+        foreach ($lines as $l) {
+            if (!empty($l['item_id']) && (float)($l['qty'] ?? 0) > 0) {
+                $ids[(int)$l['item_id']][] = (int)($l['group_item_id'] ?? 0);
+            }
+        }
+        if (!$ids) {
+            return;
+        }
+        [$in, $p] = DB::in('zc', array_keys($ids));
+        $bad = DB::all("SELECT id, code, name FROM items WHERE id IN $in AND item_type IN ('inventory','assembly')
+                         AND COALESCE(cost, 0) <= 0 AND COALESCE(avg_cost, 0) <= 0 ORDER BY code", $p);
+        if (!$bad) {
+            return;
+        }
+        $groups = [];
+        foreach ($ids as $gids) {
+            foreach ($gids as $g) {
+                if ($g) {
+                    $groups[$g] = true;
+                }
+            }
+        }
+        $gNames = $groups ? DB::pairs('SELECT id, code FROM items WHERE id IN (' . implode(',', array_map('intval', array_keys($groups))) . ')') : [];
+        $names = [];
+        foreach ($bad as $b) {
+            $in = array_values(array_unique(array_filter(array_map(fn($g) => $gNames[$g] ?? null, $ids[(int)$b['id']]))));
+            $names[] = $b['code'] . ($b['name'] !== $b['code'] ? ' - ' . $b['name'] : '') . ($in ? ' (in item group ' . implode(', ', $in) . ')' : '');
+        }
+        fail((count($bad) === 1 ? 'This item has' : 'These items have') . ' no unit cost and no average unit cost, so the sale would record no cost of goods sold: '
+            . implode('; ', $names) . '. Enter the unit cost on the item (Inventory > Item List), or receive it at its cost first, then save again.');
+    }
+
+    /**
+     * @param array $h     header columns
+     * @param array $lines line rows (may include 'id' of an existing line)
+     * @param array $opt   reason, approved_by, keep_totals, audit_action, applications
+     */
     public static function save(string $type, array $h, array $lines, ?int $id = null, array $opt = []): int
     {
         if (Memorized::$capture) {
@@ -219,6 +265,11 @@ final class Txn
                 fail('Enter a valid date.');
             }
             self::assertPeriod($h['txn_date'], $old);
+            // an inventory part (or the items of an item group) with no unit cost can not be sold (v53). The documents
+            // the water module makes from its own records (bills, adjustments: they pass skip_policy) keep their rules.
+            if (empty($opt['skip_policy'])) {
+                self::assertCosted($type, $lines);
+            }
             if (isset($h['site_id']) && $h['site_id'] && !Access::siteAllowed((int)$h['site_id'])) {
                 fail('You are not allowed to record transactions for that site.');
             }
@@ -360,6 +411,10 @@ final class Txn
                 }
                 $opt['reason'] = $why;
                 $opt['audit_action'] ??= 'edit_posted';
+            }
+            // the item groups sold on the document (Sales by Item Group, POS Sales by Item Group)
+            if (in_array($type, ItemGroups::SALES_TYPES, true)) {
+                ItemGroups::record($id);
             }
             // a one-time approval code used for this save is tied to the document it approved
             ApprovalCode::attach($id);

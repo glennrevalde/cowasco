@@ -80,6 +80,22 @@ function proc_item_opts(array $types, array $keepIds = []): array
 }
 
 /** A quantity for an input box: formatted when numeric, as typed otherwise */
+/** The unit cost of an input line: its rate, else its cost over its quantity */
+function proc_unit_cost(array $l): float
+{
+    if ((float)$l['rate'] != 0.0) {
+        return (float)$l['rate'];
+    }
+    return abs((float)$l['qty']) > 0.00001 ? round((float)$l['amount'] / (float)$l['qty'], 4) : 0.0;
+}
+
+/** Variance quantity: the input quantity less the output quantity (a loss in processing when positive) */
+function proc_qty_variance(float $inQty, float $outQty): string
+{
+    $v = round($inQty - $outQty, 4);
+    return abs($v) < 0.00005 ? '0' : qty($v);
+}
+
 function proc_num_value($v): string
 {
     if ($v === '' || $v === null) {
@@ -111,7 +127,7 @@ if ($a === 'finalize' && is_post()) {
             fail('Only pending processing orders can be completed.');
         }
         [$in, $out, $cs] = proc_split((int)$t['id']);
-        $short = Processing::shortInputs($in, (int)$t['site_id']);
+        $short = Processing::shortInputs($in, (int)$t['site_id'], null, pdate('txn_date', today()));
         if ($short) {
             fail('Still short of inputs at the processing site: ' . implode(', ', $short) . '.');
         }
@@ -326,7 +342,7 @@ $runForm = function (bool $auto) use (&$st, &$preview, $t, $sites, $pageKey, $tx
         return;
     }
     $pending = $do === 'pending';
-    $short = Processing::shortInputs($in, $siteId, $t && (int)$t['is_pending'] === 0 ? (int)$t['id'] : null);
+    $short = Processing::shortInputs($in, $siteId, $t && (int)$t['is_pending'] === 0 ? (int)$t['id'] : null, $st['txn_date']);
     if ($short && !$pending) {
         fail('Not enough stock at the processing site: ' . implode(', ', $short) . '. Save the order as pending, or transfer or receive the items first.');
     }
@@ -406,7 +422,10 @@ $inRow = function ($i, array $r) use ($inOpts, $siteId, $showCosts, $est): strin
         . '<td class="col-sm"><input class="form-control form-control-sm text-end" name="' . $n . '[qty]" value="' . h(proc_num_value($r['qty'] ?? '')) . '"></td>'
         . '<td class="num small" data-onhand>' . $onHand . '</td>';
     if ($showCosts) {
-        $html .= '<td class="num small">' . ($e ? money($e['unit'], true) : '') . '</td><td class="num small">' . ($e ? money($e['cost']) : '') . '</td>';
+        // v29: an input with no unit cost can not be posted; it is marked here as soon as the cost is estimated
+        $noCost = $e && $itemId && (float)$e['unit'] <= 0;
+        $html .= '<td class="num small">' . ($noCost ? '<span class="text-danger fw-semibold" title="No unit cost or average unit cost: the order cannot be posted">no unit cost</span>' : ($e ? money($e['unit'], true) : ''))
+            . '</td><td class="num small">' . ($e ? money($e['cost']) : '') . '</td>';
     }
     return $html . grid_row_buttons() . '</tr>';
 };
@@ -431,7 +450,7 @@ $outRow = function ($i, array $r) use ($outOpts, $showCosts, $alloc): string {
     if ($showCosts) {
         $html .= '<td class="col-num"><input class="form-control form-control-sm text-end" data-f="alloc_cost" name="' . $n . '[alloc_cost]"'
             . ' value="' . h($allocVal !== null ? number_format((float)$allocVal, 2, '.', '') : '') . '" placeholder="auto"></td>'
-            . '<td class="col-num"><input class="form-control form-control-sm text-end" data-f="unit_cost" name="' . $n . '[unit_cost]"'
+            . '<td class="col-num"><input class="form-control form-control-sm text-end' . ($res && ($r['output_role'] ?? 'co_product') !== 'scrap' && (float)($res['unit'] ?? 0) <= 0 && !empty($r['item_id']) ? ' is-invalid" title="Received at no cost: the order cannot be posted' : '') . '" data-f="unit_cost" name="' . $n . '[unit_cost]"'
             . ' value="' . h($unitVal !== null ? rtrim(rtrim(number_format((float)$unitVal, 4, '.', ''), '0'), '.') : '') . '" placeholder="auto"></td>';
     }
     return $html . grid_row_buttons() . '</tr>';
@@ -488,6 +507,15 @@ $methodHelp = array_map(fn($x) => $x[1], Processing::METHODS);
     data-stock-url="<?= h(url('api.lookup', ['what' => 'stock'])) ?>">
     <thead><tr><th>Item</th><th>Description</th><th class="num">Planned</th><th class="num">Qty</th><th class="num">On hand at site</th><?php if ($showCosts): ?><th class="num">Est. unit cost</th><th class="num">Est. cost</th><?php endif; ?><th></th></tr></thead>
     <tbody><?php foreach (array_values($st['inputs']) as $i => $r) { echo $inRow($i, $r); } ?></tbody>
+    <tfoot>
+      <tr class="fw-semibold grid-totals">
+        <td colspan="3" class="text-end">Total inputs</td>
+        <td class="num" id="inQtyTotal">0</td>
+        <td></td>
+        <?php if ($showCosts): ?><td></td><td class="num"><?= $est ? money($est['materials']) : '' ?></td><?php endif; ?>
+        <td></td>
+      </tr>
+    </tfoot>
   </table></div>
   <template id="tpl-inGrid"><?= $inRow('__i__', []) ?></template>
   <div class="card-body py-2"><?= grid_add_buttons('inGrid', 'Add input', 'inputs') ?></div>
@@ -516,6 +544,11 @@ $methodHelp = array_map(fn($x) => $x[1], Processing::METHODS);
         <td class="num" id="outShareTotal"></td>
         <?php if ($showCosts): ?><td class="num" id="outAllocTotal">0.00</td><td></td><?php endif; ?>
         <td></td>
+      </tr>
+      <tr class="fw-semibold proc-qty-var">
+        <td colspan="4" class="text-end">Variance qty (inputs less outputs)</td>
+        <td class="num" id="qtyVariance">0</td>
+        <td colspan="<?= $showCosts ? 5 : 3 ?>"></td>
       </tr>
       <?php if ($showCosts): ?>
       <tr class="small text-muted" id="outAllocCompare" <?= $alloc ? '' : 'hidden' ?> data-pool="<?= h($alloc ? number_format((float)$alloc['pool'], 2, '.', '') : '') ?>">
@@ -625,6 +658,31 @@ $methodHelp = array_map(fn($x) => $x[1], Processing::METHODS);
   if (siteSel) siteSel.addEventListener('change', refreshInputs);
   refreshInputs();
 
+  // ---------------------------------------------------------------- input quantity, and the variance qty (inputs less outputs)
+  const q4 = (v) => String(Math.round(v * 10000) / 10000);
+  function qtySum(grid) {
+    let s = 0;
+    if (grid) grid.querySelectorAll('tbody input[name$="[qty]"]').forEach((i) => { s += num(i.value); });
+    return s;
+  }
+  function qtyVariance() {
+    const inQ = qtySum(inGrid), outQ = qtySum(document.getElementById('outGrid'));
+    const a = document.getElementById('inQtyTotal'); if (a) a.textContent = q4(inQ);
+    const v = document.getElementById('qtyVariance');
+    if (v) {
+      const d = Math.round((inQ - outQ) * 10000) / 10000;
+      v.textContent = q4(d);
+      v.classList.toggle('text-danger', d > 0);
+      v.classList.toggle('text-success', d < 0);
+    }
+  }
+  if (inGrid) {
+    inGrid.addEventListener('input', qtyVariance);
+    inGrid.addEventListener('change', qtyVariance);
+    new MutationObserver(qtyVariance).observe(inGrid.querySelector('tbody'), { childList: true });
+  }
+  qtyVariance();
+
   // ---------------------------------------------------------------- allocated cost <-> unit cost
   const outGrid = document.getElementById('outGrid');
   function cell(tr, f) { return tr.querySelector('[data-f="' + f + '"]'); }
@@ -673,6 +731,7 @@ $methodHelp = array_map(fn($x) => $x[1], Processing::METHODS);
   function totals(total, qtyTotal, filled) {
     const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
     set('outQtyTotal', String(Math.round(qtyTotal * 10000) / 10000));
+    qtyVariance();
     set('outAllocTotal', fmt(total));
     set('outShareTotal', filled && total > 0 ? '100.00%' : '');
     const cmp = document.getElementById('outAllocCompare');
@@ -760,18 +819,20 @@ function proc_list(string $pageKey): void
         foreach (DB::all("SELECT l.txn_id, l.line_kind, l.qty, i.code FROM transaction_lines l JOIN items i ON i.id = l.item_id
                            WHERE l.txn_id IN $in AND l.line_kind IN ('input','output') ORDER BY l.line_no", $p) as $l) {
             $summ[(int)$l['txn_id']][$l['line_kind']][] = qty($l['qty']) . ' ' . $l['code'];
+            $summ[(int)$l['txn_id']][$l['line_kind'] . '_qty'] = ($summ[(int)$l['txn_id']][$l['line_kind'] . '_qty'] ?? 0) + (float)$l['qty'];
         }
     }
     $showCosts = Access::viewCosts();
     if (g('export') === 'csv' && Access::can($pageKey, 'print')) {
         Audit::log('export', 'inv', 'list', null, 'Processing orders', ['page_key' => $pageKey]);
-        $head = ['Date', 'Number', 'Type', 'Formula', 'Site', 'Inputs', 'Outputs', 'Status'];
+        $head = ['Date', 'Number', 'Type', 'Formula', 'Site', 'Inputs', 'Outputs', 'Variance qty', 'Status'];
         if ($showCosts) {
             $head[] = 'Total cost';
         }
         csv_download('processing_orders.csv', $head, array_map(function ($r) use ($summ, $showCosts) {
             $row = [$r['txn_date'], $r['txn_no'], Processing::typeLabel($r['process_type']), $r['formula_code'], $r['site_name'],
                 implode(', ', $summ[(int)$r['id']]['input'] ?? []), implode(', ', $summ[(int)$r['id']]['output'] ?? []),
+                round(($summ[(int)$r['id']]['input_qty'] ?? 0) - ($summ[(int)$r['id']]['output_qty'] ?? 0), 4),
                 (int)$r['is_pending'] ? 'pending' : $r['status']];
             if ($showCosts) {
                 $row[] = $r['total'];
@@ -799,9 +860,9 @@ function proc_list(string $pageKey): void
     </form>
     <div class="card"><div class="table-responsive">
     <table class="table table-sm table-hover mb-0">
-      <thead><tr><th>Date</th><th>No.</th><th>Type</th><th>Formula</th><th>Site</th><th>Inputs</th><th>Outputs</th><?php if ($showCosts): ?><th class="num">Total cost</th><?php endif; ?><th>Status</th><th>By</th></tr></thead>
+      <thead><tr><th>Date</th><th>No.</th><th>Type</th><th>Formula</th><th>Site</th><th>Inputs</th><th>Outputs</th><th class="num">Variance qty</th><?php if ($showCosts): ?><th class="num">Total cost</th><?php endif; ?><th>Status</th><th>By</th></tr></thead>
       <tbody>
-      <?php if (!$rows): ?><tr><td colspan="10" class="text-muted text-center py-3">No processing orders in this period.</td></tr><?php endif; ?>
+      <?php if (!$rows): ?><tr><td colspan="11" class="text-muted text-center py-3">No processing orders in this period.</td></tr><?php endif; ?>
       <?php foreach ($rows as $r): ?>
         <tr class="<?= (int)$r['is_voided'] ? 'text-muted text-decoration-line-through' : '' ?>">
           <td><?= h(fdate($r['txn_date'])) ?></td>
@@ -811,6 +872,7 @@ function proc_list(string $pageKey): void
           <td class="small"><?= h($r['site_name']) ?></td>
           <td class="small"><?= h(mb_strimwidth(implode(', ', $summ[(int)$r['id']]['input'] ?? []), 0, 60, '…')) ?></td>
           <td class="small"><?= h(mb_strimwidth(implode(', ', $summ[(int)$r['id']]['output'] ?? []), 0, 70, '…')) ?></td>
+          <td class="num"><?= proc_qty_variance((float)($summ[(int)$r['id']]['input_qty'] ?? 0), (float)($summ[(int)$r['id']]['output_qty'] ?? 0)) ?></td>
           <?php if ($showCosts): ?><td class="num"><?= money($r['total']) ?></td><?php endif; ?>
           <td><?= status_badge((int)$r['is_pending'] && !(int)$r['is_voided'] ? 'pending' : $r['status']) ?></td>
           <td class="small text-muted"><?= h($r['username']) ?></td>
@@ -908,6 +970,9 @@ function proc_view(array $t, string $pageKey): void
     $fixed = array_sum(array_map(fn($l) => ($l['output_role'] ?: 'co_product') !== 'co_product' ? (float)$l['amount'] : 0.0, $out));
     $allocated = array_sum(array_map(fn($l) => (float)$l['amount'], $out));
     $variance = r2($pool - $allocated);
+    $inQty = array_sum(array_map(fn($l) => (float)$l['qty'], $in));
+    $outQty = array_sum(array_map(fn($l) => (float)$l['qty'], $out));
+    $qtyVar = round($inQty - $outQty, 4);
     ?>
     <div class="card mb-3"><div class="card-body"><div class="row g-2">
       <?php foreach ($info as $k => $v): ?><div class="col-sm-6 col-md-3"><div class="small text-muted"><?= h($k) ?></div><div><?= $v ?></div></div><?php endforeach; ?>
@@ -921,9 +986,9 @@ function proc_view(array $t, string $pageKey): void
         <?php foreach ($in as $l): ?>
           <tr><td><?= safe_link('inv.center', ['id' => $l['item_id']], $l['item_code']) ?></td><td><?= h($l['description']) ?></td>
             <td class="num text-muted"><?= $l['planned_qty'] !== null ? qty($l['planned_qty']) : '' ?></td><td class="num"><?= qty($l['qty']) ?></td><td class="small"><?= h($l['item_unit']) ?></td>
-            <?php if ($showCosts): ?><td class="num"><?= money($l['rate'], true) ?></td><td class="num"><?= money($l['amount']) ?></td><?php endif; ?></tr>
+            <?php if ($showCosts): ?><td class="num"><?= money(proc_unit_cost($l), true) ?></td><td class="num"><?= money($l['amount']) ?></td><?php endif; ?></tr>
         <?php endforeach; ?>
-        <tr class="total-row"><td colspan="3">Total inputs</td><td class="num"><?= qty(array_sum(array_map(fn($l) => (float)$l['qty'], $in))) ?></td><td></td>
+        <tr class="total-row"><td colspan="3">Total inputs</td><td class="num"><?= qty($inQty) ?></td><td></td>
           <?php if ($showCosts): ?><td></td><td class="num"><?= money($materials) ?></td><?php endif; ?></tr>
       </table></div></div>
 
@@ -946,9 +1011,11 @@ function proc_view(array $t, string $pageKey): void
             <td class="num"><?= number_format((float)$l['alloc_pct'], 2) ?>%</td>
             <?php if ($showCosts): ?><td class="num"><?= money($l['amount']) ?></td><td class="num"><?= money($l['rate'], true) ?></td><?php endif; ?></tr>
         <?php endforeach; ?>
-        <tr class="total-row"><td colspan="4">Total outputs</td><td class="num"><?= qty(array_sum(array_map(fn($l) => (float)$l['qty'], $out))) ?></td><td></td><td></td>
+        <tr class="total-row"><td colspan="4">Total outputs</td><td class="num"><?= qty($outQty) ?></td><td></td><td></td>
           <td class="num"><?= number_format(array_sum(array_map(fn($l) => (float)$l['alloc_pct'], $out)), 2) ?>%</td>
           <?php if ($showCosts): ?><td class="num"><?= money($allocated) ?></td><td></td><?php endif; ?></tr>
+        <tr class="fw-semibold proc-qty-var"><td colspan="4">Variance qty: inputs (<?= qty($inQty) ?>) less outputs (<?= qty($outQty) ?>)</td>
+          <td class="num <?= abs($qtyVar) >= 0.00005 ? ($qtyVar > 0 ? 'text-danger' : 'text-success') : '' ?>"><?= proc_qty_variance($inQty, $outQty) ?></td><td colspan="<?= $showCosts ? 5 : 3 ?>"></td></tr>
         <?php if ($showCosts): ?>
         <tr class="<?= abs($variance) >= 0.005 ? 'table-warning' : '' ?> fw-semibold"><td colspan="8">Variance: inputs<?= $extra ? ' and additional costs' : '' ?> (<?= money($pool) ?>) less outputs (<?= money($allocated) ?>)</td>
           <td class="num"><?= money($variance) ?></td><td></td></tr>
@@ -967,6 +1034,16 @@ function proc_view(array $t, string $pageKey): void
     </div>
 
     <div class="col-xl-3">
+      <div class="card mb-3"><div class="card-header small fw-semibold">Quantity summary</div><div class="card-body">
+        <table class="table table-sm mb-0 totals-box">
+          <tr><td>Input quantity</td><td class="num"><?= qty($inQty) ?></td></tr>
+          <tr><td>Output quantity</td><td class="num"><?= qty($outQty) ?></td></tr>
+          <tr class="fw-semibold <?= abs($qtyVar) >= 0.00005 ? 'table-warning' : '' ?>"><td>Variance qty (inputs less outputs)</td><td class="num"><?= proc_qty_variance($inQty, $outQty) ?></td></tr>
+        </table>
+        <?php if (count(array_unique(array_filter(array_map(fn($l) => mb_strtolower(trim((string)$l['item_unit'])), array_merge($in, $out))))) > 1): ?>
+        <div class="small text-muted mt-2">The lines use more than one unit of measure; the quantities are added as entered.</div>
+        <?php endif; ?>
+      </div></div>
       <?php if ($showCosts): ?>
       <div class="card mb-3"><div class="card-header small fw-semibold">Cost summary<?= $pending ? ' (estimate)' : '' ?></div><div class="card-body">
         <table class="table table-sm mb-0 totals-box">
@@ -1023,26 +1100,28 @@ function proc_print(array $t): void
         <div class="col-4">Processing site: <?= h($sites[$t['site_id']] ?? '') ?><br>Outputs to: <?= h($sites[$t['site2_id'] ?: $t['site_id']] ?? '') ?></div>
       </div>
       <h6>Inputs</h6>
-      <table class="table table-sm"><thead><tr><th>Item</th><th>Description</th><th class="num">Qty</th><?php if ($showCosts): ?><th class="num">Cost</th><?php endif; ?></tr></thead>
-        <?php foreach ($in as $l): ?><tr><td><?= h($l['item_code']) ?></td><td><?= h($l['description']) ?></td><td class="num"><?= qty($l['qty']) ?> <?= h($l['item_unit']) ?></td><?php if ($showCosts): ?><td class="num"><?= money($l['amount']) ?></td><?php endif; ?></tr><?php endforeach; ?>
-        <?php foreach ($cs as $l): ?><tr><td colspan="2"><?= h($l['description']) ?> <span class="text-muted">(<?= h($l['account_name']) ?>)</span></td><td></td><?php if ($showCosts): ?><td class="num"><?= money($l['amount']) ?></td><?php endif; ?></tr><?php endforeach; ?>
+      <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Item</th><th>Description</th><th class="num">Qty</th><?php if ($showCosts): ?><th class="num">Unit cost</th><th class="num">Cost</th><?php endif; ?></tr></thead>
+        <?php foreach ($in as $l): ?><tr><td><?= h($l['item_code']) ?></td><td><?= h($l['description']) ?></td><td class="num"><?= qty($l['qty']) ?> <?= h($l['item_unit']) ?></td><?php if ($showCosts): ?><td class="num"><?= money(proc_unit_cost($l), true) ?></td><td class="num"><?= money($l['amount']) ?></td><?php endif; ?></tr><?php endforeach; ?>
+        <?php foreach ($cs as $l): ?><tr><td colspan="2"><?= h($l['description']) ?> <span class="text-muted">(<?= h($l['account_name']) ?>)</span></td><td></td><?php if ($showCosts): ?><td></td><td class="num"><?= money($l['amount']) ?></td><?php endif; ?></tr><?php endforeach; ?>
         <?php $inQty = array_sum(array_map(fn($l) => (float)$l['qty'], $in)); $inCost = array_sum(array_map(fn($l) => (float)$l['amount'], $in)) + array_sum(array_map(fn($l) => (float)$l['amount'], $cs)); ?>
-        <tr class="fw-semibold border-top"><td colspan="2">Total inputs<?= $cs ? ' and additional costs' : '' ?></td><td class="num"><?= qty($inQty) ?></td><?php if ($showCosts): ?><td class="num"><?= money($inCost) ?></td><?php endif; ?></tr>
-      </table>
+        <tr class="fw-semibold border-top"><td colspan="2">Total inputs<?= $cs ? ' and additional costs' : '' ?></td><td class="num"><?= qty($inQty) ?></td><?php if ($showCosts): ?><td></td><td class="num"><?= money($inCost) ?></td><?php endif; ?></tr>
+      </table></div>
       <h6>Outputs</h6>
-      <table class="table table-sm"><thead><tr><th>Item</th><th>Description</th><th>Role</th><th class="num">Qty</th><th class="num">Share</th><?php if ($showCosts): ?><th class="num">Unit cost</th><th class="num">Cost</th><?php endif; ?></tr></thead>
+      <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Item</th><th>Description</th><th>Role</th><th class="num">Qty</th><th class="num">Share</th><?php if ($showCosts): ?><th class="num">Unit cost</th><th class="num">Cost</th><?php endif; ?></tr></thead>
         <?php foreach ($out as $l): ?><tr><td><?= h($l['item_code']) ?></td><td><?= h($l['description']) ?></td><td><?= h(Processing::roleLabel($l['output_role'])) ?></td>
           <td class="num"><?= qty($l['qty']) ?> <?= h($l['item_unit']) ?></td><td class="num"><?= number_format((float)$l['alloc_pct'], 2) ?>%</td>
           <?php if ($showCosts): ?><td class="num"><?= money($l['rate'], true) ?></td><td class="num"><?= money($l['amount']) ?></td><?php endif; ?></tr><?php endforeach; ?>
         <?php $outQty = array_sum(array_map(fn($l) => (float)$l['qty'], $out)); $outCost = array_sum(array_map(fn($l) => (float)$l['amount'], $out)); ?>
         <tr class="fw-semibold border-top"><td colspan="3">Total outputs</td><td class="num"><?= qty($outQty) ?></td><td class="num"><?= number_format(array_sum(array_map(fn($l) => (float)$l['alloc_pct'], $out)), 2) ?>%</td>
           <?php if ($showCosts): ?><td></td><td class="num"><?= money($outCost) ?></td><?php endif; ?></tr>
-      </table>
-      <?php if ($showCosts): ?>
-      <table class="table table-sm w-auto ms-auto mb-2 proc-variance"><tr><td>Inputs<?= $cs ? ' and additional costs' : '' ?></td><td class="num"><?= money($inCost) ?></td></tr>
+      </table></div>
+      <table class="table table-sm w-auto ms-auto mb-2 proc-variance">
+        <?php if ($showCosts): ?>
+        <tr><td>Inputs<?= $cs ? ' and additional costs' : '' ?></td><td class="num"><?= money($inCost) ?></td></tr>
         <tr><td>Outputs</td><td class="num"><?= money($outCost) ?></td></tr>
-        <tr class="fw-bold"><td>Variance (inputs less outputs)</td><td class="num"><?= money(r2($inCost - $outCost)) ?></td></tr></table>
-      <?php endif; ?>
+        <tr class="fw-bold"><td>Variance (inputs less outputs)</td><td class="num"><?= money(r2($inCost - $outCost)) ?></td></tr>
+        <?php endif; ?>
+        <tr class="fw-bold proc-qty-var"><td>Variance qty (inputs less outputs)</td><td class="num"><?= proc_qty_variance($inQty, $outQty) ?></td></tr></table>
       <?php if ($t['memo']): ?><p class="small">Memo: <?= h($t['memo']) ?></p><?php endif; ?>
       <div class="row mt-5 small">
         <div class="col-4">Prepared by: <?= h(DB::value('SELECT full_name FROM users WHERE id = :id', ['id' => $t['created_by']])) ?></div>

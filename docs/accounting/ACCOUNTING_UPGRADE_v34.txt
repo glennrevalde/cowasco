@@ -1,0 +1,41 @@
+G-SMaRT Accounting - version 34 (2026-12-17)
+=============================================
+
+This package holds only the files that were added or changed since version 33.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No database update this time: no new migration, no table or column change, and the
+bundled database files are unchanged. (If 2026_12_10_class_reports.sql of version
+33 was not run yet, run it.)
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What is new
+-----------
+Banking > Make Deposits > Payments waiting to be deposited (Undeposited Funds):
+ - Journal entries that post to Undeposited Funds (Make Journal Entries, opening
+   balance entries too) are listed with the customer payments and sales receipts,
+   by date. They are usually adjustments of what the POS or the collections bring to
+   the bank: a cash overage, a shortage, a correction.
+ - Amount is the entry's net on Undeposited Funds. Method says "Debit, adds" or
+   "Credit, deducts"; a credit shows in red in brackets.
+ - Ticked, a debit adds to Items selected and the Deposit total, a credit deducts from
+   them. The deposit gets a line on Undeposited Funds for the net (negative for a
+   credit), linked to the entry, so the entry is deposited once and leaves the list.
+ - An entry on a deposit cannot be voided or deleted until it is taken off the deposit
+   or the deposit is voided ("It is included in deposit DEP-00012...").
+ - Edit Deposit shows the entries it holds ticked; an entry changed since shows its new
+   amount with "was" and the old one; saving takes the new amount.
+ - A deposit cannot add up to less than zero: "The items ticked add up to less than
+   zero (-120.00): a journal entry that credits Undeposited Funds deducts from the
+   payments or POS cash it adjusts. Tick them on the same deposit."
+
+Note: journal entries to Undeposited Funds made before this version that were already
+taken care of by hand (for example with an Other receipts line on a deposit) are listed
+too, since nothing links them to that deposit. Leave those unticked.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v34.docx) are updated.

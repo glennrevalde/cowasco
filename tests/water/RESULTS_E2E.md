@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-07 15:28:49 (7.3 s)
+- **Run:** 2026-11-07 21:42:34 (11.5 s)
 - **Server:** http://127.0.0.1:8097
-- **Database:** coop_e2e52 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Database:** coop_e2e53 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 10.11.14-MariaDB-0ubuntu0.24.04.1
-- **Result:** 418 passed, 0 failed, 418 checks
+- **Result:** 429 passed, 0 failed, 429 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -15,7 +15,7 @@
 | a water page opens in the same session (no second login) | 200 | 200 | PASS |
 | the water page shows the unified menu (Water Billing, Chart of Accounts, Customers) | yes | yes | PASS |
 | no PHP error on the water dashboard | yes | yes | PASS |
-| collection policy saved through its page (penalty income account) | 180 | 180 | PASS |
+| collection policy saved through its page (penalty income account) | 181 | 181 | PASS |
 | report signatories saved through Institution Configuration | 2 | 2 | PASS |
 | six active water-service accounts with a working tariff found | 6 | 6 | PASS |
 | an open billing period that has ended exists (080126_083126) | yes | yes | PASS |
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261107-152843-8856 | COL-20261107-152843-8856 | PASS |
+| payment number = official receipt number | COL-20261107-214224-4F8D | COL-20261107-214224-4F8D | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
-| payment debits the cashier's cash account | 229 | 229 | PASS |
+| payment debits the cashier's cash account | 230 | 230 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261107-152843-8856 | COL-20261107-152843-8856 | PASS |
+| retry of the same request returns the same receipt | COL-20261107-214224-4F8D | COL-20261107-214224-4F8D | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -111,7 +111,7 @@
 | water bill A is paid in full | 1,030.40 | 1,030.40 | PASS |
 | collection of account B with a 25.00 penalty accepted | yes | yes | PASS |
 | the penalty is a finance charge of the account, settled by the same receipt | yes | yes | PASS |
-| penalty credited to the penalty income account | 180 | 180 | PASS |
+| penalty credited to the penalty income account | 181 | 181 | PASS |
 | trial balance: debits = credits | 0.00 | 0.00 | PASS |
 | account 114842: water open balance = ledger open balance | 0.00 | 0.00 | PASS |
 | account 114843: water open balance = ledger open balance | 0.00 | 0.00 | PASS |
@@ -163,10 +163,10 @@
 |---|---|---|---|
 | a bill code whose A/R account is not a receivable cannot post (legacy set-up exception) | 0 | 0 | PASS |
 | ...and no one-time bill is left half-saved | 0 | 0 | PASS |
-| bill code corrected on its page (A/R = Accounts Receivable - Water) | 273 | 273 | PASS |
+| bill code corrected on its page (A/R = Accounts Receivable - Water) | 274 | 274 | PASS |
 | the one-time bill posts once the code is fixed | yes | yes | PASS |
 | one-time bill invoice total | 50.00 | 50.00 | PASS |
-| one-time bill credits the service fee income | 373 | 373 | PASS |
+| one-time bill credits the service fee income | 374 | 374 | PASS |
 | trial balance: debits = credits | 0.00 | 0.00 | PASS |
 | installment contract posted as one invoice | yes | yes | PASS |
 | installment invoice = contract total | 600.00 | 600.00 | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok 1e481 B | E2E Purok 1e481 B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok 69415 B | E2E Purok 69415 B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -512,6 +512,22 @@
 | an invoice, sales receipt or order for the member asks for the price at the member's level (15% off) | 33991.50 | 33991.50 | PASS |
 | opened again: the level is shown chosen | yes | yes | PASS |
 | cleared from the form: the member pays the members' level of the line of business, else the standard price | yes | yes | PASS |
+
+## v53 The accounting update (G-SMaRT Accounting versions 26 to 34)
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| the fourteen new reports open for the administrator | yes | yes | PASS |
+| the Report Center: the search box, the Financial Reports card, and the cooperative and water cards still there | yes | yes | PASS |
+| Statement of Cash Flows by Class: the sections follow the account types, and it ties | yes | yes | PASS |
+| the water Collection Summary keeps its date-and-time boxes | yes | yes | PASS |
+| Ending Inventory - POS Cashier: a date box and a time box each | yes | yes | PASS |
+| Make Deposits: the card and e-wallet balances with their Details | yes | yes | PASS |
+| ...the Details of Card Clearing open | yes | yes | PASS |
+| Vendors: Receive Items List | yes | yes | PASS |
+| Vendors: Receive Items and Enter Bills List | yes | yes | PASS |
+| an item group sold to a member: the group price at the member's level (1,000.00 less 20%) | 800.00 | 800.00 | PASS |
+| Company, Security & Closing Date: the item group and no-cost settings | yes | yes | PASS |
 
 ## 7.4c Period close
 

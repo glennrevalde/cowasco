@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 final class Schema
 {
-    private const FLAG = 'schema_ok_2027_03_28';
+    private const FLAG = 'schema_ok_2027_04_04';
 
     /**
      * file => one cheap probe.
@@ -179,6 +179,17 @@ final class Schema
         // last thing the script adds)
         'database/migrations/2027_03_28_regular_joint_subgroups_receipts.sql' => [
             "SELECT COUNT(*) FROM pages WHERE page_key IN ('water.address_subgroups', 'water.receipt_layouts')", 2],
+        // version 53, the accounting update: item groups, Receive Items lists, receipts ticked to settle, the average
+        // cost on the books and fourteen reports (the pages are the last thing the script adds)
+        'database/migrations/2027_04_04_accounting_update.sql' => [
+            "SELECT (SELECT COUNT(*) FROM pages WHERE page_key IN ('rpt.pos_ending_inventory', 'rpt.sales_item_group', 'rpt.pos_sales_item_group',
+                       'rpt.cmp_is_month', 'rpt.cmp_is_quarter', 'rpt.cmp_is_year', 'rpt.cmp_is_custom', 'rpt.cmp_bs_month', 'rpt.cmp_bs_quarter',
+                       'rpt.cmp_bs_year', 'rpt.cmp_bs_custom', 'rpt.avg_cost_changes', 'rpt.trial_balance_class', 'rpt.cash_flow_class'))
+                    + 0 * (SELECT COUNT(group_variance_account_id) FROM items WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(group_item_id) FROM transaction_lines WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(received_via) FROM transactions WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(*) FROM item_group_sales WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(*) FROM clearing_settlements WHERE 1 = 0)", 14],
     ];
 
     private static ?array $pending = null;

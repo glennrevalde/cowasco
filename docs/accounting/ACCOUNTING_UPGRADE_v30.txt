@@ -1,0 +1,61 @@
+G-SMaRT Accounting - version 30 (2026-11-19)
+=============================================
+
+This package holds only the files that were added or changed since version 29.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No database update this time: there is no new migration and no table or column
+changes. The bundled database files are unchanged. (If the 2026_11_12 migration of
+version 29 was not run yet, run it.)
+
+After copying the files, press Ctrl+F5 once in the browser so it loads the new
+assets/css/app.css. Then open System Administration > Utilities: Verify & Rebuild
+Data, click Verify Data, and if "Inventory entered in date order" warns about items,
+run Rebuild Data (costs) once, so past costs follow the new order of the day.
+
+What was wrong (the requests of "ADDITIONAL_REVISED FEATURES ... v30.xlsx")
+----------------------------------------------------------------------------
+The Inventory Center showed BILL-00009 (71.48 kg of Pork Carcass, 10/01) with a
+balance after of -25.19 instead of 71.48, also after rebuilding the database.
+
+ - The figure follows from the order the program counted the movements in: by date,
+   then in the order the documents were entered. -25.19 is 71.48 less 96.67 kg that
+   had been taken out of the site before the bill in that order. The history listed
+   only the latest 100 movements, so that line was not on the screen. Rebuild Data
+   replayed the transactions in the same order, so it came out the same. In a test
+   copy, a processing order of 10/01 entered before that day's bill gives exactly
+   these figures (-25.19, -96.67, -61.01, -15.51, -96.67).
+ - The -96.67 now on hand at POB2 Meatshop is the total of the movements: the
+   processing orders used 96.67 kg more than the bills brought in. With this version
+   the processing order that takes the balance below zero is listed right after the
+   day's bills; check it for a quantity entered twice, or for a bill not entered.
+
+What is changed
+ 1. The order of a day: on one date, the stock received (bills, item receipts,
+    returns, adjustments up) is counted before the stock used or sold that day
+    (processing orders, builds and transfers, then sales and adjustments down),
+    whatever order the documents were typed in. So a bill and a processing order of
+    the same day read as bought, then processed: BILL-00009 shows 71.48.
+    This order is used by the Inventory Center's history, Inventory Valuation
+    Detail, Rebuild Data (which also re-costs the processing orders and sales from
+    it) and the Verify check "Inventory entered in date order".
+ 2. Inventory Center > Transaction history:
+    - the balance after each line counts every movement from the item's very first
+      one (at the site, or at all sites), not back from today's quantity;
+    - Latest 100, Latest 500 or All, and a From and To date;
+    - the heading says how many movements are shown of how many there are;
+    - the last line is "Opening balance" (0) or, when older movements are hidden,
+      "Balance before <date>" with the number of hidden movements and Show all;
+    - a yellow note when the quantity on hand differs from the total of the
+      movements, pointing to Utilities: Verify & Rebuild Data.
+ 3. Disassemble / Process Items: an order dated before today is also checked on its
+    own date. It may not take stock that only came in after that date, nor so much
+    that the site would go below zero on a later date ("need 96.67, have 71.48 on
+    10/01/2026 without going below zero on a later date"). This is what let the
+    10/01 processing order take more than the site held on that day.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v30.docx) are updated for all of the above.

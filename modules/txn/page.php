@@ -163,7 +163,34 @@ if (!$t && ($fromId = gint('from'))) {
     $source = Txn::load($fromId);
     if ($source && in_array($source['txn_type'], ['estimate', 'sales_order'], true) && (int)$source['is_voided'] === 0) {
         $pctProgress = min(100.0, max(0.0, to_num(g('pct', '100'))));
-        foreach (Txn::lines($fromId) as $sl) {
+        $srcLines = Txn::lines($fromId);
+        // what is left of each item group of the source: the share of its first item still to invoice
+        $groupLeft = [];
+        foreach ($srcLines as $sl) {
+            $ref = (int)($sl['group_ref'] ?? 0);
+            if ($ref && ($sl['group_role'] ?? '') === 'member' && !isset($groupLeft[$ref]) && (float)$sl['qty'] != 0.0) {
+                $groupLeft[$ref] = $source['txn_type'] === 'estimate' ? $pctProgress / 100
+                    : max(0.0, ((float)$sl['qty'] - (float)$sl['qty_fulfilled']) / (float)$sl['qty']);
+            }
+        }
+        foreach ($srcLines as $sl) {
+            $gref = (int)($sl['group_ref'] ?? 0);
+            if ($gref && ($sl['group_role'] ?? '') === 'variance') {
+                // the price variance of a group comes across in the same share as its items
+                $share = $groupLeft[$gref] ?? 0.0;
+                if ($share <= 0) {
+                    continue;
+                }
+                $vAmount = r2((float)$sl['amount'] * $share);
+                $lines[] = [
+                    'line_kind' => 'item', 'item_id' => null, 'account_id' => $sl['account_id'], 'description' => $sl['description'],
+                    'qty' => 0, 'rate' => 0, 'discount_pct' => 0, 'discount_kind' => 'amt', 'discount_amount' => r2((float)$sl['discount_amount'] * $share), 'amount' => $vAmount,
+                    'tax_code_id' => $sl['tax_code_id'], 'tax_amount' => $sl['tax_code_id'] ? r2($vAmount * tax_rate((int)$sl['tax_code_id']) / 100) : 0.0,
+                    'site_id' => $sl['site_id'], 'source_line_id' => null,
+                    'group_item_id' => $sl['group_item_id'], 'group_ref' => $gref, 'group_qty' => round((float)$sl['group_qty'] * $share, 4), 'group_rate' => $sl['group_rate'], 'group_role' => 'variance',
+                ];
+                continue;
+            }
             if ((int)$sl['is_closed'] === 1) {
                 continue;
             }
@@ -192,6 +219,10 @@ if (!$t && ($fromId = gint('from'))) {
                 'tax_amount' => $sl['tax_code_id'] ? r2($amount * tax_rate((int)$sl['tax_code_id']) / 100) : 0.0,
                 'site_id' => $sl['site_id'], 'source_line_id' => $sl['id'],
             ];
+            if ($gref && ($sl['group_role'] ?? '') === 'member') {
+                $lines[array_key_last($lines)] += ['group_item_id' => $sl['group_item_id'], 'group_ref' => $gref,
+                    'group_qty' => round((float)$sl['group_qty'] * ($groupLeft[$gref] ?? 1.0), 4), 'group_rate' => $sl['group_rate'], 'group_role' => 'member'];
+            }
         }
     } else {
         $source = null;
@@ -420,12 +451,21 @@ handle_post(function () use ($t, $docType, $pageKey, $isSalesDoc, $type) {
 });
 
 // posted lines take precedence when the form is re-shown after an error
+$groupSwitch = '';
 if (is_post()) {
     $lines = array_values(array_filter(grid_rows('lines'), fn($r) => !empty($r['item_id']) || !empty($r['account_id'])));
     $expenseLines = grid_rows('expenses');
 } else {
     $expenseLines = array_values(array_filter($lines, fn($l) => $l['line_kind'] === 'expense'));
     $lines = array_values(array_filter($lines, fn($l) => $l['line_kind'] !== 'expense'));
+    // item groups: one line per group (edited as the group), or the items in them (each edited on its own)
+    if ($isSalesDoc && ItemGroups::ready() && ItemGroups::has($lines)) {
+        $lineMode = ItemGroups::viewMode();
+        $groupSwitch = ItemGroups::viewSwitch($lineMode);
+        if ($lineMode === 'groups') {
+            $lines = ItemGroups::collapse($lines);
+        }
+    }
 }
 
 $title = ($t ? 'Edit ' : 'New ') . Txn::label($docType) . ($t ? ' ' . $t['txn_no'] : '');
@@ -552,6 +592,7 @@ if ($source && !is_post()) {
 <?php elseif ($docType === 'purchase_order'): ?>
 <div class="card card-body mb-3"><?= item_grid($lines, ['mode' => 'purchase', 'show_site' => false, 'show_job' => true, 'show_fulfilled' => $t ? 'Received' : '', 'show_closed' => (bool)$t]) ?></div>
 <?php else: ?>
+<?= $groupSwitch !== '' ? '<div class="mb-2">' . $groupSwitch . '</div>' : '' ?>
 <div class="card card-body mb-3"><?= item_grid($lines, ['mode' => 'sales', 'show_disc' => $docType !== 'statement_charge', 'show_site' => false, 'show_fulfilled' => ($docType === 'sales_order' && $t) ? 'Invoiced' : '', 'show_closed' => $docType === 'sales_order' && $t, 'min_rows' => $docType === 'statement_charge' ? 1 : 3]) ?></div>
 <?php endif; ?>
 

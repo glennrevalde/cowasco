@@ -67,11 +67,13 @@ Report::define('processing_register', [
                 $amt = (float)$l['amount'];
                 if ($l['line_kind'] === 'input') {
                     $a['in'][] = qty($l['qty']) . ' ' . $l['code'];
+                    $a['in_qty'] = ($a['in_qty'] ?? 0) + (float)$l['qty'];
                     $a['materials'] = ($a['materials'] ?? 0) + $amt;
                 } elseif ($l['line_kind'] === 'cost') {
                     $a['extra'] = ($a['extra'] ?? 0) + $amt;
                 } elseif ($l['line_kind'] === 'output') {
                     $a['out'][] = qty($l['qty']) . ' ' . $l['code'];
+                    $a['out_qty'] = ($a['out_qty'] ?? 0) + (float)$l['qty'];
                     if (($l['output_role'] ?: 'co_product') === 'co_product') {
                         $a['co'] = ($a['co'] ?? 0) + $amt;
                     } else {
@@ -82,7 +84,7 @@ Report::define('processing_register', [
             }
         }
         $rows = [];
-        $tot = ['date' => 'TOTAL (completed orders)', 'materials' => 0.0, 'extra' => 0.0, 'total' => 0.0, 'by' => 0.0, 'co' => 0.0, 'variance' => 0.0];
+        $tot = ['date' => 'TOTAL (completed orders)', 'in_qty' => 0.0, 'out_qty' => 0.0, 'qty_var' => 0.0, 'materials' => 0.0, 'extra' => 0.0, 'total' => 0.0, 'by' => 0.0, 'co' => 0.0, 'variance' => 0.0];
         foreach ($orders as $o) {
             $a = $agg[(int)$o['id']] ?? [];
             $materials = r2($a['materials'] ?? 0);
@@ -96,13 +98,14 @@ Report::define('processing_register', [
                 'date' => $o['txn_date'], 'num' => $o['txn_no'], 'type' => Processing::typeLabel($o['process_type']),
                 'formula' => $o['formula_code'] ? $o['formula_code'] . ($o['process_batches'] !== null ? ' × ' . qty($o['process_batches']) : '') : '',
                 'site' => $o['site_name'], 'inputs' => implode(', ', $a['in'] ?? []), 'outputs' => implode(', ', $a['out'] ?? []),
+                'in_qty' => round($a['in_qty'] ?? 0, 4), 'out_qty' => round($a['out_qty'] ?? 0, 4), 'qty_var' => round(($a['in_qty'] ?? 0) - ($a['out_qty'] ?? 0), 4),
                 'materials' => $materials, 'extra' => $extra, 'total' => $pool, 'by' => $by, 'co' => $co, 'variance' => $variance,
                 'method' => Processing::methodLabel($o['alloc_method']), 'status' => $status,
                 '_links' => ['num' => Report::txnLink(['txn_type' => $o['txn_type'], 'txn_id' => $o['id']])],
                 '_class' => $status === 'completed' ? '' : 'text-muted',
             ];
             if ($status === 'completed') {
-                foreach (['materials', 'extra', 'total', 'by', 'co', 'variance'] as $k) {
+                foreach (['in_qty', 'out_qty', 'qty_var', 'materials', 'extra', 'total', 'by', 'co', 'variance'] as $k) {
                     $tot[$k] += $row[$k];
                 }
             }
@@ -112,6 +115,8 @@ Report::define('processing_register', [
             'columns' => [
                 ['key' => 'date', 'label' => 'Date', 'type' => 'date'], ['key' => 'num', 'label' => 'Num'], ['key' => 'type', 'label' => 'Type'],
                 ['key' => 'formula', 'label' => 'Formula'], ['key' => 'site', 'label' => 'Site'], ['key' => 'inputs', 'label' => 'Inputs'], ['key' => 'outputs', 'label' => 'Outputs'],
+                ['key' => 'in_qty', 'label' => 'Input qty', 'type' => 'qty', 'optional' => true], ['key' => 'out_qty', 'label' => 'Output qty', 'type' => 'qty', 'optional' => true],
+                ['key' => 'qty_var', 'label' => 'Variance qty', 'type' => 'qty'],
                 ['key' => 'materials', 'label' => 'Input materials', 'type' => 'money', 'sensitive' => 'cost'],
                 ['key' => 'extra', 'label' => 'Added costs', 'type' => 'money', 'sensitive' => 'cost'],
                 ['key' => 'total', 'label' => 'Total cost', 'type' => 'money', 'sensitive' => 'cost'],
@@ -122,7 +127,7 @@ Report::define('processing_register', [
             ],
             'rows' => $rows,
             'totals' => $tot,
-            'notes' => 'Disassembly, de-kitting and co-product orders. Pending orders show estimated amounts and are left out of the totals; voided orders are listed for reference.',
+            'notes' => 'Disassembly, de-kitting and co-product orders. Pending orders show estimated amounts and are left out of the totals; voided orders are listed for reference. Variance qty is the input quantity less the output quantity.',
         ];
     },
 ]);

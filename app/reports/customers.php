@@ -596,6 +596,8 @@ Report::define('sales_customer_detail', [
 
 Report::define('sales_item_summary', [
     'filters' => ['range', 'customer', 'customer_type', 'rep', 'site', 'class', 'category', 'item_type', 'pref_vendor'],
+    // the items of each item type sorted on a figure, increasing or decreasing (v29)
+    'sort_by' => ['qty' => 'Qty', 'amount' => 'Amount', 'pct' => '% of sales', 'cogs' => 'COGS', 'margin' => 'Gross margin', 'margin_pct' => 'Margin %'],
     'run' => function (array $f): array {
         $lines = Report::salesLines($f['from'], $f['to'], $f);
         $by = [];
@@ -686,6 +688,8 @@ Report::define('sales_rep_detail', [
 Report::define('inventory_sales_site', [
     'filters' => array_merge(['range', 'site', 'customer', 'customer_type', 'class'], SALES_ITEM_FILTERS),
     'sortable' => false,
+    // the items of each site sorted on a figure, increasing or decreasing (v29)
+    'sort_by' => ['qty' => 'Qty sold', 'amount' => 'Sales', 'cost' => 'Cost of sales'],
     'run' => function (array $f): array {
         $lines = array_filter(Report::salesLines($f['from'], $f['to'], $f), fn($l) => in_array($l['item_type'], ['inventory', 'assembly'], true));
         $sites = DB::pairs('SELECT id, name FROM sites');

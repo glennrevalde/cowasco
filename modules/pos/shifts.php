@@ -208,7 +208,8 @@ if ($a === 'shift') {
     // what came into the drawer apart from the float and the drops (cash sales, cash account payments)
     $cashIn = r2($sum['expected_cash'] - (float)$sh['opening_float'] + $sum['cash_drops']);
     layout_start('Shift: ' . $sh['terminal'] . ', ' . fdate($sh['business_date']), ['actions' => btn_link(url($pageKey), 'All shifts', 'btn-outline-secondary', 'arrow-left')
-        . ($zId ? ' ' . btn_link(url($pageKey, ['a' => 'reading', 'id' => $zId]), 'Z-reading', 'btn-outline-secondary', 'printer') : '')]);
+        . ($zId ? ' ' . btn_link(url($pageKey, ['a' => 'reading', 'id' => $zId]), 'Z-reading', 'btn-outline-secondary', 'printer') : '')
+        . (Access::page('rpt.pos_ending_inventory') ? ' ' . btn_link(url('rpt.pos_ending_inventory', ['shift_id' => $sh['id']]), 'Ending inventory', 'btn-outline-secondary', 'box-seam') : '')]);
     ?>
     <div class="row g-3">
       <div class="col-lg-7">
@@ -377,7 +378,8 @@ layout_start('Shifts, Cash Drops & Readings', ['actions' => page_link('pos.regis
   <?php else: ?>
     <div class="card mb-3"><div class="card-header fw-semibold">Current shift: <?= h($terminal['name']) ?></div>
       <div class="card-body">
-        <div class="small text-muted mb-2">Opened <?= h(fdatetime($shift['opened_at'])) ?> by <?= h($shift['full_name']) ?>, opening cash float <strong><?= money($shift['opening_float']) ?></strong></div>
+        <div class="small text-muted mb-2">Opened <?= h(fdatetime($shift['opened_at'])) ?> by <?= h($shift['full_name']) ?>, opening cash float <strong><?= money($shift['opening_float']) ?></strong>
+          <?php if (Access::page('rpt.pos_ending_inventory')): ?> <a class="ms-1" href="<?= h(url('rpt.pos_ending_inventory', ['shift_id' => $shift['id']])) ?>"><i class="bi bi-box-seam"></i> Ending inventory so far</a><?php endif; ?></div>
         <?= shift_summary_table($summary) ?>
       </div>
     </div>
@@ -431,14 +433,15 @@ layout_start('Shifts, Cash Drops & Readings', ['actions' => page_link('pos.regis
       <thead><tr><th>Date / terminal</th><th>Cashier</th><th>Status</th><th class="num">Float</th><th class="num">Expected</th><th class="num">Counted</th><th class="num">Over/short</th><th></th></tr></thead>
       <tbody>
       <?php if (!$history): ?><tr><td colspan="8" class="text-muted text-center py-3"><?= $hFiltered ? 'No shift for these choices.' : 'No shift yet.' ?></td></tr><?php endif; ?>
-      <?php foreach ($history as $hsh): $hDeposited = $hsh['deposit_txn_id'] && (int)$hsh['dep_void'] === 0; ?>
+      <?php $canEndInv = Access::page('rpt.pos_ending_inventory'); foreach ($history as $hsh): $hDeposited = $hsh['deposit_txn_id'] && (int)$hsh['dep_void'] === 0; ?>
         <tr><td class="text-nowrap"><?= h(fdate($hsh['business_date'])) ?><div class="small text-muted"><?= h($hsh['terminal']) ?></div></td><td><?= h($hsh['full_name']) ?></td><td><?= status_badge($hsh['status'] === 'open' ? 'open' : 'closed') ?><?= $hsh['corrected_at'] ? '<div class="small text-muted">corrected</div>' : '' ?></td>
           <td class="num"><?= money($hsh['opening_float']) ?></td>
           <td class="num"><?= $hsh['expected_cash'] !== null ? money($hsh['expected_cash']) : '' ?></td><td class="num"><?= $hsh['counted_cash'] !== null ? money($hsh['counted_cash']) : '' ?></td>
           <td class="num <?= (float)$hsh['over_short'] < 0 ? 'neg' : '' ?>"><?= $hsh['over_short'] !== null ? money($hsh['over_short']) : '' ?></td>
           <?php $canFix = $hsh['status'] === 'closed' && Access::can($pageKey, 'edit'); ?>
           <td class="text-nowrap text-end shift-acts"><a href="<?= h(url($pageKey, ['a' => 'shift', 'id' => $hsh['id']])) ?>" title="<?= $canFix ? 'Correct the closing entries' : 'The figures of the shift' ?>" aria-label="<?= $canFix ? 'Correct' : 'Details' ?>"><i class="bi bi-<?= $canFix ? 'pencil-square' : 'eye' ?>"></i></a>
-            <?= $hsh['z_id'] ? '<a class="ms-2" href="' . h(url($pageKey, ['a' => 'reading', 'id' => $hsh['z_id']])) . '" title="Print the Z-reading">Z</a>' : '' ?> <?= $hDeposited ? '<div class="small">' . Txn::link((int)$hsh['deposit_txn_id'], 'deposited') . '</div>' : '' ?></td></tr>
+            <?= $hsh['z_id'] ? '<a class="ms-2" href="' . h(url($pageKey, ['a' => 'reading', 'id' => $hsh['z_id']])) . '" title="Print the Z-reading">Z</a>' : '' ?>
+            <?= $canEndInv ? '<a class="ms-2" href="' . h(url('rpt.pos_ending_inventory', ['shift_id' => $hsh['id']])) . '" title="Ending inventory of this shift" aria-label="Ending inventory"><i class="bi bi-box-seam"></i></a>' : '' ?> <?= $hDeposited ? '<div class="small">' . Txn::link((int)$hsh['deposit_txn_id'], 'deposited') . '</div>' : '' ?></td></tr>
       <?php endforeach; ?>
       </tbody>
       <?php if ($hTot && $hTot['n'] > 0): ?>

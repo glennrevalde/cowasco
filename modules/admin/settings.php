@@ -24,7 +24,11 @@ $groups = [
         'finance_charge_grace_days' => ['Grace period (days)', 'int'], 'finance_charge_on_charges' => ['Charge interest on earlier finance charges', 'bool'],
     ],
     'Inventory and POS' => [
+        'track_group_sales' => ['Track Item Group Sales transactions', 'bool'],
+        'adopt_group_price' => ['Adopt the Group Price in the Item Group', 'bool'],
         'allow_negative_stock' => ['Allow selling or moving stock below zero (with warning)', 'bool'],
+        'block_zero_cost_sales' => ['Block sales of items with no unit cost (inventory parts and the items of item groups)', 'bool'],
+        'block_zero_cost_processing' => ['Block posting processing orders with no unit cost (inputs, co-products and by-products)', 'bool'],
     ],
     'POS receipt wording' => [
         'pos_receipt_title'         => ['Receipt title for sales', 'text'],

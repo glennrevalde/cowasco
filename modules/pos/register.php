@@ -33,6 +33,12 @@ if ($a === 'receipt') {
         Audit::log('reprint', 'pos', 'transaction', (int)$t['id'], Txn::ref($t), ['page_key' => 'pos.receipts', 'terminal_id' => $t['terminal_id']]);
     }
     $lines = Txn::lines((int)$t['id']);
+    // item groups print as one line each (the group, how many, its price), or as the items in them
+    $hasGroups = ItemGroups::ready() && ItemGroups::has($lines);
+    $lineMode = ItemGroups::viewMode();
+    if ($hasGroups && $lineMode === 'groups') {
+        $lines = ItemGroups::collapse($lines);
+    }
     $tenders = DB::all('SELECT pt.*, pm.name FROM pos_tenders pt JOIN payment_methods pm ON pm.id = pt.payment_method_id WHERE pt.txn_id = :id', ['id' => $t['id']]);
     $s = Settings::all();
     $term = DB::row('SELECT * FROM pos_terminals WHERE id = :id', ['id' => $t['terminal_id']]);
@@ -55,7 +61,8 @@ if ($a === 'receipt') {
     ?>
     <div class="no-print text-center mb-2"><button class="btn btn-primary btn-sm" onclick="window.print()" autofocus><i class="bi bi-printer"></i> Print</button>
       <?php if ($btOn): ?><button class="btn btn-outline-primary btn-sm" type="button" data-bt-print data-bt-auto data-bt-ops="#btReceipt"><i class="bi bi-bluetooth"></i> Bluetooth printer</button><?php endif; ?>
-      <a class="btn btn-success btn-sm" href="<?= h(url($pageKey)) ?>">New sale</a></div>
+      <a class="btn btn-success btn-sm" href="<?= h(url($pageKey)) ?>">New sale</a>
+      <?php if ($hasGroups): ?><div class="mt-2"><?= ItemGroups::viewSwitch($lineMode) ?></div><?php endif; ?></div>
     <?php if ($btOn): ?>
     <div class="bt-note mx-auto" data-bt-status hidden></div>
     <script type="application/json" id="btPrinterOptions"><?= json_encode(Receipt::btOptions(), JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
@@ -101,7 +108,10 @@ $cartRows = function (array $cart): array {
     foreach ($cart as $c) {
         $iid = (int)($c['item_id'] ?? 0);
         $it = $iid ? item_cache($iid) : null;
-        if (!$it || !in_array($it['item_type'], ['inventory', 'assembly', 'non_inventory', 'service', 'other_charge'], true)) {
+        if (!$it || !in_array($it['item_type'], ['inventory', 'assembly', 'non_inventory', 'service', 'other_charge', 'group'], true)) {
+            continue;
+        }
+        if ($it['item_type'] === 'group' && !ItemGroups::ready()) {
             continue;
         }
         $qtyv = to_num($c['qty'] ?? 0);
@@ -112,7 +122,7 @@ $cartRows = function (array $cart): array {
             'uom_id' => !empty($c['uom']) ? (int)$c['uom'] : null,
             'discount_kind' => ($c['dk'] ?? 'pct') === 'amt' ? 'amt' : 'pct',
             'discount_val' => to_num($c['disc'] ?? 0),
-            'tax_code_id' => $it['tax_code_id'], 'description' => $it['name']];
+            'tax_code_id' => $it['item_type'] === 'group' ? ItemGroups::taxCode($it) : $it['tax_code_id'], 'description' => $it['name']];
     }
     return $rows;
 };
@@ -154,7 +164,10 @@ if (is_post()) {
                 fail('Choose the customer, amount and payment method.');
             }
             $method = DB::row('SELECT * FROM payment_methods WHERE id = :id', ['id' => $pm]);
-            $acct = $method['method_type'] === 'cash' ? (int)$terminal['cash_account_id'] : (int)($method['clearing_account_id'] ?: Accts::get('undeposited_funds'));
+            // cash goes to the drawer; a card or e-wallet payment to the clearing account of its method, or to the module default
+            // Card Clearing / E-wallet Clearing like a POS sale paid that way (v28: it went to Undeposited Funds); others to Undeposited Funds
+            $acct = $method['method_type'] === 'cash' ? (int)$terminal['cash_account_id'] : (int)($method['clearing_account_id']
+                ?: (in_array($method['method_type'], ['card', 'ewallet'], true) ? Accts::get($method['method_type'] === 'ewallet' ? 'ewallet_clearing' : 'card_clearing') : Accts::get('undeposited_funds')));
             $apps = [];
             $left = $amt;
             foreach (Balances::openReceivables($cid) as $d) {
@@ -346,11 +359,26 @@ $items = DB::all("SELECT i.id, i.code, i.barcode, i.name, i.sales_price, i.item_
                          COALESCE(s.qty_on_hand,0) AS on_hand
                     FROM items i LEFT JOIN tax_codes t ON t.id = i.tax_code_id
                     LEFT JOIN item_site_stock s ON s.item_id = i.id AND s.site_id = :s
-                   WHERE i.is_active = 1 AND i.item_type IN ('inventory','assembly','non_inventory','service','other_charge') ORDER BY i.code", ['s' => $siteId]);
+                   WHERE i.is_active = 1 AND i.item_type IN ('inventory','assembly','non_inventory','service','other_charge'" . (ItemGroups::ready() ? ",'group'" : '') . ") ORDER BY i.code", ['s' => $siteId]);
 $itemUnits = Uom::unitsByItem(array_map(fn($r) => (int)$r['id'], $items));
-$itemsJs = array_map(fn($r) => ['id' => (int)$r['id'], 'code' => $r['code'], 'barcode' => $r['barcode'], 'name' => $r['name'], 'label' => item_label($r['code'], $r['name']), 'price' => (float)$r['sales_price'],
-    'tax' => (float)$r['tax_rate'], 'stock' => in_array($r['item_type'], ['inventory', 'assembly'], true) ? (float)$r['on_hand'] : null,
-    'units' => count($itemUnits[(int)$r['id']] ?? []) > 1 ? $itemUnits[(int)$r['id']] : []], $items);
+$taxRates = Lookup::taxRates();
+$adoptGroup = ItemGroups::adopt();
+$itemsJs = array_map(function ($r) use ($itemUnits, $taxRates, $adoptGroup) {
+    $row = ['id' => (int)$r['id'], 'code' => $r['code'], 'barcode' => $r['barcode'], 'name' => $r['name'], 'label' => item_label($r['code'], $r['name']), 'price' => (float)$r['sales_price'],
+        'tax' => (float)$r['tax_rate'], 'stock' => in_array($r['item_type'], ['inventory', 'assembly'], true) ? (float)$r['on_hand'] : null,
+        'units' => count($itemUnits[(int)$r['id']] ?? []) > 1 ? $itemUnits[(int)$r['id']] : []];
+    if ($r['item_type'] === 'group') {
+        // an item group: sold at its group price (or, with "Adopt the Group Price" off or no group price, at the prices of its items)
+        $row['group'] = true;
+        $row['members'] = array_map(fn($m) => [(int)$m['id'], (float)$m['member_qty']], ItemGroups::members((int)$r['id']));
+        $row['own'] = $adoptGroup && (float)$r['sales_price'] > 0;
+        $row['price'] = ItemGroups::price((int)$r['id'], null);
+        $tc = ItemGroups::taxCode($r);
+        $row['tax'] = (float)($taxRates[$tc] ?? 0);
+        $row['units'] = [];
+    }
+    return $row;
+}, $items);
 $methods = DB::all('SELECT * FROM payment_methods WHERE is_active = 1 ORDER BY id');
 // payment options offered on the register: Chart of Accounts > Terms, Tax Codes & Other Lists > Payment methods > "POS payment option"
 $posMethods = array_values(array_filter($methods, fn($m) => array_key_exists('show_in_pos', $m)
@@ -394,7 +422,15 @@ $suspended = DB::all("SELECT t.*, u.username FROM transactions t JOIN users u ON
 $recallId = gint('recall') ?: pint('recall_id');
 $initialCart = [];
 if ($recallId && ($r = Txn::load($recallId)) && $r['status'] === 'suspended') {
-    foreach (Txn::lines($recallId) as $l) {
+    foreach ((ItemGroups::ready() ? ItemGroups::collapse(Txn::lines($recallId)) : Txn::lines($recallId)) as $l) {
+        if (!empty($l['_group'])) {
+            $initialCart[] = ['item_id' => (int)$l['item_id'], 'qty' => (float)$l['group_qty'], 'price' => (float)$l['group_rate'], 'uom' => null,
+                'dk' => 'amt', 'disc' => (float)$l['discount_amount']];
+            continue;
+        }
+        if (empty($l['item_id'])) {
+            continue;
+        }
         $initialCart[] = ['item_id' => (int)$l['item_id'],
             'qty' => (float)$l['uom_qty'] != 0.0 ? (float)$l['uom_qty'] : (float)$l['qty'],
             'price' => (float)$l['uom_rate'] != 0.0 ? (float)$l['uom_rate'] : (float)$l['rate'],
@@ -529,6 +565,12 @@ $maxDisc = Access::limit('max_discount_pct');
   // price of one base unit for the customer on the sale: a custom price of the level, else the level's percentage
   const priceOf = (it) => {
     const lv = levelOf();
+    // an item group without its own price: the items in it at the customer's prices
+    if (it.group && !it.own) {
+      let sum = 0;
+      for (const [mid, q] of (it.members || [])) { const m = itemOf(mid); if (!m) return it.price; sum += r2(q * priceOf(m)); }
+      return r2(sum);
+    }
     if (!lv) return it.price;
     const custom = lv.custom ? lv.custom[it.id] : undefined;
     return custom !== undefined ? Number(custom) : r2(it.price * (1 + lv.pct / 100));

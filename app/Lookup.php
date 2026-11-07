@@ -189,6 +189,11 @@ final class Lookup
         );
         $out = [];
         foreach ($rows as $r) {
+            if ($r['type'] === 'group' && $mode !== 'purchase') {
+                // an item group is sold at its group price (or its consolidated price), with the tax its items mostly have
+                $r['sales_price'] = ItemGroups::price((int)$r['id'], null);
+                $r['tax_code_id'] = ItemGroups::taxCode(['id' => (int)$r['id'], 'tax_code_id' => $r['tax_code_id']]);
+            }
             $out[(int)$r['id']] = [
                 'id'    => (int)$r['id'],
                 'code'  => $r['code'],
@@ -205,16 +210,24 @@ final class Lookup
         return $out;
     }
 
-    /** Sales price for a customer (price levels) */
     /**
      * The price of an item for a customer: the price level that applies (the customer's own, else the member or
      * nonmember level of the line of business, else the general member / nonmember level), when the level is active
      * and the document date is within its dates. $unitId: the line of business (default: the form's, then sales).
+     * An item group's price is its group price (or its items' prices) with the same level: ItemGroups::price.
      */
     public static function priceFor(int $itemId, ?int $customerId, ?int $unitId = null, ?string $date = null): float
     {
-        $item = DB::row('SELECT sales_price FROM items WHERE id = :i', ['i' => $itemId]);
-        $price = (float)($item['sales_price'] ?? 0);
+        $item = DB::row('SELECT sales_price, item_type FROM items WHERE id = :i', ['i' => $itemId]);
+        if (($item['item_type'] ?? '') === 'group') {
+            return ItemGroups::price($itemId, $customerId);
+        }
+        return self::levelPrice($itemId, (float)($item['sales_price'] ?? 0), $customerId, $unitId, $date);
+    }
+
+    /** A price as the price level that applies makes it: the level's custom price for the item, or its percentage */
+    public static function levelPrice(int $itemId, float $price, ?int $customerId, ?int $unitId = null, ?string $date = null): float
+    {
         $pl = self::priceLevelFor($customerId, $unitId, $date);
         if (!$pl) {
             return $price;

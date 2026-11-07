@@ -1320,6 +1320,60 @@ $admin->post('index.php?p=coop.member&id=' . $plMember, $plForm);
 Checks::true('cleared from the form: the member pays the members\' level of the line of business, else the standard price', $q('SELECT price_level_id FROM customers WHERE id = :c', ['c' => $plCustomer]) === null);
 DB::run('UPDATE customers SET price_level_id = :p WHERE id = :c', ['p' => $plBefore, 'c' => $plCustomer]);
 
+// ======================================================================================== v53
+Checks::section('v53 The accounting update (G-SMaRT Accounting versions 26 to 34)');
+$v53Reports = ['rpt.pos_ending_inventory' => 'Ending Inventory - POS Cashier', 'rpt.sales_item_group' => 'Sales by Item Group',
+    'rpt.pos_sales_item_group' => 'POS Sales by Item Group', 'rpt.cmp_is_month' => 'Comparative Income Statement by Month',
+    'rpt.cmp_is_quarter' => 'Comparative Income Statement by Quarter', 'rpt.cmp_is_year' => 'Comparative Income Statement by Year',
+    'rpt.cmp_is_custom' => 'Comparative Income Statement by Custom Range', 'rpt.cmp_bs_month' => 'Comparative Balance Sheet by Month',
+    'rpt.cmp_bs_quarter' => 'Comparative Balance Sheet by Quarter', 'rpt.cmp_bs_year' => 'Comparative Balance Sheet by Year',
+    'rpt.cmp_bs_custom' => 'Comparative Balance Sheet by Custom Date', 'rpt.avg_cost_changes' => 'Average Cost Changes',
+    'rpt.trial_balance_class' => 'Trial Balance by Class', 'rpt.cash_flow_class' => 'Statement of Cash Flows by Class'];
+$v53Bad = [];
+foreach ($v53Reports as $key => $title) {
+    $admin->get('index.php?p=' . $key);
+    if ($admin->status !== 200 || !str_contains($admin->body, h($title)) || preg_match('/Something went wrong|SQLSTATE|Fatal error|Warning:/', $admin->body)) {
+        $v53Bad[] = $key . ' (' . $admin->status . ')';
+    }
+}
+Checks::true('the fourteen new reports open for the administrator', !$v53Bad, implode(', ', $v53Bad));
+$admin->get('index.php?p=home.reports');
+Checks::true('the Report Center: the search box, the Financial Reports card, and the cooperative and water cards still there',
+    $admin->status === 200 && str_contains($admin->body, 'id="rcSearch"') && str_contains($admin->body, 'Financial Reports')
+    && str_contains($admin->body, 'Collection Summary') && str_contains($admin->body, 'Loan Releases'));
+$admin->get('index.php?p=rpt.cash_flow_class&dates=year_to_date');
+Checks::true('Statement of Cash Flows by Class: the sections follow the account types, and it ties', $admin->status === 200
+    && str_contains($admin->body, 'account type') && !str_contains($admin->body, 'does not tie'));
+$admin->get('index.php?p=rpt.water_collection_summary&dates=custom&from=' . date('Y-m-01') . 'T08:00&to=' . date('Y-m-d') . 'T17:00');
+Checks::true('the water Collection Summary keeps its date-and-time boxes', $admin->status === 200 && str_contains($admin->body, 'type="datetime-local"')
+    && !str_contains($admin->body, 'name="from_time"'));
+$admin->get('index.php?p=rpt.pos_ending_inventory&dates=today');
+Checks::true('Ending Inventory - POS Cashier: a date box and a time box each', $admin->status === 200 && str_contains($admin->body, 'name="from_time"') && str_contains($admin->body, 'name="to_time"'));
+$admin->get('index.php?p=bank.deposits');
+Checks::true('Make Deposits: the card and e-wallet balances with their Details', $admin->status === 200 && str_contains($admin->body, 'Card and e-wallet settlements') && str_contains($admin->body, 'data-clr-details'));
+$v53Clr = (int)$q("SELECT id FROM accounts WHERE id = (SELECT account_id FROM default_accounts WHERE setting_key = 'card_clearing')");
+$admin->get('index.php?p=bank.deposits&a=clearing&account_id=' . $v53Clr . '&as_of=' . date('Y-m-d'));
+Checks::true('...the Details of Card Clearing open', $admin->status === 200 && str_contains($admin->body, 'What the balance is made of'), (string)$admin->status);
+foreach (['vend.receive_items' => 'Receive Items List', 'vend.receive_bill' => 'Receive Items and Enter Bills List'] as $key => $title) {
+    $admin->get('index.php?p=' . $key . '&a=list');
+    Checks::true("Vendors: $title", $admin->status === 200 && str_contains($admin->body, $title));
+}
+// an item group at a member's price level, through the price look-up of the sales forms
+$v53Group = (int)$q("SELECT id FROM items WHERE item_type = 'group' ORDER BY id LIMIT 1");
+if ($v53Group) {
+    $v53Old = (float)$q('SELECT sales_price FROM items WHERE id = :i', ['i' => $v53Group]);
+    DB::run('UPDATE items SET sales_price = 1000 WHERE id = :i', ['i' => $v53Group]);
+    $v53Level = DB::insert('price_levels', ['name' => 'Members 20% off (e2e v53)', 'adjust_pct' => -20, 'is_active' => 1]);
+    DB::run('UPDATE customers SET price_level_id = :p WHERE id = :c', ['p' => $v53Level, 'c' => $plCustomer]);
+    $admin->get('index.php?p=api.lookup&what=price&item=' . $v53Group . '&customer=' . $plCustomer . '&date=' . date('Y-m-d'));
+    Checks::eq('an item group sold to a member: the group price at the member\'s level (1,000.00 less 20%)', '800.00', number_format((float)($admin->json['price'] ?? -1), 2, '.', ''));
+    DB::run('UPDATE customers SET price_level_id = :p WHERE id = :c', ['p' => $plBefore, 'c' => $plCustomer]);
+    DB::run('UPDATE items SET sales_price = :s WHERE id = :i', ['s' => $v53Old, 'i' => $v53Group]);
+}
+$admin->get('index.php?p=admin.settings');
+Checks::true('Company, Security & Closing Date: the item group and no-cost settings', $admin->status === 200 && str_contains($admin->body, 'Track Item Group Sales transactions')
+    && str_contains($admin->body, 'Block sales of items with no unit cost'));
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

@@ -1,0 +1,47 @@
+G-SMaRT Accounting - version 33 (2026-12-10)
+=============================================
+
+This package holds only the files that were added or changed since version 32.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+Run database/migrations/2026_12_10_class_reports.sql once on every company database
+(phpMyAdmin > Import, Navicat > Execute SQL File, or the mysql command). It is
+written for MySQL 5.5 and is safe to run twice. Until it is run, the program stops
+after log-in and names it. (If 2026_12_03_settle_receipts_financial_menu.sql of
+version 32 was not run yet, run it first.) It adds the two new report pages and gives
+them to the roles that may open the Trial Balance and the Statement of Cash Flows,
+with their print right. No table or column is added and nothing is changed.
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What is new (the requests of "ADDITIONAL_REVISED FEATURES ... v33.xlsx")
+------------------------------------------------------------------------
+ 1. Point of Sale > Reports > POS Sales by Hour: the TOTAL row adds up the
+    Transactions column too, and its Average sale is the total net sales divided by
+    all the transactions.
+ 2. Inventory > Reports > Physical Inventory Worksheet: a new tick box, Exclude zero
+    qty. The items with no quantity on hand at the site (or at all sites) on the As of
+    date are left off the sheet, and the note under the title says so. It works with
+    a blind count as well.
+ 3. Financial > Reports > Trial Balance by Class (new). For each account, a Debit and
+    a Credit column for every class (the active classes and any class with activity,
+    then Unclassified), then Total Debit and Total Credit, which are the Trial Balance
+    of the whole company. Income and expense accounts show the fiscal year to date and
+    earlier years' net income is in Retained Earnings, class by class, as on the
+    Trial Balance. "One column per class (debit less credit)" shows a single net column
+    per class instead. A click on an amount opens the General Ledger of that account
+    for that class. The note names any class whose own debits and credits differ.
+ 4. Financial > Reports > Statement of Cash Flows by Class (new). The Statement of
+    Cash Flows (indirect method) with one column per class and a Total, which is the
+    plain statement: operating, investing and financing activities, the net cash
+    increase, and the cash at the beginning and end of the period, class by class.
+    The Statement of Cash Flows itself now uses the same code and gives the same
+    figures as before.
+ 5. The Class List has two more buttons: Trial Balance by Class and Cash Flows by
+    Class. Both reports are also in the Financial Reports card of the Report Center.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v33.docx) are updated for all of the above.

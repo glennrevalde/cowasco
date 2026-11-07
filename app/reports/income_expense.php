@@ -29,6 +29,8 @@ function income_margin(float $sales, float $income): string|float
 
 Report::define('income_customer_summary', [
     'filters' => ['range', 'customer_type', 'rep', 'class', 'site', 'item', 'category', 'item_type', 'pref_vendor'],
+    // the customers sorted on a figure, increasing or decreasing (v29)
+    'sort_by' => ['qty' => 'Qty sold', 'sales' => 'Sales', 'cost' => 'Cost of sales', 'income' => 'Income / (loss)', 'margin' => 'Margin %'],
     'default_dates' => 'this_month',
     'run' => function (array $f): array {
         $by = [];

@@ -7,7 +7,7 @@
 <li><strong>You pay on the spot.</strong> Write a check in <a href="manual.php?c=banking#pg-bank-write_checks">Write Checks</a> or a cash voucher in <a href="manual.php?c=banking#pg-bank-cash_voucher">Cash Voucher</a> (see <a href="manual.php?c=banking">Banking</a>); no bill is needed.</li>
 </ul>
 <p>Purchase orders (<a href="#pg-vend-purchase_orders">Create Purchase Orders</a>) are optional. They do not post to the books; they record what was ordered, so you can receive against them and see what is still to come.</p>
-<p>Bills are paid in <a href="#pg-vend-pay_bills">Pay Bills</a>, less the taxes withheld from the supplier when the company is a withholding agent (see <a href="manual.php?c=bir-reports">BIR Reports</a>). Money paid before the goods or services come is recorded in <a href="#pg-vend-advances">Advances to Suppliers</a> and applied to the bills later. Returns, price corrections and allowances from a supplier are recorded as <a href="#pg-vend-debit_memos">Supplier Debit Memos</a> and applied to the supplier's bills. The <a href="#pg-vend-bill_tracker">Bill Tracker</a> shows every purchase at its stage: ordered, received, billed, paid.</p>
+<p>Bills are paid in <a href="#pg-vend-pay_bills">Pay Bills</a>, less the taxes withheld from the supplier when the company is a withholding agent (see <a href="manual.php?c=bir">BIR Reports</a>). Money paid before the goods or services come is recorded in <a href="#pg-vend-advances">Advances to Suppliers</a> and applied to the bills later. Returns, price corrections and allowances from a supplier are recorded as <a href="#pg-vend-debit_memos">Supplier Debit Memos</a> and applied to the supplier's bills. The <a href="#pg-vend-bill_tracker">Bill Tracker</a> shows every purchase at its stage: ordered, received, billed, paid.</p>
 <h3 id="s-the-accounts-used">The accounts used<a class="man-hash" href="#s-the-accounts-used" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <div class="table-responsive man-table"><table class="table table-sm">
 <thead>
@@ -116,7 +116,7 @@
 </tr>
 <tr>
 <td><strong>Vendor name</strong></td>
-<td>The name used in lists, for example TechDistributors Inc. Required and unique. Documents print the supplier's legal name from its party: the <strong>Company name</strong> when there is one, otherwise this name.</td>
+<td>The name used in lists and on documents, for example TechDistributors Inc. Required and unique.</td>
 </tr>
 <tr>
 <td><strong>Company name</strong></td>
@@ -913,6 +913,37 @@
 <p>Receipt Management is an inbox for supplier receipts and invoices received as photos, PDF files or e-mails. You upload them, review the details the program read from them, and then create a bill, a check or a credit card charge from each one, or match it to a transaction already entered. The file stays attached to the transaction.</p>
 <p><strong>Where to find it:</strong> Vendors &gt; Receipt Management.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receipts__main.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receipts__main.jpg" alt="Receipt Management with one receipt for review" width="1094" height="486" loading="lazy" decoding="async"></a><figcaption>Receipt Management with one receipt for review</figcaption></figure>
+<h4 id="s-receipt-list">Receipt List<a class="man-hash" href="#s-receipt-list" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>Receipt List</strong> at the top of the page lists every receipt saved, whatever its status, with date filters.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receipts__list_button.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receipts__list_button.jpg" alt="The Receipt List button" width="1058" height="62" loading="lazy" decoding="async"></a><figcaption>The Receipt List button</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Filter</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dates</strong>, <strong>From</strong>, <strong>To</strong></td>
+<td>The period (this month as delivered). Choose a ready-made period or type the dates.</td>
+</tr>
+<tr>
+<td><strong>Date of</strong></td>
+<td><strong>The receipt</strong> (the date read from it or typed on it; the upload date when it has none) or <strong>The upload</strong>.</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>For review, Matched, Created or Rejected; <strong>All</strong> as delivered.</td>
+</tr>
+<tr>
+<td><strong>Vendor</strong>, <strong>Search</strong></td>
+<td>One vendor; words in the file name, the vendor or the memo.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Columns: <strong>Date</strong>, <strong>Receipt</strong> (click to open the file), <strong>Vendor</strong>, <strong>Amount</strong>, <strong>Account</strong>, <strong>Status</strong> (with <strong>review</strong> for those still to be reviewed), <strong>Transaction</strong> (the bill, check or charge it was matched to or created) and <strong>Uploaded</strong> (when, how and by whom), with the number of receipts and their total. <strong>Export</strong> gives the list as a spreadsheet.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receipts__list.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receipts__list.jpg" alt="The Receipt List" width="1094" height="407" loading="lazy" decoding="async"></a><figcaption>The Receipt List</figcaption></figure>
 <h4 id="s-uploading-receipts">Uploading receipts<a class="man-hash" href="#s-uploading-receipts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <div class="table-responsive man-table"><table class="table table-sm">
 <thead>
@@ -1120,6 +1151,8 @@
 <p><strong>Where to find it:</strong> Vendors &gt; Receive Items and Enter Bills. <strong>Receive Items and Enter Bill</strong> on a purchase order and <strong>Convert to bill</strong> in the Bill Tracker open it with the PO chosen.</p>
 <p>The page first asks for the <strong>Vendor</strong>.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receive_bill__main.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receive_bill__main.jpg" alt="Receive Items and Enter Bills as it opens" width="1094" height="202" loading="lazy" decoding="async"></a><figcaption>Receive Items and Enter Bills as it opens</figcaption></figure>
+<p><strong>Receive Items and Enter Bills List</strong> at the top of the page lists every bill entered here, with date filters (<strong>Dates</strong>, <strong>From</strong>, <strong>To</strong>), <strong>Status</strong>, <strong>Class</strong> and <strong>Search</strong>, and <strong>Export</strong>. Click a number to open the bill.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receive_bill__list.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receive_bill__list.jpg" alt="The Receive Items and Enter Bills List" width="1094" height="292" loading="lazy" decoding="async"></a><figcaption>The Receive Items and Enter Bills List</figcaption></figure>
 <p>Once the vendor is chosen, the <strong>Open purchase order</strong> box lists its open POs ("This vendor has no open purchase orders." when there are none). Choose a PO to fill the lines with the quantities still to be received, at the PO cost and tax, or leave <strong>Receive without a PO</strong> and enter the lines yourself.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receive_bill__vendor.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receive_bill__vendor.jpg" alt="The form with the vendor chosen" width="1094" height="797" loading="lazy" decoding="async"></a><figcaption>The form with the vendor chosen</figcaption></figure>
 <h4 id="s-fields_5">Fields<a class="man-hash" href="#s-fields_5" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
@@ -1227,8 +1260,9 @@
 <li>Click <strong>Record item receipt</strong>. The receipt opens; its <strong>Enter Bill for Received Items</strong> button is ready for when the bill comes.</li>
 </ol>
 <h4 id="s-the-list-of-item-receipts">The list of item receipts<a class="man-hash" href="#s-the-list-of-item-receipts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
-<p><strong>Item receipts</strong> at the top of the page opens <strong>Item Receipts (bill to follow)</strong>: the receipts not yet turned into bills, with the usual filters and <strong>Export</strong>. <strong>Receive items</strong> returns to the form.</p>
-<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receive_items__list.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receive_items__list.jpg" alt="The list of item receipts" width="1094" height="274" loading="lazy" decoding="async"></a><figcaption>The list of item receipts</figcaption></figure>
+<p><strong>Receive Items List</strong> at the top of the page lists every receipt of items made here: the item receipts still waiting for their bill (type Item Receipt) and those whose bill has been entered (type Bill), with date filters (<strong>Dates</strong>, <strong>From</strong>, <strong>To</strong>), <strong>Status</strong>, <strong>Class</strong> and <strong>Search</strong>, and <strong>Export</strong>. Click a number to open it. <strong>Receive items</strong> returns to the form.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receive_items__list.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receive_items__list.jpg" alt="The Receive Items List" width="1094" height="371" loading="lazy" decoding="async"></a><figcaption>The Receive Items List</figcaption></figure>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receive_items__list.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receive_items__list.jpg" alt="The list of item receipts" width="1094" height="371" loading="lazy" decoding="async"></a><figcaption>The list of item receipts</figcaption></figure>
 <h4 id="s-edit-an-item-receipt">Edit an item receipt<a class="man-hash" href="#s-edit-an-item-receipt" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <p>An item receipt whose bill has not been entered yet has an <strong>Edit</strong> button (for users with the edit permission on Receive Items).</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receive_items__view_edit_button.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receive_items__view_edit_button.jpg" alt="An item receipt with its Edit button" width="1058" height="130" loading="lazy" decoding="async"></a><figcaption>An item receipt with its Edit button</figcaption></figure>
@@ -1236,7 +1270,7 @@
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_receive_items__edit.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_receive_items__edit.jpg" alt="Edit Item Receipt" width="1094" height="836" loading="lazy" decoding="async"></a><figcaption>Edit Item Receipt</figcaption></figure>
 <h5 id="s-step-by-step-correct-an-item-receipt">Step by step: correct an item receipt</h5>
 <ol>
-<li>Open the receipt (Vendors &gt; Receive Items &gt; <strong>Item receipts</strong>, then its number) and click <strong>Edit</strong>.</li>
+<li>Open the receipt (Vendors &gt; Receive Items &gt; <strong>Receive Items List</strong>, then its number) and click <strong>Edit</strong>.</li>
 <li>Change the quantities, costs, site, date or slip number; add a line that was left out or remove one with its <strong>x</strong>.</li>
 <li>Type the <strong>Reason for the change</strong> and click <strong>Save changes</strong>.</li>
 </ol>

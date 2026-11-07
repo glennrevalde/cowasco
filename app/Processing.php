@@ -469,7 +469,35 @@ final class Processing
     // ------------------------------------------------------------------ stock checks
 
     /** Inputs that are short at the site: list of "CODE (need x, have y)" */
-    public static function shortInputs(array $inputs, int $siteId, ?int $excludeTxnId = null): array
+    /**
+     * What a processing order dated $date can take of an item at a site without the stock going below zero on that
+     * date or on any later one (v30): the lowest balance from that date on, the day's receipts counted first
+     * (Stock::history). A back-dated order can not use stock that only arrived later. $excludeTxnId: an order being
+     * edited, whose own movements are left out.
+     */
+    public static function availableFrom(int $itemId, int $siteId, string $date, ?int $excludeTxnId = null): float
+    {
+        $bal = 0.0;
+        $min = null;
+        $cut = null;
+        foreach (Stock::history($itemId, $siteId) as $m) {
+            if ($excludeTxnId && (int)$m['txn_id'] === $excludeTxnId) {
+                continue;
+            }
+            $after = $m['txn_date'] > $date || ($m['txn_date'] === $date && (int)$m['rank'] >= 1);
+            if ($after && $cut === null) {
+                $cut = $bal;                      // the balance the order would take from
+                $min = $bal;
+            }
+            $bal += (float)$m['qty'];
+            if ($after) {
+                $min = min($min, $bal);
+            }
+        }
+        return round($cut === null ? $bal : (float)$min, 4);
+    }
+
+    public static function shortInputs(array $inputs, int $siteId, ?int $excludeTxnId = null, ?string $date = null): array
     {
         $need = [];
         foreach ($inputs as $in) {
@@ -487,6 +515,15 @@ final class Processing
             }
             if ($have + 0.00001 < $q) {
                 $short[] = self::item($itemId)['code'] . ' (need ' . qty($q) . ', have ' . qty($have) . ')';
+                continue;
+            }
+            // v30: a back-dated order may not take stock that only came in after its date
+            if ($date !== null && $date < today()) {
+                $from = self::availableFrom($itemId, $siteId, $date, $excludeTxnId);
+                if ($from + 0.00001 < $q) {
+                    $short[] = self::item($itemId)['code'] . ' (need ' . qty($q) . ', have ' . qty(max(0.0, $from)) . ' on ' . fdate($date)
+                        . ' without going below zero on a later date; the rest came in after it)';
+                }
             }
         }
         return $short;

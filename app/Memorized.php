@@ -57,7 +57,8 @@ final class Memorized
 
     private const KEEP_LINE = ['line_kind', 'item_id', 'account_id', 'description', 'qty', 'unit', 'rate', 'uom_id', 'uom_factor', 'uom_qty', 'uom_rate',
         'discount_kind', 'discount_pct', 'discount_amount', 'amount', 'tax_code_id', 'tax_amount', 'site_id', 'customer_id', 'vendor_id',
-        'other_name_id', 'class_id', 'is_billable', 'output_role', 'alloc_basis', 'planned_qty'];
+        'other_name_id', 'class_id', 'is_billable', 'output_role', 'alloc_basis', 'planned_qty',
+        'group_item_id', 'group_ref', 'group_qty', 'group_rate', 'group_role'];
 
     public static function load(int $id): ?array
     {
