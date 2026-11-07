@@ -1246,6 +1246,80 @@ Checks::true('a date range around every bill: all listed', $admin->status === 20
 $admin->get('water/views/billing_list.php?from=not-a-date&to=2026-02-31');
 Checks::true('a "date" that is not one is ignored, not an error', $admin->status === 200 && !str_contains($admin->body, 'Unable to load') && substr_count($admin->body, '<tr><td>') === $allRows);
 
+// ======================================================================================== v52
+Checks::section('v52 Price level on the member\'s Customer Defaults (Member Center)');
+/** The fields a browser sends with the form that holds $marker: no disabled field (nor one in a disabled fieldset), ticked boxes only */
+$browserForm = function (string $html, string $marker): array {
+    $doc = new DOMDocument();
+    @$doc->loadHTML('<?xml encoding="utf-8"?>' . $html);
+    $xp = new DOMXPath($doc);
+    $pairs = [];
+    foreach ($xp->query('//form') as $form) {
+        if (!str_contains($doc->saveHTML($form), $marker)) {
+            continue;
+        }
+        foreach ($xp->query('.//input|.//select|.//textarea', $form) as $el) {
+            $name = $el->getAttribute('name');
+            if ($name === '' || $el->hasAttribute('disabled') || $xp->query('ancestor::fieldset[@disabled]', $el)->length) {
+                continue;
+            }
+            $tag = strtolower($el->nodeName);
+            $type = strtolower($el->getAttribute('type'));
+            if ($tag === 'input') {
+                if (in_array($type, ['file', 'submit', 'button', 'image', 'reset'], true) || (in_array($type, ['checkbox', 'radio'], true) && !$el->hasAttribute('checked'))) {
+                    continue;
+                }
+                $pairs[] = [$name, $el->hasAttribute('value') ? $el->getAttribute('value') : (in_array($type, ['checkbox', 'radio'], true) ? 'on' : '')];
+            } elseif ($tag === 'textarea') {
+                $pairs[] = [$name, $el->textContent];
+            } else {
+                $opts = $xp->query('.//option', $el);
+                $chosen = [];
+                foreach ($opts as $o) {
+                    if ($o->hasAttribute('selected')) {
+                        $chosen[] = $o->hasAttribute('value') ? $o->getAttribute('value') : $o->textContent;
+                    }
+                }
+                if (!$chosen && !$el->hasAttribute('multiple') && $opts->length) {
+                    $o = $opts->item(0);
+                    $chosen[] = $o->hasAttribute('value') ? $o->getAttribute('value') : $o->textContent;
+                }
+                foreach ($chosen as $v) {
+                    $pairs[] = [$name, $v];
+                }
+            }
+        }
+        break;
+    }
+    parse_str(implode('&', array_map(fn($p) => rawurlencode($p[0]) . '=' . rawurlencode($p[1]), $pairs)), $out);
+    return $out;
+};
+$plMember = (int)$q("SELECT id FROM members WHERE member_kind = 'individual' AND status = 'active' ORDER BY id LIMIT 1");
+$plCustomer = (int)(MemberDefaults::customerOf(Coop::member($plMember))['id'] ?? 0);
+$plItem = (int)$q("SELECT id FROM items WHERE item_type = 'inventory' AND is_active = 1 AND sales_price > 0 ORDER BY id LIMIT 1");
+$plStd = (float)$q('SELECT sales_price FROM items WHERE id = :i', ['i' => $plItem]);
+$plLevel = DB::insert('price_levels', ['name' => 'Members 15% off (e2e)', 'adjust_pct' => -15, 'is_active' => 1]);
+$plBefore = $q('SELECT price_level_id FROM customers WHERE id = :c', ['c' => $plCustomer]);
+$admin->get('index.php?p=coop.member&id=' . $plMember);
+Checks::true('the member\'s Customer Defaults tab has a Price level with the cooperative\'s levels', $admin->status === 200 && $plCustomer > 0
+    && str_contains($admin->body, 'name="cust_price_level_id"') && str_contains($admin->body, '>Members 15% off (e2e)</option>'));
+$plForm = $browserForm($admin->body, 'name="customer_defaults_sent"');
+Checks::true('...in the form the member is saved with', isset($plForm['cust_price_level_id'], $plForm['action']) && $plForm['action'] === 'save', implode(',', array_slice(array_keys($plForm), 0, 12)));
+$plForm['cust_price_level_id'] = (string)$plLevel;
+$admin->post('index.php?p=coop.member&id=' . $plMember, $plForm);
+Checks::eq('saved from the member form on the member\'s own customer record', $plLevel, (int)$q('SELECT price_level_id FROM customers WHERE id = :c', ['c' => $plCustomer]));
+Checks::true('...with a line in the audit trail', (bool)$q("SELECT 1 FROM audit_trail WHERE record_type = 'customer' AND record_id = :c AND changes LIKE '%price_level_id%' LIMIT 1", ['c' => $plCustomer]));
+$admin->get('index.php?p=api.lookup&what=price&item=' . $plItem . '&customer=' . $plCustomer . '&date=' . date('Y-m-d'));
+Checks::eq('an invoice, sales receipt or order for the member asks for the price at the member\'s level (15% off)', number_format(round($plStd * 0.85, 2), 2, '.', ''),
+    number_format((float)($admin->json['price'] ?? -1), 2, '.', ''));
+$admin->get('index.php?p=coop.member&id=' . $plMember);
+Checks::true('opened again: the level is shown chosen', (bool)preg_match('/<option value="' . $plLevel . '" selected>Members 15% off \(e2e\)<\/option>/', $admin->body));
+$plForm = $browserForm($admin->body, 'name="customer_defaults_sent"');
+$plForm['cust_price_level_id'] = '';
+$admin->post('index.php?p=coop.member&id=' . $plMember, $plForm);
+Checks::true('cleared from the form: the member pays the members\' level of the line of business, else the standard price', $q('SELECT price_level_id FROM customers WHERE id = :c', ['c' => $plCustomer]) === null);
+DB::run('UPDATE customers SET price_level_id = :p WHERE id = :c', ['p' => $plBefore, 'c' => $plCustomer]);
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

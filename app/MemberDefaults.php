@@ -17,8 +17,11 @@ declare(strict_types=1);
 final class MemberDefaults
 {
     public const CONNECTION = ['active' => 'Active', 'inactive' => 'Inactive'];
-    /** customer columns kept on the Customer Defaults tab (plus credit_limit and wht_ids) */
-    public const CUSTOMER_IDS = ['terms_id', 'tax_code_id', 'payment_method_id', 'customer_type_id', 'sales_rep_id', 'billing_group_id'];
+    /**
+     * customer columns kept on the Customer Defaults tab (plus credit_limit and wht_ids); price_level_id is the price
+     * the member pays for the items (Lookup::priceFor, the POS), as on the customer form
+     */
+    public const CUSTOMER_IDS = ['terms_id', 'tax_code_id', 'payment_method_id', 'customer_type_id', 'sales_rep_id', 'billing_group_id', 'price_level_id'];
     /** supplier columns kept on the Vendor Defaults tab (plus credit_limit, account_no and wht_ids) */
     public const VENDOR_IDS = ['terms_id', 'default_expense_account_id', 'tax_code_id'];
     /** member columns of the Water Defaults tab (the address sub-group is a member list of its own) */
@@ -328,6 +331,10 @@ final class MemberDefaults
         if (!$set) {
             return;
         }
+        // a new price level must be an active one (a level the member already has is kept even when it was made inactive)
+        if (!empty($set['price_level_id']) && !(int)DB::value('SELECT is_active FROM price_levels WHERE id = :p', ['p' => $set['price_level_id']])) {
+            fail('Choose an active price level (Customer Defaults).');
+        }
         if (array_key_exists('credit_limit', $set) && !Access::can('cust.center', 'approve') && !Access::isAdmin() && trim($reason) === '') {
             fail('Enter a reason for changing the credit limit (Customer Defaults).');
         }
@@ -335,6 +342,37 @@ final class MemberDefaults
         Audit::log('edit', 'cust', 'customer', $cid, (string)$c['name'], ['page_key' => $pageKey, 'before' => $c, 'after' => array_merge($c, $set),
             'reason' => trim($reason) !== '' ? $reason : 'Customer Defaults of the member']);
         Lookup::reset();
+    }
+
+    /**
+     * The price levels offered on Customer Defaults: the active ones, and the member's own level when it was made
+     * inactive since (so saving the tab does not drop it).
+     */
+    public static function priceLevelOptions(?int $current = null): array
+    {
+        $opts = Lookup::priceLevels();
+        if ($current && !isset($opts[$current])) {
+            $name = DB::value('SELECT name FROM price_levels WHERE id = :p', ['p' => $current]);
+            if ($name !== null && $name !== false) {
+                $opts[$current] = $name . ' (inactive)';
+            }
+        }
+        return $opts;
+    }
+
+    /**
+     * What a member without a price level of its own pays (BusinessUnits::priceLevelFor): the members' price level of
+     * the line of business or of the cooperative when one is set, else the standard prices.
+     */
+    public static function memberPriceLabel(): string
+    {
+        try {
+            $set = Settings::get('member_price_level_id', '') !== ''
+                || (BusinessUnits::ready() && DB::value('SELECT 1 FROM business_units WHERE member_price_level_id IS NOT NULL LIMIT 1'));
+        } catch (Throwable $e) {
+            $set = false;
+        }
+        return $set ? "Members' price level" : 'Standard';
     }
 
     /** Writes the Vendor Defaults on the member's supplier record (made now when there is none) */

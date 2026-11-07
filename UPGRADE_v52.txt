@@ -1,0 +1,26 @@
+G-SMaRT Integrated Cooperative System - version 52 (2026-11-07)
+=================================================================
+
+The request of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v18.xlsx. This package holds only
+the files changed since version 51. Copy the folder over your installation, keeping the
+folder structure. config/config.php is not included and is never changed. No migration:
+nothing to run on the database. Works on MySQL 5.5 and MySQL 8 as before.
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed (see docs/ADDITIONAL_MODULE_V18_CHECKLIST.md)
+----------------------------------------------------------
+- Member Center > a member > Profile > Customer Defaults has a Price level, as the
+  customer form has. It decides what the member pays for the items:
+    - invoices, sales receipts, sales orders, estimates, statement charges and batch
+      invoices: the item's price comes from it when the member is chosen;
+    - the POS: with the member as the sale's customer, the items are priced at it and
+      "Price level: ..." is shown under the customer.
+  A level with a price of its own for an item gives that price; otherwise its percentage
+  applies to the item's sales price. Left blank, the member pays the members' price level
+  of the line of business (or of the cooperative) when one is set ("Members' price
+  level"), else the standard prices ("Standard"). Only an active level can be chosen; a
+  level the member already has, made inactive since, is kept and shown "(inactive)".
+  The change is in the audit trail.
+- Water bills are not affected: a material on a water bill keeps the price of its bill
+  code.
