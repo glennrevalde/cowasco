@@ -972,6 +972,11 @@ tr.pm-due > td:first-child { box-shadow: inset 3px 0 0 #f59e0b; }
 .mc-fact-value { font-size: 1.2rem; font-weight: 650; margin: .15rem 0; }
 .mc-done { border-left: 4px solid var(--bs-success); box-shadow: var(--raise-2); }
 .mc-steps li { margin-bottom: .35rem; }
+.nc-copy details { border-top: 1px solid var(--line); }
+.nc-copy details:last-child { border-bottom: 1px solid var(--line); }
+.nc-copy summary { padding: .45rem 0; cursor: pointer; font-weight: 500; }
+.nc-copy summary .text-muted { font-weight: 400; font-variant-numeric: tabular-nums; }
+.nc-copy li { margin-bottom: .2rem; }
 .company-facts dt { font-weight: 500; color: var(--muted); }
 .company-facts dd { margin-bottom: .35rem; overflow-wrap: anywhere; }
 

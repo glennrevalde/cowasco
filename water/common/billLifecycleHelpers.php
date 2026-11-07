@@ -418,37 +418,33 @@ if (!function_exists('bl_fetch_records')) {
 }
 
 if (!function_exists('bl_fetch_bill_for_update')) {
-    function bl_fetch_bill_for_update(PDO $pdo, string $billType, int $billId): array
+    /** The bill row with its bill code; $lock = false reads it for display or a preview (no row lock) */
+    function bl_fetch_bill_for_update(PDO $pdo, string $billType, int $billId, bool $lock = true): array
     {
+        $forUpdate = $lock ? ' FOR UPDATE' : '';
         if ($billType === 'water') {
-            $stmt = $pdo->prepare("SELECT * FROM bill_readings WHERE reading_id = ? FOR UPDATE");
+            $stmt = $pdo->prepare("SELECT * FROM bill_readings WHERE reading_id = ?" . $forUpdate);
             $stmt->execute([$billId]);
         } elseif ($billType === 'one_time') {
             $stmt = $pdo->prepare("
                 SELECT b.*, bc.type, bc.cost_price, bc.code
                 FROM one_time_bills b
                 LEFT JOIN bill_codes bc ON bc.code_id = b.bill_code_id
-                WHERE b.bill_id = ?
-                FOR UPDATE
-            ");
+                WHERE b.bill_id = ?" . $forUpdate);
             $stmt->execute([$billId]);
         } elseif ($billType === 'installment') {
             $stmt = $pdo->prepare("
                 SELECT i.*, bc.type, bc.cost_price, bc.code
                 FROM installment_bills i
                 LEFT JOIN bill_codes bc ON bc.code_id = i.bill_code_id
-                WHERE i.installment_id = ?
-                FOR UPDATE
-            ");
+                WHERE i.installment_id = ?" . $forUpdate);
             $stmt->execute([$billId]);
         } elseif ($billType === 'recurring') {
             $stmt = $pdo->prepare("
                 SELECT rb.*, bc.type, bc.cost_price, bc.code
                 FROM recurring_bills rb
                 LEFT JOIN bill_codes bc ON bc.code_id = rb.bill_code_id
-                WHERE rb.bill_id = ?
-                FOR UPDATE
-            ");
+                WHERE rb.bill_id = ?" . $forUpdate);
             $stmt->execute([$billId]);
         } else {
             throw new Exception('Unknown bill type.');
@@ -947,6 +943,46 @@ if (!function_exists('bl_update_bill')) {
     }
 }
 
+if (!function_exists('bl_water_correction')) {
+    /**
+     * A water bill with another present reading, as the correction would make it: the consumption and the amount at
+     * the current tariff and discount set-up. Nothing is written (the save and the bill editor's preview both use it).
+     * Returns ['previous', 'present', 'consumption', 'details', 'amount'].
+     */
+    function bl_water_correction(PDO $pdo, array $old, $presentRaw, bool $preview = false): array
+    {
+        $previous = (int)($old['prev_reading'] ?? 0);
+        $raw = trim((string)($presentRaw ?? ''));
+        if ($raw === '') {
+            throw new Exception('Enter the corrected present reading.');
+        }
+        if (!preg_match('/^-?\d+(\.0+)?$/', $raw)) {
+            throw new Exception('The present reading is a whole number of cubic meters.');
+        }
+        $present = bl_int($raw);
+        if ($present < 0) {
+            throw new Exception('Present reading cannot be negative.');
+        }
+        if ($present < $previous) {
+            throw new Exception("Present reading {$present} cannot be lower than the previous reading {$previous}.");
+        }
+
+        $consumption = $present - $previous;
+        // recalculated from the live tariff and discount configuration; a preview reads only (the accounting of the
+        // water bill code is attached, and provisioned when missing, by the save)
+        $details = compute_water_billing_details($pdo, (int)($old['member_id'] ?? 0), (float)$consumption, !$preview, !$preview);
+        $details['consumption'] = $consumption;
+
+        return [
+            'previous' => $previous,
+            'present' => $present,
+            'consumption' => $consumption,
+            'details' => $details,
+            'amount' => round((float)($details['amount_due'] ?? 0), 2),
+        ];
+    }
+}
+
 if (!function_exists('bl_update_water_bill')) {
     function bl_update_water_bill(PDO $pdo, int $billId, array $old, array $data, string $reason, int $userId): array
     {
@@ -963,28 +999,15 @@ if (!function_exists('bl_update_water_bill')) {
          */
         $isPosted = (int)($old['is_billed'] ?? 0) === 1;
 
-        $previous = (int)($old['prev_reading'] ?? 0);
-        $presentRaw = $data['pres_reading'] ?? null;
-        if ($presentRaw === null || trim((string)$presentRaw) === '') {
-            throw new Exception('Enter the corrected present reading.');
-        }
-        $present = bl_int($presentRaw);
-        if ($present < 0) {
-            throw new Exception('Present reading cannot be negative.');
-        }
-        if ($present < $previous) {
-            throw new Exception("Present reading {$present} cannot be lower than the previous reading {$previous}.");
-        }
-
-        $consumption = $present - $previous;
-        $memberId = (int)($old['member_id'] ?? 0);
+        $correction = bl_water_correction($pdo, $old, $data['pres_reading'] ?? null);
+        $previous = $correction['previous'];
+        $present = $correction['present'];
+        $consumption = $correction['consumption'];
+        $details = $correction['details'];
+        $newAmount = $correction['amount'];
         $oldAmount = round((float)($old['amount_due'] ?? 0), 2);
 
-        // The corrected bill is recalculated from the live tariff and discount
-        // configuration, then resnapshotted so it stays self-verifying.
-        $details = compute_water_billing_details($pdo, $memberId, (float)$consumption, true);
-        $details['consumption'] = $consumption;
-        $newAmount = round((float)($details['amount_due'] ?? 0), 2);
+        // the corrected bill is snapshotted again so it stays self-verifying
         $snapshot = water_snapshot_build($details);
 
         $billingDate = substr((string)($old['billing_date'] ?? ''), 0, 10) ?: date('Y-m-d');
@@ -1070,10 +1093,40 @@ if (!function_exists('bl_update_water_bill')) {
     }
 }
 
-if (!function_exists('bl_update_other_bill')) {
-    function bl_update_other_bill(PDO $pdo, string $billType, int $billId, array $old, array $data, string $reason, int $userId): array
+if (!function_exists('bl_read_bill_code')) {
+    /** bc_lock_bill_code() without the row lock: the bill code of a bill, checked the same way (for a preview) */
+    function bl_read_bill_code(PDO $pdo, int $billCodeId): array
+    {
+        if ($billCodeId <= 0) {
+            throw new InvalidArgumentException('Invalid bill code selected.');
+        }
+        $stmt = $pdo->prepare('SELECT * FROM bill_codes WHERE code_id = ?');
+        $stmt->execute([$billCodeId]);
+        $billCode = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$billCode) {
+            throw new RuntimeException('The selected bill code does not exist.');
+        }
+        if (empty($billCode['ar_account']) || empty($billCode['income_account'])) {
+            throw new RuntimeException('Bill code is missing AR or Income account mapping.');
+        }
+        return $billCode;
+    }
+}
+
+if (!function_exists('bl_other_correction')) {
+    /**
+     * A one-time, installment or recurring bill as the correction would make it. Nothing is written (the save and
+     * the bill editor's preview both use it).
+     *
+     * A material (an Inventory bill code) on a one-time or installment bill is priced from its bill code, so the
+     * quantity is corrected and the amount follows; any other bill takes the corrected total. A new due date
+     * (one-time and recurring bills) may not be before the bill date; the term (days) and, for a bill with
+     * disconnection days, the disconnection date follow it.
+     */
+    function bl_other_correction(PDO $pdo, string $billType, array $old, array $data, bool $preview = false): array
     {
         $isInventory = strcasecmp(trim((string)($old['type'] ?? '')), 'Inventory') === 0;
+        $quantityBased = $isInventory && in_array($billType, ['one_time', 'installment'], true);
         $oldTotal = round((float)($old['total_amount'] ?? 0), 2);
         $oldDiscount = round((float)($old['discount_amount'] ?? 0), 2);
         $oldQuantity = round((float)($old['quantity'] ?? 1), 2);
@@ -1081,19 +1134,22 @@ if (!function_exists('bl_update_other_bill')) {
 
         $newQuantity = $oldQuantity;
         $newCostTotal = $oldCostTotal;
+        $unitPrice = null;
 
-        if ($isInventory && in_array($billType, ['one_time', 'installment'], true)) {
+        if ($quantityBased) {
             // Inventory pricing is always derived server side from the bill
             // code, so the operator corrects the quantity, never the price.
             if (!isset($data['quantity']) || trim((string)$data['quantity']) === '') {
                 throw new Exception('Enter the corrected quantity for this inventory bill.');
             }
             $newQuantity = bc_positive_quantity($data['quantity'], 'Quantity');
-            $billCode = bc_lock_bill_code($pdo, (int)($old['bill_code_id'] ?? 0));
+            // the save locks the bill code; a preview only reads it
+            $billCode = $preview ? bl_read_bill_code($pdo, (int)($old['bill_code_id'] ?? 0)) : bc_lock_bill_code($pdo, (int)($old['bill_code_id'] ?? 0));
             $newGross = bc_authoritative_gross($billCode, $newQuantity, null);
             $unitCost = round((float)($old['inventory_unit_cost'] ?? ($billCode['cost_price'] ?? 0)), 2);
             $newCostTotal = round($unitCost * $newQuantity, 2);
             $newTotal = round(max(0, $newGross - $oldDiscount), 2);
+            $unitPrice = round((float)($billCode['sales_price'] ?? 0), 2);
         } else {
             if (!isset($data['total_amount']) || trim((string)$data['total_amount']) === '') {
                 throw new Exception('Enter the corrected total amount.');
@@ -1106,7 +1162,85 @@ if (!function_exists('bl_update_other_bill')) {
             throw new Exception('The corrected total must be greater than zero. Delete the bill instead if it should not exist.');
         }
 
-        $newDueDate = bl_valid_date_or_null($data['due_date'] ?? null);
+        $newDueDate = null;
+        $newTermDays = null;
+        $newDisconnectionDate = null;
+        if (in_array($billType, ['one_time', 'recurring'], true)) {
+            $newDueDate = bl_valid_date_or_null($data['due_date'] ?? null);
+            if ($newDueDate !== null && $newDueDate === substr((string)($old['due_date'] ?? ''), 0, 10)) {
+                // the same due date: it, the term and the disconnection date stay as they are
+                $newDueDate = null;
+            }
+            $billDate = substr((string)($old['bill_date'] ?? ''), 0, 10);
+            if ($newDueDate !== null && $billDate !== '' && $billDate !== '0000-00-00') {
+                if ($newDueDate < $billDate) {
+                    throw new Exception('The due date cannot be before the bill date (' . bl_date($billDate) . ').');
+                }
+                // the term counts from the bill date; a recurring bill's from the end of its service period
+                // (recurringBillingProcess.php: due date = period end + term days)
+                $termFrom = $billDate;
+                $periodEnd = substr((string)($old['billing_period_end'] ?? ''), 0, 10);
+                if ($billType === 'recurring' && $periodEnd !== '' && $periodEnd !== '0000-00-00') {
+                    if ($newDueDate < $periodEnd) {
+                        throw new Exception('The due date of a recurring bill cannot be before the end of its service period (' . bl_date($periodEnd) . ').');
+                    }
+                    $termFrom = $periodEnd;
+                }
+                $newTermDays = bc_term_days($termFrom, $newDueDate);
+                $days = (int)($old['disconnection_days'] ?? 0);
+                if ($days > 0) {
+                    $newDisconnectionDate = (new DateTimeImmutable($newDueDate))->modify('+' . $days . ' days')->format('Y-m-d');
+                }
+            }
+        }
+
+        return [
+            'is_inventory' => $isInventory,
+            'quantity_based' => $quantityBased,
+            'old_total' => $oldTotal,
+            'old_discount' => $oldDiscount,
+            'old_quantity' => $oldQuantity,
+            'old_cost_total' => $oldCostTotal,
+            'new_quantity' => $newQuantity,
+            'unit_price' => $unitPrice,
+            'new_gross' => round($newGross, 2),
+            'new_total' => $newTotal,
+            'new_cost_total' => $newCostTotal,
+            'new_due_date' => $newDueDate,
+            'new_term_days' => $newTermDays,
+            'new_disconnection_date' => $newDisconnectionDate,
+        ];
+    }
+}
+
+if (!function_exists('bl_installment_schedule')) {
+    /** The schedule rows of an installment bill, in the order a correction re-spreads them */
+    function bl_installment_schedule(PDO $pdo, int $installmentId): array
+    {
+        $stmt = $pdo->prepare("
+            SELECT schedule_id, due_date, amount, COALESCE(amount_paid, 0) AS amount_paid, status
+            FROM installment_schedules
+            WHERE installment_id = ?
+            ORDER BY due_date, schedule_id
+        ");
+        $stmt->execute([$installmentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+
+if (!function_exists('bl_update_other_bill')) {
+    function bl_update_other_bill(PDO $pdo, string $billType, int $billId, array $old, array $data, string $reason, int $userId): array
+    {
+        $c = bl_other_correction($pdo, $billType, $old, $data);
+        $isInventory = $c['is_inventory'];
+        $oldTotal = $c['old_total'];
+        $oldQuantity = $c['old_quantity'];
+        $oldCostTotal = $c['old_cost_total'];
+        $newQuantity = $c['new_quantity'];
+        $newGross = $c['new_gross'];
+        $newTotal = $c['new_total'];
+        $newCostTotal = $c['new_cost_total'];
+        $newDueDate = $c['new_due_date'];
 
         // the replacement invoice carries the corrected quantity: the cooperative inventory moves the stock
         // and the cost from its item line
@@ -1153,6 +1287,8 @@ if (!function_exists('bl_update_other_bill')) {
                     total_amount = :total,
                     inventory_total_cost = :cost_total,
                     due_date = COALESCE(:due_date, due_date),
+                    term_days = COALESCE(:term_days, term_days),
+                    disconnection_date = COALESCE(:disconnection_date, disconnection_date),
                     bill_edit_count = COALESCE(bill_edit_count, 0) + 1,
                     last_bill_edited_at = NOW(),
                     last_bill_edited_by = :user_id,
@@ -1167,6 +1303,8 @@ if (!function_exists('bl_update_other_bill')) {
                 ':total' => $newTotal,
                 ':cost_total' => $newCostTotal,
                 ':due_date' => $newDueDate,
+                ':term_days' => $c['new_term_days'],
+                ':disconnection_date' => $c['new_disconnection_date'],
                 ':user_id' => $userId > 0 ? $userId : null,
                 ':reason' => mb_substr($reason, 0, 500),
                 ':id' => $billId,
@@ -1225,6 +1363,8 @@ if (!function_exists('bl_update_other_bill')) {
                     total_amount = :total,
                     balance = GREATEST(0, :total2 - COALESCE(amount_paid, 0)),
                     due_date = COALESCE(:due_date, due_date),
+                    term_days = COALESCE(:term_days, term_days),
+                    disconnection_date = COALESCE(:disconnection_date, disconnection_date),
                     journal_voucher_id = :voucher,
                     bill_edit_count = COALESCE(bill_edit_count, 0) + 1,
                     last_bill_edited_at = NOW(),
@@ -1238,6 +1378,8 @@ if (!function_exists('bl_update_other_bill')) {
                 ':total' => $newTotal,
                 ':total2' => $newTotal,
                 ':due_date' => $newDueDate,
+                ':term_days' => $c['new_term_days'],
+                ':disconnection_date' => $c['new_disconnection_date'],
                 ':voucher' => $replacementId,
                 ':user_id' => $userId > 0 ? $userId : null,
                 ':reason' => mb_substr($reason, 0, 500),

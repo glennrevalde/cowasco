@@ -1,0 +1,80 @@
+G-SMaRT Integrated Cooperative System - version 47 (2026-11-02)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v17.xlsx. This package holds only
+the files added or changed since version 46. Copy the folder over your installation,
+keeping the folder structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No migration this time: no table, column, page or setting is added, and no amount
+changes. database/accounting_system.sql and accounting_system_clean.sql are unchanged
+(they are not in the package). Works on MySQL 5.5 as before.
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed (see docs/ADDITIONAL_MODULE_V17_CHECKLIST.md)
+----------------------------------------------------------
+- Billing Adjustments > Edit opens the bill itself, instead of the small "Edit
+  Uncollected Bill" box. The bill is shown as it is printed: the cooperative, the
+  bill's kind and invoice number, its status, who it is billed to (account number,
+  member or customer, address), its dates, term, period and class, then
+    a water bill:        the meter reading (previous, present, consumption), the rate
+                         code and pipe size, the tariff lines (range, rate, m3, amount),
+                         the free cubic meters and privilege discount, the amount due;
+    a one-time bill:     the bill code and description, the quantity, the unit price,
+                         the amount, the gross, discount and total, the balance due;
+    an installment bill: the same, with its payment schedule;
+    a recurring bill:    the same, with its service period.
+  The fields that can be corrected are boxes on the bill itself (the present reading of
+  a water bill; the quantity of a material, which is priced from its bill code; the
+  amount of any other charge, on the Total amount line when a discount comes off the
+  bill; the due date of a one-time or recurring bill). Until something is changed the
+  bill shows what it was issued for; as you type it is worked out again on the server,
+  with the same calculation the save uses (reading only, nothing is written): the tariff
+  lines, the amount, the schedule of an installment bill, the term and the
+  disconnection date of a new due date. Beside the bill: the amount now and corrected,
+  by how much it goes up or down (and, when saving it unchanged would price it
+  otherwise at today's tariff or price, that amount), the class and the reason, Save
+  correction and Cancel.
+  The rules are as before: only a bill nothing has been collected on, a Super
+  Administrator only, the journal entry voided and a correction entry "-R1" posted (a
+  reading not yet posted only changes). A bill that can no longer be edited opens read
+  only, with the reason. A refused correction comes back to the bill with what was typed.
+  Corrections of the rules: a due date before the bill date is refused (it was
+  accepted); the term (days) and the disconnection date follow a corrected due date
+  (they kept their old values), the term of a recurring bill counted from the end of its
+  service period, as when it is generated; a due date left as it is keeps the bill's
+  due date, term and disconnection date.
+
+- Individual Statement of Account. Generate SOA / Post Billing has two tabs, Post
+  Billing and Individual Statement of Account; Reports > Generate Statement of Account
+  has the statement of one billing period and the Individual Statement of Account.
+    1. Member or customer: type a name, an account number or a member number (from one
+       letter; Show: All, Members only, Customers only). Each member or customer is one
+       name with its water-service accounts, how many unpaid invoices it has and their
+       total. Someone with two accounts (two houses) gets all of them on the statement,
+       or the one chosen in Accounts.
+    2. Statement date (today by default).
+    3. Every invoice of the member or customer that is still unpaid is listed, whatever
+       its billing period: water bills, one-time bills, each unpaid amortization of an
+       installment bill, recurring bills and Fixed Share Capital bills, dated on or
+       before the statement date, with the amount, what was paid, the balance and
+       whether it is overdue (by how many days), due today or not yet due. Tick the ones
+       the statement shows: all are ticked at first except installment amortizations not
+       yet due (upcoming dues, as on the statement of one billing period); Select all,
+       Overdue only, Clear. A Fixed Share Capital bill is on the member's first account
+       only, so it is never listed twice.
+  Prepare statement prints the Statement of Account of the invoices ticked: the
+  cooperative, the member or customer and the account, each invoice (date, invoice no.,
+  description and period, due date, amount, paid, balance), the totals, the amount not
+  yet due, due on the statement date and overdue, the total amount due, and the General
+  Manager. Print statement (or Ctrl+P) prints it alone (A4 landscape). The amounts are read again
+  from the bills when the statement is prepared; an invoice paid in the meantime is left
+  off and said so.
+
+- The "•" separators of the statement of one billing period and of the Post Billing
+  period list are now commas.
+
+The pages work on a phone: the list of Billing Adjustments, the bill (its tables one
+line per field), the invoices to tick and the statement are stacked to the screen.

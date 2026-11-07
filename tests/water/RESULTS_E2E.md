@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-07 06:40:28 (7.8 s)
+- **Run:** 2026-11-07 13:20:23 (7.4 s)
 - **Server:** http://127.0.0.1:8097
-- **Database:** coop_e2e50 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Database:** coop_e2e51 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 10.11.14-MariaDB-0ubuntu0.24.04.1
-- **Result:** 406 passed, 0 failed, 406 checks
+- **Result:** 411 passed, 0 failed, 411 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261107-064021-65AD | COL-20261107-064021-65AD | PASS |
+| payment number = official receipt number | COL-20261107-132016-9620 | COL-20261107-132016-9620 | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 229 | 229 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261107-064021-65AD | COL-20261107-064021-65AD | PASS |
+| retry of the same request returns the same receipt | COL-20261107-132016-9620 | COL-20261107-132016-9620 | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok 5d498 B | E2E Purok 5d498 B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok f3438 B | E2E Purok f3438 B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -490,6 +490,16 @@
 | with no open period, the guide on Reading Entry is complete (nothing blocks the page) | yes | yes | PASS |
 | Reading Entry says itself that no period is open | yes | yes | PASS |
 | a reading for a period that is not open is refused | yes | yes | PASS |
+
+## v51 Billing List with its date filters empty, set and not a date (MySQL 8 error 1525)
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| date filters empty: the register loads | yes | yes | PASS |
+| ...also sent empty by the Apply button | yes | yes | PASS |
+| a date range with no bill: none listed, no error | yes | yes | PASS |
+| a date range around every bill: all listed | yes | yes | PASS |
+| a "date" that is not one is ignored, not an error | yes | yes | PASS |
 
 ## 7.4c Period close
 

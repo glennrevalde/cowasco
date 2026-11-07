@@ -9,10 +9,10 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 | Cooperative system, changed | 178 |
 | Water system, unchanged (under water/) | 26 |
 | Water system, adapted (under water/) | 212 |
-| New | 255 |
+| New | 260 |
 | Cooperative files not shipped | 1 |
 | Water files not shipped | 61 |
-| **Shipped in total** | **1365** |
+| **Shipped in total** | **1370** |
 
 ## New files
 
@@ -39,6 +39,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v48.txt`
 - `UPGRADE_v49.txt`
 - `UPGRADE_v50.txt`
+- `UPGRADE_v51.txt`
 - `app/AccountTypes.php`
 - `app/CsvImports.php`
 - `app/CsvReview.php`
@@ -165,6 +166,8 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `modules/water/page.php`
 - `storage/migration/.gitkeep`
 - `storage/water_migration/.gitkeep`
+- `tests/coop/RESULTS_MYSQL8.md`
+- `tests/coop/RESULTS_pure_php_MYSQL8.md`
 - `tests/coop/cases_v30.php`
 - `tests/coop/cases_v31_members.php`
 - `tests/coop/cases_v31_savings.php`
@@ -185,11 +188,13 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v47.php`
 - `tests/coop/cases_v49.php`
 - `tests/coop/cases_v50.php`
+- `tests/coop/cases_v51.php`
 - `tests/coop/cases_water.php`
 - `tests/platform/provision_test.php`
 - `tests/platform/run.sh`
 - `tests/water/RESULTS_BACKUP_RESTORE.md`
 - `tests/water/RESULTS_E2E.md`
+- `tests/water/RESULTS_E2E_MYSQL8.md`
 - `tests/water/RESULTS_LEGACY_LEDGER_FIXTURE.md`
 - `tests/water/RESULTS_MIGRATIONS_TWICE.md`
 - `tests/water/backup_restore_test.php`

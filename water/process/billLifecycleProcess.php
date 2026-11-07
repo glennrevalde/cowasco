@@ -19,11 +19,23 @@ require_once __DIR__ . '/../common/superAdminGuard.php';
 require_once __DIR__ . '/../common/billLifecycleHelpers.php';
 require_once __DIR__ . '/organizationUnitHelpers.php';
 
-function blp_redirect(string $message, bool $success = false): void
+function blp_redirect(string $message, bool $success = false, string $query = ''): void
 {
     $_SESSION[$success ? 'success_msg' : 'error_msg'] = $message;
-    header('Location: ../views/billing_adjustments.php');
+    header('Location: ../views/billing_adjustments.php' . ($query !== '' ? '?' . $query : ''));
     exit;
+}
+
+/**
+ * The bill editor (Billing Adjustments > Edit) posts here with return=editor: a refused correction goes back to the
+ * bill, with what was typed, instead of to the list.
+ */
+function blp_editor_key(): string
+{
+    $type = (string)($_POST['bill_type'] ?? '');
+    $id = (int)($_POST['bill_id'] ?? 0);
+    return (($_POST['return'] ?? '') === 'editor' && ($_POST['action'] ?? '') === 'edit'
+        && in_array($type, ['water', 'one_time', 'installment', 'recurring'], true) && $id > 0) ? $type . '-' . $id : '';
 }
 
 try {
@@ -108,5 +120,11 @@ business_require_mutation(getDB(), '../views/billing_adjustments.php', ['action'
 } catch (Throwable $e) {
     if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
     error_log('Bill lifecycle error: ' . $e->getMessage());
+    $editorKey = blp_editor_key();
+    if ($editorKey !== '') {
+        $_SESSION['bill_editor_old'] = ['bill' => $editorKey] + array_intersect_key($_POST,
+            array_flip(['pres_reading', 'quantity', 'total_amount', 'due_date', 'reason', 'class_id']));
+        blp_redirect($e->getMessage(), false, 'edit=' . rawurlencode($editorKey));
+    }
     blp_redirect($e->getMessage());
 }

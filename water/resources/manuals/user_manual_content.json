@@ -3,7 +3,7 @@
         "product": "Water Billing",
         "title": "Water Billing User Manual",
         "subtitle": "Water operations in the integrated cooperative system",
-        "version": "2.4",
+        "version": "2.5",
         "revision_date": "2 November 2026",
         "audience": "System administrators, billing officers, meter readers, cashiers, accountants, inventory officers and authorized report users",
         "support_note": "Page availability depends on the user's roles and the pages given to them in Page Access Configuration."
@@ -369,7 +369,7 @@
             "page": "generate_soa",
             "page_file": "generate_soa.php",
             "steps": [
-                "Open Generate Statement of Account.",
+                "Open Generate Statement of Account (Reports), or Generate SOA / Post Billing > Individual Statement of Account for the unpaid invoices of every billing period.",
                 "Search for the member and select the required as-of date or billing range.",
                 "Review water, one-time, installment, and recurring receivables shown by the page.",
                 "Confirm cancelled and deleted items are not included in active balances.",
@@ -519,6 +519,7 @@
                 "Confirm that an actual correction is required and obtain the approval required by local policy.",
                 "Open Billing Adjustments with a role that may make corrections.",
                 "For a payment correction, select the active receipt and choose reversal or refund. Enter a complete reason and business date.",
+                "To correct a bill nothing has been collected on, click Edit: the bill itself opens for correction (see \"Correct an uncollected bill\").",
                 "For a bill correction, choose debit to increase the obligation or credit to reduce it. A credit cannot reduce the bill below the amount already paid.",
                 "Review the affected allocations, restored balances, installment status, and compensating journal before confirming.",
                 "After completion, print or save the adjustment reference and reconcile the customer ledger, payment history and the general ledger (Journal report)."
@@ -713,6 +714,67 @@
             "notes": [
                 "Do not fix financial discrepancies through direct SQL unless an approved migration or recovery procedure specifically requires it."
             ]
+        },
+        {
+            "id": "edit-bill",
+            "category": "Collections",
+            "title": "Correct an uncollected bill (Billing Adjustments > Edit)",
+            "summary": "Edit opens the bill itself: correct it in place, see it worked out again, then save it with the class and a reason.",
+            "keywords": [
+                "edit bill",
+                "correct bill",
+                "bill correction",
+                "wrong reading",
+                "wrong amount",
+                "due date",
+                "billing adjustments"
+            ],
+            "page": "billing_adjustments",
+            "page_file": "billing_adjustments.php",
+            "steps": [
+                "Open Billing Adjustments (a Super Administrator) and find the bill: Bill type and Search member or account.",
+                "Click Edit on the bill. Edit is offered only while nothing has been collected on the bill; a collected bill shows \"Collected, locked\".",
+                "The bill opens as it is printed: the cooperative, the kind of bill and its invoice number, who it is billed to, its dates and class, then its lines and totals. A water bill shows the meter reading and the tariff lines; an installment bill its payment schedule.",
+                "Correct the bill in the boxes: the present reading of a water bill; the quantity of a material (it is priced from its bill code); the amount of any other charge; the due date of a one-time or recurring bill. The bill is worked out again as you type, and Correction shows the amount now, the corrected amount and the change.",
+                "Choose the class of the correction and type the reason, then click Save correction and confirm.",
+                "The bill's journal entry is voided and a correction entry numbered after the invoice (for example 1024-R1) is posted for the corrected amount. A water reading not yet posted only changes; nothing is posted."
+            ],
+            "notes": [
+                "A due date cannot be before the bill date; the term (days) and, for a bill with disconnection days, the disconnection date follow the new due date.",
+                "A water bill is priced again at the current tariff and discounts when it is saved; the editor shows that amount before you save.",
+                "A refused correction comes back to the bill with what was typed and the reason it was refused.",
+                "Once anything is collected on a bill, correct it with a debit or credit memo, or reverse its receipt first."
+            ]
+        },
+        {
+            "id": "individual-soa",
+            "category": "Water Billing",
+            "title": "Print an Individual Statement of Account",
+            "summary": "One member or customer, the unpaid invoices you choose of every billing period, on one statement.",
+            "keywords": [
+                "individual statement",
+                "statement of account",
+                "SOA",
+                "unpaid invoices",
+                "open invoices",
+                "arrears",
+                "overdue"
+            ],
+            "page": "generate_soa",
+            "page_file": "generate_soa.php",
+            "steps": [
+                "Open Generate SOA / Post Billing and click the Individual Statement of Account tab (from Reports > Generate Statement of Account it is the second tab).",
+                "Type a name, an account number or a member number in Member or customer and choose the name. Show narrows the list to members or to customers; each name shows how many invoices it has unpaid and their total.",
+                "Set the Statement date (today by default). Invoices dated after it are not listed.",
+                "Every invoice still unpaid is listed, whatever its billing period: water bills, one-time bills, each unpaid installment amortization, recurring bills and Fixed Share Capital bills, with the amount, what was paid, the balance and whether it is overdue, due today or not yet due.",
+                "Tick the invoices the statement shows. All are ticked at first; Select all, Overdue only and Clear change them at once.",
+                "Click Prepare statement, check it, then click Print statement."
+            ],
+            "notes": [
+                "The statement lists each invoice with its date, invoice number, description and period, due date, amount, paid and balance, then the amount not yet due, due on the statement date, overdue and the total amount due.",
+                "The amounts are read again from the bills when the statement is prepared; an invoice paid in the meantime is left off and the page says so.",
+                "The statement of one billing period is still on Reports > Generate Statement of Account."
+            ]
         }
     ],
     "troubleshooting": [
@@ -826,6 +888,14 @@
         {
             "question": "How do I print receipts on our pre-printed forms?",
             "answer": "Choose Pre-Printed on Company, Security & Closing Date > Water Billing, then place the entries on Water Billing > Setup > Receipt Layout Setup and print a test page to check them."
+        },
+        {
+            "question": "Can one statement list the unpaid bills of several months?",
+            "answer": "Yes: Generate SOA / Post Billing > Individual Statement of Account lists every unpaid invoice of the member or customer, whatever its billing period, and prints the ones you tick."
+        },
+        {
+            "question": "Why does Edit open the whole bill?",
+            "answer": "So the bill is corrected where it is read: its lines, amounts and totals are shown and worked out again as you type, before the correction is saved with its class and reason."
         }
     ],
     "glossary": [
@@ -1269,11 +1339,20 @@
                 {
                     "heading": "Statement of Account",
                     "steps": [
-                        "Choose the statement type and the reading period.",
+                        "Choose the statement type and the reading period (Reports > Generate Statement of Account).",
                         "Search for the member by name, account number or street (each word typed must match) and select it.",
                         "Review active water and other receivables.",
                         "Confirm cancelled or deleted items are excluded.",
                         "Preview all pages and print or save the statement."
+                    ]
+                },
+                {
+                    "heading": "Individual Statement of Account",
+                    "steps": [
+                        "Open Generate SOA / Post Billing > Individual Statement of Account.",
+                        "Choose the member or customer by name, account number or member number, and the statement date.",
+                        "Tick the unpaid invoices to show, whatever their billing period (all are ticked at first).",
+                        "Prepare the statement, check it and print it."
                     ]
                 },
                 {
@@ -1524,6 +1603,15 @@
             "number": 14,
             "title": "Controlled Reversals, Refunds, Debits, and Credits",
             "sections": [
+                {
+                    "heading": "Correct an uncollected bill (Edit)",
+                    "steps": [
+                        "Click Edit on the bill in Billing Adjustments: the bill itself opens.",
+                        "Correct the reading, the quantity, the amount or the due date in its boxes; the bill is worked out again as you type.",
+                        "Choose the class, type the reason and click Save correction.",
+                        "The journal entry is voided and a correction entry (-R1, -R2 ...) is posted for the corrected amount."
+                    ]
+                },
                 {
                     "heading": "Payment reversal or refund",
                     "steps": [

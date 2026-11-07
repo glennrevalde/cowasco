@@ -141,17 +141,22 @@ if (!function_exists('water_billing_get_setting')) {
 }
 
 if (!function_exists('water_billing_get_global_bill_code')) {
-    function water_billing_get_global_bill_code(PDO $pdo): array
+    /** $provision = false only reads (a preview): the Water Bill code is then not created or repaired */
+    function water_billing_get_global_bill_code(PDO $pdo, bool $provision = true): array
     {
         if (!water_billing_settings_table_exists($pdo)) {
             throw new Exception('The water billing settings table is missing from the database schema.');
         }
 
-        // Self-heal the required Water Bill dictionary entry. This creates it
-        // only when missing, assigns default A/R and Income accounts, sets the
-        // sales price to zero, and enables member discounts.
-        $provisioned = water_bill_code_ensure($pdo);
-        $billCodeId = (int)($provisioned['bill_code']['code_id'] ?? 0);
+        if ($provision) {
+            // Self-heal the required Water Bill dictionary entry. This creates it
+            // only when missing, assigns default A/R and Income accounts, sets the
+            // sales price to zero, and enables member discounts.
+            $provisioned = water_bill_code_ensure($pdo);
+            $billCodeId = (int)($provisioned['bill_code']['code_id'] ?? 0);
+        } else {
+            $billCodeId = (int)$pdo->query("SELECT code_id FROM bill_codes WHERE UPPER(TRIM(code)) = 'WATER BILL' ORDER BY code_id ASC LIMIT 1")->fetchColumn();
+        }
         if ($billCodeId <= 0) {
             throw new Exception('The Water Bill bill code could not be configured.');
         }
@@ -905,13 +910,13 @@ if (!function_exists('water_rate_get_rates_for_code')) {
 }
 
 if (!function_exists('water_rate_get_member_discount')) {
-    function water_rate_get_member_discount(PDO $pdo, int $memberId): ?array
+    function water_rate_get_member_discount(PDO $pdo, int $memberId, bool $provision = true): ?array
     {
         if ($memberId <= 0) {
             return null;
         }
 
-        $globalBillCode = water_billing_get_global_bill_code($pdo);
+        $globalBillCode = water_billing_get_global_bill_code($pdo, $provision);
         if ((int)($globalBillCode['allow_member_discount'] ?? 0) !== 1) {
             return null;
         }
@@ -1011,7 +1016,8 @@ if (!function_exists('water_rate_attach_accounting')) {
 }
 
 if (!function_exists('compute_water_billing_details')) {
-    function compute_water_billing_details(PDO $pdo, int $memberId, float $consumption, bool $requireAccounting = true): array
+    /** $provision = false only reads (a preview: the Water Bill code is not created or repaired on the way) */
+    function compute_water_billing_details(PDO $pdo, int $memberId, float $consumption, bool $requireAccounting = true, bool $provision = true): array
     {
         $rateCode = water_rate_get_member_rate_code_details($pdo, $memberId);
         $rcId = (int)$rateCode['rc_id'];
@@ -1021,7 +1027,7 @@ if (!function_exists('compute_water_billing_details')) {
             true,
             false
         );
-        $discount = water_rate_get_member_discount($pdo, $memberId);
+        $discount = water_rate_get_member_discount($pdo, $memberId, $provision);
         $details = water_rate_compute_from_configuration(
             $rates,
             $consumption,

@@ -1,0 +1,52 @@
+G-SMaRT Integrated Cooperative System - version 48 (2026-11-07)
+=================================================================
+
+A correction of the platform (several companies). This package holds only the files
+changed since version 47. Copy the folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed. No migration:
+nothing to run on the database.
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What changed
+------------
+- Platform > New company could not finish: every new company failed at the last step
+  with "The new database does not match the program: 2026_12_01_water_billing.sql,
+  2027_01_24_account_types.sql (bring the template company up to date first)", and the
+  half-made database was removed. The template was not the cause. The set-up copied
+  every table of the template but not the water module's two views (chartofaccntstbl
+  and operator), nor the account types (every account of the copied chart of accounts
+  points at one) or the business units (the Water Utility among them), and the check at
+  the end found them missing. A new company now receives:
+    - the water module's two views (the database user of the program needs the CREATE
+      VIEW right, as it already needs CREATE, DROP and TRIGGER for a new company);
+    - besides the set-up lists copied before: the account types, the business units
+      (without their usual site, since the template's sites are not copied), the
+      cooperative's lists (member types, savings transaction codes, passbook types and
+      their designs, ID types, documents, loan purposes, collateral types, account
+      classes, the CDA report lines and calendar, address types, contact channels,
+      cities) and the water billing set-up (its settings, the organization units, the
+      bill codes, pipe sizes, rate codes and rates, meter discounts, discounts and their
+      privileges, recurring billing plans, the Data Import Management profiles). An
+      Inventory bill code comes without its item, since items are not copied: link it
+      again on Bill Codes;
+    - the water module's institution profile with its own name, address, phone, e-mail
+      and TIN, and none of the template's registered cooperative name, CDA registration
+      number and signatories (they were copied before).
+  Still never copied: customers, suppliers, items, members, employees, savings and loan
+  products, classes, users, transactions and any history.
+- A company whose set-up failed: open it on Platform > Companies and press "Set it up
+  again" (type the owner's account again if it is to be made with it). Nothing else is
+  needed; the failed record does not have to be deleted.
+- A template that still needs a program update is now refused before anything is made
+  ("... needs a database update first (Database updates): ..."), instead of failing at
+  the end.
+- New company: the list of the copied set-up lists is grouped (Company and access,
+  Accounting, Sales and inventory, Cooperative, Water billing), each group opened with
+  a click.
+- The platform pages on a phone: the top bar shows "G-SMaRT" and the Super Admin's
+  icon on one line (the program's name ran into the account button and the page
+  scrolled sideways).
+
+Test: bash tests/platform/run.sh (a new company made from the clean database and checked
+table by table; a failed company set up again; an out-of-date template refused).
