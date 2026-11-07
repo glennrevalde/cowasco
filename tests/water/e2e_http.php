@@ -1232,6 +1232,20 @@ if ($openPeriods) {
     DB::run("UPDATE bill_periods SET status = 'open' WHERE period_id IN (" . implode(',', array_map('intval', $openPeriods)) . ')');
 }
 
+// ======================================================================================== v51
+Checks::section('v51 Billing List with its date filters empty, set and not a date (MySQL 8 error 1525)');
+$admin->get('water/views/billing_list.php');
+$allRows = substr_count($admin->body, '<tr><td>');
+Checks::true('date filters empty: the register loads', $admin->status === 200 && !str_contains($admin->body, 'Unable to load') && $allRows > 0, (string)$allRows);
+$admin->get('water/views/billing_list.php?from=&to=&type=all&status=all&q=');
+Checks::true('...also sent empty by the Apply button', $admin->status === 200 && !str_contains($admin->body, 'Unable to load') && substr_count($admin->body, '<tr><td>') === $allRows);
+$admin->get('water/views/billing_list.php?from=2000-01-01&to=2000-01-31');
+Checks::true('a date range with no bill: none listed, no error', $admin->status === 200 && !str_contains($admin->body, 'Unable to load') && str_contains($admin->body, 'No billing records matched.'));
+$admin->get('water/views/billing_list.php?from=' . date('Y-m-d', strtotime('-5 years')) . '&to=' . date('Y-m-d', strtotime('+1 year')));
+Checks::true('a date range around every bill: all listed', $admin->status === 200 && substr_count($admin->body, '<tr><td>') === $allRows);
+$admin->get('water/views/billing_list.php?from=not-a-date&to=2026-02-31');
+Checks::true('a "date" that is not one is ignored, not an error', $admin->status === 200 && !str_contains($admin->body, 'Unable to load') && substr_count($admin->body, '<tr><td>') === $allRows);
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

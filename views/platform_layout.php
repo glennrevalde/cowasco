@@ -43,12 +43,13 @@ function platform_start(string $title, array $opt = []): void
 <nav class="navbar navbar-dark bg-dark app-bar sticky-top px-3 no-print">
   <div class="d-flex align-items-center gap-2">
     <button class="btn btn-sm btn-user d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-label="Menu"><i class="bi bi-list"></i></button>
-    <a class="navbar-brand fw-semibold" href="<?= h(purl()) ?>"><span class="brand-tile"><i class="bi bi-people-fill"></i></span><?= h($app) ?></a>
+    <?php [$brandA, $brandB] = array_pad(explode(' ', $app, 2), 2, ''); ?>
+    <a class="navbar-brand fw-semibold" href="<?= h(purl()) ?>" title="<?= h($app) ?>"><span class="brand-tile"><i class="bi bi-people-fill"></i></span><span class="brand-text"><span class="brand-a"><?= h($brandA) ?></span><?php if ($brandB !== ''): ?><span class="brand-b"> <?= h($brandB) ?></span><?php endif; ?></span></a>
     <span class="company d-none d-md-inline">Platform administration</span>
   </div>
   <?php if ($sa): ?>
   <div class="dropdown">
-    <button class="btn btn-sm btn-user dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-shield-lock"></i> <?= h($sa['full_name']) ?></button>
+    <button class="btn btn-sm btn-user dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-shield-lock"></i> <span class="user-name"><?= h($sa['full_name']) ?></span></button>
     <ul class="dropdown-menu dropdown-menu-end">
       <li><span class="dropdown-item-text small text-muted">Super Admin</span></li>
       <li><a class="dropdown-item" href="<?= h(purl('account')) ?>"><i class="bi bi-key"></i> Change password</a></li>

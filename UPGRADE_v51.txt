@@ -1,0 +1,20 @@
+G-SMaRT Integrated Cooperative System - version 51 (2026-11-07)
+=================================================================
+
+A correction for MySQL 8. This package holds only the files changed since version 50.
+Copy the folder over your installation, keeping the folder structure. config/config.php
+is not included and is never changed. No migration: nothing to run on the database. The
+only program file is water/views/billing_list.php; the rest are tests and notes.
+
+What changed
+------------
+- Water Billing > Billing List did not open on MySQL 8: "Unable to load billing register:
+  SQLSTATE[HY000]: General error: 1525 Incorrect DATE value: ''". With its date filters
+  left empty it compared the bill date with an empty text, which MySQL 8 refuses (MySQL
+  5.5 and MariaDB only warn). An empty date filter is now left out of the search, and a
+  value that is not a date is ignored instead of failing the page.
+
+Checked on MySQL 8.0 (its default settings): the cooperative tests (158, both decimal
+engines), the water end-to-end tests over HTTP (411, a fresh install and the former
+water database migrated), and every page of the program opened in a browser. No other
+query compares a date with an empty text (a test now checks every file for it).

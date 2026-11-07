@@ -411,3 +411,11 @@ The **Billing readiness** step ("No open billing period exists for new readings"
 guide (`water/common/setupReadinessHelpers.php`): the guide has 6 required steps, and billing actions need those only.
 Reading Entry says itself when no period is open and keeps Continue off; saving a reading (`wr_lock_open_period`) and
 posting bills (`bp_assert_open`) refuse a period that is not open, as before. No migration (`UPGRADE_v50.txt`).
+
+## 27. Version 51: Billing List on MySQL 8
+
+**Billing List** failed on MySQL 8 with error 1525 "Incorrect DATE value: ''": its date filters, left empty, were
+compared with the bill date as `(?='' OR bill_date>=?)`, which MySQL 8 refuses (MySQL 5.5 and MariaDB warn). An empty
+or invalid date filter is now bound as NULL (`? IS NULL OR ...`). The suites were run on MySQL 8.0.46 with its default
+settings as well as on MariaDB: the cooperative tests, the water end-to-end tests and a crawl of every page; a new
+test scans every file for a date compared with a filter that can be empty. No migration (`UPGRADE_v51.txt`).

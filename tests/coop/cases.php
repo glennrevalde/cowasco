@@ -746,6 +746,11 @@ test('Concurrency: two withdrawals at the same moment on one account, only the o
     // two separate PHP processes withdraw 800 each from a balance of 1,100 (minimum balance 100)
     $cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/worker.php') . ' withdraw ' . $rs . ' 800 2026-06-03 ' . (int)$GLOBALS['adminCash'];
     $env = ['DB_NAME' => $GLOBALS['CONFIG']['db']['name'], 'PATH' => getenv('PATH')];
+    foreach (['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASS'] as $k) { // the same database server as this run (MySQL 8 runs among them)
+        if (getenv($k) !== false) {
+            $env[$k] = (string)getenv($k);
+        }
+    }
     $procs = [];
     for ($i = 0; $i < 2; $i++) {
         $procs[] = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $env);

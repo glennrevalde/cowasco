@@ -89,13 +89,21 @@ platform_start('New company', ['actions' => btn_link(purl('companies'), 'All com
         <li>Every table, with its columns, keys, indexes and foreign keys, exactly as the copied company has them today.</li>
         <li>The copied company's set-up lists, and one inventory site, Main.</li>
         <li>The audit trail protection.</li>
+        <li>The water module's two views (the database user needs the CREATE VIEW right).</li>
         <li>The owner's account, and the company's entry on the platform.</li>
         <li>A check of the new database. Only then is the company switched on.</li>
       </ol>
       <div class="fw-semibold mb-1">Copied set-up lists</div>
-      <ul class="ps-3 mb-3 text-muted"><?php foreach (Provision::COPY as $t => $what): ?><li><?= h($what) ?></li><?php endforeach; ?></ul>
+      <div class="nc-copy mb-3">
+        <?php foreach (Provision::copyGroups() as $group => $items): ?>
+          <details>
+            <summary><?= h($group) ?> <span class="text-muted">(<?= count($items) ?>)</span></summary>
+            <ul class="ps-3 mb-1 mt-1 text-muted"><?php foreach ($items as $what): ?><li><?= h($what) ?></li><?php endforeach; ?></ul>
+          </details>
+        <?php endforeach; ?>
+      </div>
       <div class="fw-semibold mb-1">Never copied</div>
-      <p class="text-muted mb-0">Customers, suppliers, items, employees and other names, users, transactions, sales, payments, bills, journals, balances, budgets, fixed assets, POS records, the audit trail and any other history.</p>
+      <p class="text-muted mb-0">Customers, suppliers, items, members, employees and other names, savings and loan products, classes, report signatories, users, transactions, sales, payments, bills, journals, balances, budgets, fixed assets, POS records, the audit trail and any other history.</p>
     </div></div>
   </div>
 </form>

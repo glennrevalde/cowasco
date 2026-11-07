@@ -61,6 +61,16 @@ try {
 }
 
 // the posting asks for the class (Chart of Accounts > Class List); branch, segment and division are no longer asked
+
+// the tabs of the page: Post Billing (or, from Reports, the statement of one billing period) and the Individual
+// Statement of Account (?tab=individual opens on it)
+$isoaFirst = strtolower(trim((string)($_GET['tab'] ?? ''))) === 'individual';
+$mainTitle = $soaMode ? 'Generate Statement of Account' : 'Post Billing';
+$mainSub = $soaMode
+    ? 'Generate and print a member Statement of Account for one billing period.'
+    : 'Post only pending water-reading drafts. The due date is the reading period end date plus the payment term chosen.';
+$isoaTitle = 'Individual Statement of Account';
+$isoaSub = 'Choose a member or customer, then the unpaid invoices the statement lists, from any billing period.';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,7 +79,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../common/fonts.css">
     <link rel="stylesheet" href="../../assets/vendor/flatpickr/flatpickr.min.css">
-    <title><?= $soaMode ? 'Generate Statement of Account' : 'Post Billing' ?> - <?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></title>
+    <title><?= strtolower(trim((string)($_GET['tab'] ?? ''))) === 'individual' ? 'Individual Statement of Account' : ($soaMode ? 'Generate Statement of Account' : 'Post Billing') ?> - <?= htmlspecialchars(app_name(), ENT_QUOTES, 'UTF-8') ?></title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
@@ -618,6 +628,139 @@ try {
     }
     #printableSOA .soa-company-logo { max-height: 20mm !important; }
     .soa-screen-actions { display: none !important; }
+
+    /* the Individual Statement of Account prints on its own */
+    body.isoa-printing #tab-print, body.isoa-printing #tab-post, body.isoa-printing #isoaPicker { display: none !important; }
+    body.isoa-printing #tab-individual, body.isoa-printing #isoaStatementWrap { display: block !important; }
+    body.isoa-printing #printableISOA, body.isoa-printing #printableISOA * { visibility: visible !important; }
+    body.isoa-printing #printableISOA {
+        position: absolute !important;
+        inset: 0 auto auto 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        color: #000 !important;
+        background: #fff !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+    body.isoa-printing #printableISOA .soa-title { font-size: 18pt !important; }
+    body.isoa-printing #printableISOA .soa-ledger-table { font-size: 8.5pt !important; }
+    body.isoa-printing #printableISOA .soa-ledger-table thead { display: table-header-group; }
+    body.isoa-printing #printableISOA .ui-table-scroll { overflow: visible !important; }
+    body.isoa-printing #printableISOA .soa-document-header { margin-bottom: 12px !important; gap: 24px !important; }
+    body.isoa-printing #printableISOA .soa-meta-grid { margin-top: 10px !important; }
+    body.isoa-printing #printableISOA .soa-summary { margin-top: 10px !important; }
+    body.isoa-printing #printableISOA .soa-notes { margin-top: 10px !important; }
+    body.isoa-printing #printableISOA .soa-signatory-wrap { margin-top: 12px !important; }
+    body.isoa-printing #printableISOA .soa-document-footer { margin-top: 14px !important; }
+    body.isoa-printing #printableISOA .soa-ledger-table tr,
+    body.isoa-printing #printableISOA .soa-summary,
+    body.isoa-printing #printableISOA .soa-notes,
+    body.isoa-printing #printableISOA .soa-signatory-wrap,
+    body.isoa-printing #printableISOA .soa-document-footer { break-inside: avoid; page-break-inside: avoid; }
+}
+</style>
+<style id="individual-soa">
+[hidden] { display: none !important; }
+/* ------------------------------------------------------------------ the page's tabs: plain text, the open one underlined */
+.page-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin: -6px 0 22px; overflow-x: auto; scrollbar-width: none; }
+.page-tabs::-webkit-scrollbar { display: none; }
+.page-tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 10px 14px; font: 600 .9rem 'Sora', sans-serif; color: var(--text-secondary); cursor: pointer; white-space: nowrap; border-radius: 0; }
+.page-tab:hover { color: var(--text-primary); }
+.page-tab[aria-selected="true"] { color: var(--text-primary); border-bottom-color: #0d6efd; }
+.page-tab:focus-visible { outline: 2px solid #86b7fe; outline-offset: -2px; }
+
+/* ------------------------------------------------------------------ Individual Statement of Account */
+.isoa-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(210px, .9fr) minmax(170px, .8fr); gap: 16px; align-items: end; }
+.isoa-label { font-size: .8rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 8px; }
+.isoa-intro { font-size: .86rem; color: var(--text-secondary); line-height: 1.55; margin: -4px 0 18px; }
+.search-result .search-side { float: right; text-align: right; font-size: .75rem; color: var(--text-secondary); margin-left: 12px; }
+.search-result .search-side strong { display: block; font-family: 'JetBrains Mono', monospace; color: var(--text-primary); font-size: .8rem; }
+.search-kind { font-weight: 600; }
+.isoa-picked { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-top: 18px; background: #fbfcfe; }
+.isoa-picked-name { font-weight: 700; font-size: 1rem; }
+.isoa-picked-meta { font-size: .8rem; color: var(--text-secondary); margin-top: 3px; line-height: 1.5; }
+.isoa-picked-who { flex: 1 1 280px; min-width: 0; }
+.isoa-picked-side { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.isoa-scope-wrap { min-width: 220px; }
+.isoa-scope-wrap .isoa-label { margin-bottom: 6px; }
+.isoa-scope-wrap .form-control { padding: 9px 12px; }
+.isoa-note { font-size: .8rem; color: var(--text-secondary); margin: -4px 0 10px; line-height: 1.5; }
+.isoa-toolbar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 22px 0 10px; }
+.isoa-toolbar h3 { font-size: .95rem; margin: 0; }
+.isoa-quick { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-light { background: #fff; color: var(--text-primary); border: 1.5px solid var(--border); }
+.btn-sm { padding: 8px 13px; font-size: .8rem; }
+.isoa-table-wrap { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: auto; max-height: 470px; }
+table.isoa-pick { width: 100%; border-collapse: collapse; font-size: .82rem; }
+table.isoa-pick th { position: sticky; top: 0; z-index: 1; background: var(--off-white); text-align: left; padding: 10px 12px; font-size: .74rem; font-weight: 700; color: var(--text-secondary); border-bottom: 1px solid var(--border); white-space: nowrap; }
+table.isoa-pick td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.isoa-pick tr:last-child td { border-bottom: 0; }
+table.isoa-pick tbody tr { cursor: pointer; }
+table.isoa-pick tbody tr:hover td { background: #fafbfc; }
+table.isoa-pick tr.is-off td { color: var(--text-muted); }
+table.isoa-pick input[type="checkbox"] { width: 17px; height: 17px; accent-color: #0d6efd; cursor: pointer; }
+.isoa-ref { font-family: 'JetBrains Mono', monospace; font-weight: 600; white-space: nowrap; }
+.isoa-sub { font-size: .74rem; color: var(--text-secondary); margin-top: 2px; }
+.isoa-money { text-align: right !important; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.isoa-st { font-weight: 700; font-size: .78rem; white-space: nowrap; }
+.isoa-st.overdue { color: var(--error); }
+.isoa-st.due { color: var(--warning); }
+.isoa-st.current, .isoa-st.open { color: var(--text-secondary); }
+.isoa-sum { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.isoa-sum-text { font-size: .88rem; line-height: 1.5; }
+.isoa-sum-text strong { font-family: 'JetBrains Mono', monospace; }
+.isoa-empty { padding: 28px 16px; text-align: center; color: var(--text-secondary); font-size: .88rem; }
+.isoa-dropped { margin-top: 14px; }
+#isoaStatementWrap { margin-top: 26px; }
+.isoa-ledger col.date { width: 10%; }
+.isoa-ledger col.reference { width: 12%; }
+.isoa-ledger col.description { width: 34%; }
+.isoa-ledger col.due { width: 11%; }
+.isoa-ledger col.money { width: 11%; }
+.isoa-ledger tbody td { border-bottom: 1px solid #eef0f3 !important; }
+.isoa-ledger tfoot td { padding: 7px 8px; font-weight: 800; border-top: 2px solid #111827; }
+.isoa-ledger tfoot td.soa-money { text-align: right; }
+.isoa-ledger td:nth-child(1), .isoa-ledger td:nth-child(4) { white-space: nowrap; }
+.isoa-footer { grid-template-columns: 1fr !important; }
+table.isoa-pick td[data-label="Date"], table.isoa-pick td[data-label="Due date"] { white-space: nowrap; }
+.soa-summary-row.muted-row { color: #4b5563; font-weight: 400; }
+@media (max-width: 900px) {
+    .isoa-grid { grid-template-columns: 1fr 1fr; }
+    .isoa-grid > :first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+    .isoa-grid { grid-template-columns: 1fr; }
+    .isoa-table-wrap { max-height: none; overflow: visible; border: 0; }
+    table.isoa-pick thead { display: none; }
+    table.isoa-pick, table.isoa-pick tbody, table.isoa-pick tr { display: block; width: 100%; }
+    table.isoa-pick tr { position: relative; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px 10px 44px; margin-bottom: 10px; }
+    table.isoa-pick td { display: flex; justify-content: space-between; gap: 12px; border: 0 !important; padding: 3px 0; text-align: right; }
+    table.isoa-pick td::before { content: attr(data-label); font-family: 'Sora', sans-serif; font-size: .74rem; font-weight: 600; color: var(--text-secondary); text-align: left; }
+    table.isoa-pick td.isoa-check { position: absolute; left: 12px; top: 12px; padding: 0; }
+    table.isoa-pick td.isoa-check::before, table.isoa-pick td.isoa-what::before { display: none; }
+    table.isoa-pick td.isoa-what { display: block; text-align: left; padding-bottom: 6px; }
+    .isoa-quick .btn, .isoa-sum .btn { flex: 1 1 auto; }
+    .isoa-picked-side, .isoa-scope-wrap { width: 100%; }
+    .isoa-picked-side .btn { flex: 1 1 auto; }
+}
+@media screen and (max-width: 760px) {
+    /* the statement on a phone: one block per invoice (the printed statement keeps its table) */
+    .ui-table-scroll > table.isoa-ledger { table-layout: auto; width: 100% !important; min-width: 0 !important; }
+    .isoa-ledger colgroup, .isoa-ledger thead { display: none; }
+    .isoa-ledger, .isoa-ledger tbody, .isoa-ledger tfoot, .isoa-ledger tr { display: block; width: 100%; }
+    .isoa-ledger tbody tr { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+    .isoa-ledger tbody td, .isoa-ledger tfoot td { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0 !important; border: 0 !important; text-align: right; white-space: normal !important; }
+    .isoa-ledger tbody td::before, .isoa-ledger tfoot td::before { content: attr(data-label); color: #6b7280; font-weight: 600; text-align: left; }
+    .isoa-ledger tbody td.isoa-desc { display: block; text-align: left; }
+    .isoa-ledger tbody td.isoa-desc::before { display: none; }
+    .isoa-ledger tfoot tr { border-top: 2px solid #111827; padding-top: 6px; }
+    .isoa-ledger tfoot td[colspan] { display: none; }
 }
 </style>
 </head>
@@ -633,20 +776,25 @@ try {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 <?= $soaMode ? 'Back to Reports Management' : 'Back to Billing Management' ?>
             </a>
-            <h1 class="page-title"><?= $soaMode ? 'Generate Statement of Account' : 'Post Billing' ?></h1>
-            <p class="page-subtitle">
-                <?= $soaMode
-                    ? 'Generate and print a member Statement of Account from the Reports Management module.'
-                    : 'Post only pending water-reading drafts. Due date is calculated as the reading period end date plus the selected payment term.' ?>
-            </p>
+            <h1 class="page-title" id="pageTitle"><?= e($isoaFirst ? $isoaTitle : $mainTitle) ?></h1>
+            <p class="page-subtitle" id="pageSubtitle"><?= e($isoaFirst ? $isoaSub : $mainSub) ?></p>
         </div>
+
+        <nav class="page-tabs" role="tablist" aria-label="<?= e($soaMode ? 'Statements of account' : 'Post billing and statements') ?>">
+            <button type="button" class="page-tab" role="tab" id="tabBtnMain" aria-controls="<?= $soaMode ? 'tab-print' : 'tab-post' ?>"
+                    aria-selected="<?= $isoaFirst ? 'false' : 'true' ?>" data-tab-target="<?= $soaMode ? 'tab-print' : 'tab-post' ?>"
+                    data-title="<?= e($mainTitle) ?>" data-sub="<?= e($mainSub) ?>"><?= e($soaMode ? 'Statement by Billing Period' : 'Post Billing') ?></button>
+            <button type="button" class="page-tab" role="tab" id="tabBtnIndividual" aria-controls="tab-individual"
+                    aria-selected="<?= $isoaFirst ? 'true' : 'false' ?>" data-tab-target="tab-individual"
+                    data-title="<?= e($isoaTitle) ?>" data-sub="<?= e($isoaSub) ?>">Individual Statement of Account</button>
+        </nav>
 
         <div id="alertBox" class="alert"></div>
         <?php if ($loadErrors): ?>
             <div class="alert error">The page could not load required database data: <?= e(implode(' ', array_unique($loadErrors))) ?> <?= $soaMode ? 'Statement generation' : 'Posting' ?> is disabled until the database problem is corrected.</div>
         <?php endif; ?>
 
-        <div id="tab-post" class="tab-pane <?= $soaMode ? '' : 'active' ?>">
+        <div id="tab-post" class="tab-pane <?= (!$soaMode && !$isoaFirst) ? 'active' : '' ?>" role="tabpanel" aria-labelledby="tabBtnMain">
             <div class="card">
                 <div class="card-head">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
@@ -675,10 +823,10 @@ try {
                                     if ($readingCount === 0) {
                                         $periodStatus = 'No readings entered';
                                     } elseif ($pendingCount === 0) {
-                                        $periodStatus = 'Fully posted — ' . $postedCount . ' bill(s)';
+                                        $periodStatus = 'Fully posted, ' . $postedCount . ' bill(s)';
                                     } else {
                                         $periodStatus = $pendingCount . ' pending';
-                                        if ($postedCount > 0) $periodStatus .= ' • ' . $postedCount . ' already posted';
+                                        if ($postedCount > 0) $periodStatus .= ', ' . $postedCount . ' already posted';
                                     }
                                 ?>
                                     <option value="<?= (int)$p['period_id'] ?>"
@@ -771,7 +919,7 @@ try {
             </div>
         </div>
 
-        <div id="tab-print" class="tab-pane <?= $soaMode ? 'active' : '' ?>">
+        <div id="tab-print" class="tab-pane <?= ($soaMode && !$isoaFirst) ? 'active' : '' ?>" role="tabpanel" aria-labelledby="tabBtnMain">
             <div class="card">
                 <div class="card-head">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -924,6 +1072,155 @@ try {
                 </div>
             </div>
         </div>
+
+        <div id="tab-individual" class="tab-pane <?= $isoaFirst ? 'active' : '' ?>" role="tabpanel" aria-labelledby="tabBtnIndividual">
+            <div class="card" id="isoaPicker">
+                <div class="card-head">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+                    Individual Statement of Account
+                </div>
+                <div class="card-body">
+                    <p class="isoa-intro">Every bill of the member or customer that is still unpaid is listed, whatever its billing period: water, one-time, installment, recurring and share capital. Tick the ones the statement shows.</p>
+                    <div class="isoa-grid">
+                        <div>
+                            <label class="isoa-label" for="isoaSearch">1. Member or customer</label>
+                            <div class="search-wrap">
+                                <input type="text" id="isoaSearch" class="form-control" placeholder="Name, account number or member number" autocomplete="off"
+                                       data-inc-list="#isoaDropdown" data-inc-item=".search-result[data-account-id]" aria-controls="isoaDropdown">
+                                <div class="search-dropdown" id="isoaDropdown"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="isoa-label" for="isoaKind">Show</label>
+                            <select id="isoaKind" class="form-control">
+                                <option value="all">All</option>
+                                <option value="member">Members only</option>
+                                <option value="customer">Customers only</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="isoa-label" for="isoaDate">2. Statement date</label>
+                            <div class="date-control-wrap">
+                                <input type="text" id="isoaDate" class="form-control js-date-input" value="<?= date('Y-m-d') ?>" autocomplete="off">
+                                <span class="date-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="isoa-picked" id="isoaPicked" hidden>
+                        <div class="isoa-picked-who">
+                            <div class="isoa-picked-name" id="isoaPickedName"></div>
+                            <div class="isoa-picked-meta" id="isoaPickedMeta"></div>
+                        </div>
+                        <div class="isoa-picked-side">
+                            <div class="isoa-scope-wrap" id="isoaScopeWrap" hidden>
+                                <label class="isoa-label" for="isoaScope">Accounts</label>
+                                <select id="isoaScope" class="form-control"></select>
+                            </div>
+                            <button type="button" class="btn btn-light btn-sm" id="isoaChange">Choose another</button>
+                        </div>
+                    </div>
+
+                    <div id="isoaInvoices" hidden>
+                        <div class="isoa-toolbar">
+                            <h3>3. Unpaid invoices on the statement</h3>
+                            <div class="isoa-quick">
+                                <button type="button" class="btn btn-light btn-sm" data-isoa-select="all">Select all</button>
+                                <button type="button" class="btn btn-light btn-sm" data-isoa-select="overdue">Overdue only</button>
+                                <button type="button" class="btn btn-light btn-sm" data-isoa-select="none">Clear</button>
+                            </div>
+                        </div>
+                        <p class="isoa-note" id="isoaNote" hidden></p>
+                        <div class="isoa-table-wrap">
+                            <table class="isoa-pick" data-ui-dense="keep">
+                                <thead><tr>
+                                    <th><input type="checkbox" id="isoaAll" aria-label="Select all invoices"></th>
+                                    <th>Invoice</th><th>Date</th><th>Due date</th>
+                                    <th class="isoa-money">Amount</th><th class="isoa-money">Paid</th><th class="isoa-money">Balance</th><th>Status</th>
+                                </tr></thead>
+                                <tbody id="isoaRows"></tbody>
+                            </table>
+                        </div>
+                        <div class="isoa-sum">
+                            <div class="isoa-sum-text" id="isoaSumText" aria-live="polite"></div>
+                            <button type="button" class="btn btn-primary" id="isoaGenerate">
+                                <span class="spinner" id="isoaSpinner"></span>
+                                Prepare statement
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="isoaStatementWrap" hidden>
+                <div class="alert error isoa-dropped" id="isoaDropped" style="display:none"></div>
+                <section class="soa-receipt" id="printableISOA" aria-label="Individual Statement of Account">
+                    <header class="soa-document-header">
+                        <div>
+                            <h2 class="soa-title">Statement of Account</h2>
+                            <div class="soa-scope" id="isoaScope">Unpaid invoices</div>
+                            <div class="soa-customer-name" id="isoaCustName"></div>
+                            <div class="soa-customer-address" id="isoaCustAddress"></div>
+                            <div class="soa-customer-contact" id="isoaCustContact"></div>
+                            <div class="soa-meta-grid">
+                                <span class="soa-meta-label">Statement date:</span><strong class="soa-meta-value" id="isoaMetaDate"></strong>
+                                <span class="soa-meta-label">Account no.:</span><strong class="soa-meta-value" id="isoaMetaAcct"></strong>
+                                <span class="soa-meta-label" id="isoaMetaKindLabel">Member no.:</span><strong class="soa-meta-value" id="isoaMetaKind"></strong>
+                                <span class="soa-meta-label">Invoices listed:</span><strong class="soa-meta-value" id="isoaMetaCount"></strong>
+                            </div>
+                        </div>
+                        <div class="soa-company-block">
+                            <div class="soa-company-logo-wrap"><img class="soa-company-logo" id="isoaLogo" alt="Company logo"></div>
+                            <div>
+                                <div class="soa-company-name" id="isoaCoName"></div>
+                                <div class="soa-company-detail" id="isoaCoAddress"></div>
+                                <div class="soa-company-detail" id="isoaCoContact"></div>
+                                <div class="soa-company-detail" id="isoaCoOnline"></div>
+                                <div class="soa-company-detail" id="isoaCoTin"></div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="ui-table-scroll"><table class="soa-ledger-table isoa-ledger" aria-label="Invoices on the statement">
+                        <colgroup><col class="date"><col class="reference"><col class="description"><col class="due"><col class="money"><col class="money"><col class="money"></colgroup>
+                        <thead><tr><th>Date</th><th>Invoice no.</th><th>Description</th><th>Due date</th><th class="soa-money">Amount</th><th class="soa-money">Paid</th><th class="soa-money">Balance</th></tr></thead>
+                        <tbody id="isoaLedger"></tbody>
+                        <tfoot><tr><td colspan="4">Total</td><td class="soa-money" id="isoaFootAmount" data-label="Total amount"></td><td class="soa-money" id="isoaFootPaid" data-label="Total paid"></td><td class="soa-money" id="isoaFootBalance" data-label="Total balance"></td></tr></tfoot>
+                    </table></div>
+
+                    <div class="soa-summary">
+                        <div class="soa-summary-row muted-row" id="isoaRowCurrent"><span>Not yet due:</span><strong id="isoaSumCurrent"></strong></div>
+                        <div class="soa-summary-row muted-row" id="isoaRowDue"><span>Due on the statement date:</span><strong id="isoaSumDue"></strong></div>
+                        <div class="soa-summary-row muted-row" id="isoaRowOpen"><span>No due date:</span><strong id="isoaSumOpen"></strong></div>
+                        <div class="soa-summary-row"><strong>Amount overdue:</strong><strong id="isoaSumOverdue"></strong></div>
+                        <div class="soa-summary-row overdue"><strong>Total amount due:</strong><strong id="isoaSumTotal"></strong></div>
+                    </div>
+
+                    <div class="soa-notes">
+                        <p id="isoaSupport"></p>
+                        <p id="isoaPayNote"></p>
+                    </div>
+
+                    <div class="soa-signatory-wrap" id="isoaGmBlock">
+                        <div class="soa-signatory">
+                            <div class="soa-signatory-name" id="isoaGmName"></div>
+                            <div class="soa-signatory-title" id="isoaGmTitle">General Manager</div>
+                        </div>
+                    </div>
+
+                    <footer class="soa-document-footer isoa-footer">
+                        <div class="soa-footer-company" id="isoaFooter"></div>
+                    </footer>
+                </section>
+
+                <div class="soa-screen-actions" style="text-align:center; margin-top:24px;">
+                    <button type="button" class="btn btn-primary" id="isoaPrint">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        Print statement
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -972,6 +1269,9 @@ try {
 
                     if (input.id === 'statementDate') {
                         triggerRegenerate();
+                    }
+                    if (input.id === 'isoaDate') {
+                        isoaLoad();
                     }
                 }
             });
@@ -1572,19 +1872,19 @@ try {
                 if (member.phone) memberContacts.push(`Tel: ${member.phone}`);
                 if (member.email) memberContacts.push(`Email: ${member.email}`);
                 if (member.zone) memberContacts.push(`Zone ${member.zone}`);
-                soaSetText('soaCustomerContact', memberContacts.join('  •  '), '');
+                soaSetText('soaCustomerContact', memberContacts.join(', '), '');
 
                 soaSetText('soaDate', soaDateLabel(data.statement_date || statementDate));
                 soaSetText('soaAcctRef', member.account_reference || memberId);
                 const periodLabel = [period.code, period.start_date && period.end_date
                     ? `${soaDateLabel(period.start_date)} – ${soaDateLabel(period.end_date)}`
-                    : ''].filter(Boolean).join('  •  ');
+                    : ''].filter(Boolean).join(', ');
                 soaSetText('soaPeriodLabel', periodLabel);
 
                 let terms = 'See individual due dates';
                 if (Number.isInteger(Number(data.term_days)) && Number(data.term_days) > 0) {
                     terms = `${Number(data.term_days)} day${Number(data.term_days) === 1 ? '' : 's'}`;
-                    if (data.due_date) terms += `  •  Due ${soaDateLabel(data.due_date)}`;
+                    if (data.due_date) terms += `, due ${soaDateLabel(data.due_date)}`;
                 }
                 soaSetText('soaTerms', terms);
 
@@ -1594,12 +1894,12 @@ try {
                 const companyPhones = [];
                 if (company.telephone) companyPhones.push(`Telephone: ${company.telephone}`);
                 if (company.mobile) companyPhones.push(`Mobile: ${company.mobile}`);
-                soaSetText('soaCompanyContact', companyPhones.join('  •  '), '');
+                soaSetText('soaCompanyContact', companyPhones.join(', '), '');
 
                 const companyOnline = [];
                 if (company.email) companyOnline.push(`Email: ${company.email}`);
                 if (company.website) companyOnline.push(`Website: ${company.website}`);
-                soaSetText('soaCompanyOnline', companyOnline.join('  •  '), '');
+                soaSetText('soaCompanyOnline', companyOnline.join(', '), '');
                 soaSetText('soaCompanyTin', company.tin ? `TIN: ${company.tin}` : '', '');
 
                 const logo = document.getElementById('soaCompanyLogo');
@@ -1622,7 +1922,7 @@ try {
                 );
                 soaSetText(
                     'soaFooterCompany',
-                    `Registered Office: ${company.address || SOA_ISSUER.address}${company.name ? `  •  ${company.name}` : ''}`
+                    `Registered Office: ${company.address || SOA_ISSUER.address}${company.name ? `, ${company.name}` : ''}`
                 );
 
                 const signatories = data.signatories || {};
@@ -1701,7 +2001,7 @@ try {
                                 <td>${e(item.reference || '—')}</td>
                                 <td>
                                     <div class="soa-line-description">${e(item.description || item.category || 'Account charge')}</div>
-                                    <div class="soa-line-meta">${e(item.category || '')}${item.category ? '  •  ' : ''}${e(dueLabel)}</div>
+                                    <div class="soa-line-meta">${e(item.category || '')}${item.category ? ', ' : ''}${e(dueLabel)}</div>
                                 </td>
                                 <td class="soa-money">${soaMoneyCell(item.amountCents)}</td>
                                 <td class="soa-money">—</td>
@@ -1746,7 +2046,306 @@ try {
             });
     }
 
+
+    // ==========================================
+    // TABS: Post Billing (or the statement of one billing period) and the Individual Statement of Account
+    // ==========================================
+    const SOA_MODE = <?= $soaMode ? 'true' : 'false' ?>;
+    function openPageTab(btn, focusTab = false) {
+        document.querySelectorAll('.page-tab').forEach(b => {
+            const on = b === btn;
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+            b.tabIndex = on ? 0 : -1;
+        });
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === btn.dataset.tabTarget));
+        document.getElementById('pageTitle').textContent = btn.dataset.title;
+        document.getElementById('pageSubtitle').textContent = btn.dataset.sub;
+        if (focusTab) btn.focus();
+        // the address keeps the tab, so a reload or a shared link opens it again
+        try {
+            const url = new URL(window.location.href);
+            if (btn.dataset.tabTarget === 'tab-individual') {
+                url.searchParams.set('tab', 'individual');
+                if (SOA_MODE) url.searchParams.set('view', 'soa');
+            } else {
+                url.searchParams.delete('tab');
+                if (SOA_MODE) url.searchParams.set('view', 'soa');
+            }
+            window.history.replaceState(null, '', url.toString());
+        } catch (ignore) { /* an old browser keeps the address */ }
+        if (btn.dataset.tabTarget === 'tab-individual' && !isoa.account) {
+            setTimeout(() => document.getElementById('isoaSearch').focus(), 30);
+        }
+    }
+    document.querySelectorAll('.page-tab').forEach(btn => {
+        btn.tabIndex = btn.getAttribute('aria-selected') === 'true' ? 0 : -1;
+        btn.addEventListener('click', () => openPageTab(btn));
+        btn.addEventListener('keydown', ev => {
+            if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+            const tabs = [...document.querySelectorAll('.page-tab')];
+            const next = tabs[(tabs.indexOf(btn) + (ev.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+            ev.preventDefault();
+            openPageTab(next, true);
+        });
+    });
+
+    // ==========================================
+    // INDIVIDUAL STATEMENT OF ACCOUNT
+    // ==========================================
+    const ISOA_CONTEXT = <?= json_encode($soaMode ? 'reports_management' : 'generate_soa') ?>;
+    const isoa = { account: null, found: [], invoices: [], scope: [], selected: new Set(), searchSeq: 0, loadSeq: 0, stmtSeq: 0, timer: null };
+    const isoaEl = id => document.getElementById(id);
+    const isoaDate = () => (isoaEl('isoaDate').value || '').trim() || new Date().toISOString().slice(0, 10);
+    function isoaDateLabel(iso) {
+        if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return '';
+        const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+        return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1] + ' ' + d + ', ' + y;
+    }
+    async function isoaFetch(params) {
+        const query = new URLSearchParams(Object.assign({ context: ISOA_CONTEXT }, params));
+        const response = await fetch('../process/getIndividualSoaData.php?' + query.toString(), { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || `The request failed (HTTP ${response.status}).`);
+        return data;
+    }
+
+    // 1. the member or customer
+    function isoaSearch() {
+        clearTimeout(isoa.timer);
+        const q = isoaEl('isoaSearch').value.trim();
+        const seq = ++isoa.searchSeq;      // a late answer to an older query is dropped
+        const dropdown = isoaEl('isoaDropdown');
+        if (!q) { dropdown.classList.remove('open'); dropdown.innerHTML = ''; return; }
+        isoa.timer = setTimeout(() => {
+            isoaFetch({ action: 'search', q, kind: isoaEl('isoaKind').value, statement_date: isoaDate() }).then(d => {
+                if (seq !== isoa.searchSeq) return;
+                isoa.found = d.accounts;
+                dropdown.innerHTML = d.accounts.length ? d.accounts.map(a => `
+                    <div class="search-result" data-account-id="${e(a.id)}">
+                        <div class="search-side">${a.open_count > 0 ? `${e(a.open_count)} unpaid<strong>${fmtPeso(a.open_total)}</strong>` : 'Nothing unpaid'}</div>
+                        <div class="search-name">${e(a.name)}</div>
+                        <div class="search-meta"><span class="search-kind">${e(a.kind)}</span>, account${a.accounts.length === 1 ? '' : 's'} ${e(a.account_number)}${a.member_no ? ', member no. ' + e(a.member_no) : ''}${a.status !== 'Active' ? ', inactive' : ''}</div>
+                    </div>`).join('')
+                    : '<div class="search-result" style="cursor:default;color:var(--text-muted)">No member or customer found.</div>';
+                dropdown.classList.add('open');
+            }).catch(err => {
+                if (seq !== isoa.searchSeq) return;
+                dropdown.innerHTML = `<div class="search-result" style="cursor:default;color:#b91c1c">${e(err.message)}</div>`;
+                dropdown.classList.add('open');
+            });
+        }, 160);
+    }
+    isoaEl('isoaSearch').addEventListener('input', isoaSearch);
+    isoaEl('isoaKind').addEventListener('change', isoaSearch);
+    isoaEl('isoaDropdown').addEventListener('click', ev => {
+        const row = ev.target.closest('[data-account-id]');
+        if (!row) return;
+        isoaChoose(isoa.found.find(a => String(a.id) === row.dataset.accountId));
+    });
+    document.addEventListener('click', ev => {
+        if (!isoaEl('isoaSearch').contains(ev.target) && !isoaEl('isoaDropdown').contains(ev.target)) isoaEl('isoaDropdown').classList.remove('open');
+    });
+    isoaEl('isoaChange').addEventListener('click', () => { isoaEl('isoaSearch').value = ''; isoaEl('isoaSearch').focus(); });
+    isoaEl('isoaScope').addEventListener('change', () => { isoa.invoices = []; isoa.selected = new Set(); isoaLoad(); });
+
+    function isoaChoose(account) {
+        if (!account) return;
+        if (!isoa.account || isoa.account.id !== account.id) { isoa.invoices = []; isoa.selected = new Set(); }
+        isoa.account = account;
+        isoaEl('isoaDropdown').classList.remove('open');
+        isoaEl('isoaSearch').value = '';
+        isoaEl('isoaPickedName').textContent = account.name;
+        isoaEl('isoaPickedMeta').textContent = [account.kind, (account.accounts.length === 1 ? 'account no. ' : 'accounts ') + account.account_number, account.member_no ? 'member no. ' + account.member_no : ''].filter(Boolean).join(', ');
+        // a member or customer with more than one water-service account: all of them, or one
+        const scope = isoaEl('isoaScope');
+        scope.innerHTML = `<option value="all">All ${account.accounts.length} accounts</option>`
+            + account.accounts.map(a => `<option value="${e(a.id)}">Account ${e(a.account_number)}${a.status !== 'Active' ? ' (inactive)' : ''}</option>`).join('');
+        scope.value = 'all';
+        isoaEl('isoaScopeWrap').hidden = account.accounts.length < 2;
+        isoaEl('isoaPicked').hidden = false;
+        isoaLoad();
+    }
+
+    // 2. its unpaid invoices as of the statement date (the ones taken off before stay off)
+    function isoaLoad() {
+        if (!isoa.account) return;
+        const seq = ++isoa.loadSeq;
+        const unticked = new Set(isoa.invoices.filter(i => !isoa.selected.has(i.key)).map(i => i.key));
+        isoaEl('isoaStatementWrap').hidden = true;
+        isoaEl('isoaInvoices').hidden = false;
+        isoaEl('isoaRows').innerHTML = '<tr><td colspan="8" class="isoa-empty">Looking up the unpaid invoices...</td></tr>';
+        isoaEl('isoaSumText').textContent = '';
+        isoaEl('isoaGenerate').disabled = true;
+        const known = new Set(isoa.invoices.map(i => i.key));
+        isoaFetch({ action: 'invoices', account_id: isoa.account.id, scope: isoaEl('isoaScope').value || 'all', statement_date: isoaDate() }).then(d => {
+            if (seq !== isoa.loadSeq) return;
+            isoa.invoices = d.invoices;
+            isoa.scope = d.scope || [];
+            // ticked at first as the server says (an amortization not yet due is not); one taken off stays off
+            isoa.selected = new Set(d.invoices.filter(i => known.has(i.key) ? !unticked.has(i.key) : i.preselect).map(i => i.key));
+            const a = d.account;
+            isoaEl('isoaPickedMeta').textContent = [a.kind, (d.accounts.length === 1 ? 'account no. ' : 'accounts ') + d.accounts.map(x => x.account_number).join(', '), a.member_no ? 'member no. ' + a.member_no : '', a.address].filter(Boolean).join(', ');
+            const upcoming = d.invoices.filter(i => !i.preselect).length;
+            isoaEl('isoaNote').textContent = upcoming ? `${upcoming} installment amortization${upcoming === 1 ? ' is' : 's are'} not yet due and not ticked; tick ${upcoming === 1 ? 'it' : 'them'} to put ${upcoming === 1 ? 'it' : 'them'} on the statement.` : '';
+            isoaEl('isoaNote').hidden = upcoming === 0;
+            isoaRender();
+        }).catch(err => {
+            if (seq !== isoa.loadSeq) return;
+            isoa.invoices = [];
+            isoaEl('isoaRows').innerHTML = `<tr><td colspan="8" class="isoa-empty" style="color:#b91c1c">${e(err.message)}</td></tr>`;
+        });
+    }
+
+    function isoaRender() {
+        const rows = isoaEl('isoaRows');
+        if (!isoa.invoices.length) {
+            rows.innerHTML = `<tr><td colspan="8" class="isoa-empty">${e(isoa.account.name)} has no unpaid invoice dated on or before ${e(isoaDateLabel(isoaDate()))}.</td></tr>`;
+        } else {
+            rows.innerHTML = isoa.invoices.map(i => {
+                const on = isoa.selected.has(i.key);
+                return `<tr data-key="${e(i.key)}" class="${on ? '' : 'is-off'}">
+                    <td class="isoa-check"><input type="checkbox" ${on ? 'checked' : ''} aria-label="Put ${e(i.reference)} on the statement"></td>
+                    <td class="isoa-what"><div class="isoa-ref">${e(i.reference)}</div><div>${e(i.description)}</div><div class="isoa-sub">${e(i.type_label)}${isoa.scope.length > 1 ? ', account ' + e(i.account_number) : ''}${i.detail ? ', ' + e(i.detail) : ''}</div></td>
+                    <td data-label="Date">${e(isoaDateLabel(i.date))}</td>
+                    <td data-label="Due date">${i.due_date ? e(isoaDateLabel(i.due_date)) : 'None'}</td>
+                    <td data-label="Amount" class="isoa-money">${fmtPeso(i.amount)}</td>
+                    <td data-label="Paid" class="isoa-money">${fmtPeso(i.paid)}</td>
+                    <td data-label="Balance" class="isoa-money"><strong>${fmtPeso(i.balance)}</strong></td>
+                    <td data-label="Status"><span class="isoa-st ${e(i.status)}">${e(i.status_label)}</span></td>
+                </tr>`;
+            }).join('');
+        }
+        isoaSummary();
+    }
+
+    function isoaSummary() {
+        isoa.stmtSeq++;                                // a statement on its way no longer matches the choice
+        const chosen = isoa.invoices.filter(i => isoa.selected.has(i.key));
+        let total = 0n, overdue = 0n;
+        chosen.forEach(i => { const c = moneyToCents(i.balance); total += c; if (i.status === 'overdue') overdue += c; });
+        const all = isoaEl('isoaAll');
+        all.checked = isoa.invoices.length > 0 && chosen.length === isoa.invoices.length;
+        all.indeterminate = chosen.length > 0 && chosen.length < isoa.invoices.length;
+        all.disabled = isoa.invoices.length === 0;
+        isoaEl('isoaSumText').innerHTML = isoa.invoices.length
+            ? `<strong>${chosen.length}</strong> of ${isoa.invoices.length} unpaid invoice${isoa.invoices.length === 1 ? '' : 's'} on the statement, <strong>${fmtPesoCents(total)}</strong>${overdue > 0n ? `, of which ${fmtPesoCents(overdue)} is overdue` : ''}.`
+            : '';
+        isoaEl('isoaGenerate').disabled = chosen.length === 0;
+        isoaEl('isoaSpinner').style.display = 'none';
+        isoaEl('isoaStatementWrap').hidden = true;     // a statement prepared before no longer matches the choice
+    }
+
+    // 3. the invoices the statement lists
+    isoaEl('isoaRows').addEventListener('click', ev => {
+        const tr = ev.target.closest('tr[data-key]');
+        if (!tr) return;
+        const box = tr.querySelector('input[type="checkbox"]');
+        if (ev.target !== box) box.checked = !box.checked;
+        if (box.checked) isoa.selected.add(tr.dataset.key); else isoa.selected.delete(tr.dataset.key);
+        tr.classList.toggle('is-off', !box.checked);
+        isoaSummary();
+    });
+    function isoaSelect(which) {
+        isoa.selected = new Set(isoa.invoices.filter(i => which === 'all' || (which === 'overdue' && i.status === 'overdue')).map(i => i.key));
+        isoaRender();
+    }
+    isoaEl('isoaAll').addEventListener('change', ev => isoaSelect(ev.target.checked ? 'all' : 'none'));
+    document.querySelectorAll('[data-isoa-select]').forEach(b => b.addEventListener('click', () => isoaSelect(b.dataset.isoaSelect)));
+
+    isoaEl('isoaGenerate').addEventListener('click', () => {
+        const items = isoa.invoices.filter(i => isoa.selected.has(i.key)).map(i => i.key);
+        if (!items.length || !isoa.account) return;
+        const button = isoaEl('isoaGenerate');
+        const seq = ++isoa.stmtSeq;
+        const forAccount = isoa.account.id;
+        button.disabled = true;
+        isoaEl('isoaSpinner').style.display = 'inline-block';
+        isoaFetch({ action: 'statement', account_id: forAccount, scope: isoaEl('isoaScope').value || 'all', statement_date: isoaDate(), items: items.join(',') })
+            .then(d => {
+                // a late answer, or one for another member or customer chosen since, is not shown
+                if (seq !== isoa.stmtSeq || !isoa.account || isoa.account.id !== forAccount) return;
+                isoaStatement(d);
+            })
+            .catch(err => { if (seq === isoa.stmtSeq) showAlert('error', err.message || 'The statement could not be prepared.'); })
+            .finally(() => { if (seq === isoa.stmtSeq) { button.disabled = false; isoaEl('isoaSpinner').style.display = 'none'; } });
+    });
+
+    function isoaStatement(d) {
+        const a = d.account, c = d.company || {}, t = d.totals;
+        const set = (id, v) => { isoaEl(id).textContent = v || ''; };
+        set('isoaScope', `${t.count} unpaid invoice${t.count === 1 ? '' : 's'}`);
+        set('isoaCustName', a.name);
+        set('isoaCustAddress', a.address || 'Address not recorded');
+        set('isoaCustContact', [a.phone ? 'Tel: ' + a.phone : '', a.email ? 'Email: ' + a.email : '', a.zone ? 'Zone ' + a.zone : ''].filter(Boolean).join(', '));
+        set('isoaMetaDate', isoaDateLabel(d.statement_date));
+        set('isoaMetaAcct', (d.scope || []).map(x => x.account_number).join(', ') || a.account_number);
+        set('isoaMetaKindLabel', a.kind === 'Member' ? 'Member no.:' : 'Account holder:');
+        set('isoaMetaKind', a.kind === 'Member' ? (a.member_no || 'Member') : 'Customer');
+        set('isoaMetaCount', String(t.count));
+        set('isoaCoName', c.name);
+        set('isoaCoAddress', c.address);
+        set('isoaCoContact', [c.telephone ? 'Telephone: ' + c.telephone : '', c.mobile ? 'Mobile: ' + c.mobile : ''].filter(Boolean).join(', '));
+        set('isoaCoOnline', [c.email ? 'Email: ' + c.email : '', c.website ? 'Website: ' + c.website : ''].filter(Boolean).join(', '));
+        set('isoaCoTin', c.tin ? 'TIN: ' + c.tin : '');
+        const logo = isoaEl('isoaLogo');
+        if (c.logo) { logo.src = c.logo; logo.style.display = 'block'; } else { logo.removeAttribute('src'); logo.style.display = 'none'; }
+
+        let amount = 0n, paid = 0n;
+        isoaEl('isoaLedger').innerHTML = d.invoices.map(i => {
+            amount += moneyToCents(i.amount); paid += moneyToCents(i.paid);
+            return `<tr>
+                <td data-label="Date">${e(isoaDateLabel(i.date))}</td>
+                <td data-label="Invoice no.">${e(i.reference)}</td>
+                <td class="isoa-desc"><div class="soa-line-description">${e(i.description)}</div><div class="soa-line-meta">${e(i.type_label)}${(d.scope || []).length > 1 ? ', account ' + e(i.account_number) : ''}${i.detail ? ', ' + e(i.detail) : ''}${i.status === 'overdue' ? ', ' + e(i.status_label.toLowerCase()) : ''}</div></td>
+                <td data-label="Due date">${i.due_date ? e(isoaDateLabel(i.due_date)) : 'None'}</td>
+                <td data-label="Amount" class="soa-money">${fmtPeso(i.amount)}</td>
+                <td data-label="Paid" class="soa-money">${moneyToCents(i.paid) > 0n ? fmtPeso(i.paid) : '—'}</td>
+                <td data-label="Balance" class="soa-money">${fmtPeso(i.balance)}</td>
+            </tr>`;
+        }).join('');
+        set('isoaFootAmount', fmtPesoCents(amount));
+        set('isoaFootPaid', fmtPesoCents(paid));
+        set('isoaFootBalance', fmtPeso(t.total));
+        set('isoaSumCurrent', fmtPeso(t.current));
+        set('isoaSumDue', fmtPeso(t.due));
+        set('isoaSumOpen', fmtPeso(t.open));
+        set('isoaSumOverdue', fmtPeso(t.overdue));
+        set('isoaSumTotal', fmtPeso(t.total));
+        isoaEl('isoaRowCurrent').hidden = moneyToCents(t.current) === 0n;
+        isoaEl('isoaRowDue').hidden = moneyToCents(t.due) === 0n;
+        isoaEl('isoaRowOpen').hidden = moneyToCents(t.open) === 0n;
+
+        const support = c.telephone || c.mobile || c.email || '';
+        set('isoaSupport', `For questions about this statement, contact ${c.name || SOA_ISSUER.name}${support ? ' at ' + support : ''}.`);
+        set('isoaPayNote', `Please settle the amount due at the ${c.name || SOA_ISSUER.name} collection office and present your account number.`);
+        set('isoaFooter', `Registered Office: ${c.address || SOA_ISSUER.address}${c.name ? ', ' + c.name : ''}`);
+        const gm = (d.signatories || {}).general_manager || {};
+        set('isoaGmName', String(gm.name || '').trim());
+        set('isoaGmTitle', String(gm.position || 'General Manager').trim() || 'General Manager');
+        isoaEl('isoaGmBlock').style.display = String(gm.name || '').trim() === '' ? 'none' : 'flex';
+
+        const dropped = isoaEl('isoaDropped');
+        if (d.dropped && d.dropped.length) {
+            dropped.textContent = `${d.dropped.length} of the invoices chosen ${d.dropped.length === 1 ? 'is' : 'are'} no longer an unpaid invoice of these accounts (paid or changed since the list was shown) and ${d.dropped.length === 1 ? 'is' : 'are'} left off. Choose the member or customer again to see what is unpaid now.`;
+            dropped.style.display = 'block';
+        } else {
+            dropped.style.display = 'none';
+        }
+        isoaEl('isoaStatementWrap').hidden = false;
+        isoaEl('isoaStatementWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    isoaEl('isoaPrint').addEventListener('click', () => {
+        document.body.classList.add('isoa-printing');
+        window.print();
+    });
+    window.addEventListener('beforeprint', () => {
+        if (document.getElementById('tab-individual').classList.contains('active')) document.body.classList.add('isoa-printing');
+    });
+    window.addEventListener('afterprint', () => document.body.classList.remove('isoa-printing'));
+
     function printSOA() {
+        document.body.classList.remove('isoa-printing');
         window.print();
     }
 </script>

@@ -15,6 +15,21 @@ the supplied databases), the row says so.
 | Data | the supplied former water database (Marigondon NHS and STEC-STHS Multipurpose Cooperative: 6,888 water accounts, 361 legacy members, 7,872 savings transactions) and the supplied cooperative sample database (`database/accounting_system.sql`) |
 | Date | 14 October 2026 |
 
+## Version 51 (7 November 2026): Billing List on MySQL 8
+
+Run on PHP 8.3.6, on MariaDB 10.11.14 and on **MySQL 8.0.46** (Ubuntu's build, its default settings: sql_mode
+ONLY_FULL_GROUP_BY, STRICT_TRANS_TABLES, NO_ZERO_IN_DATE, NO_ZERO_DATE, ERROR_FOR_DIVISION_BY_ZERO,
+NO_ENGINE_SUBSTITUTION; innodb_strict_mode on), the server of the installation that reported the fault.
+
+| Suite | Command | Result | File |
+|---|---|---|---|
+| The fault, reproduced | the Billing List query on MySQL 8 with its date filters empty | version 50: "SQLSTATE[HY000]: General error: 1525 Incorrect DATE value: ''" (the message of the installation); version 51: the 65 water bills of the sample | — |
+| Cooperative module on MySQL 8 | `DB_HOST=127.0.0.1 DB_PORT=3307 ... php tests/coop/run.php` (and `--pure-php`) | **158 passed, 0 failed**, 2,410 checks, on both decimal engines (the concurrency test's two processes now use the same server as the run) | `tests/coop/RESULTS_MYSQL8.md`, `tests/coop/RESULTS_pure_php_MYSQL8.md` |
+| Cooperative module on MariaDB | `DB_NAME=coop_t51 php tests/coop/run.php` (and `--pure-php`) | **158 passed, 0 failed**, 2,410 checks; new: "Version 51: no query compares a date with a filter that can be empty" (every PHP file scanned; it flags version 50's Billing List) | `tests/coop/RESULTS.md`, `tests/coop/RESULTS_pure_php.md` |
+| Water end to end on MySQL 8 | `bash tests/water/run_e2e.sh mnssmc_test coop_e2e_m8 8099` with the MySQL 8 connection | **411 passed, 0 failed** (a fresh install, the former water database migrated, every section); new section v51: Billing List with its dates empty, sent empty, a range with no bill, a range around every bill, a value that is not a date | `tests/water/RESULTS_E2E_MYSQL8.md` |
+| Water end to end on MariaDB | `bash tests/water/run_e2e.sh mnssmc_test coop_e2e51 8097` | **411 passed, 0 failed** | `tests/water/RESULTS_E2E.md` |
+| Every page on MySQL 8 | Playwright crawl of the 533 page addresses on the sample database imported into MySQL 8, 1366 px | **531 of 533 open without a database, PHP or JavaScript error**, no failed request, no sideways scrolling; the 2 others are `collection_receipt.php` without a receipt number (404 by design) and `import_management.php` (removed in version 49) | — |
+
 ## Version 50 (7 November 2026): an open billing period is not a step of the set-up guide
 
 Run on the code of this version, PHP 8.3.6 and MariaDB 10.11.14 (the SQL is written for MySQL 5.5).
