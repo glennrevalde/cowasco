@@ -67,6 +67,52 @@ final class LoanTxn
         ];
     }
 
+    // ------------------------------------------------------------------ the loans due of a water-service account's member
+
+    /** The cooperative members of a water-service account: the members of the same name (party) */
+    public static function membersOfWaterAccount(int $waterAccountId): array
+    {
+        return DB::all('SELECT m.id, m.member_no, m.full_name FROM members m JOIN water_accounts w ON w.party_id = m.party_id
+                         WHERE w.pkey = :w AND m.party_id IS NOT NULL ORDER BY m.id', ['w' => $waterAccountId]);
+    }
+
+    /**
+     * What the members' open loans have due as of a date (v54, shown on Water Billing > Collections (Cashier); the
+     * payments are taken on Teller > Loan Collection). For each loan its principal, interest and penalty due, the
+     * figures of the Loan Collection form (dueDetails), and the totals. Every branch's loans are counted.
+     * Returns ['members' => [...], 'loans' => [[loan_id, loan_no, name, member_name, principal, interest, penalty, total,
+     * next_due, count_due]], 'totals' => [principal, interest, penalty, total], 'as_of'].
+     */
+    public static function dueSummary(array $memberIds, string $date): array
+    {
+        $out = ['members' => [], 'loans' => [], 'totals' => ['principal' => '0.00', 'interest' => '0.00', 'penalty' => '0.00', 'total' => '0.00'], 'as_of' => $date];
+        $memberIds = array_values(array_unique(array_filter(array_map('intval', $memberIds))));
+        if (!$memberIds) {
+            return $out;
+        }
+        [$in, $p] = DB::in('m', $memberIds);
+        $out['members'] = DB::all("SELECT id, member_no, full_name FROM members WHERE id IN $in ORDER BY id", $p);
+        $loans = DB::all("SELECT l.*, p.name AS product_name, p.code AS product_code, m.full_name AS member_name, m.member_no
+                            FROM loan_accounts l JOIN loan_products p ON p.id = l.product_id JOIN members m ON m.id = l.member_id
+                           WHERE l.member_id IN $in AND l.status IN ('current','past_due','restructured')
+                           ORDER BY l.release_date, l.id", $p);
+        foreach ($loans as $l) {
+            $d = self::dueDetails($l, $date);
+            $row = [
+                'loan_id' => (int)$l['id'], 'loan_no' => (string)$l['loan_no'], 'name' => (string)$l['product_name'],
+                'member_name' => (string)$l['member_name'], 'member_no' => (string)$l['member_no'],
+                'principal' => $d['principal']['due'], 'interest' => $d['interest']['due'], 'penalty' => $d['penalty']['due'],
+                'total' => Dec::fix(Dec::add(Dec::add($d['principal']['due'], $d['interest']['due'], 2), $d['penalty']['due'], 2)),
+                'next_due' => $d['next_due'], 'count_due' => $d['count_due'],
+            ];
+            $out['loans'][] = $row;
+            foreach (['principal', 'interest', 'penalty', 'total'] as $k) {
+                $out['totals'][$k] = Dec::fix(Dec::add($out['totals'][$k], $row[$k], 2));
+            }
+        }
+        return $out;
+    }
+
     // ------------------------------------------------------------------ the collections of a period
 
     /** The payments and corrections posted between two dates (the list under the form) */

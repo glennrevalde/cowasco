@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-07 21:42:34 (11.5 s)
+- **Run:** 2026-11-07 23:37:05 (9.6 s)
 - **Server:** http://127.0.0.1:8097
-- **Database:** coop_e2e53 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Database:** coop_e2e54 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 10.11.14-MariaDB-0ubuntu0.24.04.1
-- **Result:** 429 passed, 0 failed, 429 checks
+- **Result:** 438 passed, 0 failed, 438 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261107-214224-4F8D | COL-20261107-214224-4F8D | PASS |
+| payment number = official receipt number | COL-20261107-233656-B4DD | COL-20261107-233656-B4DD | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 230 | 230 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261107-214224-4F8D | COL-20261107-214224-4F8D | PASS |
+| retry of the same request returns the same receipt | COL-20261107-233656-B4DD | COL-20261107-233656-B4DD | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok 69415 B | E2E Purok 69415 B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok 4065e B | E2E Purok 4065e B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -528,6 +528,20 @@
 | Vendors: Receive Items and Enter Bills List | yes | yes | PASS |
 | an item group sold to a member: the group price at the member's level (1,000.00 less 20%) | 800.00 | 800.00 | PASS |
 | Company, Security & Closing Date: the item group and no-cost settings | yes | yes | PASS |
+
+## v54 Loan Due on the water cashier page, the Member type filter, Sales by Customer Detail Group by Customer/Member Type
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| the cashier page has the Loan Due panel (shown once an account is chosen) | yes | yes | PASS |
+| the cashier gets the loans due of a member's water-service account | yes | yes | PASS |
+| a date that is no date is today | 2026-11-07 | 2026-11-07 | PASS |
+| a non-member's account: no member, no loans (the panel stays hidden) | yes | yes | PASS |
+| not signed in: refused | yes | yes | PASS |
+| Sales by Customer Detail: the Member type filter (All members, the member types, Non-members) | yes | yes | PASS |
+| ...run for All members: named in the heading | yes | yes | PASS |
+| Sales by Customer Detail Group by Customer/Member Type opens with its type groups | yes | yes | PASS |
+| ...listed in the Report Center | yes | yes | PASS |
 
 ## 7.4c Period close
 

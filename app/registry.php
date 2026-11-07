@@ -134,6 +134,8 @@ return [
         'rpt.sales_customer_summary' => ['cust', 'Sales by Customer Summary', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_customer_summary'], 1],
         'rpt.forecast_vs_actual'     => ['cust', 'Forecast vs Actual by Customer', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'forecast_vs_actual'], 1],
         'rpt.sales_customer_detail'  => ['cust', 'Sales by Customer Detail', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_customer_detail'], 1],
+        // v54: the sales grouped by the member type (members) or customer type (the others), with subtotals per type
+        'rpt.sales_customer_type_detail' => ['cust', 'Sales by Customer Detail Group by Customer/Member Type', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_customer_type_detail'], 1],
         'rpt.income_customer_summary' => ['cust', 'Income by Customer Summary', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'income_customer_summary'], 1],
         'rpt.income_customer_detail'  => ['cust', 'Income by Customer Detail', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'income_customer_detail'], 1],
         'rpt.sales_item_summary'     => ['cust', 'Sales by Item Summary', 'report', 'Sales Reports', 'reports/run.php', ['report' => 'sales_item_summary'], 1],

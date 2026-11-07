@@ -1,0 +1,36 @@
+G-SMaRT Integrated Cooperative System - version 54 (2026-11-07)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v19.xlsx (docs/ADDITIONAL_MODULE_V19_CHECKLIST.md).
+
+This package holds only the files changed or added since version 53. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is never
+changed. Works on MySQL 5.5 and MySQL 8 as before.
+
+Version 53 must be in place first (its files and database/migrations/2027_04_04_accounting_update.sql).
+
+What to run on the database (once)
+----------------------------------
+  database/migrations/2027_04_11_sales_by_member_type.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         mysql -u root -p your_database < database/migrations/2027_04_11_sales_by_member_type.sql
+
+It adds the page of the new report and gives it to the roles that open Sales by Customer Detail.
+Safe to run more than once. Until it is run the program stops with "Database update needed" and
+names this file. Press Ctrl+F5 once in the browser afterwards.
+
+What is new
+-----------
+Water Billing > Collections (Cashier)
+- Under the receivables of the chosen water-service account, a Loan Due panel: the member's
+  Principal, Interest, Penalties and Total due on their open loans as of the Date of Transaction
+  (the figures of Teller > Loan Collection). Point at an amount, or tap it on a phone, to see it
+  by loan (loan name, loan number, next due date, amount due). For reference only: nothing is
+  collected there. No panel for an account whose owner is not a cooperative member.
+Customers > Reports
+- Member type filter on Sales by Customer Detail: All members, each member type, Non-members
+  (with the walk-in sales). Every report with a Customer type filter has it too.
+- New report: Sales by Customer Detail Group by Customer/Member Type. The sales grouped by member
+  type (members) and customer type (the others), then the customers with no type and the walk-in
+  sales; a total per customer and per type.

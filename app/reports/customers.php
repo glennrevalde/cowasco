@@ -594,6 +594,98 @@ Report::define('sales_customer_detail', [
     'run' => fn(array $f) => sales_detail($f, 'customer_key', 'customer_label'),
 ]);
 
+/**
+ * Sales by Customer Detail Group by Customer/Member Type (v54): the lines of Sales by Customer Detail grouped by the
+ * type of the customer, then by customer, with a subtotal per customer and per type. A member's customer (a member has
+ * its name, or its parent's) goes under the member type (Regular members, Associate - Individual members ...), any
+ * other customer under its customer type (or its parent's), then the customers with no type and the walk-in sales.
+ */
+Report::define('sales_customer_type_detail', [
+    'filters' => array_merge(['range', 'customer', 'customer_type', 'member_type', 'rep', 'site', 'class'], SALES_ITEM_FILTERS),
+    'sortable' => false,
+    'run' => function (array $f): array {
+        $lines = Report::salesLines($f['from'], $f['to'], $f);
+        $memberType = Report::memberTypesOf();
+        $custType = [];
+        foreach (DB::all('SELECT c.id, ct.name FROM customers c LEFT JOIN customers pc ON pc.id = c.parent_id
+                            JOIN customer_types ct ON ct.id = COALESCE(c.customer_type_id, pc.customer_type_id)') as $r) {
+            $custType[(int)$r['id']] = (string)$r['name'];
+        }
+        // the group of a line: [sort key, heading]
+        $groupOf = function (array $l) use ($memberType, $custType): array {
+            $c = (int)$l['customer_id'];
+            if (!$c) {
+                return ['4', 'Walk-in sales'];
+            }
+            if (isset($memberType[$c])) {
+                [, $name, $order] = $memberType[$c];
+                return ['1|' . str_pad((string)$order, 6, '0', STR_PAD_LEFT) . '|' . $name, $name . ' members'];
+            }
+            if (isset($custType[$c])) {
+                return ['2|' . $custType[$c], $custType[$c] . ' customers'];
+            }
+            return ['3', 'Customers with no type'];
+        };
+        $names = [];
+        foreach ($lines as &$l) {
+            [$l['_gk'], $l['_gl']] = $groupOf($l);
+            $c = (int)$l['customer_id'];
+            $l['_cn'] = $names[$c] ??= $c ? (($l['parent_id'] ? $l['parent_name'] . ':' : '') . $l['customer_name']) : 'Walk-in';
+        }
+        unset($l);
+        usort($lines, fn($a, $b) => [$a['_gk'], $a['_cn'], $a['txn_date'], $a['txn_id']] <=> [$b['_gk'], $b['_cn'], $b['txn_date'], $b['txn_id']]);
+        $rows = [];
+        $g = $cust = null;
+        $gt = ['qty' => 0.0, 'amount' => 0.0];
+        $ct = ['qty' => 0.0, 'amount' => 0.0];
+        $grand = ['qty' => 0.0, 'amount' => 0.0];
+        $closeCustomer = function () use (&$rows, &$cust, &$ct) {
+            if ($cust !== null) {
+                $rows[] = ['type' => 'Total ' . $cust, 'qty' => $ct['qty'], 'amount' => r2($ct['amount']), '_class' => 'subtotal-row indent-1'];
+            }
+        };
+        $closeGroup = function () use (&$rows, &$g, &$gt) {
+            if ($g !== null) {
+                $rows[] = ['type' => 'Total ' . $g, 'qty' => $gt['qty'], 'amount' => r2($gt['amount']), '_class' => 'subtotal-row type-total'];
+            }
+        };
+        foreach ($lines as $l) {
+            if ($l['_gl'] !== $g) {
+                $closeCustomer();
+                $closeGroup();
+                $rows[] = ['type' => $l['_gl'], '_class' => 'group-row'];
+                $g = $l['_gl'];
+                $cust = null;
+                $gt = ['qty' => 0.0, 'amount' => 0.0];
+            }
+            if ($l['_cn'] !== $cust) {
+                $closeCustomer();
+                $rows[] = ['type' => $l['_cn'], '_class' => 'group-row indent-1'];
+                $cust = $l['_cn'];
+                $ct = ['qty' => 0.0, 'amount' => 0.0];
+            }
+            $rows[] = [
+                'type' => Txn::label($l['txn_type']), 'date' => $l['txn_date'], 'num' => $l['receipt_no'] ?: $l['txn_no'], 'name' => $l['_cn'],
+                'item' => $l['item_code'] ?: $l['description'], 'qty' => $l['s_qty'], 'price' => (float)$l['rate'], 'amount' => r2($l['s_amount']),
+                '_links' => ['num' => Report::txnLink($l)], '_class' => 'indent-2',
+            ];
+            foreach (['ct', 'gt', 'grand'] as $v) {
+                ${$v}['qty'] += $l['s_qty'];
+                ${$v}['amount'] += $l['s_amount'];
+            }
+        }
+        $closeCustomer();
+        $closeGroup();
+        return [
+            'grouped' => true,
+            'columns' => [['key' => 'type', 'label' => 'Type'], ['key' => 'date', 'label' => 'Date', 'type' => 'date'], ['key' => 'num', 'label' => 'Num'], ['key' => 'name', 'label' => 'Customer'],
+                ['key' => 'item', 'label' => 'Item'], ['key' => 'qty', 'label' => 'Qty', 'type' => 'qty'], ['key' => 'price', 'label' => 'Sales price', 'type' => 'money'], ['key' => 'amount', 'label' => 'Amount', 'type' => 'money']],
+            'rows' => $rows, 'totals' => ['type' => 'TOTAL', 'qty' => $grand['qty'], 'amount' => r2($grand['amount'])],
+            'notes' => 'A customer is under its member type when a cooperative member has its name (or its parent\'s name); the others are under their customer type.',
+        ];
+    },
+]);
+
 Report::define('sales_item_summary', [
     'filters' => ['range', 'customer', 'customer_type', 'rep', 'site', 'class', 'category', 'item_type', 'pref_vendor'],
     // the items of each item type sorted on a figure, increasing or decreasing (v29)

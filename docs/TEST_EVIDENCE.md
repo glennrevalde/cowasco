@@ -15,6 +15,21 @@ the supplied databases), the row says so.
 | Data | the supplied former water database (Marigondon NHS and STEC-STHS Multipurpose Cooperative: 6,888 water accounts, 361 legacy members, 7,872 savings transactions) and the supplied cooperative sample database (`database/accounting_system.sql`) |
 | Date | 14 October 2026 |
 
+## Version 54 (7 November 2026): workbook v19 (Loan Due on the water cashier page, the Member type filter, sales by member type)
+
+Run on PHP 8.3.6, on MariaDB 10.11.14 and on MySQL 8.0.46. See `docs/ADDITIONAL_MODULE_V19_CHECKLIST.md` and `UPGRADE_v54.txt`.
+
+| Suite | Command | Result | File |
+|---|---|---|---|
+| Cooperative module (bcmath, pure PHP) on MariaDB | `DB_NAME=coop_t54 php tests/coop/run.php` (and `--pure-php`) | **168 passed, 0 failed**, 2,634 checks on both engines; new (`tests/coop/cases_v54.php`, 59 checks): the Member type filter on five sales of one date (all, All members, Regular, Associate - Individual, Non-members with the walk-in sale, with a customer type as well, a wrong value ignored, a job counted as the member's, shown wherever Customer type is, named in the heading); the new report's five groups in order with a subtotal per type and per customer and the grand total of Sales by Customer Detail, its page, access and script run again; the loans due of a water-service account's member equal to the Loan Collection form's for two loans, the totals, none on the release date, nothing posted by looking, none for a non-member, a paid loan left out | `tests/coop/RESULTS.md`, `tests/coop/RESULTS_pure_php.md` |
+| Cooperative module on MySQL 8 | the same with the MySQL 8 connection | **168 passed, 0 failed**, 2,634 checks on both engines | `tests/coop/RESULTS_MYSQL8.md`, `tests/coop/RESULTS_pure_php_MYSQL8.md` |
+| Water end to end over HTTP, MariaDB and MySQL 8 | `bash tests/water/run_e2e.sh mnssmc_test coop_e2e54 8097` (and on MySQL 8) | **438 passed, 0 failed** on both; new section v54 (9 checks): the Loan Due panel on the cashier page, the cashier role gets a member's loans due, a bad date taken as today, a non-member's account has none, refused when not signed in, the Member type filter with its choices and run for All members, the new report with its groups, listed in the Report Center | `tests/water/RESULTS_E2E.md`, `tests/water/RESULTS_E2E_MYSQL8.md` |
+| A new company | `bash tests/platform/run.sh` | **46 passed, 0 failed** | — |
+| The update script | `2027_04_11_sales_by_member_type.sql` on the version 53 sample database, twice, on MariaDB and MySQL 8 | runs twice without an error; the page once, given to the 3 roles that open Sales by Customer Detail; the static MySQL 5.5 check finds nothing | — |
+| The two SQL files | the version 53 files imported, the script run, written by `php tools/export_sql.php` with the same titles and notes | 235 tables, 2 views; sample 8,834 rows, clean 2,915 rows; both imported again on MySQL 8 | `database/accounting_system.sql`, `database/accounting_system_clean.sql` |
+| In the browser | the cowasco sample database upgraded with the two scripts, 1366 and 390 px | Collections (Cashier), account 2 (Reyes, Jose), Date of Transaction 01/20/2027: Loan Due shows Principal 4,048.75, Interest 444.41, Penalties 144.76, Total 4,637.92; hovering (1366) and tapping (390) each amount shows it by loan (Regular Loan, loan 01-6-0000002, next due 02/15/2027); Sales by Customer Detail run for All members; Sales by Customer Detail Group by Customer/Member Type with Regular members, the customer types, the customers with no type and the walk-in sales, a total per customer and per type; no console error, no sideways scrolling | — |
+| Every page | Playwright crawl of 560 pages and the 95 water pages at 1366 and 390 px | **558 of 560 and 93 of 95 at both widths** without a PHP or JavaScript error or sideways scrolling; the others are the 404s by design (the receipt print opened without a receipt number, the import page removed in version 49) | — |
+
 ## Version 53 (7 November 2026): the accounting update (G-SMaRT Accounting versions 26 to 34)
 
 Run on PHP 8.3.6, on MariaDB 10.11.14 and on MySQL 8.0.46 (its default settings). See `UPGRADE_v53.txt` and

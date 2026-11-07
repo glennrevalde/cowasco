@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 final class Schema
 {
-    private const FLAG = 'schema_ok_2027_04_04';
+    private const FLAG = 'schema_ok_2027_04_11';
 
     /**
      * file => one cheap probe.
@@ -190,6 +190,9 @@ final class Schema
                     + 0 * (SELECT COUNT(received_via) FROM transactions WHERE 1 = 0)
                     + 0 * (SELECT COUNT(*) FROM item_group_sales WHERE 1 = 0)
                     + 0 * (SELECT COUNT(*) FROM clearing_settlements WHERE 1 = 0)", 14],
+        // version 54: Sales by Customer Detail Group by Customer/Member Type
+        'database/migrations/2027_04_11_sales_by_member_type.sql' => [
+            "SELECT COUNT(*) FROM pages WHERE page_key = 'rpt.sales_customer_type_detail'", 1],
     ];
 
     private static ?array $pending = null;

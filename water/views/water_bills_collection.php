@@ -110,6 +110,46 @@ if (!function_exists('e')) {
         .share-capital-box { margin-top:16px; padding:12px 14px 4px; border:1px solid #bbf7d0; border-radius:8px; background:#f6fef9; }
         .share-capital-box .cart-row:last-child { border-bottom:0; }
         .badge-late { background:var(--error-bg); color:var(--error); border:1px solid #fecaca; }
+        /* the member's loans due (v54): display only, the payments are taken on Teller > Loan Collection */
+        .loan-due-card .card-head { flex-wrap:wrap; }
+        .loan-due-card .card-title { color:var(--text-primary); }
+        .ld-asof { font-size:.78rem; color:var(--text-secondary); font-weight:600; }
+        .ld-member { font-size:.8rem; color:var(--text-secondary); margin-bottom:12px; line-height:1.5; }
+        .ld-member strong { color:var(--text-primary); font-weight:700; }
+        .ld-rows { border:1px solid var(--border); border-radius:var(--radius-sm); background:linear-gradient(180deg,#fff,#fbfcfd); box-shadow:inset 0 1px 0 #fff, 0 1px 2px rgba(15,15,26,.04); }
+        .ld-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:11px 14px; border-bottom:1px solid var(--border); font-size:.88rem; }
+        .ld-row:last-child { border-bottom:0; }
+        .ld-row.ld-total { background:#f4f6f9; font-weight:800; border-radius:0 0 var(--radius-sm) var(--radius-sm); }
+        .ld-label { font-weight:600; color:var(--text-primary); }
+        .ld-total .ld-label { font-weight:800; }
+        .ld-amt-wrap { position:relative; }
+        .ld-amt { font:inherit; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:.9rem; color:var(--text-primary); background:#fff; border:1px solid var(--border);
+                  border-radius:7px; padding:6px 10px; min-width:132px; text-align:right; cursor:help; box-shadow:0 1px 0 rgba(15,15,26,.04); transition:border-color .15s, box-shadow .15s; }
+        .ld-amt:hover, .ld-amt:focus-visible { border-color:var(--info); box-shadow:0 0 0 3px var(--info-bg); outline:none; }
+        .ld-amt.is-due { color:var(--error); }
+        /* the breakdown opens beside the amount (below it on a phone); it never takes the pointer, so the next amount
+           can be pointed at or tapped through it */
+        .ld-pop { position:absolute; right:calc(100% + 12px); top:50%; z-index:30; width:min(360px, calc(100vw - 48px)); background:#fff; border:1px solid var(--border);
+                  border-radius:10px; box-shadow:var(--shadow-lg); padding:12px 14px; pointer-events:none; visibility:hidden; opacity:0;
+                  transform:translate(6px, -50%); transition:opacity .15s, transform .15s, visibility .15s; }
+        .ld-amt-wrap:hover .ld-pop, .ld-amt:focus + .ld-pop { visibility:visible; opacity:1; transform:translate(0, -50%); }
+        .ld-pop-title { font-size:.78rem; font-weight:800; color:var(--text-primary); margin-bottom:8px; }
+        .ld-pop table { width:100%; border-collapse:collapse; font-size:.78rem; }
+        .ld-pop th { text-align:left; font-weight:700; color:var(--text-secondary); padding:0 0 6px; border-bottom:1px solid var(--border); }
+        .ld-pop th:last-child, .ld-pop td:last-child { text-align:right; white-space:nowrap; }
+        .ld-pop td { padding:7px 0; border-bottom:1px dashed var(--border); vertical-align:top; }
+        .ld-pop tr:last-child td { border-bottom:0; }
+        .ld-pop td:last-child { font-family:'JetBrains Mono',monospace; font-weight:700; padding-left:12px; }
+        .ld-pop .ld-loan { font-weight:700; color:var(--text-primary); }
+        .ld-pop .ld-sub { color:var(--text-muted); font-size:.72rem; margin-top:2px; }
+        .ld-empty { padding:14px; text-align:center; color:var(--text-muted); font-size:.85rem; }
+        .ld-note { margin-top:12px; font-size:.75rem; color:var(--text-muted); line-height:1.5; }
+        @media (max-width:560px) {
+            .ld-row { padding:10px 12px; }
+            .ld-amt { min-width:112px; }
+            .ld-pop { right:-4px; top:calc(100% + 8px); transform:translateY(-4px); }
+            .ld-amt-wrap:hover .ld-pop, .ld-amt:focus + .ld-pop { transform:none; }
+        }
         .cart-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:8px 0; font-size:.85rem; border-bottom:1px dashed var(--border); }
         .cart-row strong { font-family:'JetBrains Mono',monospace; }
         .cart-total { display:flex; justify-content:space-between; align-items:center; padding:18px 0 10px; border-top:2px solid var(--border); margin-top:14px; font-weight:800; }
@@ -434,6 +474,19 @@ if (!function_exists('e')) {
                     <div id="receivablesList"></div>
                 </div>
             </div>
+
+            <!-- the member's loans due (v54): shown for reference; loans are paid on Teller > Loan Collection -->
+            <section class="card loan-due-card" id="loanDueCard" aria-labelledby="loanDueTitle" hidden>
+                <div class="card-head">
+                    <h2 class="card-title" id="loanDueTitle" style="font-size:.95rem">Loan Due</h2>
+                    <span class="ld-asof" id="loanDueAsOf"></span>
+                </div>
+                <div class="card-body">
+                    <div class="ld-member" id="loanDueMember"></div>
+                    <div id="loanDueBody"><div class="ld-empty">Loading the member's loans…</div></div>
+                    <p class="ld-note">For reference only: the loan payments are collected on Teller &gt; Loan Collection. Point at an amount (or tap it) to see it by loan.</p>
+                </div>
+            </section>
         </div>
 
         <div>
@@ -442,7 +495,7 @@ if (!function_exists('e')) {
                 <div class="card-body">
                     <div style="margin-bottom:16px;">
                         <label style="font-size:.75rem; font-weight:800; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:8px;">Date of Transaction</label>
-                        <input type="date" id="transactionDate" class="form-control" value="<?= date('Y-m-d') ?>" onchange="requestQuote()" required>
+                        <input type="date" id="transactionDate" class="form-control" value="<?= date('Y-m-d') ?>" onchange="requestQuote(); loadLoanDue();" required>
                         <div style="font-size:.72rem; color:var(--text-muted); margin-top:6px;">This is the controlled business date. The actual creation timestamp is stored separately. Future dates and excessive backdating are rejected by the server.</div>
                     </div>
 
@@ -571,6 +624,7 @@ async function selectMember(memberData) {
     document.getElementById('dispMemberAcct').textContent = `Account ID: ${memberData.pkey}`;
     document.getElementById('billsContainer').style.display = 'block';
     selectedItems.clear(); serverQuote = null; idempotencyKey = newPaymentKey(); updateCart();
+    loadLoanDue();
     const list = document.getElementById('receivablesList');
     list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Loading receivables…</div>';
     try {
@@ -602,6 +656,54 @@ async function selectMember(memberData) {
         });
     } catch { list.innerHTML = '<div class="alert-error" style="padding:14px">Unable to load receivables.</div>'; }
 }
+// ---- the member's loans due (v54): principal, interest and penalty due as of the date of the transaction; each amount
+// shows its loans on hover, focus or tap. Nothing here is collected.
+let loanDueSeq = 0;
+async function loadLoanDue() {
+    const card = document.getElementById('loanDueCard');
+    const accountId = Number(document.getElementById('currentMemberId').value || 0);
+    const date = document.getElementById('transactionDate').value;
+    const seq = ++loanDueSeq;
+    if (!accountId) { card.hidden = true; return; }
+    try {
+        const r = await fetch(`../process/getMemberLoanDue.php?member_id=${encodeURIComponent(accountId)}&date=${encodeURIComponent(date || '')}`);
+        const data = await r.json();
+        if (seq !== loanDueSeq) return;
+        if (data.error) throw new Error(data.error);
+        renderLoanDue(data);
+    } catch (err) {
+        if (seq !== loanDueSeq) return;
+        card.hidden = false;
+        document.getElementById('loanDueMember').textContent = '';
+        document.getElementById('loanDueBody').innerHTML = '<div class="ld-empty">Unable to load the loans due.</div>';
+    }
+}
+function loanDueDate(d) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || '');
+    return m ? `${m[2]}/${m[3]}/${m[1]}` : (d || '');
+}
+function renderLoanDue(data) {
+    const card = document.getElementById('loanDueCard');
+    const members = Array.isArray(data.members) ? data.members : [];
+    // a water-service account of someone who is not a cooperative member has no loans to show
+    if (!members.length) { card.hidden = true; return; }
+    card.hidden = false;
+    document.getElementById('loanDueAsOf').textContent = 'As of ' + loanDueDate(data.as_of);
+    document.getElementById('loanDueMember').innerHTML = 'Member: ' + members.map(m => `<strong>${e(m.full_name)}</strong> (${e(m.member_no)})`).join(', ');
+    const loans = Array.isArray(data.loans) ? data.loans : [];
+    const body = document.getElementById('loanDueBody');
+    if (!loans.length) { body.innerHTML = '<div class="ld-rows"><div class="ld-empty">No open loans.</div></div>'; return; }
+    const t = data.totals || {};
+    const parts = [['principal', 'Principal', 'Principal due by loan'], ['interest', 'Interest', 'Interest due by loan'], ['penalty', 'Penalties', 'Penalty due by loan'], ['total', 'Total', 'Total due by loan']];
+    body.innerHTML = '<div class="ld-rows">' + parts.map(([k, label, title]) => {
+        const amount = Number(t[k] || 0);
+        const rows = loans.map(l => `<tr><td><div class="ld-loan">${e(l.name)}</div><div class="ld-sub">Loan ${e(l.loan_no)}${members.length > 1 ? ' of ' + e(l.member_name) : ''}${l.next_due ? ', next due ' + e(loanDueDate(l.next_due)) : ''}</div></td><td>${fmtPeso(l[k])}</td></tr>`).join('');
+        return `<div class="ld-row${k === 'total' ? ' ld-total' : ''}"><span class="ld-label">${label}</span>
+            <div class="ld-amt-wrap"><button type="button" class="ld-amt${amount > 0.004 ? ' is-due' : ''}" aria-describedby="ldPop_${k}">${fmtPeso(amount)}</button>
+            <div class="ld-pop" role="tooltip" id="ldPop_${k}"><div class="ld-pop-title">${title}</div><table><thead><tr><th>Loan</th><th>Amount due</th></tr></thead><tbody>${rows}</tbody></table></div></div></div>`;
+    }).join('') + '</div>';
+}
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && document.activeElement?.classList.contains('ld-amt')) document.activeElement.blur(); });
 function toggleItem(model, checked, amountInput) {
     amountInput.disabled = !checked;
     document.getElementById(`card_${model.key}`)?.classList.toggle('selected', checked);

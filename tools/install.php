@@ -99,6 +99,8 @@ run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_03_28_regular_joint_sub
 // version 53, the accounting update (item groups, Receive Items lists, receipts ticked to settle, the average cost on
 // the books, the new reports and their page access)
 run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_04_accounting_update.sql');
+// version 54, Sales by Customer Detail Group by Customer/Member Type
+run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_11_sales_by_member_type.sql');
 // the passbooks installed with the program: the savings passbook and the loan passbook of the former program, each
 // with its own design (Cooperative > Passbook Types)
 foreach (['Regular Passbook' => 'savings', 'Loan Passbook' => 'loan'] as $pbName => $pbLedger) {

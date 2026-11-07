@@ -1374,6 +1374,37 @@ $admin->get('index.php?p=admin.settings');
 Checks::true('Company, Security & Closing Date: the item group and no-cost settings', $admin->status === 200 && str_contains($admin->body, 'Track Item Group Sales transactions')
     && str_contains($admin->body, 'Block sales of items with no unit cost'));
 
+// ======================================================================================== v54
+Checks::section('v54 Loan Due on the water cashier page, the Member type filter, Sales by Customer Detail Group by Customer/Member Type');
+$v54Account = (int)$q('SELECT w.pkey FROM water_accounts w JOIN members m ON m.party_id = w.party_id ORDER BY w.pkey LIMIT 1');
+$v54Member = (int)$q('SELECT m.id FROM water_accounts w JOIN members m ON m.party_id = w.party_id WHERE w.pkey = :w ORDER BY m.id LIMIT 1', ['w' => $v54Account]);
+$cas->get('water/views/water_bills_collection.php');
+Checks::true('the cashier page has the Loan Due panel (shown once an account is chosen)', $cas->status === 200 && str_contains($cas->body, 'id="loanDueCard"') && str_contains($cas->body, 'loadLoanDue()'));
+$cas->get('water/process/getMemberLoanDue.php?member_id=' . $v54Account . '&date=' . $today);
+Checks::true('the cashier gets the loans due of a member\'s water-service account', $cas->status === 200 && (int)($cas->json['members'][0]['id'] ?? 0) === $v54Member
+    && is_array($cas->json['loans'] ?? null) && ($cas->json['as_of'] ?? '') === $today, substr($cas->body, 0, 200));
+$cas->get('water/process/getMemberLoanDue.php?member_id=' . $v54Account . '&date=not-a-date');
+Checks::eq('a date that is no date is today', date('Y-m-d'), (string)($cas->json['as_of'] ?? ''));
+$v54NonMember = (int)$q('SELECT w.pkey FROM water_accounts w WHERE NOT EXISTS (SELECT 1 FROM members m WHERE m.party_id = w.party_id) ORDER BY w.pkey LIMIT 1');
+if ($v54NonMember) {
+    $cas->get('water/process/getMemberLoanDue.php?member_id=' . $v54NonMember);
+    Checks::true('a non-member\'s account: no member, no loans (the panel stays hidden)', $cas->status === 200 && ($cas->json['members'] ?? null) === [] && ($cas->json['loans'] ?? null) === []);
+}
+$v54Anon = new Browser($base, 'anon54');
+$v54Anon->get('water/process/getMemberLoanDue.php?member_id=' . $v54Account);
+Checks::true('not signed in: refused', $v54Anon->status !== 200 || !str_contains($v54Anon->body, '"members"'), (string)$v54Anon->status);
+$admin->get('index.php?p=rpt.sales_customer_detail&dates=this_year');
+Checks::true('Sales by Customer Detail: the Member type filter (All members, the member types, Non-members)', $admin->status === 200 && str_contains($admin->body, 'name="member_type"')
+    && str_contains($admin->body, 'All members') && str_contains($admin->body, 'Non-members') && str_contains($admin->body, '>Regular<'));
+$admin->get('index.php?p=rpt.sales_customer_detail&dates=this_year&member_type=members');
+Checks::true('...run for All members: named in the heading', $admin->status === 200 && str_contains($admin->body, 'All members') && !preg_match('/SQLSTATE|Fatal error|Warning:/', $admin->body));
+$admin->get('index.php?p=rpt.sales_customer_type_detail&dates=this_year');
+Checks::true('Sales by Customer Detail Group by Customer/Member Type opens with its type groups', $admin->status === 200
+    && str_contains($admin->body, 'Sales by Customer Detail Group by Customer/Member Type') && preg_match('/ members<\/td>|Walk-in sales|customers<\/td>|Customers with no type/', $admin->body)
+    && !preg_match('/Something went wrong|SQLSTATE|Fatal error|Warning:/', $admin->body));
+$admin->get('index.php?p=home.reports');
+Checks::true('...listed in the Report Center', str_contains($admin->body, 'Sales by Customer Detail Group by Customer/Member Type'));
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

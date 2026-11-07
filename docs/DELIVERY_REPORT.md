@@ -450,3 +450,15 @@ the member's price level; the no-cost check leaves out the documents the water m
 accounting's six migrations are one script, `database/migrations/2027_04_04_accounting_update.sql` (safe to run
 again, MySQL 5.5), registered in the update check and the installer; the two bundled databases were upgraded with it
 and written again. The accounting's own upgrade notes are in `docs/accounting/`. See `UPGRADE_v53.txt`.
+
+## 30. Version 54: workbook v19 (Loan Due on the water cashier page, the Member type filter, sales by member type)
+
+The requests of `ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v19.xlsx`, mapped in `docs/ADDITIONAL_MODULE_V19_CHECKLIST.md`:
+Water Billing > Collections (Cashier) shows under the receivables a Loan Due panel for the member of the chosen
+water-service account (Principal, Interest, Penalties and Total due as of the date of the transaction, each shown by
+loan on hover or tap; display only, the loan payments stay on Teller > Loan Collection); Sales by Customer Detail, and
+every report with a Customer type filter, has a Member type filter (All members, each member type, Non-members with the
+walk-in sales); a new report, Sales by Customer Detail Group by Customer/Member Type, groups the sales by member type and
+customer type with a subtotal per customer and per type. One migration, `2027_04_11_sales_by_member_type.sql` (the
+report's page and access, MySQL 5.5), registered in the update check and the installer; both bundled databases written
+again. See `UPGRADE_v54.txt`.

@@ -77,6 +77,9 @@ final class Report
         }
         BusinessUnits::$reportFilter = $f['business_unit_id'] ?: null;
         $f['item_type'] = isset(Importer::ITEM_TYPES[(string)g('item_type')]) ? (string)g('item_type') : '';
+        // the member type (v54): 'members', 'non' (non-members, walk-in sales with them) or a member type's id
+        $mt = (string)g('member_type');
+        $f['member_type'] = in_array($mt, ['members', 'non'], true) || (ctype_digit($mt) && (int)$mt > 0) ? $mt : '';
         if (!Classes::ready()) {
             $f['class_id'] = null;
         }
@@ -263,18 +266,89 @@ final class Report
         return self::$idCache[$key] ??= array_map('intval', DB::column('SELECT id FROM items WHERE ' . implode(' AND ', $w), $p));
     }
 
-    /** The customers (with their jobs) the customer filters let through, or null when none is set */
+    /**
+     * The customers (with their jobs) the customer filters let through, or null when none is set: the customer type,
+     * and the member type (v54): the members of a type, all members, or the non-members. A customer is a member's when
+     * a member has its name (the party; a job goes by its own name, else its parent's), and has that member's type.
+     */
     public static function customerIds(array $f): ?array
     {
-        if (empty($f['customer_type_id'])) {
+        $ct = (int)($f['customer_type_id'] ?? 0);
+        $mt = (string)($f['member_type'] ?? '');
+        if (!$ct && $mt === '') {
             return null;
         }
-        $key = 'c' . (int)$f['customer_type_id'];
-        return self::$idCache[$key] ??= array_map('intval', DB::column(
-            'SELECT c.id FROM customers c LEFT JOIN customers pc ON pc.id = c.parent_id
-              WHERE c.customer_type_id = :t OR (c.customer_type_id IS NULL AND pc.customer_type_id = :t2)',
-            ['t' => (int)$f['customer_type_id'], 't2' => (int)$f['customer_type_id']]
-        ));
+        $key = 'c' . $ct . '|' . $mt;
+        if (isset(self::$idCache[$key])) {
+            return self::$idCache[$key];
+        }
+        $w = [];
+        $p = [];
+        if ($ct) {
+            $w[] = '(c.customer_type_id = :t OR (c.customer_type_id IS NULL AND pc.customer_type_id = :t2))';
+            $p += ['t' => $ct, 't2' => $ct];
+        }
+        if ($mt !== '') {
+            $member = 'SELECT 1 FROM members m WHERE m.party_id = COALESCE(c.party_id, pc.party_id)';
+            if ($mt === 'non') {
+                $w[] = "NOT EXISTS ($member)";
+            } elseif ($mt === 'members') {
+                $w[] = "EXISTS ($member)";
+            } else {
+                $w[] = "EXISTS ($member AND m.member_type_id = :mt)";
+                $p['mt'] = (int)$mt;
+            }
+        }
+        return self::$idCache[$key] = array_map('intval', DB::column(
+            'SELECT c.id FROM customers c LEFT JOIN customers pc ON pc.id = c.parent_id WHERE ' . implode(' AND ', $w), $p));
+    }
+
+    /** The Member type filter's choices (v54): all members, each member type, the non-members */
+    public static function memberTypeOptions(): array
+    {
+        static $o = null;
+        if ($o === null) {
+            $o = ['members' => 'All members'];
+            foreach (DB::all('SELECT id, name FROM member_types ORDER BY sort_order, name') as $t) {
+                $o[(string)$t['id']] = $t['name'];
+            }
+            $o['non'] = 'Non-members';
+        }
+        return $o;
+    }
+
+    /** A report narrowed by customer type is also narrowed by member type, in a program with members (v54) */
+    public static function showsMemberType(array $def): bool
+    {
+        $want = $def['filters'] ?? [];
+        return (in_array('member_type', $want, true) || in_array('customer_type', $want, true)) && Coop::ready()
+            && (bool)DB::value('SELECT COUNT(*) FROM member_types');
+    }
+
+    /** Do sales with no customer (walk-in) pass the customer filters? Only when the filter is the non-members alone */
+    public static function walkInsPass(array $f): bool
+    {
+        return ($f['member_type'] ?? '') === 'non' && empty($f['customer_type_id']);
+    }
+
+    /**
+     * The member type of each customer (v54): [customer id => [member type id, name]] for the customers of members
+     * (the member of the same name, else of the parent's name), the others left out
+     */
+    public static function memberTypesOf(): array
+    {
+        if (!Coop::ready()) {
+            return [];
+        }
+        $out = [];
+        foreach (DB::all('SELECT c.id, m.member_type_id, mt.name, mt.sort_order FROM customers c LEFT JOIN customers pc ON pc.id = c.parent_id
+                            JOIN members m ON m.party_id = COALESCE(c.party_id, pc.party_id)
+                            LEFT JOIN member_types mt ON mt.id = m.member_type_id
+                           ORDER BY c.id, m.id DESC') as $r) {
+            // the first member record of the name wins (a name holds one membership)
+            $out[(int)$r['id']] = [(int)$r['member_type_id'], (string)($r['name'] ?? 'Member'), (int)($r['sort_order'] ?? 0)];
+        }
+        return $out;
     }
 
     /** " AND <col> IN (...)" for the item filters, or '' when none is set */
@@ -285,7 +359,9 @@ final class Report
 
     public static function customerCond(array $f, string $col, array &$p, string $tag = 'rfc'): string
     {
-        return self::idCond(self::customerIds($f), $col, $p, $tag);
+        $cond = self::idCond(self::customerIds($f), $col, $p, $tag);
+        // the non-members: the walk-in sales with them
+        return $cond !== '' && self::walkInsPass($f) ? ' AND (' . $col . ' IS NULL OR ' . substr($cond, 5) . ')' : $cond;
     }
 
     private static function idCond(?array $ids, string $col, array &$p, string $tag): string
@@ -310,7 +386,7 @@ final class Report
     public static function customerOk(array $f, $customerId): bool
     {
         $ids = self::customerIds($f);
-        return $ids === null || ((int)$customerId > 0 && in_array((int)$customerId, $ids, true));
+        return $ids === null || ((int)$customerId > 0 ? in_array((int)$customerId, $ids, true) : self::walkInsPass($f));
     }
 
     /** Is an item, customer or site filter of this kind set? (a report can then leave out its empty groups) */
@@ -948,6 +1024,10 @@ final class Report
         if (!empty($f['customer_type_id']) && in_array('customer_type', $want, true)) {
             $parts[] = 'Customer type ' . DB::value('SELECT name FROM customer_types WHERE id = :id', ['id' => $f['customer_type_id']]);
         }
+        if (($f['member_type'] ?? '') !== '' && self::showsMemberType($def)) {
+            $mtName = self::memberTypeOptions()[$f['member_type']] ?? '';
+            $parts[] = ctype_digit($f['member_type']) ? 'Member type ' . $mtName : $mtName;
+        }
         if (!empty($f['user_id'])) {
             $parts[] = (in_array('cashier', $def['filters'] ?? [], true) ? 'Cashier ' : 'User ')
                 . DB::value('SELECT username FROM users WHERE id = :id', ['id' => $f['user_id']]);
@@ -1028,6 +1108,7 @@ final class Report
             'item_type' => ['item_type', 'Item type', fn() => array_intersect_key(Importer::ITEM_TYPES, array_flip(DB::column('SELECT DISTINCT item_type FROM items')))],
             'pref_vendor' => ['pref_vendor_id', 'Preferred supplier', fn() => DB::pairs('SELECT v.id, v.name FROM vendors v WHERE EXISTS (SELECT 1 FROM items i WHERE i.preferred_vendor_id = v.id) ORDER BY v.name')],
             'customer_type' => ['customer_type_id', 'Customer type', fn() => DB::pairs('SELECT id, name FROM customer_types ORDER BY name')],
+            'member_type' => ['member_type', 'Member type', fn() => self::memberTypeOptions()],
             'fa_category' => ['category_id', 'Asset category', fn() => DB::pairs('SELECT id, name FROM asset_categories ORDER BY name')],
         ];
         foreach ($selects as $name => [$field, $label, $opts]) {
@@ -1037,6 +1118,9 @@ final class Report
                 || ($name === 'unit' && in_array('class', $want, true) && empty($def['no_unit']) && BusinessUnits::ready() && BusinessUnits::inUse());
             if ($name === 'unit' && !BusinessUnits::ready()) {
                 $show = false;
+            }
+            if ($name === 'member_type') {
+                $show = self::showsMemberType($def);
             }
             if ($show) {
                 echo '<div class="col-auto"><label class="form-label">' . h($label) . '</label><select class="form-select form-select-sm" name="' . h($field) . '" style="max-width:240px">'
