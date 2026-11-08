@@ -3067,4 +3067,66 @@ CREATE TABLE document_reissues (
   KEY ix_document_reissues_txn (txn_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+-- Consolidated Import: a file of members with their savings, loans, water-service account and bill balances,
+-- read into the database (its rows), reviewed and corrected as lines, then saved
+DROP TABLE IF EXISTS coop_import_batches;
+CREATE TABLE coop_import_batches (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  batch_no      VARCHAR(20)  NULL,
+  file_name     VARCHAR(190) NULL,
+  file_bytes    INT UNSIGNED NOT NULL DEFAULT 0,
+  status        VARCHAR(12)  NOT NULL DEFAULT 'reading',
+  headers_json  MEDIUMTEXT   NULL,
+  mapping_json  MEDIUMTEXT   NULL,
+  options_json  TEXT         NULL,
+  file_rows     INT UNSIGNED NOT NULL DEFAULT 0,
+  check_cursor  INT UNSIGNED NOT NULL DEFAULT 0,
+  checked_at    DATETIME     NULL,
+  result_json   MEDIUMTEXT   NULL,
+  created_by    INT UNSIGNED NULL,
+  created_at    DATETIME     NULL,
+  updated_at    DATETIME     NULL,
+  saved_at      DATETIME     NULL,
+  KEY ix_cib_status (status, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS coop_import_raw;
+CREATE TABLE coop_import_raw (
+  batch_id  INT UNSIGNED NOT NULL,
+  file_row  INT UNSIGNED NOT NULL,
+  cells     MEDIUMTEXT   NOT NULL,
+  PRIMARY KEY (batch_id, file_row)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS coop_import_lines;
+CREATE TABLE coop_import_lines (
+  id              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  batch_id        INT UNSIGNED NOT NULL,
+  kind            VARCHAR(10)  NOT NULL,
+  line_no         INT UNSIGNED NOT NULL,
+  member_line_id  INT UNSIGNED NULL,
+  member_line_no  INT UNSIGNED NOT NULL DEFAULT 0,
+  file_row        INT UNSIGNED NOT NULL DEFAULT 0,
+  vals            MEDIUMTEXT   NOT NULL,
+  key_no          VARCHAR(60)  NULL,
+  key_person      VARCHAR(190) NULL,
+  key_water       VARCHAR(60)  NULL,
+  amount          DECIMAL(15,2) NULL,
+  errors          TEXT         NULL,
+  notes           TEXT         NULL,
+  info            TEXT         NULL,
+  cells           TEXT         NULL,
+  bad             TINYINT(1)   NOT NULL DEFAULT 0,
+  checked         TINYINT(1)   NOT NULL DEFAULT 0,
+  status          VARCHAR(10)  NOT NULL DEFAULT 'pending',
+  saved_ref       VARCHAR(80)  NULL,
+  UNIQUE KEY ux_cil_line (batch_id, line_no),
+  KEY ix_cil_kind (batch_id, kind, status, line_no),
+  KEY ix_cil_member (batch_id, member_line_id),
+  KEY ix_cil_no (batch_id, kind, key_no),
+  KEY ix_cil_person (batch_id, key_person),
+  KEY ix_cil_water (batch_id, key_water)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;

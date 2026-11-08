@@ -39,6 +39,37 @@ final class DB
     }
 
     /**
+     * Back to the strict SQL mode of the accounting pages after a water file was loaded for its functions only (a
+     * coop page that uses the water code, such as Consolidated Import: the request stays strict).
+     */
+    public static function restoreStrict(): void
+    {
+        self::$relaxedMode = false;
+        if (self::$pdo !== null) {
+            self::$pdo->exec("SET SESSION sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+        }
+    }
+
+    /**
+     * Runs $fn with the relaxed SQL mode the water code was written for (water code called from an accounting page);
+     * the strict mode is back afterwards. Nothing changes on a request that is relaxed already.
+     */
+    public static function withRelaxed(callable $fn)
+    {
+        if (self::$relaxedMode) {
+            return $fn();
+        }
+        $pdo = self::pdo();
+        self::$relaxedMode = true;
+        $pdo->exec("SET SESSION sql_mode = 'NO_ENGINE_SUBSTITUTION'");
+        try {
+            return $fn();
+        } finally {
+            self::restoreStrict();
+        }
+    }
+
+    /**
      * The strict SQL mode until the returned object goes out of scope ($guard = DB::strictScope(); at the top of a
      * method: the mode is back to relaxed when the method returns or throws). Nothing happens on a strict request.
      */

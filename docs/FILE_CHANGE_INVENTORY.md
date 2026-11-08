@@ -9,10 +9,10 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 | Cooperative system, changed | 209 |
 | Water system, unchanged (under water/) | 26 |
 | Water system, adapted (under water/) | 212 |
-| New | 338 |
+| New | 346 |
 | Cooperative files not shipped | 1 |
 | Water files not shipped | 61 |
-| **Shipped in total** | **1448** |
+| **Shipped in total** | **1456** |
 
 ## New files
 
@@ -44,8 +44,10 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v53.txt`
 - `UPGRADE_v54.txt`
 - `UPGRADE_v55.txt`
+- `UPGRADE_v56.txt`
 - `app/AccountTypes.php`
 - `app/Clearing.php`
+- `app/ConsolidatedImport.php`
 - `app/CsvImports.php`
 - `app/CsvReview.php`
 - `app/ItemGroups.php`
@@ -65,6 +67,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `app/reports/comparative.php`
 - `app/reports/item_groups.php`
 - `app/reports/water.php`
+- `assets/js/consolidated_import.js`
 - `assets/js/csv_review.js`
 - `assets/js/datefield.js`
 - `assets/js/dialog.js`
@@ -86,6 +89,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/manual/img/coa_account_types__edit.jpg`
 - `assets/manual/img/coa_account_types__main.jpg`
 - `assets/manual/img/coa_account_types__new.jpg`
+- `assets/manual/img/coop_consolidated_import__main.jpg`
 - `assets/manual/img/coop_member__water.jpg`
 - `assets/manual/img/coop_members__import.jpg`
 - `assets/manual/img/coop_passbooks__test.jpg`
@@ -185,6 +189,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `database/migrations/2027_04_04_accounting_update.sql`
 - `database/migrations/2027_04_11_sales_by_member_type.sql`
 - `database/migrations/2027_04_18_bill_balance_upload.sql`
+- `database/migrations/2027_04_25_consolidated_import.sql`
 - `database/seeds/water_reference.sql`
 - `docs/ADDITIONAL_MODULE_V10_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V11_CHECKLIST.md`
@@ -197,6 +202,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `docs/ADDITIONAL_MODULE_V18_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V19_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V20_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V21_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V2_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V3_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V4_CHECKLIST.md`
@@ -231,6 +237,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `modules/coop/_loan_ledgers.php`
 - `modules/coop/_loan_release.php`
 - `modules/coop/_loan_voucher.php`
+- `modules/coop/consolidated_import.php`
 - `modules/coop/loan_vouchers.php`
 - `modules/coop/sav_center.php`
 - `modules/water/page.php`
@@ -263,6 +270,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v53.php`
 - `tests/coop/cases_v54.php`
 - `tests/coop/cases_v55.php`
+- `tests/coop/cases_v56.php`
 - `tests/coop/cases_water.php`
 - `tests/platform/provision_test.php`
 - `tests/platform/run.sh`

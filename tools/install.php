@@ -103,6 +103,7 @@ run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_04_accounting_update
 run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_11_sales_by_member_type.sql');
 // version 55, Upload Bill Balances
 run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_18_bill_balance_upload.sql');
+run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_25_consolidated_import.sql');
 // the passbooks installed with the program: the savings passbook and the loan passbook of the former program, each
 // with its own design (Cooperative > Passbook Types)
 foreach (['Regular Passbook' => 'savings', 'Loan Passbook' => 'loan'] as $pbName => $pbLedger) {

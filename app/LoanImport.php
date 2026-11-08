@@ -23,6 +23,17 @@ declare(strict_types=1);
  */
 final class LoanImport
 {
+    /**
+     * Who a row's member code names (the consolidated import of Member Center gives the members of its file, not yet on
+     * file); null: the member on file
+     */
+    public static ?Closure $memberResolver = null;
+
+    /** The lists check() reads are read once a request (the consolidated import checks one member at a time) */
+    public static bool $memo = false;
+
+    private static array $lists = [];
+
     /** How the loan is amortized: the interest method and the amortization type of the loan */
     public const AMORT = ['equal_amortization' => 'Diminishing, equal amortization', 'equal_principal' => 'Diminishing, equal principal', 'straight' => 'Straight (add-on)'];
 
@@ -252,10 +263,12 @@ final class LoanImport
         return $out;
     }
 
-    /** Checks every row; nothing is saved. $opt: cut_off_date, balancing_account (the page's). Returns [rows, summary, general]. */
-    public static function check(array $rows, array $opt): array
+    /** The loan products, the GL accounts and the receivable accounts, by what a file may write */
+    private static function lists(): array
     {
-        $general = [];
+        if (self::$memo && self::$lists) {
+            return self::$lists;
+        }
         $products = [];
         foreach (DB::all('SELECT * FROM loan_products') as $p) {
             $products[mb_strtolower((string)$p['code'])] = $p;
@@ -277,6 +290,16 @@ final class LoanImport
             $acctBy[mb_strtolower($a['code'] . ' ' . $a['name'])] = $a;
             $acctBy[mb_strtolower((string)$a['name'])] ??= $a;
         }
+        $l = [$products, $accounts, $receivables, $acctBy];
+        self::$lists = self::$memo ? $l : [];
+        return $l;
+    }
+
+    /** Checks every row; nothing is saved. $opt: cut_off_date, balancing_account (the page's). Returns [rows, summary, general]. */
+    public static function check(array $rows, array $opt): array
+    {
+        $general = [];
+        [$products, $accounts, $receivables, $acctBy] = self::lists();
         if (trim((string)($opt['balancing_account'] ?? '')) === '') {
             $general[] = 'Choose the balancing GL account (the other side of the loans\' journal entry).';
         }
@@ -297,7 +320,7 @@ final class LoanImport
             $m = null;
             if ($no === '') {
                 $err[] = 'Enter the member code.';
-            } elseif (!($m = DB::row('SELECT * FROM members WHERE member_no = :n', ['n' => $no]))) {
+            } elseif (!($m = self::$memberResolver ? (self::$memberResolver)($no) : DB::row('SELECT * FROM members WHERE member_no = :n', ['n' => $no]))) {
                 $err[] = 'Member code ' . $no . ' is not on file (import the members first).';
             } elseif (!Coop::branchAllowed($m['branch_id'] ? (int)$m['branch_id'] : null)) {
                 $err[] = 'Member ' . $no . ' belongs to another branch.';

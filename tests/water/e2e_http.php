@@ -1532,6 +1532,133 @@ Checks::true('not signed in: refused', $v55Anon->status !== 200 || !str_contains
 @unlink($v55Csv);
 Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
 
+// ======================================================================================== v56
+Checks::section('v56 Consolidated Import: members with their savings, loans and bill balances from one file, reviewed in the database, then saved');
+$ci = 'index.php?p=coop.consolidated_import';
+/** A request of the page (the form fields, a piece of a file); the answer as JSON */
+$ciPost = function (Browser $b, array $fields, ?string $piece = null) use ($ci) {
+    $ch = $b->handle('POST', $ci, [], false, ['Accept: application/json']);
+    $post = $fields + ['_csrf' => $b->csrf()];
+    if ($piece !== null) {
+        $tmp = sys_get_temp_dir() . '/e2e_ci_' . bin2hex(random_bytes(4));
+        file_put_contents($tmp, $piece);
+        $post['data'] = new CURLFile($tmp, 'application/octet-stream', 'piece');
+    }
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+    $r = $b->finish($ch, curl_exec($ch));
+    if (isset($tmp)) {
+        @unlink($tmp);
+    }
+    return $r;
+};
+$admin->get($ci);
+Checks::true('Members & Others > Consolidated Import opens: the file, the format, the templates', $admin->status === 200 && str_contains($admin->body, '<h1>Consolidated Import</h1>') && str_contains($admin->body, 'data-ci-pick')
+    && str_contains($admin->body, 'Rows under the member') && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body));
+Checks::true('...in the menu after Opening Balances Import', (bool)preg_match('/Opening Balances Import<\/a>\s*<a class="menu-link[^"]*" href="[^"]*coop\.consolidated_import/', $admin->body));
+foreach (['index.php?p=coop.members' => 'Member Center', 'index.php?p=coop.members&a=import' => 'Import members', 'index.php?p=sav.accounts&a=import' => 'Import savings',
+          'index.php?p=loan.accounts&a=import' => 'Import loans', 'water/views/bill_balance_upload.php' => 'Upload Bill Balances'] as $path => $what) {
+    $admin->get($path);
+    Checks::true($what . ': a Consolidated Import button', $admin->status === 200 && str_contains($admin->body, 'p=coop.consolidated_import'));
+}
+$ciTpl = $admin->get($ci . '&t=template&layout=wide&format=csv')->body;
+Checks::true('the CSV template of one row per member: the member, two savings accounts on the row', str_starts_with(ltrim($ciTpl, "\xEF\xBB\xBF"), 'member_no,last_name,first_name') && str_contains($ciTpl, 'savings2_code'));
+Checks::true('...the Excel templates of both layouts', str_starts_with($admin->get($ci . '&t=template&layout=wide&format=xlsx')->body, 'PK') && str_starts_with($admin->get($ci . '&t=template&layout=long&format=xlsx')->body, 'PK'));
+// two water-service accounts whose holders are not members yet
+$ciW = DB::all("SELECT pkey, account_number, lastname, firstname FROM water_accounts w WHERE status = 'A' AND account_number <> '' AND lastname <> '' AND firstname <> ''
+                 AND NOT EXISTS (SELECT 1 FROM members m WHERE m.party_id = w.party_id) AND pkey NOT IN (" . implode(',', array_merge([0], $accts)) . ") ORDER BY pkey DESC LIMIT 2");
+// (the accounts used: in the water records = A/R subledger check at the end)
+$accts = array_merge($accts, array_map(fn($w) => (int)$w['pkey'], $ciW));
+$ciFee = (string)$q('SELECT code FROM bill_codes WHERE code_id = :c', ['c' => $memCode]);
+$ciCsv = "Member No,Last Name,First Name,Middle Name,Birth Date,Member Type,Membership Date,Barangay,City,Province,Water Account,Savings Code,Savings Balance,Savings Account No,One-Time Balance,One-Time Code\n"
+    . "E56-001,\"{$ciW[0]['lastname']}\",\"{$ciW[0]['firstname']}\",-,1980-02-03,REG,2019-01-10,Poblacion,San Isidro,Nueva Ecija,{$ciW[0]['account_number']},03,1500,E56-SC-1,320,$ciFee\n"
+    . ",,,,,,,,,,,03,250,E56-SC-2,,\n"
+    . "E56-002,\"{$ciW[1]['lastname']}\",\"{$ciW[1]['firstname']}\",-,1985-07-08,REG,2020-05-01,San Roque,San Isidro,Nueva Ecija,{$ciW[1]['account_number']},03,800,,,\n"
+    . "E56-003,Ilagan,Corazon,-,31/31/1990,REG,2021-01-01,Tabon,San Isidro,Nueva Ecija,,03,abc,,,\n";
+$ciPost($admin, ['a' => 'create', 'file_name' => 'members_e2e.csv', 'bytes' => (string)strlen($ciCsv)]);
+$ciId = (int)($admin->json['id'] ?? 0);
+$ciChunk = (int)($admin->json['chunk'] ?? 0);
+Checks::true('a file started: its number, sent in pieces of ' . number_format($ciChunk) . ' bytes', $ciId > 0 && $ciChunk > 0, substr($admin->body, 0, 200));
+$ciPost($admin, ['a' => 'chunk', 'id' => (string)$ciId, 'index' => '0'], substr($ciCsv, 0, 100));
+$ciPost($admin, ['a' => 'chunk', 'id' => (string)$ciId, 'index' => '2'], substr($ciCsv, 100));
+Checks::true('...a piece out of order refused', $admin->status === 422 && str_contains((string)($admin->json['error'] ?? ''), 'went missing'));
+$ciPost($admin, ['a' => 'chunk', 'id' => (string)$ciId, 'index' => '0'], $ciCsv);
+Checks::eq('...the whole file kept', strlen($ciCsv), (int)($admin->json['have'] ?? 0));
+$ciPost($admin, ['a' => 'parse', 'id' => (string)$ciId]);
+Checks::true('...read into the database, to the page of the file', str_contains((string)($admin->json['url'] ?? ''), 'id=' . $ciId), substr($admin->body, 0, 300));
+Checks::eq('...its rows kept in the database, not in the browser', 4, (int)$q('SELECT COUNT(*) FROM coop_import_raw WHERE batch_id = :b', ['b' => $ciId]));
+$admin->get($ci . '&id=' . $ciId);
+Checks::true('the page of the file: the columns recognised, the values for the blank cells, the four kinds of lines', $admin->status === 200 && str_contains($admin->body, '16 of 16 recognised')
+    && str_contains($admin->body, 'Values for the blank cells') && substr_count($admin->body, 'data-ci-tile=') === 4 && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body));
+for ($i = 0; $i < 50; $i++) {
+    $ciPost($admin, ['a' => 'check', 'id' => (string)$ciId]);
+    if (!empty($admin->json['done']) || $admin->status !== 200) {
+        break;
+    }
+}
+$ciSum = (array)($admin->json['summary'] ?? []);
+Checks::true('every line checked in steps: 3 members, 4 savings accounts, 1 bill balance; 2 lines in red', ($admin->json['done'] ?? false) === true
+    && [$ciSum['kinds']['member']['lines'] ?? 0, $ciSum['kinds']['savings']['lines'] ?? 0, $ciSum['kinds']['bill']['lines'] ?? 0, $ciSum['bad'] ?? 0] === [3, 4, 1, 2], json_encode($ciSum));
+$admin->get($ci . '&a=lines&id=' . $ciId . '&kind=member&bad=1');
+$ciBad = $admin->json['lines'][0] ?? [];
+Checks::true('...the member in red: its date of birth (red cell)', ($admin->json['total'] ?? 0) === 1 && in_array('birth_date', $ciBad['cells'] ?? [], true) && str_contains(implode(' ', $ciBad['errors'] ?? []), 'not a date'));
+$ciPost($admin, ['a' => 'edit', 'id' => (string)$ciId, 'line' => (string)$ciBad['id'], 'field' => 'birth_date', 'value' => '1990-03-31']);
+$ciNow = array_values(array_filter((array)($admin->json['lines'] ?? []), fn($l) => $l['id'] === $ciBad['id']));
+Checks::true('...corrected in the review: checked again at once, good', ($ciNow[0]['errors'] ?? ['x']) === [] && ($admin->json['summary']['bad'] ?? -1) === 1);
+$admin->get($ci . '&a=lines&id=' . $ciId . '&kind=savings&bad=1');
+$ciSav = $admin->json['lines'][0] ?? [];
+Checks::true('...the savings balance "abc" in red', in_array('savings_balance', $ciSav['cells'] ?? [], true));
+$ciPost($admin, ['a' => 'remove', 'id' => (string)$ciId, 'line' => (string)$ciBad['id']]);
+Checks::true('a member removed with its savings account', count((array)($admin->json['removed'] ?? [])) === 2 && ($admin->json['summary']['bad'] ?? -1) === 0);
+$ciPost($admin, ['a' => 'restore', 'id' => (string)$ciId, 'lines' => implode(',', (array)$admin->json['removed'])]);
+Checks::eq('...put back', 2, count((array)($admin->json['restored'] ?? [])));
+$ciPost($admin, ['a' => 'edit', 'id' => (string)$ciId, 'line' => (string)$ciSav['id'], 'field' => 'savings_balance', 'value' => '600']);
+Checks::eq('...its balance corrected: no line in red', 0, (int)($admin->json['summary']['bad'] ?? -1));
+Checks::true('...the class of the bill balance asked above the lines', str_contains(implode(' ', (array)($admin->json['summary']['general'] ?? [])), 'class'));
+$admin->post($ci . '&id=' . $ciId, ['_csrf' => $admin->csrf(), 'action' => 'options', 'id' => (string)$ciId, 'cut_off_date' => $today, 'savings_txn_code' => 'INI', 'balancing_account' => '3900',
+    'class_id' => (string)$classId, 'installments' => '1', 'payment_mode' => 'Monthly']);
+Checks::true('the values for the blank cells kept (every line to be checked again)', str_contains($admin->url, 'id=' . $ciId) && str_contains($admin->body, 'every line is checked again'));
+$cas->get($ci);
+$casCi = (int)$q("SELECT COUNT(*) FROM role_page_access r JOIN pages p ON p.id = r.page_id WHERE p.page_key = 'coop.consolidated_import' AND r.role_id = :r AND r.allowed = 1 AND r.can_create = 1", ['r' => $cashierRole]);
+$ciPost($cas, ['a' => 'save', 'id' => (string)$ciId]);
+Checks::true('a user without the right may not save (a cashier ' . ($casCi ? 'with' : 'without') . ' Create)', $cas->status !== 200 && (int)$q("SELECT COUNT(*) FROM members WHERE member_no LIKE 'E56-%'") === 0, $cas->status . ' ' . substr($cas->body, 0, 120));
+$ciPost($admin, ['a' => 'save', 'id' => (string)$ciId]);
+Checks::true('saving refused until the lines are checked again', $admin->status === 422 && str_contains((string)($admin->json['error'] ?? ''), 'not checked yet'));
+for ($i = 0; $i < 50; $i++) {
+    $ciPost($admin, ['a' => 'check', 'id' => (string)$ciId]);
+    if (!empty($admin->json['done']) || $admin->status !== 200) {
+        break;
+    }
+}
+Checks::true('...checked again: ready', ($admin->json['summary']['ready'] ?? false) === true, json_encode($admin->json['summary']['general'] ?? $admin->json));
+$ciTx = (int)$q('SELECT COALESCE(MAX(id), 0) FROM transactions');
+for ($i = 0; $i < 50; $i++) {
+    $ciPost($admin, ['a' => 'save', 'id' => (string)$ciId]);
+    if (!empty($admin->json['done']) || $admin->status !== 200) {
+        break;
+    }
+}
+Checks::true('Save: every member saved, in steps', ($admin->json['done'] ?? false) === true && ($admin->json['saved'] ?? 0) === 3, substr($admin->body, 0, 300));
+$ciM = DB::all("SELECT member_no, status, party_id, water_account_id FROM members WHERE member_no LIKE 'E56-%' ORDER BY member_no");
+Checks::eq('...three Active members', [['E56-001', 'active'], ['E56-002', 'active'], ['E56-003', 'active']], array_map(fn($m) => [$m['member_no'], $m['status']], $ciM));
+Checks::true('...the first two the same persons as the holders of their water-service accounts', (int)$ciM[0]['water_account_id'] === (int)$ciW[0]['pkey'] && (int)$ciM[0]['party_id'] === (int)$q('SELECT party_id FROM water_accounts WHERE pkey = :p', ['p' => $ciW[0]['pkey']])
+    && (int)$ciM[1]['party_id'] === (int)$q('SELECT party_id FROM water_accounts WHERE pkey = :p', ['p' => $ciW[1]['pkey']]));
+Checks::eq('...their share capital accounts with their balances (two for the first member, one on the row under it)', [['E56-001', '1500.00'], ['E56-001', '250.00'], ['E56-002', '800.00'], ['E56-003', '600.00']],
+    array_map(fn($r) => [$r['member_no'], $r['balance']], DB::all("SELECT m.member_no, a.balance FROM sav_accounts a JOIN members m ON m.id = a.member_id WHERE m.member_no LIKE 'E56-%' ORDER BY m.member_no, a.balance DESC")));
+Checks::eq('...the first member\'s one-time balance on its water account', 320.0, $money($q("SELECT SUM(total_amount) FROM one_time_bills WHERE member_id = :m AND status = 'unpaid'", ['m' => $ciW[0]['pkey']])));
+Checks::true('...every voucher balanced', !(int)$q('SELECT COUNT(*) FROM (SELECT txn_id FROM journal_lines WHERE txn_id > :t GROUP BY txn_id HAVING ABS(SUM(debit - credit)) >= 0.005) x', ['t' => $ciTx]));
+$admin->get($ci . '&id=' . $ciId);
+Checks::true('the page of the file: Saved, what each line became', str_contains($admin->body, 'class="ci-done') && str_contains($admin->body, '3 member(s), 4 savings account(s), 0 loan(s) and 1 bill balance(s)'));
+$admin->get($ci . '&a=lines&id=' . $ciId . '&kind=savings&status=saved');
+Checks::true('...each savings line with its account no.', ($admin->json['total'] ?? 0) === 4 && !array_filter((array)$admin->json['lines'], fn($l) => !str_starts_with($l['saved_ref'], 'Account ')));
+$ciPost($admin, ['a' => 'save', 'id' => (string)$ciId]);
+Checks::true('...saved once', $admin->status === 422 && str_contains((string)($admin->json['error'] ?? ''), 'saved already'));
+$admin->get($ci);
+Checks::true('the files read: listed with their state', str_contains($admin->body, (string)$q('SELECT batch_no FROM coop_import_batches WHERE id = :b', ['b' => $ciId])) && str_contains($admin->body, 'is-saved'));
+$ciAnon = new Browser($base, 'anon56');
+$ciAnon->get($ci . '&a=lines&id=' . $ciId . '&kind=member');
+Checks::true('not signed in: refused', !str_contains($ciAnon->body, '"lines"'), (string)$ciAnon->status);
+Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

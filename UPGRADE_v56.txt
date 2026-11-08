@@ -1,0 +1,55 @@
+G-SMaRT Integrated Cooperative System - version 56 (2026-11-08)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v21.xlsx (docs/ADDITIONAL_MODULE_V21_CHECKLIST.md).
+
+This package holds only the files changed or added since version 55. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is never
+changed. Works on MySQL 5.5 and MySQL 8 as before.
+
+Version 55 must be in place first (its files and database/migrations/2027_04_18_bill_balance_upload.sql).
+
+What to run on the database (once)
+----------------------------------
+  database/migrations/2027_04_25_consolidated_import.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         mysql -u root -p your_database < database/migrations/2027_04_25_consolidated_import.sql
+
+It adds three tables (the files read, their rows and the lines of the review) and the page
+Members & Others > Consolidated Import, given to the roles that have Member Center, with the same
+rights. Safe to run more than once. Until it is run the program stops with "Database update
+needed" and names this file. Press Ctrl+F5 once in the browser afterwards.
+
+What is new
+-----------
+Members & Others > Consolidated Import (also a Consolidated Import button on the Member Center,
+Import members, Import savings, Import loans and Water Billing > Upload Bill Balances)
+- One file for the members and everything they have: Import Members, Import Savings, Import Loans
+  and Upload Bill Balances in one. Once a member is imported, the member's savings accounts, loans,
+  water-service account and water bill balances are imported with it.
+- No fixed format. The first row names the columns, in any order, with your own names: the names
+  of the four imports, the headings in words and the usual other names are recognised, and you may
+  say what any column holds (remembered for the next file). Only the columns of what you import
+  are needed; the others are optional.
+- Any number of savings accounts, loans and bill balances a member: on one row (savings2_code,
+  loan2_principal ...) or on the rows under the member's row. A member may have only savings,
+  savings and loans, savings and bill balances, or all of them.
+- A CSV file or an Excel workbook, up to 60,000 rows and 150 MB. The file is sent in pieces and
+  read into the database, checked and saved in steps of a few seconds, so thousands of members are
+  imported without the server timing out (and within MySQL 5.5's default 1 MB packet).
+- The data is shown in a review form before anything is saved: each member, savings account, loan
+  and bill balance is a line, with the row of the file it came from. A line with an error is in
+  red, the reason in red under it and the cell in red. Correct the cell in the form (the member is
+  checked again at once) or remove the line (a member with its lines) and put it back.
+- The checks are those of the four imports, plus the file as a whole (the same member, account no.,
+  loan no. or water account twice), the member's water-service account (named by its account no.:
+  the member becomes the same person as its holder; or opened from a rate code and a pipe size)
+  and its fixed share capital billing (fsc_amount).
+- Save saves every member with its lines, a few members at a time, each member's lines in one
+  transaction, every line checked again first. If it stops, what was saved stays and Go on saving
+  continues from there. The entries are those of the four imports.
+- Each file is kept (CI-00001 ...) with its lines and what each became.
+
+Templates: one row per member, and rows under the member, in Excel (with a sheet that explains
+every column) and CSV, on the page.

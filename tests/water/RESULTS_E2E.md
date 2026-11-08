@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-08 20:02:50 (10 s)
+- **Run:** 2026-11-08 21:31:15 (12.1 s)
 - **Server:** http://127.0.0.1:8097
-- **Database:** coop_e2e55 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Database:** coop_e2e56 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 10.11.14-MariaDB-0ubuntu0.24.04.1
-- **Result:** 472 passed, 0 failed, 472 checks
+- **Result:** 511 passed, 0 failed, 511 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261108-200240-68CB | COL-20261108-200240-68CB | PASS |
+| payment number = official receipt number | COL-20261108-213105-6F68 | COL-20261108-213105-6F68 | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 230 | 230 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261108-200240-68CB | COL-20261108-200240-68CB | PASS |
+| retry of the same request returns the same receipt | COL-20261108-213105-6F68 | COL-20261108-213105-6F68 | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok 1ce9c B | E2E Purok 1ce9c B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok af5c7 B | E2E Purok af5c7 B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -582,6 +582,50 @@
 | not signed in: refused | yes | yes | PASS |
 | trial balance: debits = credits | 0.00 | 0.00 | PASS |
 
+## v56 Consolidated Import: members with their savings, loans and bill balances from one file, reviewed in the database, then saved
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| Members & Others > Consolidated Import opens: the file, the format, the templates | yes | yes | PASS |
+| ...in the menu after Opening Balances Import | yes | yes | PASS |
+| Member Center: a Consolidated Import button | yes | yes | PASS |
+| Import members: a Consolidated Import button | yes | yes | PASS |
+| Import savings: a Consolidated Import button | yes | yes | PASS |
+| Import loans: a Consolidated Import button | yes | yes | PASS |
+| Upload Bill Balances: a Consolidated Import button | yes | yes | PASS |
+| the CSV template of one row per member: the member, two savings accounts on the row | yes | yes | PASS |
+| ...the Excel templates of both layouts | yes | yes | PASS |
+| a file started: its number, sent in pieces of 1,048,576 bytes | yes | yes | PASS |
+| ...a piece out of order refused | yes | yes | PASS |
+| ...the whole file kept | 559 | 559 | PASS |
+| ...read into the database, to the page of the file | yes | yes | PASS |
+| ...its rows kept in the database, not in the browser | 4 | 4 | PASS |
+| the page of the file: the columns recognised, the values for the blank cells, the four kinds of lines | yes | yes | PASS |
+| every line checked in steps: 3 members, 4 savings accounts, 1 bill balance; 2 lines in red | yes | yes | PASS |
+| ...the member in red: its date of birth (red cell) | yes | yes | PASS |
+| ...corrected in the review: checked again at once, good | yes | yes | PASS |
+| ...the savings balance "abc" in red | yes | yes | PASS |
+| a member removed with its savings account | yes | yes | PASS |
+| ...put back | 2 | 2 | PASS |
+| ...its balance corrected: no line in red | 0 | 0 | PASS |
+| ...the class of the bill balance asked above the lines | yes | yes | PASS |
+| the values for the blank cells kept (every line to be checked again) | yes | yes | PASS |
+| a user without the right may not save (a cashier without Create) | yes | yes | PASS |
+| saving refused until the lines are checked again | yes | yes | PASS |
+| ...checked again: ready | yes | yes | PASS |
+| Save: every member saved, in steps | yes | yes | PASS |
+| ...three Active members | [["E56-001","active"],["E56-002","active"],["E56-003","active"]] | [["E56-001","active"],["E56-002","active"],["E56-003","active"]] | PASS |
+| ...the first two the same persons as the holders of their water-service accounts | yes | yes | PASS |
+| ...their share capital accounts with their balances (two for the first member, one on the row under it) | [["E56-001","1500.00"],["E56-001","250.00"],["E56-002","800.00"],["E56-003","600.00"]] | [["E56-001","1500.00"],["E56-001","250.00"],["E56-002","800.00"],["E56-003","600.00"]] | PASS |
+| ...the first member's one-time balance on its water account | 320.00 | 320.00 | PASS |
+| ...every voucher balanced | yes | yes | PASS |
+| the page of the file: Saved, what each line became | yes | yes | PASS |
+| ...each savings line with its account no. | yes | yes | PASS |
+| ...saved once | yes | yes | PASS |
+| the files read: listed with their state | yes | yes | PASS |
+| not signed in: refused | yes | yes | PASS |
+| trial balance: debits = credits | 0.00 | 0.00 | PASS |
+
 ## 7.4c Period close
 
 | Check | Expected | Actual | Result |
@@ -596,5 +640,5 @@
 | trial balance: debits = credits | 0.00 | 0.00 | PASS |
 | every document balances | 0 | 0 | PASS |
 | no ledger document belongs to two water events | 0 | 0 | PASS |
-| A/R control account = open water invoices (subledger) | 11,253.45 | 11,253.45 | PASS |
-| water records open balance = A/R subledger for the accounts used | 11,253.45 | 11,253.45 | PASS |
+| A/R control account = open water invoices (subledger) | 11,573.45 | 11,573.45 | PASS |
+| water records open balance = A/R subledger for the accounts used | 11,573.45 | 11,573.45 | PASS |

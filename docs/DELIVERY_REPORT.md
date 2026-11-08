@@ -479,3 +479,22 @@ twice. An Upload Balances button on the four billing pages and a card on Billing
 `2027_04_18_bill_balance_upload.sql` (two tables and the page with its access, MySQL 5.5), registered in the update
 check and the installer, its tables added to the water base script; both bundled databases written again. See
 `UPGRADE_v55.txt`.
+
+## 32. Version 56: workbook v21 (Consolidated Import)
+
+The request of `ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v21.xlsx`, mapped in `docs/ADDITIONAL_MODULE_V21_CHECKLIST.md`:
+Members & Others > Consolidated Import merges Import Members, Import Savings, Import Loans and Upload Bill Balances into
+one file: once a member is imported, the member's savings and share capital accounts, loans, water-service account
+(named by its account no., or opened from a rate code and a pipe size), fixed share capital billing and water bill
+balances are imported with it. There is no fixed format: the columns are recognised by their names, the user may say
+what any column holds (remembered for the next file), only the columns of what is imported are needed, and a member's
+accounts may be on its row (numbered) or on the rows under it, any number of each; a member may have only savings,
+savings and loans, or savings and bill balances. The file (CSV or Excel, up to 60,000 rows) is sent in pieces and read
+into the database; every member, savings account, loan and bill balance is a line of a review form, a line with an
+error in red with the cell and the reason in red, corrected in place (checked again at once) or removed and put back.
+The checks are those of the four imports, the file as a whole, the water-service account and the fixed billing; saving
+runs in steps, each member with its lines in one transaction, every line checked again first, and goes on where it
+stopped. A Consolidated Import button on the Member Center, the three import pages and Upload Bill Balances. One
+migration, `2027_04_25_consolidated_import.sql` (three tables and the page with its access, MySQL 5.5), registered in
+the update check and the installer, its tables added to the base script; both bundled databases written again. See
+`UPGRADE_v56.txt`.

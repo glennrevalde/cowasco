@@ -1,8 +1,8 @@
 -- =====================================================================
 --  G-SMaRT Integrated Cooperative System - clean database (set-up lists and users, no transactions)
---  Generated 2026-11-08 19:44:19 +08:00
---  237 tables (149 cooperative, 88 water billing) and 2 views,
---  2,921 rows (0 ledger documents, 0 water-service accounts)
+--  Generated 2026-11-08 21:17:35 +08:00
+--  240 tables (152 cooperative, 88 water billing) and 2 views,
+--  2,931 rows (0 ledger documents, 0 water-service accounts)
 --
 --  Import:  phpMyAdmin > Import > choose this file > Go
 --      or:  mysql -u root -p < accounting_system_clean.sql
@@ -3096,6 +3096,68 @@ CREATE TABLE document_reissues (
   KEY ix_document_reissues_txn (txn_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
+-- Consolidated Import: a file of members with their savings, loans, water-service account and bill balances,
+-- read into the database (its rows), reviewed and corrected as lines, then saved
+DROP TABLE IF EXISTS coop_import_batches;
+CREATE TABLE coop_import_batches (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  batch_no      VARCHAR(20)  NULL,
+  file_name     VARCHAR(190) NULL,
+  file_bytes    INT UNSIGNED NOT NULL DEFAULT 0,
+  status        VARCHAR(12)  NOT NULL DEFAULT 'reading',
+  headers_json  MEDIUMTEXT   NULL,
+  mapping_json  MEDIUMTEXT   NULL,
+  options_json  TEXT         NULL,
+  file_rows     INT UNSIGNED NOT NULL DEFAULT 0,
+  check_cursor  INT UNSIGNED NOT NULL DEFAULT 0,
+  checked_at    DATETIME     NULL,
+  result_json   MEDIUMTEXT   NULL,
+  created_by    INT UNSIGNED NULL,
+  created_at    DATETIME     NULL,
+  updated_at    DATETIME     NULL,
+  saved_at      DATETIME     NULL,
+  KEY ix_cib_status (status, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS coop_import_raw;
+CREATE TABLE coop_import_raw (
+  batch_id  INT UNSIGNED NOT NULL,
+  file_row  INT UNSIGNED NOT NULL,
+  cells     MEDIUMTEXT   NOT NULL,
+  PRIMARY KEY (batch_id, file_row)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS coop_import_lines;
+CREATE TABLE coop_import_lines (
+  id              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  batch_id        INT UNSIGNED NOT NULL,
+  kind            VARCHAR(10)  NOT NULL,
+  line_no         INT UNSIGNED NOT NULL,
+  member_line_id  INT UNSIGNED NULL,
+  member_line_no  INT UNSIGNED NOT NULL DEFAULT 0,
+  file_row        INT UNSIGNED NOT NULL DEFAULT 0,
+  vals            MEDIUMTEXT   NOT NULL,
+  key_no          VARCHAR(60)  NULL,
+  key_person      VARCHAR(190) NULL,
+  key_water       VARCHAR(60)  NULL,
+  amount          DECIMAL(15,2) NULL,
+  errors          TEXT         NULL,
+  notes           TEXT         NULL,
+  info            TEXT         NULL,
+  cells           TEXT         NULL,
+  bad             TINYINT(1)   NOT NULL DEFAULT 0,
+  checked         TINYINT(1)   NOT NULL DEFAULT 0,
+  status          VARCHAR(10)  NOT NULL DEFAULT 'pending',
+  saved_ref       VARCHAR(80)  NULL,
+  UNIQUE KEY ux_cil_line (batch_id, line_no),
+  KEY ix_cil_kind (batch_id, kind, status, line_no),
+  KEY ix_cil_member (batch_id, member_line_id),
+  KEY ix_cil_no (batch_id, kind, key_no),
+  KEY ix_cil_person (batch_id, key_person),
+  KEY ix_cil_water (batch_id, key_water)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ---------------------------------------------------------------------
 --  2. WATER BILLING TABLES (database/migrations/2026_12_01_water_billing.sql)
 -- ---------------------------------------------------------------------
@@ -5084,7 +5146,7 @@ INSERT INTO `modules` (`id`,`code`,`name`,`icon`,`sort_order`) VALUES
 (18,'cda','CDA Compliance','clipboard2-check',18),
 (19,'water','Water Billing','droplet-half',7);
 
--- pages (376 rows)
+-- pages (377 rows)
 INSERT INTO `pages` (`id`,`page_key`,`module_id`,`name`,`page_type`,`menu_group`,`sort_order`,`show_in_menu`,`description`) VALUES
 (1,'home.dashboard',1,'Home Dashboard','center','Home',10,1,NULL),
 (2,'home.reports',1,'Report Center','center','Home',20,1,NULL),
@@ -5464,9 +5526,10 @@ INSERT INTO `pages` (`id`,`page_key`,`module_id`,`name`,`page_type`,`menu_group`
 (373,'rpt.trial_balance_class',2,'Trial Balance by Class','report','Reports',175,1,NULL),
 (374,'rpt.cash_flow_class',2,'Statement of Cash Flows by Class','report','Reports',275,1,NULL),
 (375,'rpt.sales_customer_type_detail',4,'Sales by Customer Detail Group by Customer/Member Type','report','Sales Reports',755,1,NULL),
-(376,'water.bill_balance_upload',19,'Upload Bill Balances','transaction','Billing',3197,1,'Upload the open balances of the recurring, installment, one-time and fixed share capital bills from a file, reviewed line by line before they are recorded.');
+(376,'water.bill_balance_upload',19,'Upload Bill Balances','transaction','Billing',3197,1,'Upload the open balances of the recurring, installment, one-time and fixed share capital bills from a file, reviewed line by line before they are recorded.'),
+(377,'coop.consolidated_import',13,'Consolidated Import','transaction','Transactions',1982,1,'One file for the members with their savings, loans, water-service account and bill balances, reviewed and corrected before it is saved.');
 
--- role_page_access (1450 rows)
+-- role_page_access (1458 rows)
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (2,1,1,0,0,0,1,0),
 (2,2,1,0,0,0,1,0),
@@ -5763,14 +5826,15 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (2,374,1,0,0,0,1,0),
 (2,375,1,0,0,0,1,0),
 (2,376,1,0,0,0,1,0),
+(2,377,1,0,0,0,1,0),
 (3,1,1,0,0,0,1,0),
 (3,2,1,0,0,0,1,0),
 (3,3,1,0,0,0,1,0),
 (3,4,1,0,0,0,1,0),
 (3,5,1,0,0,0,1,0),
-(3,6,1,0,0,0,1,0),
-(3,7,1,0,0,0,1,0);
+(3,6,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(3,7,1,0,0,0,1,0),
 (3,49,1,1,1,0,1,0),
 (3,50,1,1,1,0,1,0),
 (3,51,1,1,1,0,1,0),
@@ -5869,9 +5933,9 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (5,134,1,0,0,0,1,0),
 (5,135,1,0,0,0,1,0),
 (5,137,1,0,0,0,1,0),
-(5,138,1,0,0,0,1,0),
-(5,139,1,0,0,0,1,0);
+(5,138,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(5,139,1,0,0,0,1,0),
 (6,1,1,0,0,0,1,0),
 (6,2,1,0,0,0,1,0),
 (6,3,1,0,0,0,1,0),
@@ -5970,9 +6034,9 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,30,1,0,0,0,1,0),
 (9,31,1,0,0,0,1,0),
 (9,32,1,0,0,0,1,0),
-(9,33,1,0,0,0,1,0),
-(9,34,1,0,0,0,1,0);
+(9,33,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,34,1,0,0,0,1,0),
 (9,35,1,0,0,0,1,0),
 (9,36,1,0,0,0,1,0),
 (9,37,1,0,0,0,1,0),
@@ -6071,9 +6135,9 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,130,1,0,0,0,1,0),
 (9,131,1,0,0,0,1,0),
 (9,132,1,0,0,0,1,0),
-(9,133,1,0,0,0,1,0),
-(9,134,1,0,0,0,1,0);
+(9,133,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,134,1,0,0,0,1,0),
 (9,135,1,0,0,0,1,0),
 (9,136,1,0,0,0,1,0),
 (9,137,1,0,0,0,1,0),
@@ -6172,9 +6236,9 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,244,1,0,0,0,1,0),
 (9,245,1,0,0,0,1,0),
 (9,246,1,0,0,0,1,0),
-(9,247,1,0,0,0,1,0),
-(9,248,1,0,0,0,1,0);
+(9,247,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,248,1,0,0,0,1,0),
 (9,249,1,0,0,0,1,0),
 (9,250,1,0,0,0,1,0),
 (9,251,1,0,0,0,1,0),
@@ -6273,9 +6337,9 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,347,1,0,0,0,1,0),
 (9,348,1,0,0,0,1,0),
 (9,349,1,0,0,0,1,0),
-(9,350,1,0,0,0,1,0),
-(9,351,1,0,0,0,1,0);
+(9,350,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,351,1,0,0,0,1,0),
 (9,352,1,0,0,0,1,0),
 (9,353,1,0,0,0,1,0),
 (9,354,1,0,0,0,1,0),
@@ -6301,6 +6365,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,374,1,0,0,0,1,0),
 (9,375,1,0,0,0,1,0),
 (9,376,1,0,0,0,1,0),
+(9,377,1,0,0,0,1,0),
 (10,1,1,1,1,1,1,1),
 (10,2,1,1,1,1,1,1),
 (10,3,1,1,1,1,1,1),
@@ -6373,10 +6438,10 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,242,1,1,1,1,1,1),
 (10,243,1,1,1,1,1,1),
 (10,244,1,1,1,1,1,1),
-(10,245,1,1,1,1,1,1),
-(10,246,1,1,1,1,1,1),
-(10,247,1,1,1,1,1,1);
+(10,245,1,1,1,1,1,1);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(10,246,1,1,1,1,1,1),
+(10,247,1,1,1,1,1,1),
 (10,248,1,1,1,1,1,1),
 (10,249,1,1,1,1,1,1),
 (10,250,1,1,1,1,1,1),
@@ -6474,10 +6539,10 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,342,1,1,1,1,1,1),
 (10,343,1,1,1,1,1,1),
 (10,344,1,1,1,1,1,1),
-(10,345,1,1,1,1,1,1),
-(10,346,1,1,1,1,1,1),
-(10,347,1,1,1,1,1,1);
+(10,345,1,1,1,1,1,1);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(10,346,1,1,1,1,1,1),
+(10,347,1,1,1,1,1,1),
 (10,348,1,1,1,1,1,1),
 (10,349,1,1,1,1,1,1),
 (10,350,1,1,1,1,1,1),
@@ -6502,6 +6567,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,373,1,0,0,0,1,0),
 (10,374,1,0,0,0,1,0),
 (10,376,1,1,1,1,1,1),
+(10,377,1,1,1,1,1,1),
 (11,1,1,1,1,0,1,0),
 (11,2,1,1,1,0,1,0),
 (11,3,1,1,1,0,1,0),
@@ -6574,11 +6640,11 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,249,1,1,1,0,1,0),
 (11,250,1,1,1,0,1,0),
 (11,251,1,1,1,0,1,0),
-(11,252,1,1,1,0,1,0),
+(11,252,1,1,1,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (11,253,1,1,1,0,1,0),
 (11,254,1,1,1,0,1,0),
-(11,258,1,0,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(11,258,1,0,0,0,1,0),
 (11,259,1,0,0,0,1,0),
 (11,260,1,0,0,0,1,0),
 (11,261,1,0,0,0,1,0),
@@ -6675,14 +6741,15 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,365,1,0,0,0,1,0),
 (11,366,1,0,0,0,1,0),
 (11,367,1,0,0,0,1,0),
-(11,368,1,0,0,0,1,0),
+(11,368,1,0,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (11,369,1,0,0,0,1,0),
 (11,370,1,0,0,0,1,0),
-(11,371,1,0,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(11,371,1,0,0,0,1,0),
 (11,373,1,0,0,0,1,0),
 (11,374,1,0,0,0,1,0),
 (11,376,1,0,0,0,1,0),
+(11,377,1,1,1,0,1,0),
 (12,1,1,1,1,0,1,0),
 (12,2,1,1,1,0,1,0),
 (12,3,1,1,1,0,1,0),
@@ -6727,6 +6794,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (12,273,1,0,0,0,1,0),
 (12,274,1,0,0,0,1,0),
 (12,354,1,1,1,0,1,0),
+(12,377,1,1,1,0,1,0),
 (13,1,1,0,0,0,1,1),
 (13,2,1,0,0,0,1,1),
 (13,217,1,0,0,0,1,0),
@@ -6774,19 +6842,20 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (14,280,1,1,0,0,1,0),
 (14,282,1,1,0,0,1,0),
 (14,298,1,1,1,0,1,0),
-(14,301,1,1,1,0,1,0),
+(14,301,1,1,1,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (14,305,1,1,1,0,1,0),
 (14,320,1,1,1,0,1,0),
 (14,321,1,1,1,0,1,0),
 (14,322,1,1,1,0,1,0),
-(14,323,1,1,1,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(14,323,1,1,1,0,1,0),
 (14,324,1,1,1,0,1,0),
 (14,325,1,1,1,0,1,0),
 (14,327,1,1,1,0,1,0),
 (14,329,1,1,1,0,1,0),
 (14,338,1,1,1,0,1,0),
 (14,359,1,1,1,0,1,0),
+(14,377,1,1,0,0,1,0),
 (15,1,1,1,1,0,1,0),
 (15,2,1,1,1,0,1,0),
 (15,3,1,1,1,0,1,0),
@@ -6817,6 +6886,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (15,234,1,0,0,0,1,0),
 (15,236,1,0,0,0,1,0),
 (15,243,1,0,0,0,1,0),
+(15,377,1,1,1,0,1,0),
 (16,1,1,1,0,0,1,0),
 (16,217,1,0,0,0,1,0),
 (16,219,1,0,0,0,1,0),
@@ -6873,15 +6943,15 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (17,231,1,1,1,1,1,1),
 (17,234,1,1,1,1,1,1),
 (17,235,1,1,1,1,1,1),
-(17,236,1,1,1,1,1,1),
+(17,236,1,1,1,1,1,1);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (17,237,1,1,1,1,1,1),
 (17,238,1,1,1,1,1,1),
 (17,239,1,1,1,1,1,1),
 (17,240,1,1,1,1,1,1),
 (17,241,1,1,1,1,1,1),
 (17,242,1,1,1,1,1,1),
-(17,243,1,1,1,1,1,1);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(17,243,1,1,1,1,1,1),
 (17,244,1,1,1,1,1,1),
 (17,245,1,1,1,1,1,1),
 (17,246,1,1,1,1,1,1),
@@ -6931,7 +7001,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (17,294,1,1,1,1,1,1),
 (17,296,1,1,1,1,1,1),
 (17,297,1,1,1,1,1,1),
-(17,354,1,1,1,1,1,1);
+(17,354,1,1,1,1,1,1),
+(17,377,1,1,1,1,1,1);
 
 -- role_special_permissions (75 rows)
 INSERT INTO `role_special_permissions` (`role_id`,`perm_key`,`perm_value`) VALUES
@@ -7011,12 +7082,13 @@ INSERT INTO `role_special_permissions` (`role_id`,`perm_key`,`perm_value`) VALUE
 (17,'max_amount',''),
 (17,'party_merge','1');
 
--- audit_trail (4 rows)
+-- audit_trail (5 rows)
 INSERT INTO `audit_trail` (`id`,`created_at`,`user_id`,`username`,`user_roles`,`ip_address`,`workstation`,`site_id`,`terminal_id`,`module`,`page_key`,`action`,`record_type`,`record_id`,`record_ref`,`amount`,`changes`,`snapshot`,`reason`,`approved_by`) VALUES
 (1,'2026-10-19 00:49:43',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Cooperative Management modules',NULL,NULL,NULL,'Migration 2026_11_01: Cooperative, Savings & Deposits, Loans, Teller, Year-end Distribution and CDA Compliance modules added with their tables, accounts, roles and settings',NULL),
 (2,'2026-11-07 21:26:48',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Accounting update (version 53)',NULL,NULL,NULL,'Migration 2027_04_04: item groups, Receive Items lists, settle ticks, average cost on the books; 14 reports (POS ending inventory, item group sales, comparative statements, average cost changes, class reports)',NULL),
 (3,'2026-11-07 23:37:21',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Sales by Customer Detail Group by Customer/Member Type',NULL,NULL,NULL,'Migration 2027_04_11: the report page, given to the roles that open Sales by Customer Detail',NULL),
-(4,'2026-11-08 19:44:11',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Upload Bill Balances',NULL,NULL,NULL,'Migration 2027_04_18: the uploads of bill balances and the page, given to the roles that have One-Time Billing',NULL);
+(4,'2026-11-08 19:44:11',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Upload Bill Balances',NULL,NULL,NULL,'Migration 2027_04_18: the uploads of bill balances and the page, given to the roles that have One-Time Billing',NULL),
+(5,'2026-11-08 21:17:31',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Consolidated Import',NULL,NULL,NULL,'Migration 2027_04_25: the consolidated import of members, savings, loans and bill balances, given to the roles that have Member Center',NULL);
 
 -- sequences (43 rows)
 INSERT INTO `sequences` (`seq_key`,`prefix`,`next_no`,`pad`) VALUES

@@ -281,6 +281,7 @@ return [
         // no longer in the menu (version 39): its vouchers still open from their links (view, print, void)
         'coop.vouchers'           => ['coop', 'Cooperative Vouchers', 'transaction', 'Transactions', 'coop/vouchers.php', [], 0],
         'coop.import'             => ['coop', 'Opening Balances Import', 'transaction', 'Transactions', 'coop/import.php', [], 1],
+        'coop.consolidated_import' => ['coop', 'Consolidated Import', 'transaction', 'Transactions', 'coop/consolidated_import.php', [], 1],
         'coop.profile'            => ['coop', 'Cooperative Profile & Policies', 'setup', 'Setup', 'coop/profile.php', [], 1],
         'coop.branches'           => ['coop', 'Branches', 'setup', 'Setup', 'coop/branches.php', [], 1],
         'coop.lists'              => ['coop', 'Member Types, Clusters & Other Lists', 'setup', 'Setup', 'coop/lists.php', [], 1],

@@ -55,7 +55,7 @@ if ($a === 'import') {
         'help' => 'Amounts as 12500.00 or 12,500.00. One voucher per cut-off date and code.',
     ];
     $state = CsvReview::handle($cfg);
-    coop_layout('Import savings', ['actions' => btn_link(url($pageKey), 'Savings Account Center', 'btn-outline-secondary', 'arrow-left'), 'js' => ['js/csv_review.js']]);
+    coop_layout('Import savings', ['actions' => (Access::can('coop.consolidated_import', 'create') ? btn_link(url('coop.consolidated_import'), 'Consolidated Import', 'btn-outline-primary', 'files') . ' ' : '') . btn_link(url($pageKey), 'Savings Account Center', 'btn-outline-secondary', 'arrow-left'), 'js' => ['js/csv_review.js']]);
     echo CsvReview::render($cfg, $state);
     layout_end();
     exit;

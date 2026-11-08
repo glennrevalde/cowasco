@@ -33,6 +33,7 @@
 <li><a href="#pg-coop-templates">Document Templates</a>, if your documents use wording of your own.</li>
 <li><a href="#pg-cda-mappings">Report Field Mappings</a>, the <a href="#pg-cda-calendar">Regulatory Calendar</a> and the <a href="#pg-cda-officers">officers</a>.</li>
 <li>When moving from another system: <a href="#pg-coop-import">Opening Balances Import</a> of the members, then the savings and share capital balances, the time deposits and the loans, all as of the cut-off date.</li>
+<li>Or <a href="#pg-coop-consolidated_import">Consolidated Import</a>: the members with their savings, loans, water-service accounts and bill balances from one file.</li>
 <li>Run the <a href="#pg-rpt-coop_sl_gl">Subsidiary vs General Ledger Reconciliation</a>. It must show no difference before you go live.</li>
 </ol>
 <h2 id="s-coop-roles">Roles and rights<a class="man-hash" href="#s-coop-roles" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
@@ -161,7 +162,7 @@
 </ol>
 <p><strong>To list the members on hold:</strong> choose <strong>On hold</strong> in <strong>Show only</strong> and click <strong>Show</strong>.</p>
 <h4 id="s-coop-members-import">Importing members (Import Member)<a class="man-hash" href="#s-coop-members-import" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
-<p>For the move from the former system, the individual members are brought in from a CSV file instead of being typed one by one. Each member is created with the status <strong>Active</strong>. Import the members first, then their savings (<a href="#s-sav-accounts-import">Import Savings</a>) and time deposits (<a href="#s-sav-td-import">Import Time Deposit</a>).</p>
+<p>For the move from the former system, the individual members are brought in from a CSV file instead of being typed one by one. Each member is created with the status <strong>Active</strong>. Import the members first, then their savings (<a href="#s-sav-accounts-import">Import Savings</a>) and time deposits (<a href="#s-sav-td-import">Import Time Deposit</a>). To bring the members with their savings, loans and bill balances in one file, use <a href="#pg-coop-consolidated_import">Consolidated Import</a>.</p>
 <p><strong>Where to find it:</strong> <strong>Import Member</strong> on the title bar of the Member Center. Reading and checking a file needs the Create right on Member Information; uploading it needs the Approve right there.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coop_members__import.jpg" title="Click to enlarge"><img src="assets/manual/img/coop_members__import.jpg" alt="Import members: a file with columns of the full template read for review; the two rows with a problem are in red, the cells they name outlined" width="1094" height="955" loading="lazy" decoding="async"></a><figcaption>Import members: a file with columns of the full template read for review; the two rows with a problem are in red</figcaption></figure>
 <p><strong>The file.</strong> <strong>Download the CSV template</strong> gives the columns with two sample rows; open it in Excel, replace the samples with the members, and save it as <strong>CSV (Comma delimited)</strong>. The first line holds the column names (the template's, or the headings in words, for example "Last Name" or "Date of Birth"); one member per line after it. The card <strong>The columns</strong> on the page lists every column with what goes in it; the required ones are in bold.</p>
@@ -1092,6 +1093,86 @@
 <li>Balances can only be imported for active, applicant or suspended members.</li>
 <li>The voucher is refused when the books are closed through the cut-off date, unless you may change closed periods.</li>
 </ul>
+<h2 id="pg-coop-consolidated_import">Consolidated Import<a class="man-hash" href="#pg-coop-consolidated_import" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>One file for the members and everything they have: the members, their savings and share capital accounts with their balances, their loans with what was paid on them, their water-service account and the unpaid balances of their water bills. It does in one file what <a href="#s-coop-members-import">Import Member</a>, <a href="#s-sav-accounts-import">Import Savings</a>, <a href="#s-loan-accounts-import">Import Loans</a> and Upload Bill Balances do one at a time, with the same checks and the same entries. A member may have only savings, savings and loans, savings and bill balances, or all of them.</p>
+<p><strong>Where to find it:</strong> Members &amp; Others &gt; Consolidated Import, after Opening Balances Import. A <strong>Consolidated Import</strong> button is also on the Member Center, Import members, Import savings, Import loans and Water Billing &gt; Upload Bill Balances. Reading, checking and correcting a file needs the Create right on Consolidated Import. Saving it needs, besides, the rights of each part it holds: Approve on Member Information (the members are made Active), Approve on the Savings Account Center, Approve on the Loan Accounts Center, Create on Upload Bill Balances, Create on Water Service Accounts (accounts opened) and Create on Fixed Share Capital Billing.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coop_consolidated_import__main.jpg" title="Click to enlarge"><img src="assets/manual/img/coop_consolidated_import__main.jpg" alt="Consolidated Import: a file under review, the four kinds of lines with their counts and totals, the member lines with the line in red and its cell" width="1094" height="1458" loading="lazy" decoding="async"></a><figcaption>Consolidated Import: a file under review, with the line in red and its cell</figcaption></figure>
+<h4 id="s-coop-consolidated-format">The file: no fixed format<a class="man-hash" href="#s-coop-consolidated-format" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The file is a CSV file (comma, semicolon or tab separated) or an Excel workbook (.xlsx). Its first row names the columns, in any order and with your own names; only the columns of what you import are needed and the others may be left out. The page recognises the names of the four imports (member_no, last_name, savings_code, principal, billing_type ...), the headings in words ("Member No", "Date of Birth", "Savings Balance", "Release Date", "One-Time Balance") and the usual other names (Surname, Principal, Rate Code, Water Account, Name ...). A column with a whole name ("Dela Cruz, Juan S." or "Juan S. Dela Cruz") is split into the last, first and middle name when those columns are not in the file.</p>
+<p>A member's accounts may be in either layout, or both in one file:</p>
+<ul>
+<li><strong>One row per member.</strong> The member and the member's accounts across the row. A second account of the same kind has the columns numbered: <code>savings2_code</code>, <code>savings2_balance</code>, <code>loan2_principal</code> ... (or <code>savings_code_2</code>, "Savings Code 2"); a column name written twice is the next account. The bill balances may be given as in Upload Bill Balances, a column for each billing type (<code>recurring_balance</code>, <code>installment_balance</code>, <code>one_time_balance</code>, <code>share_capital_balance</code> with their charge categories).</li>
+<li><strong>Rows under the member.</strong> The member on its row, then one row per account with the member's columns left blank: a row with no member name and no member no. adds its accounts to the member above it. A row with the same member no., or the same name and date of birth, is the same member (its details fill what the first row left blank).</li>
+</ul>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Part</th>
+<th>Columns</th>
+<th>What it makes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Member</td>
+<td>The columns of Import Member (member_no, last_name, first_name, middle_name, birth_date, member_type, membership_date, barangay, city, province and the other details).</td>
+<td>A member, Active. A member no. already on file is that member: only the accounts and balances of the file are added and the member's details on file are not changed.</td>
+</tr>
+<tr>
+<td>Water service</td>
+<td>water_account_no; or water_rate_code and water_pipe_size (with water_zone, water_sequence, water_connection_date).</td>
+<td>The member becomes the same person as the holder of the water-service account named (the names must match), or a water-service account is opened for the member. The member's bill balances go to it.</td>
+</tr>
+<tr>
+<td>Fixed share capital billing</td>
+<td>fsc_amount (with fsc_frequency, fsc_posting_day, fsc_start_date, fsc_term_days).</td>
+<td>The member on Fixed Share Capital Billing for that amount, on the member's share capital account of the file, from the day after the cut-off date unless a start date is given. Needed for a fixed share capital balance of a new member.</td>
+</tr>
+<tr>
+<td>Savings (any number)</td>
+<td>savings_code and savings_balance; savings_account_no, savings_passbook_no, savings_opened_on, savings_cut_off_date, savings_txn_code.</td>
+<td>A savings or share capital account, Active, its balance entered on the cut-off date with the savings transaction code (as Import Savings).</td>
+</tr>
+<tr>
+<td>Loans (any number)</td>
+<td>loan_name, loan_principal, loan_term, loan_mode, loan_amort_type, loan_rate, loan_release_date, loan_principal_paid, loan_interest_paid, loan_penalties_paid; loan_no, loan_pn_no, loan_first_due and the others of Import Loans.</td>
+<td>A loan, Active, with its schedule and what was paid up to the cut-off date (as Import Loans).</td>
+</tr>
+<tr>
+<td>Bill balances (any number)</td>
+<td>bill_type, bill_charge_code, bill_balance; bill_date, bill_due_date, bill_installments, bill_payment_mode, bill_share_capital_account.</td>
+<td>A recurring, installment, one-time or fixed share capital bill on the member's water-service account, with its invoice (as Upload Bill Balances).</td>
+</tr>
+</tbody>
+</table></div>
+<p>The card <strong>The format</strong> on the page lists every column by part, the ones a part needs in bold, and has the <strong>Excel</strong> and <strong>CSV</strong> templates of both layouts (the Excel template has a second sheet explaining every column). A file may have up to 60,000 rows and 150 MB.</p>
+<h4 id="s-coop-consolidated-steps">Reading, reviewing and saving a file<a class="man-hash" href="#s-coop-consolidated-steps" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ol>
+<li>Open <strong>Members &amp; Others &gt; Consolidated Import</strong>, choose the file and click <strong>Read the file for review</strong>. The file is sent in pieces and its rows are kept in the database (a bar shows the progress); nothing is saved to the members, savings, loans or bills yet.</li>
+<li>The page of the file opens. <strong>Columns of the file</strong> says how many columns were recognised. Open it to see what each column holds, with an example from the file, and change it: choose what a column holds (or <em>Not imported</em>) and, for a savings, loan or bill column, which account of the member it is (1st, 2nd ...). <strong>Make the lines again with these columns</strong> makes the lines again from the rows of the file. The choice is remembered: the next file with the same column names is read the same way.</li>
+<li>Check <strong>Values for the blank cells</strong>: the <strong>Cut-off date</strong> (the date of the savings balances, the loans' totals paid and the bill balances), the <strong>Savings transaction code</strong>, the <strong>Loan balancing account</strong>, the <strong>Class of the bill balances</strong> (their journal entries need one), the <strong>Installments left</strong> and the <strong>Installment payment mode</strong>. A cell of the file overrides them. <strong>Use these values and check again</strong> keeps them and checks every line again.</li>
+<li>Every line is checked, in steps, with a bar: each member, savings account, loan and bill balance is a line of the review. The four boxes above the lines give the number of lines of each kind, how many have a problem and their totals; click one (or its tab) to see its lines, 50 a page, with the member of each account and the row of the file it came from.</li>
+<li>A line with a problem is in red: the reason in red under it and the cell it names in red. Correct the cell by typing in it or choosing from its list: the member is checked again at once with all its lines. Remove a line with <i class="bi bi-x-lg"></i> (a member line takes its savings, loans and bill balances with it); <strong>Put back the last</strong> brings it back, and <strong>Removed</strong> in the list on the right shows the lines removed, each with <strong>Put back</strong>. <strong>Only lines with a problem</strong> and <strong>Find in the lines</strong> narrow the list. <i class="bi bi-three-dots"></i> shows the other columns of a line.</li>
+<li>When no line is in red, click <strong>Save N members to the database</strong> and confirm. The members are saved a few at a time, each member with all its lines in one transaction, every line checked again first: the members, their water-service accounts, their savings accounts with their balances, their fixed share capital billings, their loans and their bill balances. Keep the page open until it ends. If saving stops (a member no. taken in the meantime, a lost connection), the members saved stay saved, nothing of the member that stopped it is saved, its line shows the reason in red: correct it or remove it and click <strong>Go on saving</strong>.</li>
+<li>The page of the file then says what was saved, and each line what it became (the member no., the account no., the loan no., the upload of the bill balances). Run the <a href="#pg-rpt-coop_sl_gl">Subsidiary vs General Ledger Reconciliation</a> afterwards.</li>
+</ol>
+<p>The <strong>Files read</strong> list on the first page shows each file with its number (CI-00001), the rows, its state (Under review, Being saved, Saved), who read it and when; <strong>Open</strong> goes back to it. A file under review stays until it is saved or closed (<strong>Close the file</strong>: nothing of it is saved).</p>
+<h4 id="s-coop-consolidated-checks">What is checked<a class="man-hash" href="#s-coop-consolidated-checks" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>Each member with the checks of Import Member (the required details, the dates, the member type, the branch, the same member no. or the same person on file); each savings account with those of Import Savings, each loan with those of Import Loans and each bill balance with those of Upload Bill Balances, as of a member not on file yet when the file makes it.</li>
+<li>The file as a whole: the same member no. on two member lines, the same person (name and date of birth) under two member nos., the same savings account no. or loan no. on two members, the same water-service account for two members.</li>
+<li>The water-service account: it exists and is active, it is not another member's, its holder's name is the member's; or the rate code and pipe size of the account to open are known and have a complete tariff on Water Meter Rates ("Rate code "A" is 2 rate codes ...: write its name"). A bill balance needs the member's water-service account.</li>
+<li>The fixed share capital billing: its amount, frequency, posting day, start date and term, the member's one share capital account it bills; a fixed share capital balance of a new member needs fsc_amount ("... is not on Fixed Share Capital Billing: give the fixed share capital amount (fsc_amount) on the member's line") and a date before the start of the billing.</li>
+<li>Above the lines: a missing savings transaction code, balancing account or cut-off date, a cut-off date after today, and the class when there are recurring, installment or one-time balances.</li>
+</ul>
+<h4 id="s-coop-consolidated-good-to-know">Good to know<a class="man-hash" href="#s-coop-consolidated-good-to-know" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>Accounts in a row before any member, or member details with no name, make a member line in red so nothing of the file is lost: remove it, or complete it.</li>
+<li>An existing member is named by its member no. on the line; a person on file under another number is in red with that number ("... is already a member: 100201. To add the accounts to that member, enter member no. 100201 on this line.").</li>
+<li>The entries are those of the four imports: the savings balances with the savings transaction code against its GL account (one voucher per cut-off date and code in each group of members saved), the loans against the balancing account, the recurring, installment and one-time balances each with its invoice against 39999 Legacy Water Balances Clearing, a fixed share capital balance with no journal entry.</li>
+<li>A file is saved once. Reading the same file again shows every account already on file in red.</li>
+<li>On a phone each line of the review is a card with its cells as fields.</li>
+</ul>
 <h2 id="pg-coop-profile">Cooperative Profile &amp; Policies<a class="man-hash" href="#pg-coop-profile" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>The cooperative's registration details, the names of the signatories that print on documents, and the policies the cooperative pages follow: the minimum share capital, back-dating, approval thresholds, teller rules, account number formats, loan payment rules, alerts and the year-end distribution percentages.</p>
 <p><strong>Where to find it:</strong> Members &amp; Others &gt; Cooperative Profile &amp; Policies.</p>
@@ -1941,7 +2022,7 @@
 <p><strong>To release a hold:</strong> click the account and click <strong>Unhold</strong> (grey for an account with nothing on hold). The window lists the active holds with their amount, reason, date and the user who placed them; choose one, or <strong>Every hold of the account</strong> when there are several, type the reason if you wish and click <strong>Unhold</strong>: "Unhold: 2,000.00 of 01100004011 released. Withdrawable now 6,012.75." On the account's own page, <strong>Unhold</strong> beside a hold in the <strong>Holds</strong> card releases that one.</p>
 <p>A withdrawal, transfer or batch withdrawal that would take the balance below the amount on hold is refused. Every hold and release is on the audit trail with its amount and reason.</p>
 <h4 id="s-sav-accounts-import">Importing savings accounts (Import Savings)<a class="man-hash" href="#s-sav-accounts-import" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
-<p>For the move from the former system, the members' savings and share capital accounts are brought in from a CSV file, one row per account. Each account is opened with the status <strong>Active</strong> and its balance is entered on the cut-off date with the <strong>savings transaction code</strong> you choose, whose GL account takes the other side of the journal entry. Import the members first (<a href="#s-coop-members-import">Import Member</a>).</p>
+<p>For the move from the former system, the members' savings and share capital accounts are brought in from a CSV file, one row per account. Each account is opened with the status <strong>Active</strong> and its balance is entered on the cut-off date with the <strong>savings transaction code</strong> you choose, whose GL account takes the other side of the journal entry. Import the members first (<a href="#s-coop-members-import">Import Member</a>), or bring the members and their accounts in one file with <a href="#pg-coop-consolidated_import">Consolidated Import</a>.</p>
 <p><strong>Where to find it:</strong> <strong>Import Savings</strong> on the toolbar of the Savings Account Center, after Refresh. Reading and checking a file needs the Create right; uploading it needs the Approve right.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/sav_accounts__import.jpg" title="Click to enlarge"><img src="assets/manual/img/sav_accounts__import.jpg" alt="Import savings: the code for the journal entry, the cut-off date and the rows read for review" width="1094" height="998" loading="lazy" decoding="async"></a><figcaption>Import savings: the code for the journal entry, the cut-off date and the rows read for review</figcaption></figure>
 <div class="table-responsive man-table"><table class="table table-sm">
@@ -5256,7 +5337,7 @@ For a member who has resigned, been terminated or died, a fourth mode, <strong>S
 <p><strong>To recompute a loan's balances:</strong> click <strong>Recompute balances</strong> on the Summary tab and confirm. The program rebuilds the schedule's paid columns and the running balances from the loan ledger and sets the status again ("Balances and status recomputed from the loan ledger."). Nothing is posted to the books.</p>
 <p>Saving a note, releasing collateral and recomputing need the Edit right on Loan Accounts Center.</p>
 <h4 id="s-loan-accounts-import">Importing loans (Import Loans)<a class="man-hash" href="#s-loan-accounts-import" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
-<p>For the move from the former system, the members' loans are brought in from a CSV file, one row per loan, as it was released (product, principal, terms, mode of payment, amortization type, rate and release date) with the totals paid on it up to a cut-off date. Each loan is made <strong>Active</strong> with its amortization schedule, a loan ledger from its release, and its balances at the cut-off date; from then on it is collected like any loan released here. Import the members first (<a href="#s-coop-members-import">Import Member</a>).</p>
+<p>For the move from the former system, the members' loans are brought in from a CSV file, one row per loan, as it was released (product, principal, terms, mode of payment, amortization type, rate and release date) with the totals paid on it up to a cut-off date. Each loan is made <strong>Active</strong> with its amortization schedule, a loan ledger from its release, and its balances at the cut-off date; from then on it is collected like any loan released here. Import the members first (<a href="#s-coop-members-import">Import Member</a>), or bring the members with their loans in one file with <a href="#pg-coop-consolidated_import">Consolidated Import</a>.</p>
 <p><strong>Where to find it:</strong> <strong>Import Loans</strong> on the title bar of the Loan Accounts Center. Reading and checking a file needs the Create right on Loan Accounts Center; uploading it needs the Approve right there.</p>
 <p><strong>The page.</strong> Choose the <strong>Balancing GL account</strong>: the other side of the loans' journal entry, normally <strong>Opening Balance Equity</strong> for a migration. Each loan's principal balance is debited to the loan receivable account of its product and credited to this account. Enter the <strong>Cut-off date</strong>: the date of the totals paid in the file. Both fill the cells the file leaves blank; a row can give its own. <strong>Download the CSV template</strong> gives the columns with sample rows.</p>
 <div class="table-responsive man-table"><table class="table table-sm">

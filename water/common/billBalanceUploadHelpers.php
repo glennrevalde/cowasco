@@ -324,10 +324,16 @@ function bbu_dates_sql(PDO $pdo, array $dates): string
  * needs (the charge category; the member's recurring plan; the installments left and the payment mode; the member's
  * fixed share capital billing). Each line comes back with _errors, _notes, _info, _cells, _figure (the balance),
  * _group (the billing type) and _ok (what to record).
+ * $opt (the consolidated import of Member Center, whose members and water-service accounts may not be on file yet):
+ *   virtual     account no. => a water-service account the import makes (pkey 0)
+ *   sc_plans    account no. => the fixed share capital billing the import makes for the member (plan_id 0, account_no,
+ *               status), or null when there is none (sc_missing: account no. => what to say)
+ *   memo        the bill codes read once a request
  */
-function bbu_check(PDO $pdo, array $rows, array $common): array
+function bbu_check(PDO $pdo, array $rows, array $common, array $opt = []): array
 {
-    $codes = bbu_codes($pdo);
+    static $memoCodes = null;
+    $codes = !empty($opt['memo']) ? ($memoCodes ??= bbu_codes($pdo)) : bbu_codes($pdo);
     $byId = [];
     foreach ($codes as $c) {
         $byId[(int)$c['code_id']] = $c;
@@ -357,6 +363,9 @@ function bbu_check(PDO $pdo, array $rows, array $common): array
                 $accounts['id:' . $a['pkey']] = $a;
             }
         }
+    }
+    foreach ((array)($opt['virtual'] ?? []) as $vno => $va) {
+        $accounts['no:' . $vno] = $va;
     }
     $pkeys = array_map(fn($a) => (int)$a['pkey'], $accounts);
     $types = array_map(fn($r) => bbu_type_key((string)($r['billing_type'] ?? '')), $rows);
@@ -671,7 +680,13 @@ function bbu_check(PDO $pdo, array $rows, array $common): array
             $dupKey = 'one_time|' . $pkey . '|' . (int)$bc['code_id'] . '|0|' . $billDate;
         } elseif ($type === 'share_capital' && $a) {
             $plan = null;
-            if (!$scReady) {
+            if (array_key_exists($no, (array)($opt['sc_plans'] ?? []))) {
+                // the member and the fixed billing the consolidated import makes
+                $plan = $opt['sc_plans'][$no];
+                if ($plan === null) {
+                    $err((string)($opt['sc_missing'][$no] ?? 'The member is not on Fixed Share Capital Billing.'), ['billing_type']);
+                }
+            } elseif (!$scReady) {
                 $err('Fixed Share Capital Billing is not installed on this database.', ['billing_type']);
             } else {
                 $members = array_values(array_filter($scMembers[$pkey] ?? [], fn($m) => in_array($m['status'], ['active', 'applicant'], true)));
@@ -860,7 +875,11 @@ function bbu_post(PDO $pdo, array $rows, array $common, $classValue, int $userId
         (upload_id, line_no, file_row, billing_type, water_account_id, bill_code_id, sav_account_id, bill_id, amount, bill_date, due_date, installments)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-    $pdo->beginTransaction();
+    // inside the transaction of the caller when there is one (the consolidated import of Member Center)
+    $own = !$pdo->inTransaction();
+    if ($own) {
+        $pdo->beginTransaction();
+    }
     try {
         // the accounts, the bill codes and the share capital accounts, each in one order, locked before anything is
         // written: a bill or an upload made at the same time waits
@@ -980,10 +999,12 @@ function bbu_post(PDO $pdo, array $rows, array $common, $classValue, int $userId
         Audit::log('create', 'water', 'bill_balance_upload', $uploadId, $uploadNo . ($fileName !== '' ? ' ' . $fileName : '') . ': ' . $n . ' balance(s), ' . bbu_money($total)
             . ' (' . implode(', ', array_map(fn($t) => BBU_TYPES[$t][0] . ' ' . $byType[$t][0], array_keys(array_filter($byType, fn($v) => $v[0] > 0)))) . ')',
             ['page_key' => 'water.bill_balance_upload', 'amount' => $total]);
-        $pdo->commit();
+        if ($own) {
+            $pdo->commit();
+        }
         return ['upload_id' => $uploadId, 'upload_no' => $uploadNo, 'count' => $n, 'total' => $total, 'by_type' => $byType];
     } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
+        if ($own && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
         throw $e;

@@ -31,13 +31,16 @@ final class XlsxReader
      * something (rows of empty, merely formatted cells are left out). Fails with a message the user can act on when
      * the file is not a workbook.
      */
-    public static function rows(string $path, int $max = 20000): array
+    public static function rows(string $path, int $max = 20000, int $maxCols = self::MAX_COLS): array
     {
-        return array_values(self::numbered($path, $max));
+        return array_values(self::numbered($path, $max, $maxCols));
     }
 
-    /** The rows that hold something, keyed by their row number in the worksheet */
-    public static function numbered(string $path, int $max = 20000): array
+    /**
+     * The rows that hold something, keyed by their row number in the worksheet. $maxCols: the columns read (the
+     * consolidated import of members has a column for every detail of a member and of each of the member's accounts)
+     */
+    public static function numbered(string $path, int $max = 20000, int $maxCols = self::MAX_COLS): array
     {
         if (!self::available()) {
             fail('Excel files cannot be read on this server (PHP zip extension is off). Save the file as CSV (Comma delimited) and choose it again.');
@@ -81,7 +84,7 @@ final class XlsxReader
                 $ref = (string)($c->attributes()['r'] ?? '');
                 $col = $ref !== '' ? self::colIndex(preg_replace('/\d+/', '', $ref)) : $next;
                 $next = $col + 1;
-                if ($col >= self::MAX_COLS) {
+                if ($col >= $maxCols) {
                     continue;
                 }
                 $text = self::cellText($c, $strings, $dateStyles);

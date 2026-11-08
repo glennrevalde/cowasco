@@ -14,6 +14,17 @@ declare(strict_types=1);
  */
 final class CsvImports
 {
+    /**
+     * Who a savings or time deposit row's member code names (the consolidated import of Member Center gives the members
+     * of its file, not yet on file); null: the member on file
+     */
+    public static ?Closure $memberResolver = null;
+
+    /** The lists check() reads are read once a request (the consolidated import checks one member at a time) */
+    public static bool $memo = false;
+
+    private static array $lists = [];
+
     public const KINDS = [
         'members' => ['Members', 'member', 'members'],
         'savings' => ['Savings', 'account', 'accounts'],
@@ -335,24 +346,7 @@ final class CsvImports
             }
         }
         unset($r);
-        $types = [];
-        foreach (Members::types() as $t) {
-            $types[mb_strtolower((string)$t['code'])] = $t;
-            $types[mb_strtolower((string)$t['name'])] = $t;
-        }
-        $branches = [];
-        foreach (Coop::branches() as $b) {
-            $branches[mb_strtolower((string)$b['code'])] = $b;
-            $branches[mb_strtolower((string)$b['name'])] = $b;
-        }
-        $products = [];
-        foreach (DB::all('SELECT * FROM sav_products') as $p) {
-            $products[mb_strtoupper((string)$p['code'])] = $p;
-        }
-        $codes = [];
-        foreach (DB::all('SELECT c.*, a.code AS acode, a.name AS aname FROM sav_txn_codes c LEFT JOIN accounts a ON a.id = c.opposite_account_id') as $c) {
-            $codes[mb_strtoupper((string)$c['code'])] = $c;
-        }
+        [$types, $branches, $products, $codes] = self::lists();
         if (in_array($kind, ['deposit', 'withdrawal'], true)) {
             $general = array_merge($general, self::checkBatchHeader($kind, $opt, $codes));
         }
@@ -411,6 +405,35 @@ final class CsvImports
         unset($r);
         $bad = count(array_filter($rows, fn($x) => $x['_errors']));
         return [$rows, ['rows' => count($rows), 'bad' => $bad, 'total' => Dec::fix($total)], $general];
+    }
+
+    /** The member types, branches, savings products and savings transaction codes, by what a file may write */
+    private static function lists(): array
+    {
+        if (self::$memo && self::$lists) {
+            return self::$lists;
+        }
+        $types = [];
+        foreach (Members::types() as $t) {
+            $types[mb_strtolower((string)$t['code'])] = $t;
+            $types[mb_strtolower((string)$t['name'])] = $t;
+        }
+        $branches = [];
+        foreach (Coop::branches() as $b) {
+            $branches[mb_strtolower((string)$b['code'])] = $b;
+            $branches[mb_strtolower((string)$b['name'])] = $b;
+        }
+        $products = [];
+        foreach (DB::all('SELECT * FROM sav_products') as $p) {
+            $products[mb_strtoupper((string)$p['code'])] = $p;
+        }
+        $codes = [];
+        foreach (DB::all('SELECT c.*, a.code AS acode, a.name AS aname FROM sav_txn_codes c LEFT JOIN accounts a ON a.id = c.opposite_account_id') as $c) {
+            $codes[mb_strtoupper((string)$c['code'])] = $c;
+        }
+        $l = [$types, $branches, $products, $codes];
+        self::$lists = self::$memo ? $l : [];
+        return $l;
     }
 
     private static function checkMember(array &$r, array $types, array $branches, array &$seen): array
@@ -610,7 +633,7 @@ final class CsvImports
             $err[] = 'Enter the member code.';
             return null;
         }
-        $m = DB::row('SELECT * FROM members WHERE member_no = :n', ['n' => $no]);
+        $m = self::$memberResolver ? (self::$memberResolver)($no) : DB::row('SELECT * FROM members WHERE member_no = :n', ['n' => $no]);
         if (!$m) {
             $err[] = 'Member code ' . $no . ' is not on file (import the members first).';
             return null;
@@ -1007,7 +1030,7 @@ final class CsvImports
                 'res_street' => trim((string)$r['street']) ?: null, 'res_barangay' => trim((string)$r['barangay']), 'res_city' => trim((string)$r['city']), 'res_province' => trim((string)$r['province']),
                 'mobile' => trim((string)$r['mobile']) ?: null, 'email' => trim((string)$r['email']) ?: null, 'tin' => trim((string)$r['tin']) ?: null,
                 'par_value' => Dec::fix(Dec::of(Coop::setting('default_par_value', '100'))), 'status' => 'active',
-            ], $x['tabs'], null, $pageKey);
+            ] + (!empty($r['_link_party_id']) ? ['link_party_id' => (int)$r['_link_party_id']] : []), $x['tabs'], null, $pageKey);
             $out[$i] = (string)DB::value('SELECT member_no FROM members WHERE id = :id', ['id' => $id]);
         }
         ksort($out);
@@ -1072,8 +1095,8 @@ final class CsvImports
         }
         // one journal voucher per cut-off date and code: the member accounts credited, the code's GL account debited
         $groups = [];
-        foreach ($rows as $r) {
-            $groups[$r['cut_off_date'] . '|' . $r['savings_txn_code']][] = $r;
+        foreach ($rows as $i => $r) {
+            $groups[$r['cut_off_date'] . '|' . $r['savings_txn_code']][$i] = $r;
         }
         $out = [];
         foreach ($groups as $key => $grp) {
@@ -1093,7 +1116,7 @@ final class CsvImports
                 $gl[] = ['account_id' => (int)$c['opposite_account_id'], 'debit' => $sum, 'memo' => $c['code'] . ' ' . $c['description']];
                 $txnId = CoopLedger::post('coop_jv', ['txn_date' => $date, 'memo' => 'Savings import as of ' . fdate($date) . ' (' . $c['code'] . ' ' . $c['description'] . ')', 'reason' => 'Import of savings balances'], $gl);
             }
-            foreach ($grp as $r) {
+            foreach ($grp as $i => $r) {
                 $m = DB::row('SELECT * FROM members WHERE member_no = :n', ['n' => $r['member_code']]);
                 $p = $products[$r['savings_code']];
                 $opened = $r['opened_on'] !== '' ? $r['opened_on'] : $date;
@@ -1113,12 +1136,14 @@ final class CsvImports
                     Savings::move(Savings::account($id, true), $c['code'], 'credit', $r['amount'], $date, ['txn_id' => $txnId, 'description' => $c['description'], 'ref_type' => 'import',
                         'opposite_account_id' => (int)$c['opposite_account_id'], 'is_system' => true]);
                 }
-                $out[] = (string)DB::value('SELECT account_no FROM sav_accounts WHERE id = :id', ['id' => $id]);
+                $out[$i] = (string)DB::value('SELECT account_no FROM sav_accounts WHERE id = :id', ['id' => $id]);
             }
             DB::insert('coop_imports', ['kind' => 'savings', 'as_of' => $date, 'rows_count' => count($grp), 'total' => Dec::fix($sum), 'offset_account_id' => (int)$c['opposite_account_id'], 'txn_id' => $txnId,
                 'file_name' => mb_substr($fileName, 0, 190) ?: null, 'summary_json' => json_encode(['source' => 'csv_review', 'code' => $c['code']]), 'created_by' => Auth::id()]);
         }
-        return $out;
+        // the account numbers in the order of the rows
+        ksort($out);
+        return array_values($out);
     }
 
     private static function postTd(array $rows, array $opt, string $fileName, string $pageKey): array

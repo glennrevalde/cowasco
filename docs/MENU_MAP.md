@@ -21,7 +21,7 @@ are retired (table at the end) and open the page that replaces them.
 
 ## Members & Others
 
-- **Transactions** (3): Member Center `coop.members`; Member Statement of Account `coop.member_statement`; Opening Balances Import `coop.import`
+- **Transactions** (4): Member Center `coop.members`; Member Statement of Account `coop.member_statement`; Opening Balances Import `coop.import`; Consolidated Import `coop.consolidated_import`
 - **Setup** (7): Cooperative Profile & Policies `coop.profile`; Branches `coop.branches`; Member Types, Clusters & Other Lists `coop.lists`; Passbook Types `coop.passbooks`; Document Numbering `coop.numbering`; Document Templates `coop.templates`; Lines of Business `coop.business_units`
 - **Reports** (11): Member Master List `rpt.coop_members`; Membership Movement `rpt.coop_member_movement`; Share Capital Balances `rpt.coop_share_capital`; Capital Build-up `rpt.coop_cbu`; Statement of Financial Condition `rpt.coop_sfc`; Statement of Operations `rpt.coop_sop`; Statement of Changes in Equity `rpt.coop_sce`; Statutory Funds `rpt.coop_statutory_funds`; Subsidiary vs General Ledger Reconciliation `rpt.coop_sl_gl`; Document Print History `rpt.coop_document_prints`; Statement of Operations by Line of Business `rpt.sop_business_unit`
 
@@ -150,4 +150,4 @@ The file still answers (old bookmarks keep working): it shows why the page is re
 | `water_rate_discounts.php` | General Discounts `water.discounts` | Configure all values directly in General Discounts. |
 | `print_meter_reading_list.php` | Meter Reading List Print `water.meter_reading_list_print` | Use Meter Reading List Print. |
 
-19 menus, 348 menu entries.
+19 menus, 349 menu entries.

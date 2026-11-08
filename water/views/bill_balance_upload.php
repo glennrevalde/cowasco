@@ -169,6 +169,9 @@ table.bu-table tfoot td { font-weight:800; background:var(--surface); border-top
             <h1 class="page-title">Upload Bill Balances</h1>
             <p class="page-sub">Bring in the unpaid balances of the members' and customers' bills from a file: recurring, installment, one-time and fixed share capital. A member may have one, two, three or all four of them. Every balance is shown for review first: correct a cell or remove a line, then record them. Nothing is recorded while a line has a problem, and then every balance or none.</p>
         </div>
+        <?php if (class_exists('Access') && Access::can('coop.consolidated_import', 'create')): ?>
+            <a class="btn btn-ghost" href="<?= e(url('coop.consolidated_import')) ?>" title="The members with their savings, loans and bill balances from one file">Consolidated Import</a>
+        <?php endif; ?>
     </div>
 
     <?php if (!$ready): ?>

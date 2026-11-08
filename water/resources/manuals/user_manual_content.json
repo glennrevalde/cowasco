@@ -503,7 +503,8 @@
                 "The recurring, installment and one-time balances are receivables: each gets its invoice, debit the bill code's A/R account, credit the Legacy Water Balances Clearing account (39999). No income is recognised again, no stock moves for a material and no member discount is taken.",
                 "The balances are collected on Collections (Cashier) as any bill and are on the Individual Statement of Account.",
                 "The same balance is not uploaded twice: a line with the account, billing type, charge category, date and balance of an earlier upload is refused (unless that bill was cancelled); one recurring bill a date on a subscription and one share capital bill a date on a fixed billing.",
-                "A bill date after today, or in closed books (without the right to change a closed period), is refused. Recording takes the Create right on Upload Bill Balances; the page is given by the migration to the roles that have One-Time Billing."
+                "A bill date after today, or in closed books (without the right to change a closed period), is refused. Recording takes the Create right on Upload Bill Balances; the page is given by the migration to the roles that have One-Time Billing.",
+                "To bring the members with their savings, loans and bill balances from one file, use Members & Others > Consolidated Import (the Consolidated Import button on this page): each member's bill balances go to the member's water-service account, named by its account no. or opened from a rate code and a pipe size, with the same checks and entries as this page."
             ]
         },
         {

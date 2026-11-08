@@ -23,7 +23,7 @@ if (g('a') === 'import') {
         'help' => 'Dates as YYYY-MM-DD or MM/DD/YYYY. A member no. or a name and date of birth already on file is refused.',
     ];
     $state = CsvReview::handle($cfg);
-    coop_layout('Import members', ['actions' => btn_link(url($pageKey), 'Member Center', 'btn-outline-secondary', 'arrow-left'), 'js' => ['js/csv_review.js']]);
+    coop_layout('Import members', ['actions' => (Access::can('coop.consolidated_import', 'create') ? btn_link(url('coop.consolidated_import'), 'Consolidated Import', 'btn-outline-primary', 'files') . ' ' : '') . btn_link(url($pageKey), 'Member Center', 'btn-outline-secondary', 'arrow-left'), 'js' => ['js/csv_review.js']]);
     echo CsvReview::render($cfg, $state);
     layout_end();
     exit;
@@ -107,6 +107,9 @@ if (Access::can('coop.member', 'create')) {
 }
 if (Access::can('coop.member', 'create')) {
     $actions .= ' ' . btn_link(url($pageKey, ['a' => 'import']), 'Import Member', 'btn-outline-primary', 'filetype-csv');
+}
+if (Access::can('coop.consolidated_import', 'create')) {
+    $actions .= ' ' . btn_link(url('coop.consolidated_import'), 'Consolidated Import', 'btn-outline-primary', 'files');
 }
 if (Access::page('rpt.coop_members')) {
     $actions .= ' ' . btn_link(url('rpt.coop_members'), 'Masterlist report', 'btn-outline-secondary', 'file-earmark-spreadsheet');

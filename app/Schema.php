@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 final class Schema
 {
-    private const FLAG = 'schema_ok_2027_04_18';
+    private const FLAG = 'schema_ok_2027_04_25';
 
     /**
      * file => one cheap probe.
@@ -198,6 +198,12 @@ final class Schema
             "SELECT (SELECT COUNT(*) FROM pages WHERE page_key = 'water.bill_balance_upload')
                     + 0 * (SELECT COUNT(*) FROM water_balance_uploads WHERE 1 = 0)
                     + 0 * (SELECT COUNT(*) FROM water_balance_upload_lines WHERE 1 = 0)", 1],
+        // version 56: Consolidated Import (the files, their rows and the lines of the review; the page is added last)
+        'database/migrations/2027_04_25_consolidated_import.sql' => [
+            "SELECT (SELECT COUNT(*) FROM pages WHERE page_key = 'coop.consolidated_import')
+                    + 0 * (SELECT COUNT(*) FROM coop_import_batches WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(*) FROM coop_import_raw WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(member_line_no) FROM coop_import_lines WHERE 1 = 0)", 1],
     ];
 
     private static ?array $pending = null;

@@ -300,7 +300,7 @@ final class CsvReview
      * The cells a row's messages name. $cells (the row's _cells) maps the position of a message to the columns the
      * check names itself; any other message names the columns whose label (or key) it uses.
      */
-    private static function named(array $errs, array $cols, array $cells = []): array
+    public static function named(array $errs, array $cols, array $cells = []): array
     {
         $out = [];
         foreach (array_values($errs) as $i => $e) {
