@@ -8,8 +8,9 @@ declare(strict_types=1);
  *   - Printed:     the whole form is printed on plain paper (the frames, the titles, the labels and the entries), as
  *                  before;
  *   - Pre-Printed: only the entries are printed, each where the pre-printed form has room for it.
- * The receipts are the water bill / collection receipt (Collections, Payment History: two copies side by side, the
- * Cooperative's and the Consumer's) and the official receipt (Generate Official Receipt).
+ * The receipts are the water bill / collection receipt (Collections, Payment History: two copies, the Cooperative's
+ * and the Consumer's, one above the other on Letter bond paper since version 57) and the official receipt (Generate
+ * Official Receipt).
  *
  * The layout of the pre-printed form is set on Water Billing > Setup > Receipt Layout Setup, as a passbook is on
  * Passbook Types: the paper, the top, right, bottom and left margins, and for each part of the receipt (the header, the
@@ -66,15 +67,15 @@ final class WaterReceiptLayout
     ];
     public const ZERO = ['' => 'blank', '-' => 'a dash', '0' => '0.00'];
     public const ALIGN = ['l' => 'Left', 'r' => 'Right', 'c' => 'Centre'];
-    public const FONTS = ['mono' => 'Dot matrix (Courier New)', 'sans' => 'Arial'];
+    public const FONTS = ['mono_bold' => 'Dot matrix, bold (Courier New Bold)', 'mono' => 'Dot matrix (Courier New)', 'sans' => 'Arial'];
     public const CPI = [0 => 'As the font size', 10 => '10 (pica)', 12 => '12 (elite)', 15 => '15', 17 => '17 (condensed)', 20 => '20 (condensed elite)'];
     public const PAGE_SIZES = [
-        '12474x5670'  => 'Water bill 22 x 10 cm (two copies side by side)',
+        '12240x15840' => 'Letter 8.5 x 11 in, portrait (the water bill: two copies, one above the other)',
         '12960x7920'  => 'Official receipt 9 x 5.5 in',
-        '6237x5670'   => 'Half of a water bill 11 x 10 cm (one copy)',
-        '12240x7920'  => 'Half letter 8.5 x 5.5 in',
-        '12240x15840' => 'Letter 8.5 x 11 in (test on plain paper)',
-        '11906x16838' => 'A4 21 x 29.7 cm (test on plain paper)',
+        '12240x7920'  => 'Half letter 8.5 x 5.5 in (one copy of the water bill)',
+        '12474x5670'  => 'Former water bill form 22 x 10 cm (two copies side by side)',
+        '6237x5670'   => 'Half of the former water bill form 11 x 10 cm (one copy)',
+        '11906x16838' => 'A4 21 x 29.7 cm',
     ];
     /** The measurements of a layout: key => [label, min, max] (tups unless said) */
     public const MEASURES = [
@@ -83,7 +84,7 @@ final class WaterReceiptLayout
         'header_top' => ['Header: Top', -14400, 30000], 'header_left' => ['Header: Left', -14400, 30000],
         'body_top' => ['Lines: Top', -14400, 30000], 'body_left' => ['Lines: Left', -14400, 30000], 'body_interval' => ['Lines: Interval', 50, 2000], 'max_lines' => ['Max Lines', 1, 40],
         'footer_top' => ['Totals: Top', -14400, 30000], 'footer_left' => ['Totals: Left', -14400, 30000],
-        'copies' => ['Copies across the paper', 1, 2], 'copy_left' => ['Second copy: Left', 0, 30000], 'copy_top' => ['Second copy: Top', 0, 30000],
+        'copies' => ['Copies on the paper', 1, 2], 'copy_left' => ['Second copy: Left', 0, 30000], 'copy_top' => ['Second copy: Top', 0, 30000],
     ];
 
     // ================================================================================== the setting
@@ -95,17 +96,27 @@ final class WaterReceiptLayout
         return isset(self::TYPES[$v]) ? $v : 'printed';
     }
 
-    /** The saved layout of a receipt, or its default */
+    /**
+     * The saved layout of a receipt, or its default. A saved layout that is still the former default of the water bill
+     * (22 x 10 cm, two copies side by side: saved without a change before version 57) is the default of now.
+     */
     public static function get(string $kind): array
     {
         $j = json_decode(Settings::get(self::LAYOUT_SETTING[$kind] ?? '', ''), true);
-        return is_array($j) && isset($j['setup'], $j['body']) ? self::clean($kind, $j) : self::defaultLayout($kind);
+        if (!is_array($j) || !isset($j['setup'], $j['body'])) {
+            return self::defaultLayout($kind);
+        }
+        $l = self::clean($kind, $j);
+        return $kind === 'collection' && $l === self::clean('collection', self::formerCollectionLayout()) ? self::defaultLayout($kind) : $l;
     }
 
     public static function isCustom(string $kind): bool
     {
         $j = json_decode(Settings::get(self::LAYOUT_SETTING[$kind] ?? '', ''), true);
-        return is_array($j) && isset($j['setup']);
+        if (!is_array($j) || !isset($j['setup'])) {
+            return false;
+        }
+        return !($kind === 'collection' && isset($j['body']) && self::clean('collection', $j) === self::clean('collection', self::formerCollectionLayout()));
     }
 
     public static function save(string $kind, array $layout, string $pageKey, string $reason = ''): void
@@ -134,8 +145,9 @@ final class WaterReceiptLayout
     }
 
     /**
-     * Where the Printed receipts put each entry (measured on them): the water bill is 22 x 10 cm with the Cooperative's
-     * copy on the left and the Consumer's copy 6,322 tups to its right; the official receipt is 9 x 5.5 inches.
+     * Where the Printed receipts put each entry (measured on them): the water bill is a Letter sheet, portrait, with the
+     * Cooperative's copy on the upper half and the Consumer's copy 7,920 tups (5.5 in) below it (version 57); the
+     * official receipt is 9 x 5.5 inches.
      */
     public static function defaultLayout(string $kind): array
     {
@@ -151,6 +163,35 @@ final class WaterReceiptLayout
                     $it('total_amount_due', 9558, 3528, 1902, 'r', 'comma'), $it('exempt_sales', 9558, 4305, 1902, 'r', 'comma')],
             ];
         }
+        // Letter bond paper, portrait: the Cooperative's copy on the upper half, the Consumer's copy 5.5 in (7,920 tups)
+        // below it; each entry where the plain-paper receipt prints it (water/views/collection_receipt.php, version 57)
+        return [
+            'setup' => ['page_width' => 12240, 'page_height' => 15840, 'margin_top' => 0, 'margin_right' => 0, 'margin_bottom' => 0, 'margin_left' => 0,
+                'header_top' => 0, 'header_left' => 0, 'body_top' => 4244, 'body_left' => 0, 'body_interval' => 288, 'max_lines' => 3,
+                'footer_top' => 0, 'footer_left' => 0, 'copies' => 2, 'copy_left' => 0, 'copy_top' => 7920, 'font' => 'mono_bold', 'cpi' => 0, 'font_size_pt' => '11.0'],
+            'header' => [
+                $it('account', 764, 1994), $it('name', 2574, 1994, 5312, 'l', '', 12), $it('number', 8102, 1994, 0, 'l', '', 10),
+                $it('address', 1633, 2517), $it('rate_code', 9116, 2517),
+                $it('prev_date', 3072, 3244, 1440, 'r', '', 10.5), $it('pres_date', 3072, 3604, 1440, 'r', '', 10.5), $it('due_date', 3072, 3964, 1440, 'r', '', 10.5),
+                $it('charge_mode', 3072, 4324, 1440, 'r', '', 10.5), $it('disconnection', 3072, 4684, 1440, 'r', '', 10.5),
+                $it('present', 4728, 3146, 2115, 'c', '', 12), $it('previous', 7059, 3146, 2100, 'c', '', 12), $it('usage', 9376, 3146, 2100, 'c', '', 12),
+                $it('water_fee', 10036, 3668, 1440, 'r', 'comma', 10.5), $it('arrears', 10036, 3956, 1440, 'r', 'comma', 10.5),
+            ],
+            'body' => [$it('description', 4728, 0, 0, 'l', '', 10), $it('amount', 10036, 0, 1440, 'r', 'comma', 10.5)],
+            'footer' => [
+                $it('paid_at', 764, 5156), $it('amount_due', 8102, 5156, 3374, 'r', 'comma', 13), $it('words', 2390, 5999, 0, 'l', '', 10),
+                $it('cash', 3938, 6409, 2368, 'c', 'comma'), $it('amount_due', 6523, 6409, 2368, 'c', 'comma'), $it('change', 9108, 6409, 2368, 'c', 'comma'),
+            ],
+        ];
+    }
+
+    /**
+     * The default of the water bill before version 57: the former form of 22 x 10 cm, the Cooperative's copy on the
+     * left and the Consumer's copy 6,322 tups to its right. A layout saved as it was is read as the default of now.
+     */
+    public static function formerCollectionLayout(): array
+    {
+        $it = [self::class, 'it'];
         return [
             'setup' => ['page_width' => 12474, 'page_height' => 5670, 'margin_top' => 0, 'margin_right' => 0, 'margin_bottom' => 0, 'margin_left' => 0,
                 'header_top' => 0, 'header_left' => 0, 'body_top' => 3406, 'body_left' => 0, 'body_interval' => 139, 'max_lines' => 2,
@@ -227,6 +268,9 @@ final class WaterReceiptLayout
         }
         if ($s['copies'] === 2 && $s['copy_left'] === 0 && $s['copy_top'] === 0) {
             $out[] = 'The second copy prints over the first one: set its Left or Top.';
+        }
+        if ($kind === 'collection' && $s['page_width'] === 12474 && $s['page_height'] === 5670) {
+            $out[] = 'This layout is for the former 22 x 10 cm form. "Back to the default layout" prints on Letter bond paper, portrait, the two copies one above the other.';
         }
         return $out;
     }
@@ -391,7 +435,7 @@ final class WaterReceiptLayout
         $s = $l['setup'];
         $area = 'left:' . self::inch($s['margin_left']) . ';top:' . self::inch($s['margin_top'])
             . ';width:' . self::inch(max(0, $s['page_width'] - $s['margin_left'] - $s['margin_right'])) . ';height:' . self::inch(max(0, $s['page_height'] - $s['margin_top'] - $s['margin_bottom']));
-        $html = '<div class="wrl-page' . ($s['font'] === 'sans' ? ' wrl-sans' : '') . '" data-wrl="' . h($kind) . '" style="width:' . self::inch($s['page_width']) . ';height:' . self::inch($s['page_height'])
+        $html = '<div class="wrl-page' . ($s['font'] === 'sans' ? ' wrl-sans' : '') . ($s['font'] === 'mono_bold' ? ' wrl-bold' : '') . '" data-wrl="' . h($kind) . '" style="width:' . self::inch($s['page_width']) . ';height:' . self::inch($s['page_height'])
             . ';font-size:' . (float)$s['font_size_pt'] . 'pt"><div class="wrl-area" style="' . $area . '">';
         $fit = self::fitLines($lines, (int)$s['max_lines'], $restLabel);
         for ($c = 0; $c < ($kind === 'collection' ? (int)$s['copies'] : 1); $c++) {
@@ -420,6 +464,7 @@ final class WaterReceiptLayout
         $s = $l['setup'];
         $css = '.wrl-page{position:relative;background:#fff;color:#000;overflow:hidden;font-family:"Courier New",Courier,monospace;line-height:1.15;box-sizing:border-box;print-color-adjust:exact;-webkit-print-color-adjust:exact}'
             . '.wrl-page.wrl-sans{font-family:Arial,Helvetica,sans-serif}'
+            . '.wrl-page.wrl-bold{font-weight:700}'
             . '.wrl-area{position:absolute;overflow:hidden}'
             . '.wrl-f{position:absolute;white-space:nowrap}'
             . '@media screen{.wrl-page{box-shadow:0 10px 28px rgba(15,23,42,.16);outline:1px dashed #cbd5e1;outline-offset:-1px}.wrl-area{outline:1px dotted #e2e8f0}}'

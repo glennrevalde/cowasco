@@ -202,7 +202,8 @@ test('Pre-printed receipts: the layout is kept clean, saved and put back to the 
 
     // the default layouts: the forms of the cooperative, two copies of the water bill side by side
     $col = WaterReceiptLayout::defaultLayout('collection');
-    eq([$col['setup']['page_width'], $col['setup']['page_height'], $col['setup']['copies'], $col['setup']['copy_left']], [12474, 5670, 2, 6322], 'the water bill: 22 x 10 cm, two copies');
+    eq([$col['setup']['page_width'], $col['setup']['page_height'], $col['setup']['copies'], $col['setup']['copy_left'], $col['setup']['copy_top']], [12240, 15840, 2, 0, 7920],
+        'the water bill: Letter, portrait, two copies one above the other (version 57; 22 x 10 cm side by side before)');
     eq(WaterReceiptLayout::warnings('collection', $col), [], 'the default layout has nothing to warn about');
     $or = WaterReceiptLayout::defaultLayout('official');
     eq([$or['setup']['page_width'], $or['setup']['page_height'], $or['setup']['max_lines']], [12960, 7920, 11], 'the official receipt: 9 x 5.5 in, 11 lines');

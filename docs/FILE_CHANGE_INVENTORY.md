@@ -7,12 +7,12 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 |---|---:|
 | Cooperative system, unchanged | 663 |
 | Cooperative system, changed | 209 |
-| Water system, unchanged (under water/) | 26 |
-| Water system, adapted (under water/) | 212 |
-| New | 346 |
+| Water system, unchanged (under water/) | 24 |
+| Water system, adapted (under water/) | 214 |
+| New | 356 |
 | Cooperative files not shipped | 1 |
 | Water files not shipped | 61 |
-| **Shipped in total** | **1456** |
+| **Shipped in total** | **1466** |
 
 ## New files
 
@@ -45,8 +45,11 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v54.txt`
 - `UPGRADE_v55.txt`
 - `UPGRADE_v56.txt`
+- `UPGRADE_v57.txt`
 - `app/AccountTypes.php`
+- `app/BillAccounts.php`
 - `app/Clearing.php`
+- `app/CoaImport.php`
 - `app/ConsolidatedImport.php`
 - `app/CsvImports.php`
 - `app/CsvReview.php`
@@ -67,6 +70,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `app/reports/comparative.php`
 - `app/reports/item_groups.php`
 - `app/reports/water.php`
+- `assets/js/bill_accounts.js`
 - `assets/js/consolidated_import.js`
 - `assets/js/csv_review.js`
 - `assets/js/datefield.js`
@@ -86,9 +90,11 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/manual/img/bank_deposits__settle.jpg`
 - `assets/manual/img/bank_deposits__settle_gross.jpg`
 - `assets/manual/img/bank_deposits__settlements.jpg`
+- `assets/manual/img/bill_accounts__main.jpg`
 - `assets/manual/img/coa_account_types__edit.jpg`
 - `assets/manual/img/coa_account_types__main.jpg`
 - `assets/manual/img/coa_account_types__new.jpg`
+- `assets/manual/img/coa_accounts__import.jpg`
 - `assets/manual/img/coop_consolidated_import__main.jpg`
 - `assets/manual/img/coop_member__water.jpg`
 - `assets/manual/img/coop_members__import.jpg`
@@ -190,6 +196,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `database/migrations/2027_04_11_sales_by_member_type.sql`
 - `database/migrations/2027_04_18_bill_balance_upload.sql`
 - `database/migrations/2027_04_25_consolidated_import.sql`
+- `database/migrations/2027_05_02_bill_accounts_center.sql`
 - `database/seeds/water_reference.sql`
 - `docs/ADDITIONAL_MODULE_V10_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V11_CHECKLIST.md`
@@ -203,6 +210,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `docs/ADDITIONAL_MODULE_V19_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V20_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V21_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V22_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V2_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V3_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V4_CHECKLIST.md`
@@ -240,6 +248,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `modules/coop/consolidated_import.php`
 - `modules/coop/loan_vouchers.php`
 - `modules/coop/sav_center.php`
+- `modules/water/bill_accounts.php`
 - `modules/water/page.php`
 - `storage/migration/.gitkeep`
 - `storage/water_migration/.gitkeep`
@@ -271,6 +280,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v54.php`
 - `tests/coop/cases_v55.php`
 - `tests/coop/cases_v56.php`
+- `tests/coop/cases_v57.php`
 - `tests/coop/cases_water.php`
 - `tests/platform/provision_test.php`
 - `tests/platform/run.sh`
@@ -585,7 +595,7 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 - `water/common/`: 32
 - `water/database/`: 1
 - `water/process/`: 102
-- `water/resources/`: 1
+- `water/resources/`: 3
 - `water/views/`: 75
 
 <details><summary>Every adapted water file</summary>
@@ -726,6 +736,8 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 - `water/process/updateMemberRateCode.php`
 - `water/process/updateMemberSequence.php`
 - `water/process/updateWaterRateGroup.php`
+- `water/resources/css/cowassco_measured_receipt.css`
+- `water/resources/js/cowassco_measured_receipt.js`
 - `water/resources/manuals/user_manual_content.json`
 - `water/views/access_control.php`
 - `water/views/account_setup_required.php`
@@ -809,7 +821,7 @@ bridge `app/WaterPosting.php` instead of the former journal tables. By folder:
 
 - `water/common/`: 8
 - `water/process/`: 12
-- `water/resources/`: 5
+- `water/resources/`: 3
 - `water/seeders/`: 1
 
 ## Not shipped

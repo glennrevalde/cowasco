@@ -2147,6 +2147,14 @@ table.isoa-pick td[data-label="Date"], table.isoa-pick td[data-label="Due date"]
     });
     isoaEl('isoaChange').addEventListener('click', () => { isoaEl('isoaSearch').value = ''; isoaEl('isoaSearch').focus(); });
     isoaEl('isoaScope').addEventListener('change', () => { isoa.invoices = []; isoa.selected = new Set(); isoaLoad(); });
+    // opened from the Bill Accounts Center (?tab=individual&account=<account no.>): that member or customer is chosen
+    const isoaPreset = (new URLSearchParams(window.location.search).get('account') || '').trim();
+    if (isoaPreset !== '') {
+        isoaFetch({ action: 'search', q: isoaPreset, kind: 'all', statement_date: isoaDate() }).then(d => {
+            const hit = (d.accounts || []).find(a => (a.accounts || []).some(x => String(x.account_number) === isoaPreset));
+            if (hit) isoaChoose(hit);
+        }).catch(() => {});
+    }
 
     function isoaChoose(account) {
         if (!account) return;

@@ -3,7 +3,7 @@
         "product": "Water Billing",
         "title": "Water Billing User Manual",
         "subtitle": "Water operations in the integrated cooperative system",
-        "version": "2.6",
+        "version": "2.7",
         "revision_date": "8 November 2026",
         "audience": "System administrators, billing officers, meter readers, cashiers, accountants, inventory officers and authorized report users",
         "support_note": "Page availability depends on the user's roles and the pages given to them in Page Access Configuration."
@@ -508,6 +508,47 @@
             ]
         },
         {
+            "id": "bill-accounts-center",
+            "category": "Statements and History",
+            "title": "See every bill of the members and customers (Bill Accounts Center)",
+            "summary": "One grid of every water, one-time, recurring, installment and fixed share capital bill, the open ones by default; filter, export to Excel or CSV, print or save as PDF, and open the account's collection, statement or ledger.",
+            "keywords": [
+                "bill accounts center",
+                "bills",
+                "invoices",
+                "open bills",
+                "unpaid bills",
+                "closed bills",
+                "fully paid",
+                "balance",
+                "overdue",
+                "receivables",
+                "zone",
+                "address sub-group",
+                "bill code",
+                "export",
+                "excel",
+                "csv",
+                "pdf",
+                "print"
+            ],
+            "page": "bill.accounts",
+            "page_file": "",
+            "steps": [
+                "Open Water Billing > Billing > Bill Accounts Center. It shows the open bills (not fully paid) of every member and customer, one line per invoice: Account No., Name, Description, Bill Date, Invoice No., Due Date, Amount, Paid, Balance and Status.",
+                "Type a name, an account no., an invoice no. or a member no. in the search box: the grid follows as you type.",
+                "Click Filter to choose the bill status (Open, Open and overdue, Open not yet due, Closed (fully paid), Open and closed, Cancelled), the bill code, the zone, the address sub-group, members or customers, the bill type, the bill dates and the order.",
+                "Click a bill, then Collection (the cashier with the account chosen), Statement (the Individual Statement of Account), Ledger or Account; double-click it for the statement; right-click it (on a phone: the three dots) for the same actions.",
+                "Export makes an Excel workbook or a CSV file of every bill found; Print / PDF prints them on a landscape page (choose Save as PDF in the print window for a PDF file)."
+            ],
+            "notes": [
+                "An installment shows each amortization as a bill, dated on its due date; a fixed share capital bill is shown on the member's first water-service account.",
+                "The totals under the grid are those of every bill found, not only the page shown (100 bills a page).",
+                "The balance of an account on the center is what its Statement of Account lists as unpaid and what the cashier collects.",
+                "The page is given to the roles that have Billing List, Generate SOA / Post Billing or Collections (Cashier); exporting and printing need its Print right."
+            ]
+        },
+        {
             "id": "collections",
             "category": "Collections",
             "title": "Collect a full or partial customer payment",
@@ -928,7 +969,7 @@
         },
         {
             "question": "How do I print receipts on our pre-printed forms?",
-            "answer": "Choose Pre-Printed on Company, Security & Closing Date > Water Billing, then place the entries on Water Billing > Setup > Receipt Layout Setup and print a test page to check them."
+            "answer": "Choose Pre-Printed on Company, Security & Closing Date > Water Billing, then place the entries on Water Billing > Setup > Receipt Layout Setup and print a test page to check them. The default water bill form is a Letter sheet, portrait, with the two copies one above the other."
         },
         {
             "question": "Can one statement list the unpaid bills of several months?",
@@ -937,6 +978,14 @@
         {
             "question": "Why does Edit open the whole bill?",
             "answer": "So the bill is corrected where it is read: its lines, amounts and totals are shown and worked out again as you type, before the correction is saved with its class and reason."
+        },
+        {
+            "question": "Why does the receipt print with the date and the web address at the top and bottom?",
+            "answer": "It no longer does: the water bill receipt has no browser margins, so the browser prints no header or footer. If they still show, choose Letter paper and Margins: Default (not Custom) in the print window, or switch off Headers and footers there."
+        },
+        {
+            "question": "Where do I see every unpaid bill of the members and customers?",
+            "answer": "On Water Billing > Billing > Bill Accounts Center: it opens on the open bills, with filters for the bill status (open, overdue, closed or fully paid), the bill code, the zone, the address sub-group, members or customers, the bill type and the bill dates, and exports them to Excel or CSV or prints them."
         }
     ],
     "glossary": [
@@ -1630,12 +1679,14 @@
                 {
                     "heading": "Printed and pre-printed receipts",
                     "bullets": [
-                        "Printed: the receipt prints whole on plain paper (its frames, titles, labels and entries).",
-                        "Pre-Printed: only the entries print, each where the cooperative's printed form has room for it. The water bill form has two copies side by side.",
+                        "Printed: the receipt prints whole on plain paper (its frames, titles, labels and entries): Letter bond paper, portrait, the Cooperative's copy on the upper half and the Consumer's copy on the lower half, cut apart on the dashed line.",
+                        "Every text of the receipt is black; the entries are in bold Courier New and the labels in bold Arial, at sizes an Epson dot-matrix printer prints clearly.",
+                        "The receipt page has no margins of its own in the browser, so the browser prints no header or footer (no date, title, web address or page number).",
+                        "Pre-Printed: only the entries print, each where the cooperative's printed form has room for it. The default water bill form is the same Letter sheet, the second copy 5.5 inches below the first.",
                         "The choice is made on Company, Security & Closing Date > Water Billing, one for the collection receipt and one for the official receipt.",
                         "Each receipt has a link to print it the other way once (\"Print on plain paper\" or \"Print on a pre-printed form\").",
                         "When a receipt has more charges than the form has lines, the last line adds the rest together.",
-                        "Print at Actual size / 100%, with the browser's headers and footers off."
+                        "Choose the printer's Letter paper, portrait, and print at Actual size / 100%."
                     ]
                 }
             ]
@@ -1852,10 +1903,11 @@
                     "heading": "Receipt Layout Setup",
                     "steps": [
                         "Open Water Billing > Setup > Receipt Layout Setup and choose the water bill / collection receipt or the official receipt.",
-                        "Paper, margins and printing: the size of the form, the top, bottom, left and right margins, the copies across the paper and where the second one starts, the font, its size and the characters per inch.",
+                        "Paper, margins and printing: the size of the form (the water bill is a Letter sheet, portrait, by default), the top, bottom, left and right margins, the copies on the paper and where the second one starts, the font (Dot matrix, bold by default), its size and the characters per inch.",
                         "For the header, the lines and the totals: the origin of the part, then each entry with its Left, Top, Width, alignment, format and size. Drag an entry on the drawing, or select it and use the arrow keys (10 tups; with Shift 100).",
                         "Add an entry, remove one, or use the default of a part; give the reason and choose Save layout.",
-                        "Print a test page on a form and adjust until every entry falls in place. Put the receipt back to the default layout with Back to the default layout."
+                        "Print a test page on a form and adjust until every entry falls in place. Put the receipt back to the default layout with Back to the default layout.",
+                        "A layout saved for the former 22 x 10 cm water bill form says so at the top; Back to the default layout prints the water bill on Letter paper, portrait. A layout saved without a change of the former default already prints on Letter paper."
                     ]
                 }
             ]

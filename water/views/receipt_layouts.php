@@ -191,6 +191,7 @@ $measureBox = function (string $k, string $label, string $hint = '') use ($setup
         .rl-stage:focus-visible { box-shadow: 0 0 0 3px rgba(29, 78, 216, .3); }
         .rl-paper { position: relative; background: #fff; box-shadow: 0 8px 22px rgba(15, 23, 42, .16); margin: 0 auto; font-family: "Courier New", Courier, monospace; color: #111; }
         .rl-paper.is-sans { font-family: Arial, Helvetica, sans-serif; }
+        .rl-paper.is-bold { font-weight: 700; }
         .rl-margin { position: absolute; border: 1px dashed #94a3b8; pointer-events: none; }
         .rl-copy2 { position: absolute; border: 1px dashed #cbd5e1; pointer-events: none; }
         .rl-item { position: absolute; white-space: nowrap; line-height: 1.15; cursor: default; }
@@ -292,7 +293,7 @@ $measureBox = function (string $k, string $label, string $hint = '') use ($setup
                     <?php if ($kind === 'collection'): ?>
                     <div class="rl-group"><h3>Copies</h3>
                         <div class="rl-grid">
-                            <div class="rl-field" style="grid-column:1/-1"><label for="rl_copies">Copies across the paper</label><select class="rl-in" id="rl_copies" name="setup[copies]" data-m="copies" data-no-search="true"><?= $opt([1 => 'One copy', 2 => "Two: Cooperative's and Consumer's"], $setup['copies']) ?></select></div>
+                            <div class="rl-field" style="grid-column:1/-1"><label for="rl_copies">Copies on the paper</label><select class="rl-in" id="rl_copies" name="setup[copies]" data-m="copies" data-no-search="true"><?= $opt([1 => 'One copy', 2 => "Two: Cooperative's and Consumer's"], $setup['copies']) ?></select></div>
                             <?= $measureBox('copy_left', 'Second copy: Left', 'How far right of the first copy the second one prints') ?><?= $measureBox('copy_top', 'Second copy: Top', 'How far below the first copy the second one prints') ?>
                         </div>
                     </div>

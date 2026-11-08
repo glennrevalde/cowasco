@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-08 21:31:15 (12.1 s)
+- **Run:** 2026-11-09 00:00:20 (11.7 s)
 - **Server:** http://127.0.0.1:8097
-- **Database:** coop_e2e56 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Database:** coop_e2e57 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 10.11.14-MariaDB-0ubuntu0.24.04.1
-- **Result:** 511 passed, 0 failed, 511 checks
+- **Result:** 533 passed, 0 failed, 533 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261108-213105-6F68 | COL-20261108-213105-6F68 | PASS |
+| payment number = official receipt number | COL-20261109-000009-59D0 | COL-20261109-000009-59D0 | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 230 | 230 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261108-213105-6F68 | COL-20261108-213105-6F68 | PASS |
+| retry of the same request returns the same receipt | COL-20261109-000009-59D0 | COL-20261109-000009-59D0 | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -261,7 +261,7 @@
 | ...and both carry the class chosen | 0 | 0 | PASS |
 | no charge ticked: nothing is issued | 3 | 3 | PASS |
 | the charge category of the bill changed | 5 | 5 | PASS |
-| ...and its date issued | 2026-11-07 | 2026-11-07 | PASS |
+| ...and its date issued | 2026-11-08 | 2026-11-08 | PASS |
 | ...its amount follows the new category (a material at its sales price) | 1,200.00 | 1,200.00 | PASS |
 | the first invoice is voided as replaced, not deleted | replaced | replaced | PASS |
 | the corrected invoice -R1 is posted on the new date issued | yes | yes | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok af5c7 B | E2E Purok af5c7 B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok a309f B | E2E Purok a309f B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -535,7 +535,7 @@
 |---|---|---|---|
 | the cashier page has the Loan Due panel (shown once an account is chosen) | yes | yes | PASS |
 | the cashier gets the loans due of a member's water-service account | yes | yes | PASS |
-| a date that is no date is today | 2026-11-08 | 2026-11-08 | PASS |
+| a date that is no date is today | 2026-11-09 | 2026-11-09 | PASS |
 | a non-member's account: no member, no loans (the panel stays hidden) | yes | yes | PASS |
 | not signed in: refused | yes | yes | PASS |
 | Sales by Customer Detail: the Member type filter (All members, the member types, Non-members) | yes | yes | PASS |
@@ -570,7 +570,7 @@
 | ...a material's balance moves no stock | 5.00 | 5.00 | PASS |
 | ...account A, not enrolled in the plan: its recurring balance on an ended subscription | ended | ended | PASS |
 | ...account F, enrolled: on its active subscription | active | active | PASS |
-| ...account B: three monthly installments of 300.00 from the due date | [["2026-11-20","300.00"],["2026-12-20","300.00"],["2027-01-20","300.00"]] | [["2026-11-20","300.00"],["2026-12-20","300.00"],["2027-01-20","300.00"]] | PASS |
+| ...account B: three monthly installments of 300.00 from the due date | [["2026-11-21","300.00"],["2026-12-21","300.00"],["2027-01-21","300.00"]] | [["2026-11-21","300.00"],["2026-12-21","300.00"],["2027-01-21","300.00"]] | PASS |
 | the upload listed with its lines, the bill each made and what is still unpaid | yes | yes | PASS |
 | the same file read again: every balance recorded is in red (uploaded already), with the two lines of before | 8 | 8 | PASS |
 | ...naming the upload | yes | yes | PASS |
@@ -624,6 +624,33 @@
 | ...saved once | yes | yes | PASS |
 | the files read: listed with their state | yes | yes | PASS |
 | not signed in: refused | yes | yes | PASS |
+| trial balance: debits = credits | 0.00 | 0.00 | PASS |
+
+## v57 Bill Accounts Center, the import of the chart of accounts, the address sub-group on the member form, the water bill receipt on Letter paper
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| Water Billing > Billing > Bill Accounts Center opens on the open bills: Account No., Name, Description, Bill Date, Invoice No., Due Date, Amount, Paid, Balance, Status | yes | yes | PASS |
+| ...in the menu after Billing Management | yes | yes | PASS |
+| ...the filters: bill status, bill code, zone, address sub-group, members or customers, bill type, bill dates, sort | yes | yes | PASS |
+| the open bills of an account: the same invoices and balance as its Statement of Account | [4,"160.25"] | [4,"160.25"] | PASS |
+| ...the search as you type answers the lines and their totals | yes | yes | PASS |
+| Export to CSV: the columns of the center, a line per bill, the total | yes | yes | PASS |
+| Export to Excel: a workbook | yes | yes | PASS |
+| Print / PDF: the bills found, landscape, with the totals | yes | yes | PASS |
+| Statement (a line of the center): the Individual Statement of Account of the account | yes | yes | PASS |
+| not signed in: no bills | yes | yes | PASS |
+| Financial > Chart of Accounts: Import beside New account | yes | yes | PASS |
+| ...the CSV template | yes | yes | PASS |
+| ...the file read for review: four lines, two in red with their reasons, nothing saved | yes | yes | PASS |
+| ...checked again as the cells change (the line removed is gone, the bad type still red) | yes | yes | PASS |
+| ...saved: the accounts on the chart, the sub-account under its main account | yes | yes | PASS |
+| Member Information > Water Defaults: the address sub-group box with Rename and Add in it | yes | yes | PASS |
+| ...a new sub-group added from the box | yes | yes | PASS |
+| ...the chosen one renamed from the box: the member and its water-service account take the new name | yes | yes | PASS |
+| the water bill / collection receipt on plain paper: Letter, portrait, the two copies one above the other | yes | yes | PASS |
+| ...printed with no margins of the browser (no header or footer), black text, bold Courier New | yes | yes | PASS |
+| ...on a pre-printed form: Letter, portrait, the entries in bold | yes | yes | PASS |
 | trial balance: debits = credits | 0.00 | 0.00 | PASS |
 
 ## 7.4c Period close

@@ -35,6 +35,55 @@ if ($a === 'delete' && is_post()) {
     redirect(url($pageKey));
 }
 
+// ------------------------------------------------------------------ Import: the accounts of a chart of accounts from a CSV file
+// or an Excel workbook, shown for review first (a line with a problem in red, its cells correctable, any line
+// removable), saved when no line is in red (version 57; app/CoaImport.php)
+if ($a === 'import') {
+    Access::require($pageKey, 'create');
+    if (!$canChange) {
+        Access::denyPage($pageKey, 'change the Chart of Accounts');
+    }
+    $opt = fn() => ['existing' => isset(CoaImport::EXISTING[(string)p('existing')]) ? (string)p('existing') : 'update'];
+    $o = is_post() ? $opt() : ['existing' => 'update'];
+    $cfg = [
+        'cols' => CoaImport::cols(), 'aliases' => CoaImport::aliases(), 'noun' => ['account', 'accounts'], 'excel' => true,
+        'template_name' => 'chart_of_accounts_template.csv', 'samples' => CoaImport::samples(), 'opt' => $opt,
+        'check' => fn(array $rows, array $o) => CoaImport::check($rows, $o),
+        'post' => function (array $rows, array $o, string $file) use ($pageKey) {
+            $r = CoaImport::post($rows, $o, $file, $pageKey);
+            $parts = [];
+            foreach (['added' => 'added', 'updated' => 'updated', 'same' => 'already the same', 'skipped' => 'left as they were'] as $k => $w) {
+                if ($r[$k]) {
+                    $parts[] = $r[$k] . ' ' . $w;
+                }
+            }
+            return 'Chart of accounts imported: ' . (implode(', ', $parts) ?: 'nothing to change') . ($r['codes'] ? ' (' . implode(', ', array_slice($r['codes'], 0, 10)) . (count($r['codes']) > 10 ? ' ...' : '') . ')' : '') . '.';
+        },
+        'can_post' => true, 'post_label' => 'Save', 'post_icon' => 'check2-circle', 'done' => url($pageKey),
+        'confirm' => 'Save the accounts to the chart of accounts? The new accounts are added and the accounts already on the chart are updated or left as they are, as chosen above.',
+        'fields' => select_field('existing', 'An account whose code is already on the chart', CoaImport::EXISTING, $o['existing'], ['class' => 'col-12 col-lg-10', 'extra' => 'data-no-combo']),
+        'intro' => 'The accounts of a chart of accounts, one line per account, from a CSV file or an Excel workbook: the code, the name and the type, and if you have them the main account it is under, '
+            . 'the normal balance, With SL, Active, the description and the bank account no. The file of <strong>Export</strong> on the Chart of Accounts is read as it is. '
+            . 'Every line is shown for review before anything is saved: a line with a problem is in red with its reason, any cell can be corrected and any line removed.',
+        'help' => 'A sub-account names the code of its main account (on the chart or in the file, of the same category; one level of sub-accounts). The type is one of Financial &gt; Account Types (Bank, Accounts Receivable, Expense ... or a type of your own).',
+    ];
+    $state = CsvReview::handle($cfg);
+    if ($state['rows'] && $state['summary']) {
+        $sm = $state['summary'];
+        $bits = [];
+        foreach (['new' => 'new account', 'update' => 'to update', 'same' => 'already the same', 'skip' => 'left as on the chart'] as $k => $w) {
+            if (!empty($sm[$k])) {
+                $bits[] = '<strong>' . (int)$sm[$k] . '</strong> ' . ($k === 'new' && (int)$sm[$k] !== 1 ? 'new accounts' : $w);
+            }
+        }
+        $cfg['extra'] = $bits ? '<div class="coa-imp-sum small text-muted">Of the lines without a problem: ' . implode(', ', $bits) . '.</div>' : '';
+    }
+    layout_start('Import the chart of accounts', ['actions' => btn_link(url($pageKey), 'Chart of Accounts', 'btn-outline-secondary', 'arrow-left'), 'js' => ['js/csv_review.js']]);
+    echo CsvReview::render($cfg, $state);
+    layout_end();
+    return;
+}
+
 if ($a === 'new' || $a === 'edit') {
     $acc = null;
     if ($a === 'edit') {
@@ -222,7 +271,8 @@ foreach ($ordered as $r) {
     $byCat[$r['category']][] = $r;
 }
 $showBank = Access::special('view_bank_balances') || Access::page('bank.register');
-layout_start('Chart of Accounts', ['actions' => ($canChange ? page_link($pageKey, ['a' => 'new'], 'New account', 'btn-primary', 'plus-lg', 'create') : '')
+layout_start('Chart of Accounts', ['actions' => ($canChange ? page_link($pageKey, ['a' => 'new'], 'New account', 'btn-primary', 'plus-lg', 'create')
+        . ' ' . page_link($pageKey, ['a' => 'import'], 'Import', 'btn-outline-primary', 'upload', 'create') : '')
     . ' ' . page_link('coa.account_types', [], 'Account types', 'btn-outline-secondary', 'tags')
     . ' ' . (Access::can($pageKey, 'print') ? btn_link(current_url(['export' => 'csv']), 'Export', 'btn-outline-secondary', 'download') : '')
     . ' ' . page_link('coa.default_accounts', [], 'Module default accounts', 'btn-outline-secondary', 'diagram-3')]);

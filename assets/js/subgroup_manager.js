@@ -7,6 +7,8 @@
    Address sub-group boxes of the page take the new list at once, keeping what each one shows (a renamed entry shows
    its new name). The boxes are select[name="address_subgroup"], select[name="bulk_address_subgroup"] and any select
    with data-subgroup-select; the options with an empty value, "none" or "__none__" stay as they are.
+   A box wrapped in data-subgroup-inline (the member form, version 57) also adds a new sub-group and renames the chosen
+   one in place, without the window.
    No framework; the same on the cooperative pages and the water pages.
    ===================================================================== */
 (function () {
@@ -55,6 +57,8 @@
     + '.sgm-check{display:inline-flex;align-items:center;gap:6px;font-size:13px}'
     + '.sgm-manage{display:inline-flex;align-items:center;gap:5px;margin-top:6px;border:0;background:transparent;color:#1d4ed8;font-size:12.5px;font-weight:600;padding:2px 0;cursor:pointer}'
     + '.sgm-manage:hover{text-decoration:underline}'
+    + '.sgi-pick>select{flex:1 1 auto;width:1%;min-width:0}.sgi-btn{flex:0 0 auto}.sgi-edit>input{min-width:0}'
+    + '.sgi-msg{margin-top:4px;font-size:12.5px;line-height:1.35}.sgi-msg.is-ok{color:#047857}.sgi-msg.is-bad{color:#b91c1c}'
     + '@media (max-width:640px){.sgm-add{grid-template-columns:1fr 1fr}.sgm-add .sgm-addname{grid-column:1/-1}.sgm-table thead{display:none}'
     + '.sgm-table,.sgm-table tbody,.sgm-table tr,.sgm-table td{display:block;width:100%}.sgm-table tr{border-bottom:1px solid #e5e7eb;padding:8px 0}'
     + '.sgm-table td{border:0;padding:3px 12px;text-align:left}.sgm-table td[data-label]{display:flex;align-items:center;justify-content:space-between;gap:12px}'
@@ -284,11 +288,100 @@
     e.preventDefault();
     open(t);
   });
+
+  /**
+   * The box itself (version 57): [data-subgroup-inline] holds the Address sub-group select with a Rename button
+   * (data-sgi="edit": the chosen sub-group renamed in place, carried to every member and water-service account that
+   * has it) and an Add button (data-sgi="new": a new sub-group typed in place, added to the list and chosen); Save or
+   * Enter keeps it, Cancel or Escape puts the select back. The other boxes of the page take the list at once.
+   */
+  function inline(wrap) {
+    if (wrap.dataset.sgiReady) return;
+    wrap.dataset.sgiReady = '1';
+    const pick = wrap.querySelector('.sgi-pick');
+    const edit = wrap.querySelector('.sgi-edit');
+    const sel = pick ? pick.querySelector('select') : null;
+    const input = wrap.querySelector('[data-sgi-name]');
+    const save = wrap.querySelector('[data-sgi="save"]');
+    const msg = wrap.querySelector('.sgi-msg');
+    if (!sel || !edit || !input || !save) return;
+    const mgr = new Manager(wrap, { uid: ++uid, endpoint: endpointOf(wrap), pageKey: wrap.dataset.pageKey || '', trigger: wrap });
+    let mode = '';
+    let row = null;
+    const say = (text, ok) => {
+      msg.hidden = !text;
+      msg.className = 'sgi-msg ' + (ok ? 'is-ok' : 'is-bad');
+      msg.textContent = text || '';
+    };
+    const close = () => { mode = ''; row = null; edit.hidden = true; pick.hidden = false; save.disabled = false; };
+    const begin = (m) => {
+      say('', true);
+      const current = sel.value;
+      const go = () => {
+        mode = m;
+        input.value = m === 'edit' ? row.name : '';
+        input.placeholder = m === 'edit' ? '' : 'New sub-group, e.g. Purok 3';
+        save.textContent = m === 'edit' ? 'Rename' : 'Add';
+        pick.hidden = true;
+        edit.hidden = false;
+        input.focus();
+        if (m === 'edit') input.select();
+      };
+      if (m === 'new') { row = null; go(); return; }
+      if (current === '' || KEEP.includes(current)) { say('Choose the sub-group to rename first.', false); return; }
+      mgr.call(null).then(() => {
+        row = mgr.rows.find((r) => r.name === current) || null;
+        if (!row) { say('"' + current + '" is not on the list: add it with +.', false); return; }
+        go();
+      }).catch((err) => say(err.message, false));
+    };
+    const keep = () => {
+      const name = input.value.trim();
+      if (name === '') { say('Type the name of the sub-group.', false); input.focus(); return; }
+      save.disabled = true;
+      const payload = mode === 'edit'
+        ? { action: 'save', id: row.id, name, sort_order: row.sort_order, is_active: !!row.is_active }
+        : { action: 'save', name, sort_order: 0, is_active: true };
+      const oldName = row ? row.name : null;
+      const wasEdit = mode === 'edit';
+      (wasEdit ? Promise.resolve() : mgr.call(null)).then(() => {
+        if (!wasEdit) {
+          // a new one goes to the end of the list
+          payload.sort_order = mgr.rows.reduce((m, r) => Math.max(m, parseInt(r.sort_order, 10) || 0), 0) + 10;
+        }
+        return mgr.call(payload);
+      }).then((d) => {
+        const renamed = {};
+        const now = wasEdit ? mgr.rows.find((r) => r.id === row.id) : mgr.rows.find((r) => r.name.toLowerCase() === name.toLowerCase());
+        if (wasEdit && now && now.name !== oldName) renamed[oldName] = now.name;
+        refreshSelects(mgr.rows, renamed);
+        if (!wasEdit && now) { sel.value = now.name; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+        close();
+        say(d.message || (wasEdit ? 'Renamed.' : 'Added.'), true);
+        sel.focus();
+      }).catch((err) => { save.disabled = false; say(err.message, false); input.focus(); });
+    };
+    wrap.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-sgi]');
+      if (!b || !wrap.contains(b)) return;
+      e.preventDefault();
+      if (b.dataset.sgi === 'edit' || b.dataset.sgi === 'new') begin(b.dataset.sgi);
+      else if (b.dataset.sgi === 'save') keep();
+      else if (b.dataset.sgi === 'cancel') { close(); say('', true); sel.focus(); }
+    });
+    input.addEventListener('keydown', (e) => {
+      // Enter keeps the name (the member form is not sent); Escape leaves it
+      if (e.key === 'Enter') { e.preventDefault(); keep(); }
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); say('', true); sel.focus(); }
+    });
+    sel.addEventListener('change', () => say('', true));
+  }
   function start() {
     addStyle();
     document.querySelectorAll('[data-subgroup-manager]').forEach(mount);
+    document.querySelectorAll('[data-subgroup-inline]').forEach(inline);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
-  window.SubgroupManager = { open, mount, refreshSelects };
+  window.SubgroupManager = { open, mount, inline, refreshSelects };
 })();

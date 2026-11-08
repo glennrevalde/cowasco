@@ -476,7 +476,7 @@
 <tbody>
 <tr>
 <td>Zone, Address sub-group, Sequence</td>
-<td>The zone, the address sub-group and the meter reading sequence of the member's water service.</td>
+<td>The zone, the address sub-group and the meter reading sequence of the member's water service. The address sub-group is kept right in its box: the pencil renames the sub-group chosen (every member and water-service account that has it takes the new name) and <strong>+</strong> adds a new one to the list and chooses it, each saved at once with Save or Enter (Cancel or Escape leaves it). <strong>All sub-groups: order, switch off, delete</strong> under the box opens the whole list.</td>
 </tr>
 <tr>
 <td>Rate code / classification, Pipe size</td>
@@ -6629,6 +6629,110 @@ For a member who has resigned, been terminated or died, a fourth mode, <strong>S
 <p><strong>Where to find it:</strong> Loans &gt; Reports &gt; Written-off Loans and Recoveries.</p>
 <p><strong>Filters:</strong> <strong>Dates</strong> (all dates at first) and <strong>Branch</strong>.</p>
 <p><strong>The columns:</strong> <strong>Written off</strong> (the date), <strong>Loan</strong> (click it to record a recovery), <strong>Member</strong>, <strong>Product</strong>, <strong>Principal written off</strong>, <strong>Interest dropped</strong>, <strong>Penalty dropped</strong>, <strong>Recovered</strong>, <strong>Net loss</strong> (principal written off less recovered), <strong>Resolution / reason</strong> and <strong>Voucher</strong> (click it to open the write-off voucher). The total line adds the amounts.</p>
+<h2 id="pg-bill-accounts">Bill Accounts Center<a class="man-hash" href="#pg-bill-accounts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The Bill Accounts Center is every bill of the members and customers of Water Billing in one grid, laid out like the <a href="#pg-loan-accounts">Loan Accounts Center</a>: the water bills, the one-time, recurring and installment bills and the fixed share capital bills, one line per invoice. It opens on the open bills (the ones not fully paid); the closed (fully paid) bills are a filter away. The bills found are exported to Excel or CSV, printed, or saved as a PDF file.</p>
+<p><strong>Where to find it:</strong> Water Billing &gt; Billing &gt; Bill Accounts Center (after Billing Management). The roles that have Billing List, Generate SOA / Post Billing or Collections (Cashier) were given it, to open it and, when they may print on that page, to print and export it.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bill_accounts__main.jpg" title="Click to enlarge"><img src="assets/manual/img/bill_accounts__main.jpg" alt="The Bill Accounts Center with its filters open: the open bills of the sample cooperative, overdue ones in red, a recurring bill selected" width="1094" height="1190" loading="lazy" decoding="async"></a><figcaption>The Bill Accounts Center: the open bills, with the filters open and a bill selected</figcaption></figure>
+<h4 id="s-bill-accounts-grid">The grid<a class="man-hash" href="#s-bill-accounts-grid" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Account No.</td>
+<td>The water-service account. A fixed share capital bill is shown on the member's first water-service account (as the Statement of Account shows it), or on its share capital account when the member has no water service.</td>
+</tr>
+<tr>
+<td>Name</td>
+<td>The member or customer, with <strong>Member</strong> or <strong>Customer</strong> under it.</td>
+</tr>
+<tr>
+<td>Description</td>
+<td>What the bill is for: the water consumption in m³ (with its billing period under it), the charge of a one-time, recurring or installment bill (with its bill code under it; the service month of a recurring bill; amortization 2 of 6 of an installment), or the share capital account and month of a share capital bill.</td>
+</tr>
+<tr>
+<td>Bill Date</td>
+<td>The date of the bill. An installment shows each amortization as a bill, dated on its due date.</td>
+</tr>
+<tr>
+<td>Invoice No.</td>
+<td>The invoice number as the Statement of Account prints it: WTR-, OTB-, REC-, INS- (the contract and the amortization) or SCB- and the number.</td>
+</tr>
+<tr>
+<td>Due Date</td>
+<td>The due date, in red when it has passed and the bill is not paid.</td>
+</tr>
+<tr>
+<td>Amount, Paid, Balance</td>
+<td>The amount of the bill, what was collected on it (never more than the amount) and what is left.</td>
+</tr>
+<tr>
+<td>Status</td>
+<td><strong>Overdue</strong> (in red), <strong>Due today</strong>, <strong>Not yet due</strong>, <strong>Open</strong> (no due date), <strong>Paid</strong> (in green) or <strong>Cancelled</strong>; <strong>partly paid</strong> is added when part of it was paid.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Under the grid: the number of bills and accounts found, how many are overdue and their balance, and the totals of Amount, Paid and Balance of every bill found (not only the page shown). The grid shows 100 bills a page, with the pages under the totals. A bill is the same on the Bill Accounts Center, on the Individual Statement of Account and at the cashier: what the center shows as the balance of an account is what its statement lists as unpaid.</p>
+<h4 id="s-bill-accounts-filters">Search and filters<a class="man-hash" href="#s-bill-accounts-filters" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Type in the search box a name (every word, in any order), an account no., an invoice no. or a member no.; the grid follows as you type. <strong>Filter</strong> opens the filters:</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Filter</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bill status</td>
+<td><strong>Open (not fully paid)</strong> when the page opens; <strong>Open and overdue</strong>, <strong>Open, not yet due</strong>, <strong>Closed (fully paid)</strong>, <strong>Open and closed</strong>, <strong>Cancelled</strong>.</td>
+</tr>
+<tr>
+<td>Bill code</td>
+<td>A bill code of Water Billing &gt; Bill Codes (the water bills are under the bill code of the water bill), or <strong>Fixed share capital</strong>.</td>
+</tr>
+<tr>
+<td>Zone</td>
+<td>A zone of the water-service accounts, or <strong>No zone</strong>.</td>
+</tr>
+<tr>
+<td>Address sub-group</td>
+<td>An address sub-group, or <strong>No address sub-group</strong>.</td>
+</tr>
+<tr>
+<td>Members or customers</td>
+<td>The bills of the members only, of the customers only, or both.</td>
+</tr>
+<tr>
+<td>Bill type</td>
+<td>Water bills, one-time, installment, recurring or fixed share capital bills.</td>
+</tr>
+<tr>
+<td>Bill date from, to</td>
+<td>The bills dated in the period.</td>
+</tr>
+<tr>
+<td>Sort by</td>
+<td>Account no. (then the bill date), name, bill date (newest or oldest first), due date, or balance (largest first).</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Clear the filters</strong> goes back to the open bills of everyone.</p>
+<h4 id="s-bill-accounts-actions">The toolbar<a class="man-hash" href="#s-bill-accounts-actions" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Click a bill, then a button of the toolbar; double-click it for its Statement of Account; or right-click it (on a phone: the <i class="bi bi-three-dots-vertical"></i> button or a long press) for the same actions:</p>
+<ul>
+<li><strong>Collection</strong>: the water cashier (Collections) with the account chosen, for an open bill.</li>
+<li><strong>Statement</strong>: the Individual Statement of Account of the member or customer, with its unpaid invoices.</li>
+<li><strong>Ledger</strong>: the ledger of the water-service account, its bills and payments.</li>
+<li><strong>Account</strong>: the water-service account on Water Service Accounts.</li>
+<li><strong>Export</strong>: an Excel workbook (.xlsx) or a CSV file of every bill found, with the columns of the grid and the total line.</li>
+<li><strong>Print / PDF</strong>: the bills found on a landscape page with the cooperative's name and the filters; choose <strong>Save as PDF</strong> in the print window for a PDF file.</li>
+</ul>
+<p>Exporting and printing need the Print right on the page; each one is written to the audit trail with the filters used. An export or a printout holds at most 100,000 bills: narrow the filters for more.</p>
 <h2 id="pg-teller-shift">Teller Shift &amp; Cash Count<a class="man-hash" href="#pg-teller-shift" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>Every teller works from a cash drawer. At the start of the day the teller opens a shift on this page with the beginning cash in the drawer. Every cash receipt and cash payment the teller posts while the shift is open counts to it. At the end of the day the teller counts the cash, by denomination or as one total, and closes the shift. A difference between the cash counted and the cash expected is posted to Cash Over and Short at once, so the ledger agrees with the cash in the drawer.</p>
 <p>The same page shows a closed shift with its count, prints its cash count sheet, and lists the recent shifts.</p>

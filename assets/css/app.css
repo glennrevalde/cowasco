@@ -3313,3 +3313,44 @@ table tr.avg-jump td a { color: inherit; text-decoration-color: rgba(180, 35, 24
   .ci-batches td:last-child { justify-content: flex-end; padding-top: .35rem !important; }
   .ci-done { flex-direction: column; }
 }
+
+/* =====================================================================
+   Water Billing > Bill Accounts Center (version 57): the grid of the Loan Accounts Center with the bills; the status
+   as a coloured word, the description wider, the pages of lines under the totals
+   ===================================================================== */
+.ba-grid thead th { white-space: normal; vertical-align: bottom; line-height: 1.2; }
+.ba-grid td { padding-left: .5rem; padding-right: .5rem; }
+.ba-grid td.ba-name { min-width: 9.5rem; }
+.ba-grid td.ba-desc { min-width: 14rem; max-width: 21rem; }
+.ba-grid tr.is-closed > td { color: #6b7280; }
+.ba-desc-sm { color: var(--ink-soft); margin-top: .1rem; }
+.ba-status { font-weight: 600; white-space: nowrap; }
+.ba-status.is-overdue { color: #b42318; }
+.ba-status.is-due { color: #b54708; }
+.ba-grid tr > td .ba-status.is-paid, .ba-grid tr > td.ba-status.is-paid { color: #067647; }
+.ba-grid tr > td .ba-status.is-cancelled, .ba-grid tr > td.ba-status.is-cancelled { color: #98a2b3; font-weight: 500; }
+.ba-grid td.num .ba-status { margin-top: .1rem; }
+.ba-export { display: inline-block; }
+.ba-export .dropdown-menu { font-size: .85rem; min-width: 14rem; }
+.ba-export .dropdown-item > .bi { width: 1.25rem; color: var(--blue-deep); }
+.ba-pager { display: flex; justify-content: space-between; align-items: center; gap: .5rem .75rem; flex-wrap: wrap; padding: .15rem .75rem .6rem; font-size: .8rem; color: var(--ink-soft); }
+.ba-pager-btns { display: inline-flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+.ba-pager-page { padding: 0 .35rem; white-space: nowrap; }
+.ba-pager .btn.disabled { opacity: .45; }
+.ba-print-bar { display: flex; gap: .5rem; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: .75rem; }
+.ba-print-table { font-size: 8.5pt; margin-top: .5rem; }
+.ba-print-table th, .ba-print-table td { padding: .18rem .3rem; vertical-align: top; }
+.ba-print-table .num { text-align: right; white-space: nowrap; }
+.ba-print-table tfoot th { border-top: 1.5px solid #000; }
+@media (max-width: 991.98px) {
+  .ba-grid td.ba-name { min-width: 11rem; }
+}
+@media (max-width: 575.98px) {
+  .ba-grid td.ba-name { min-width: 8.5rem; }
+  .ba-pager { justify-content: center; }
+  .ba-pager-info { width: 100%; text-align: center; }
+  .ba-pager-btns .btn { padding: .25rem .5rem; }
+}
+
+/* Financial > Chart of Accounts > Import (version 57): the counts under the review */
+.coa-imp-sum { margin: .5rem .25rem 0; }

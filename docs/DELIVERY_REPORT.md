@@ -498,3 +498,24 @@ stopped. A Consolidated Import button on the Member Center, the three import pag
 migration, `2027_04_25_consolidated_import.sql` (three tables and the page with its access, MySQL 5.5), registered in
 the update check and the installer, its tables added to the base script; both bundled databases written again. See
 `UPGRADE_v56.txt`.
+
+## 33. Version 57: workbook v22 (Bill Accounts Center, the import of the chart of accounts, the water bill receipt on Letter paper)
+
+The requests of `ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v22.xlsx`, mapped in `docs/ADDITIONAL_MODULE_V22_CHECKLIST.md`.
+Water Billing > Billing > Bill Accounts Center, laid out like the Loan Accounts Center, lists every bill of the members
+and customers (posted water bills, one-time bills, each amortization of an installment, recurring bills and fixed share
+capital bills, as the Individual Statement of Account and the cashier know them), one line per invoice with Account No.,
+Name, Description, Bill Date, Invoice No., Due Date, Amount, Paid, Balance and Status; it opens on the open bills, and
+the bill status shows the closed (fully paid) ones, the overdue ones, the ones not yet due, all or the cancelled ones.
+Filters: bill code, zone, address sub-group, members or customers, bill type, bill dates, order; search as you type;
+Excel and CSV exports and the printout (Save as PDF) of every bill found, a few thousand at a time; Collection,
+Statement, Ledger and Account from a line. Financial > Chart of Accounts > Import reads a chart of accounts from a CSV
+file or an Excel workbook (the chart's own Export read back unchanged) into the review form of the other imports: a
+line with a problem in red with its reason and cell, corrected in place or removed, saved every account or none, the
+main accounts first, the accounts already on the chart updated or left as they are, the rules of the account form. On
+Member Information the address sub-group is renamed and added right in its box. The water bill / collection receipt
+prints on Letter bond paper, portrait, the two copies one above the other, black, bold Courier New for the entries, with
+no browser margins (so no header or footer); the pre-printed layout of Receipt Layout Setup is the same Letter sheet
+by default in the new bold dot-matrix font, a layout saved as the former default read as the new one. One migration,
+`2027_05_02_bill_accounts_center.sql` (the page and its access, no table, MySQL 5.5), registered in the update check
+and the installer; both bundled databases written again. See `UPGRADE_v57.txt`.

@@ -1,777 +1,152 @@
+/* =====================================================================
+   Water bill / collection receipt printed on plain paper (version 57)
+
+   Letter bond paper (8.5 x 11 in), portrait: the Cooperative's copy on the upper half, the Consumer's copy on the
+   lower half, each 7.6 x 4.95 in, cut apart on the dashed line at 5.5 in. Every text is black (#000); the entries are
+   bold Courier New and the labels bold Arial, at sizes an Epson dot-matrix printer prints clearly. The page has no
+   margins of the browser (@page margin 0), so the browser prints no header or footer (no date, title, address or page
+   number); the room around the copies is the sheet's own.
+
+   The copy is laid out in fixed measurements (inches), so the Pre-Printed receipt (Receipt Layout Setup) can print
+   its entries where this one prints them. The screen shows the sheet scaled to the window.
+   ===================================================================== */
 :root {
-  --ink: #01082d;
-  --receipt-red: #ff0000;
-  --dot-ink: #545b63;
-  --paper: #fffefb;
-  --app-bg: #edf1f5;
-  --receipt-width: 22cm;
-  --receipt-height: 10cm;
-  --copy-width: 10.85cm;
-  --perforation-width: 0.3cm;
-  --frame-line: 0.15cm;
-  --thin-line: 0.025cm;
-  --receipt-font: "Arial Narrow", Arial, Helvetica, sans-serif;
-  --serif-font: Georgia, "Times New Roman", serif;
-  --dot-font: "Courier New", Courier, monospace;
+  --wb-ink: #000;
+  --wb-line: 1pt solid #000;
+  --wb-thin: 0.75pt solid #000;
+  --wb-dot: "Courier New", Courier, "Liberation Mono", monospace;
+  --wb-sans: Arial, Helvetica, "Liberation Sans", sans-serif;
+  --app-bg: #e9edf2;
 }
 
 * { box-sizing: border-box; }
 html, body { min-height: 100%; }
-body {
-  margin: 0;
-  background: var(--app-bg);
-  color: #1d2733;
-  font-family: Arial, Helvetica, sans-serif;
-}
+body { margin: 0; background: var(--app-bg); color: #111827; font-family: var(--wb-sans); }
 button, a { font: inherit; }
 
+/* ---------------------------------------------------------------- the toolbar (screen only) */
 .receipt-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  min-height: 62px;
-  padding: 10px 18px;
-  background: #111827;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px;
+  min-height: 62px; padding: 10px 18px;
+  background: #111827; box-shadow: 0 4px 18px rgba(0, 0, 0, .18);
 }
 .receipt-toolbar button,
 .receipt-toolbar a {
-  min-height: 40px;
-  padding: 9px 15px;
-  border: 0;
-  border-radius: 7px;
-  background: #fff;
-  color: #111827;
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 22px;
-  text-decoration: none;
-  cursor: pointer;
+  min-height: 40px; padding: 9px 15px; border: 0; border-radius: 7px;
+  background: #fff; color: #111827; font-size: 14px; font-weight: 700; line-height: 22px;
+  text-decoration: none; cursor: pointer;
 }
-.receipt-toolbar button:hover,
-.receipt-toolbar a:hover { background: #e5e7eb; }
+.receipt-toolbar a { background: rgba(255, 255, 255, .14); color: #fff; }
+.receipt-toolbar button:hover { background: #e5e7eb; }
+.receipt-toolbar a:hover { background: rgba(255, 255, 255, .24); }
+.receipt-toolbar button[disabled] { opacity: .6; cursor: progress; }
 .receipt-toolbar .status-warning {
-  padding: 8px 12px;
-  border: 1px solid #fecaca;
-  border-radius: 7px;
-  background: #fff1f2;
-  color: #991b1b;
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
+  padding: 8px 12px; border: 1px solid #fecaca; border-radius: 7px;
+  background: #fff1f2; color: #991b1b; font-size: 12px; font-weight: 800; text-transform: uppercase;
 }
-.receipt-toolbar .receipt-meta {
-  color: #d1d5db;
-  font-size: 12px;
-  font-weight: 700;
-}
+.receipt-toolbar .receipt-meta { color: #d1d5db; font-size: 12.5px; font-weight: 600; }
 
-.receipt-preview {
-  display: grid;
-  place-items: start center;
-  min-height: calc(100vh - 62px);
-  padding: 28px;
-  overflow: auto;
-  background:
-    linear-gradient(45deg, #e7ebf0 25%, transparent 25%),
-    linear-gradient(-45deg, #e7ebf0 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #e7ebf0 75%),
-    linear-gradient(-45deg, transparent 75%, #e7ebf0 75%),
-    #f2f4f7;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
-  background-size: 16px 16px;
-}
-.receipt-preview-scaler {
-  position: relative;
-  transform-origin: top center;
-}
-
+/* ---------------------------------------------------------------- the sheet on the screen */
+.receipt-preview { display: grid; place-items: start center; min-height: calc(100vh - 62px); padding: 28px 16px; overflow: auto; }
+.receipt-preview-scaler { position: relative; overflow: hidden; }
 .receipt-sheet {
-  display: grid;
-  grid-template-columns: var(--copy-width) var(--perforation-width) var(--copy-width);
-  width: var(--receipt-width);
-  height: var(--receipt-height);
-  overflow: hidden;
-  background: var(--paper);
-  box-shadow: 0 14px 30px rgba(27, 35, 45, 0.2);
-  color: var(--ink);
-  print-color-adjust: exact;
-  -webkit-print-color-adjust: exact;
-}
-.center-perforation {
-  position: relative;
-  height: 100%;
-  background: var(--paper);
-}
-.center-perforation::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 50%;
-  border-left: 0.02cm dashed #a6a6a6;
-  transform: translateX(-50%);
-}
-.receipt-copy {
-  width: var(--copy-width);
-  height: var(--receipt-height);
-  overflow: hidden;
-  background: var(--paper);
-}
-
-.copy-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  padding-top: 0.08cm;
-  color: var(--ink);
-  font-family: var(--receipt-font);
-}
-
-.receipt-header {
-  position: relative;
-  flex: 0 0 2.08cm;
-  width: 10.3cm;
-  text-align: center;
-}
-
-.organization-block {
-  padding-top: 0.01cm;
-  line-height: 1;
-}
-
-.organization-name {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.36cm;
-  font-weight: 900;
-  letter-spacing: 0.012cm;
-  line-height: 0.38cm;
-  white-space: nowrap;
-}
-
-.organization-type {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.34cm;
-  font-weight: 900;
-  letter-spacing: 0.01cm;
-  line-height: 0.34cm;
-}
-
-.organization-address {
-  margin-top: 0.01cm;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.195cm;
-  font-weight: 500;
-  line-height: 0.21cm;
-}
-
-.organization-address.second-line {
-  margin-top: -0.005cm;
-}
-
-.header-bottom-line {
-  position: absolute;
-  right: 0;
-  bottom: 0.02cm;
-  left: 0;
-  height: 0.58cm;
-}
-
-.telephone {
-  position: absolute;
-  left: 0.02cm;
-  bottom: 0.06cm;
-  font-family: "Times New Roman", Times, serif;
-  font-size: 0.31cm;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.bill-title {
-  position: absolute;
-  left: 50%;
-  bottom: 0.035cm;
-  transform: translateX(-50%);
-  font-family: "Times New Roman", Times, serif;
-  font-size: 0.39cm;
-  font-weight: 900;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.receipt-number {
-  position: absolute;
-  right: 0.02cm;
-  bottom: -0.005cm;
-  color: var(--receipt-red) !important;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.60cm !important;
-  font-weight: 400 !important;
-  letter-spacing: 0.035cm;
-  line-height: 1;
-  text-shadow: none !important;
-  white-space: nowrap;
-}
-
-/* Outer border is exactly 1.5 mm. The inside dimensions are 10 cm × 7.4 cm. */
-.bill-frame {
-  display: grid;
-  grid-template-rows: 0.2cm 1.4cm 2.4cm 0.9cm 2.5cm;
-  flex: 0 0 auto;
-  width: 10cm;
-  height: 7.4cm;
-  overflow: hidden;
-  border: 0.15cm solid var(--ink);
-  box-sizing: content-box;
-  background: var(--paper);
-}
-
-.frame-row {
-  position: relative;
-  width: 10cm;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border-bottom: var(--thin-line) solid var(--ink);
-}
-
-.frame-row:last-child {
-  border-bottom: 0;
-}
-
-/* Row 1: three columns only. */
-.heading-row {
-  display: grid;
-  grid-template-columns: 2cm 6cm 2cm;
-  height: 0.2cm;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.205cm;
-  font-weight: 900;
-  line-height: 0.18cm;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.heading-row > div {
-  min-width: 0;
-  overflow: hidden;
-}
-
-.heading-row > div + div {
-  border-left: var(--thin-line) solid var(--ink);
-}
-
-/* Row 2: exactly two columns, 2 cm and 8 cm. */
-.consumer-row {
-  display: grid;
-  grid-template-columns: 2cm 8cm;
-  height: 1.4cm;
-}
-
-.consumer-row > div + div {
-  border-left: var(--thin-line) solid var(--ink);
-}
-
-.consumer-account {
-  padding-top: 0.11cm;
-  text-align: center;
-}
-
-.consumer-information {
-  position: relative;
-  padding: 0.07cm 0.12cm 0.04cm;
-  overflow: hidden;
-}
-
-.consumer-name {
-  width: 5.75cm;
-  height: 0.33cm;
-  overflow: hidden;
-  font-size: 0.245cm !important;
-  line-height: 0.31cm;
-  white-space: nowrap;
-}
-
-.consumer-number {
-  position: absolute;
-  top: 0.08cm;
-  right: 0.17cm;
-  width: 1.75cm;
-  overflow: hidden;
-  font-size: 0.235cm !important;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.consumer-detail {
-  display: grid;
-  grid-template-columns: 1.48cm minmax(0, 1fr);
-  align-items: center;
-  min-height: 0.31cm;
-  overflow: hidden;
-  line-height: 0.29cm;
-  white-space: nowrap;
-}
-
-.address-detail {
-  margin-top: 0.02cm;
-}
-
-.fixed-label {
-  color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.225cm;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-/* Row 3: exactly 3.8 cm and 6.2 cm. */
-.meter-row {
-  display: grid;
-  grid-template-columns: 3.8cm 6.2cm;
-  height: 2.4cm;
-}
-
-.meter-row > div + div {
-  border-left: var(--thin-line) solid var(--ink);
-}
-
-.date-meter-cell {
-  padding: 0.04cm 0.07cm 0.02cm;
-  overflow: hidden;
-}
-
-.section-heading {
-  height: 0.31cm;
-  overflow: hidden;
-  color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.245cm;
-  font-weight: 900;
-  line-height: 0.29cm;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.date-list {
-  display: grid;
-  grid-template-rows: repeat(5, 0.38cm);
-}
-
-.date-list > div {
-  display: grid;
-  grid-template-columns: 1.55cm minmax(0, 1fr);
-  align-items: center;
-  min-width: 0;
-}
-
-.date-list span {
-  overflow: hidden;
-  color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.175cm;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.date-list b {
-  overflow: hidden;
-  font-size: 0.215cm !important;
-  font-weight: 400;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.meter-right-cell {
-  display: grid;
-  grid-template-rows: 0.95cm 1.45cm;
-  width: 6.2cm;
-  height: 2.4cm;
-  overflow: hidden;
-}
-
-/* Upper right area: exactly three columns, no fourth column. */
-.readings-strip {
-  display: grid;
-  grid-template-columns: 2.1cm 2.1cm 2cm;
-  width: 6.2cm;
-  height: 0.95cm;
-  border-bottom: var(--thin-line) solid var(--ink);
-}
-
-.reading-box {
-  position: relative;
-  min-width: 0;
-  overflow: hidden;
-  text-align: center;
-}
-
-.reading-box + .reading-box {
-  border-left: var(--thin-line) solid var(--ink);
-}
-
-.reading-title {
-  height: 0.34cm;
-  overflow: hidden;
-  color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.225cm;
-  font-weight: 900;
-  line-height: 0.32cm;
-  white-space: nowrap;
-}
-
-.reading-number {
-  height: 0.29cm;
-  overflow: hidden;
-  font-size: 0.22cm !important;
-  line-height: 0.27cm;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.water-fee-label {
-  position: absolute;
-  right: 0;
-  bottom: 0.02cm;
-  left: 0;
-  overflow: hidden;
-  color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.205cm;
-  font-weight: 900;
-  line-height: 0.23cm;
-  white-space: nowrap;
-}
-
-.water-fee-value {
-  position: absolute;
-  right: 0.08cm;
-  bottom: 0.025cm;
-  overflow: hidden;
-  font-size: 0.215cm !important;
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* Lower right area: one uninterrupted 6.2 cm × 1.45 cm cell. */
-.charges-open-cell {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 0.005cm;
-  width: 6.2cm;
-  height: 1.45cm;
-  overflow: hidden;
-  padding: 0 0.08cm 0.045cm 0.13cm;
-}
-
-.charge-entry {
-  position: static;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 1.4cm;
-  align-items: center;
-  flex: 0 0 0.24cm;
-  min-width: 0;
-  height: 0.24cm;
-  line-height: 0.22cm;
-}
-
-.charge-entry span {
-  overflow: hidden;
-  color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.155cm;
-  font-weight: 800;
-  line-height: 0.22cm;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.charge-entry b {
-  overflow: hidden;
-  font-size: 0.19cm !important;
-  font-weight: 400;
-  line-height: 0.22cm;
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* Row 4: one 0.9 cm row. Values and labels share each cell; no extra row or line. */
-.payment-row {
-  display: grid;
-  grid-template-columns: 3.8cm 3.1cm 3.1cm;
-  width: 10cm;
-  height: 0.9cm;
-}
-
-.payment-cell {
-  position: relative;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.payment-cell + .payment-cell {
-  border-left: var(--thin-line) solid var(--ink);
-}
-
-.payment-value {
-  position: absolute;
-  top: 0.07cm;
-  right: 0.07cm;
-  left: 0.07cm;
-  height: 0.31cm;
-  overflow: hidden;
-  font-size: 0.205cm !important;
-  line-height: 0.29cm;
-  white-space: nowrap;
-}
-
-.payment-date-cell .payment-value {
-  text-align: left;
-}
-
-.total-due-value {
-  text-align: right;
-}
-
-.signature-value {
-  position: absolute;
-  top: 0.03cm;
-  right: 0.06cm;
-  left: 0.06cm;
-  height: 0.38cm;
-  overflow: hidden;
-  color: #344f76;
-  font-family: "Brush Script MT", "Segoe Script", cursive;
-  font-size: 0.31cm;
-  font-style: italic;
-  line-height: 0.36cm;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.payment-label {
-  position: absolute;
-  right: 0.03cm;
-  bottom: 0.07cm;
-  left: 0.03cm;
-  overflow: hidden;
-  color: var(--ink);
-  font-family: "Times New Roman", Times, serif;
-  font-size: 0.155cm;
-  font-weight: 900;
-  line-height: 0.19cm;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.total-label {
-  font-size: 0.205cm;
-}
-
-/* Row 5: one 10 cm × 2.5 cm cell. No vertical or horizontal subdivisions. */
-.settlement-row {
-  position: relative;
-  width: 10cm;
-  height: 2.5cm;
-  overflow: hidden;
-  color: var(--ink);
-}
-
-.amount-words-line {
-  position: absolute;
-  top: 0.06cm;
-  right: 0.08cm;
-  left: 0.08cm;
-  display: grid;
-  grid-template-columns: 1.95cm minmax(0, 1fr);
-  column-gap: 0.06cm;
-  align-items: start;
-  min-width: 0;
-  height: 0.37cm;
-  overflow: hidden;
-}
-
-.amount-words-line > span {
-  color: var(--ink);
-  font-family: "Times New Roman", Times, serif;
-  font-size: 0.19cm;
-  font-weight: 900;
-  line-height: 0.25cm;
-  white-space: nowrap;
-}
-
-.amount-words-line > b {
-  min-width: 0;
-  max-height: 0.35cm;
-  overflow: hidden;
-  font-size: 0.185cm !important;
-  font-weight: 400;
-  line-height: 0.22cm;
-  text-transform: uppercase;
-  white-space: normal;
-}
-
-.receipt-validity {
-  position: absolute;
-  top: 0.42cm;
-  left: 0.08cm;
-  margin: 0;
-  color: var(--ink);
-  font-family: "Times New Roman", Times, serif;
-  font-size: 0.19cm;
-  font-weight: 900;
-  line-height: 0.225cm;
-}
-
-.settlement-values {
-  position: absolute;
-  top: 0.40cm;
-  right: 0.09cm;
-  left: 3.10cm;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  height: 0.82cm;
-  align-items: start;
-}
-
-.settlement-item {
-  min-width: 0;
-  overflow: hidden;
-  text-align: center;
-}
-
-.settlement-item > div {
-  height: 0.34cm;
-  overflow: hidden;
-  font-size: 0.225cm !important;
-  line-height: 0.31cm;
-  white-space: nowrap;
-}
-
-.settlement-item > span {
-  display: block;
-  overflow: hidden;
-  color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.195cm;
-  font-weight: 400;
-  line-height: 0.24cm;
-  white-space: nowrap;
-}
-
-.copy-label {
-  position: absolute;
-  right: 0.12cm;
-  bottom: 0.12cm;
-  color: var(--ink);
-  font-family: "Times New Roman", Times, serif;
-  font-size: 0.34cm;
-  font-weight: 900;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-/* Fixed labels are dark blue. Impact-printer values are gray, except the red serial number. */
-.organization-name,
-.organization-type,
-.organization-address,
-.telephone,
-.bill-title,
-.heading-row,
-.fixed-label,
-.section-heading,
-.date-list span,
-.reading-title,
-.water-fee-label,
-.charge-entry span,
-.payment-label,
-.amount-words-line > span,
-.receipt-validity,
-.settlement-item > span,
-.copy-label {
-  color: var(--ink);
-}
-
-.dot-matrix {
-  color: var(--dot-ink);
-  font-family: var(--dot-font);
-  font-size: 0.225cm;
-  font-weight: 400;
-  letter-spacing: 0.006cm;
-  line-height: 1.04;
-  text-shadow: 0.01cm 0 rgba(84, 91, 99, 0.25);
-}
-
-
+  position: relative; width: 8.5in; height: 11in; overflow: hidden;
+  background: #fff; color: var(--wb-ink);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .08), 0 14px 34px rgba(15, 23, 42, .18);
+  transform-origin: top left;
+}
+
+/* ---------------------------------------------------------------- one copy */
+.wb-copy { position: absolute; left: 0.45in; width: 7.6in; height: 4.95in; color: var(--wb-ink); font-family: var(--wb-sans); }
+.wb-copy:first-of-type { top: 0.35in; }
+.wb-copy:last-of-type { top: 5.85in; }
+.wb-cut { position: absolute; left: 0.25in; right: 0.25in; top: 5.5in; border-top: 0.75pt dashed #000; height: 0; }
+.wb-cut > span { position: absolute; right: 0; top: -0.09in; padding-left: 6px; background: #fff; font: 700 6.5pt var(--wb-sans); letter-spacing: .04em; text-transform: uppercase; }
+
+.dm { font-family: var(--wb-dot); font-weight: 700; color: var(--wb-ink); letter-spacing: 0; }
+.wb-l { display: block; font: 700 7.5pt/1.1 var(--wb-sans); text-transform: uppercase; letter-spacing: .02em; color: var(--wb-ink); white-space: nowrap; }
+.wb-l-inline { display: inline-block; margin-right: 0.08in; }
+
+.wb-head { height: 0.8in; text-align: center; }
+.wb-org { font: 700 14pt/1.15 var(--wb-sans); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wb-org-sub { margin-top: 1pt; font: 700 8.5pt/1.2 var(--wb-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wb-title-row { display: grid; grid-template-columns: 2.4in 1fr 2.4in; align-items: end; margin-top: 3pt; }
+.wb-copy-label { text-align: left; font: 700 9pt/1 var(--wb-sans); text-transform: uppercase; }
+.wb-title { font: 700 13pt/1 var(--wb-sans); letter-spacing: .08em; }
+
+.wb-frame { position: absolute; top: 0.82in; left: 0; width: 7.6in; border: var(--wb-line); }
+.wb-row { display: flex; border-top: var(--wb-thin); }
+.wb-row:first-child { border-top: 0; }
+.wb-cell { position: relative; min-width: 0; padding: 0.04in 0.07in; border-left: var(--wb-thin); overflow: hidden; }
+.wb-cell:first-child { border-left: 0; }
+.wb-cell > b { display: block; font-size: 11pt; line-height: 1.15; white-space: nowrap; overflow: hidden; }
+
+.wb-row-a { height: 0.5in; }
+.wb-c-account { width: 1.25in; }
+.wb-c-name { width: 3.85in; }
+.wb-c-number { width: 2.5in; }
+.wb-row-a .wb-cell > b { margin-top: 0.05in; }
+.wb-big { font-size: 12pt !important; }
+.wb-small { font-size: 10pt !important; }
+
+.wb-row-b { height: 0.3in; align-items: stretch; }
+.wb-row-b .wb-cell { display: flex; align-items: center; }
+.wb-row-b .wb-cell > b { display: inline-block; min-width: 0; flex: 1 1 auto; }
+.wb-c-address { width: 5.1in; }
+.wb-c-rate { width: 2.5in; }
+
+.wb-row-c { height: 1.55in; }
+.wb-c-dates { width: 2.75in; padding-top: 0.05in; }
+.wb-c-meter { width: 4.85in; padding: 0; }
+.wb-sec { font: 700 8pt/1 var(--wb-sans); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 0.06in; }
+.wb-kv { display: flex; align-items: center; justify-content: space-between; gap: 0.08in; height: 0.25in; }
+.wb-kv > span { font: 700 8pt/1 var(--wb-sans); white-space: nowrap; }
+.wb-kv > b { font-size: 10.5pt; line-height: 1.15; white-space: nowrap; }
+.wb-readings { display: grid; grid-template-columns: repeat(3, 1fr); height: 0.5in; border-bottom: var(--wb-thin); }
+.wb-readings > div { padding: 0.04in 0.07in; border-left: var(--wb-thin); text-align: center; }
+.wb-readings > div:first-child { border-left: 0; }
+.wb-readings b { display: block; margin-top: 0.04in; white-space: nowrap; }
+.wb-charges { padding: 0.04in 0.07in 0; }
+.wb-charge { display: flex; justify-content: space-between; align-items: center; gap: 0.12in; height: 0.2in; }
+.wb-charge > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 8.5pt/1.2 var(--wb-sans); }
+.wb-charge > span.dm { font: 700 10pt/1.2 var(--wb-dot); }
+.wb-charge > b { font-size: 10.5pt; white-space: nowrap; }
+
+.wb-row-d { height: 0.55in; }
+.wb-row-d .wb-cell { display: flex; flex-direction: column; justify-content: space-between; }
+.wb-c-paid { width: 2.6in; }
+.wb-c-sign { width: 2.5in; }
+.wb-c-total { width: 2.5in; text-align: right; }
+.wb-c-total .wb-l { text-align: right; }
+.wb-total { font-size: 13pt !important; }
+
+.wb-row-e { height: 0.32in; }
+.wb-c-words { width: 7.6in; display: flex; align-items: center; }
+.wb-c-words > b { display: inline-block; flex: 1 1 auto; min-width: 0; font-size: 10pt; }
+
+.wb-row-f { height: 0.52in; }
+.wb-c-valid { width: 2.2in; display: flex; align-items: center; font: 700 7.5pt/1.2 var(--wb-sans); text-transform: uppercase; }
+.wb-c-money { width: 1.8in; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
+
+/* ---------------------------------------------------------------- a phone: the sheet scaled, the toolbar wraps */
 @media (max-width: 700px) {
-  .receipt-preview { padding: 14px; }
-  .receipt-toolbar { justify-content: flex-start; }
+  .receipt-preview { padding: 14px 8px; }
+  .receipt-toolbar { justify-content: flex-start; padding: 10px 12px; }
+  .receipt-toolbar .receipt-meta { flex-basis: 100%; }
 }
 
-@page {
-  size: 22cm 10cm;
-  margin: 0;
-}
-
+/* ---------------------------------------------------------------- printing: the sheet at its size, nothing else */
+@page { size: 8.5in 11in; margin: 0; }
 @media print {
-  html,
-  body {
-    width: 22cm;
-    height: 10cm;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden;
-    background: white;
+  html, body { width: 8.5in; height: 11in; margin: 0 !important; padding: 0 !important; background: #fff !important; overflow: hidden; }
+  .receipt-toolbar { display: none !important; }
+  .receipt-preview, .receipt-preview-scaler {
+    display: block !important; width: 8.5in !important; height: 11in !important; min-height: 0 !important;
+    margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff !important; transform: none !important;
   }
-
-  .receipt-toolbar {
-    display: none !important;
-  }
-
-  .receipt-preview,
-  .receipt-preview-scaler {
-    display: block !important;
-    width: 22cm !important;
-    height: 10cm !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: white !important;
-    transform: none !important;
-  }
-
-  .receipt-sheet {
-    width: 22cm !important;
-    height: 10cm !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
+  .receipt-sheet { box-shadow: none !important; transform: none !important; }
 }
 
-/* Dynamic database values keep the editor's original font size whenever they fit.
-   JavaScript reduces only overflowing values; measured cells never move or grow. */
-[data-fit-text] {
-  min-width: 0;
-}
-
-.consumer-address-value {
-  display: block;
-  width: 100%;
-  height: 0.29cm;
-  overflow: hidden;
-  line-height: 0.29cm;
-  white-space: nowrap;
-}
+/* entries that are longer than their cell are made smaller by the script, never below a size still readable */
+[data-fit-text] { min-width: 0; }

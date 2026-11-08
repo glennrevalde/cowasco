@@ -33,8 +33,11 @@ final class CsvReview
         return trim((string)$h, '_');
     }
 
-    /** Rows of an uploaded CSV file (field $field), keyed by the column keys; other columns of the file are kept as they are named */
-    public static function readUpload(array $cols, array $aliases = [], string $field = 'file'): array
+    /**
+     * Rows of an uploaded CSV file (field $field), keyed by the column keys; other columns of the file are kept as they
+     * are named. $excel: an Excel workbook (.xlsx) is read too (its first worksheet, as a CSV file of it would be)
+     */
+    public static function readUpload(array $cols, array $aliases = [], string $field = 'file', bool $excel = false): array
     {
         $up = $_FILES[$field] ?? null;
         if (!$up || ($up['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
@@ -43,8 +46,11 @@ final class CsvReview
         if ($up['error'] !== UPLOAD_ERR_OK) {
             fail('The file could not be uploaded' . (in_array($up['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) ? ': it is too large.' : '.'));
         }
+        if ($excel && preg_match('/\.xlsx$/i', (string)$up['name'])) {
+            return self::readText(XlsxReader::csvText((string)$up['tmp_name'], self::MAX_ROWS + 50), $cols, $aliases);
+        }
         if (!preg_match('/\.(csv|txt|tsv)$/i', (string)$up['name'])) {
-            fail('Choose a CSV file (.csv). In Excel: File > Save As > CSV (Comma delimited).');
+            fail($excel ? 'Choose a CSV file (.csv) or an Excel workbook (.xlsx).' : 'Choose a CSV file (.csv). In Excel: File > Save As > CSV (Comma delimited).');
         }
         $fh = Importer::openAsUtf8((string)$up['tmp_name']);
         $text = (string)stream_get_contents($fh);
@@ -381,7 +387,7 @@ final class CsvReview
         try {
             $opt = ($cfg['opt'])();
             if ($step === 'read') {
-                $rows = self::readUpload($cfg['cols'], $cfg['aliases'] ?? []);
+                $rows = self::readUpload($cfg['cols'], $cfg['aliases'] ?? [], 'file', !empty($cfg['excel']));
                 $state['file'] = mb_substr((string)($_FILES['file']['name'] ?? ''), 0, 190);
             } else {
                 $rows = self::posted($cfg['cols']);
@@ -475,8 +481,8 @@ final class CsvReview
             $o .= '<div class="row g-3 csvr-start"><div class="col-xl-7"><form method="post" enctype="multipart/form-data" class="card csvr-step" data-csvr-read>' . csrf_field()
                 . '<input type="hidden" name="step" value="read"><div class="card-header">1. The file</div><div class="card-body">'
                 . (!empty($cfg['intro']) ? '<p class="small text-muted">' . $cfg['intro'] . '</p>' : '')
-                . '<div class="row g-2">' . ($cfg['fields'] ?? '') . '<div class="col-12"><label class="form-label" for="csvrFile">CSV file</label>'
-                . '<input class="form-control" type="file" id="csvrFile" name="file" accept=".csv,.txt,.tsv,text/csv" required></div></div>'
+                . '<div class="row g-2">' . ($cfg['fields'] ?? '') . '<div class="col-12"><label class="form-label" for="csvrFile">' . (!empty($cfg['excel']) ? 'CSV file or Excel workbook' : 'CSV file') . '</label>'
+                . '<input class="form-control" type="file" id="csvrFile" name="file" accept="' . (!empty($cfg['excel']) ? '.csv,.txt,.tsv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : '.csv,.txt,.tsv,text/csv') . '" required></div></div>'
                 . '<div class="csvr-step-foot"><button class="btn btn-primary"><i class="bi bi-table"></i> Read the file for review</button>'
                 . '<a class="btn btn-outline-secondary" href="' . h($tpl) . '"><i class="bi bi-download"></i> Download the CSV template</a>'
                 . (self::extras($cfg['cols']) ? '<a class="btn btn-outline-secondary" href="' . h(current_url(['t' => 'template', 'set' => 'full'])) . '" title="Every detail of the record as a column: keep the ones you have"><i class="bi bi-file-earmark-spreadsheet"></i> Full template (every detail)</a>' : '')
@@ -485,7 +491,7 @@ final class CsvReview
                 . '</div></form></div>'
                 . '<div class="col-xl-5"><div class="card"><div class="card-header d-flex justify-content-between align-items-center"><span>The columns</span><a class="small" href="' . h($tpl) . '">Template</a></div><div class="card-body small">'
                 . self::columnHelp($cfg['cols']) . '<div class="text-muted mt-2">Required columns in bold. The first line of the file holds the column names; one ' . h($noun[0]) . ' per line after it. '
-                . 'Save from Excel as CSV (Comma delimited).' . (!empty($cfg['help']) ? ' ' . $cfg['help'] : '') . '</div></div></div></div></div>';
+                . (!empty($cfg['excel']) ? 'An Excel workbook is read from its first worksheet.' : 'Save from Excel as CSV (Comma delimited).') . (!empty($cfg['help']) ? ' ' . $cfg['help'] : '') . '</div></div></div></div></div>';
             return $o;
         }
         $sum = $state['summary'] ?? ['rows' => count($state['rows']), 'bad' => 0];

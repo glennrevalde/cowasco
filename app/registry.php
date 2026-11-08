@@ -7,6 +7,12 @@
 
 // the water-billing pages join the registry at the end of 'pages'
 $waterPages = WaterPages::registry();
+// a page of the Water Billing menu made like the centers of the cooperative (version 57): every bill of the members and
+// customers, after Billing Management
+$waterAt = array_search('water.billing_management', array_keys($waterPages), true);
+$waterPages = array_slice($waterPages, 0, $waterAt === false ? 0 : $waterAt + 1, true)
+    + ['bill.accounts' => ['water', 'Bill Accounts Center', 'center', 'Billing', 'water/bill_accounts.php', [], 1]]
+    + array_slice($waterPages, $waterAt === false ? 0 : $waterAt + 1, null, true);
 
 return [
     'modules' => [

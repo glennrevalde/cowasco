@@ -291,6 +291,70 @@
 <li>"This account is in use. Make it inactive instead of deleting it." An account cannot be deleted while it has ledger entries or transaction lines, is a module default account, has sub-accounts, or is used on an item. Make it inactive instead.</li>
 <li>Without the special permission to change the Chart of Accounts, the list is read-only and the <strong>New account</strong>, <strong>Edit</strong> and <strong>Delete</strong> links do not appear.</li>
 </ul>
+<h3 id="s-coa-import">Importing a chart of accounts<a class="man-hash" href="#s-coa-import" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>A whole chart of accounts, or a part of it, can be brought in from a file instead of being typed account by account. The file is a CSV file or an Excel workbook (its first worksheet), with one line per account. Nothing is saved when the file is read: every line is shown first in a review form, where a line with a problem is in red with its reason, any cell can be corrected and any line removed. The accounts are saved when no line is in red, every one of them or none.</p>
+<p><strong>Where to find it:</strong> Financial &gt; Chart of Accounts &gt; <strong>Import</strong> (beside <strong>New account</strong>). It needs the Create right on Chart of Accounts and the special permission to change the Chart of Accounts; updating the accounts already on the chart also needs the Edit right.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_accounts__import.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_accounts__import.jpg" alt="Import the chart of accounts: seven lines under review, the type Current Asset read as Other Current Asset, line 6 in red (With SL is Yes or No) and line 8 in red (no account has the code 9999)" width="1094" height="1190" loading="lazy" decoding="async"></a><figcaption>Import the chart of accounts: the lines under review, two of them in red with their reasons</figcaption></figure>
+<h4 id="s-coa-import-columns">The columns of the file<a class="man-hash" href="#s-coa-import-columns" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The first line of the file names the columns, in any order. The names below are read, and so are the headings of the chart's own <strong>Export</strong> (Code, Name, Type, Normal balance, Parent, With SL, Active) and the usual other words (Account Code, Account Title, Account Type, Parent Code, Sub-account of, Remarks ...). <strong>Download the CSV template</strong> on the page has the columns and a few example accounts.</p>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Column</th>
+<th>What it holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>code</strong></td>
+<td>The account code (required), at most 20 characters, used by no other account.</td>
+</tr>
+<tr>
+<td><strong>name</strong></td>
+<td>The name of the account (required), at most 120 characters.</td>
+</tr>
+<tr>
+<td><strong>type</strong></td>
+<td>The account type (required), as <a href="#pg-coa-account_types">Account Types</a> lists it: Bank, Accounts Receivable, Other Current Asset, Fixed Asset, Accounts Payable, Equity, Income, Expense ... or a type of your own. The usual other words are read too (Current Asset, Revenue, Cost of Sales, Capital ...), and the review says how each was read.</td>
+</tr>
+<tr>
+<td>parent</td>
+<td>Sub-account of: the code (or the name) of the main account it is under, on the chart or in the same file, of the same category. Blank for a main account. One level of sub-accounts, as on the account form.</td>
+</tr>
+<tr>
+<td>normal_balance</td>
+<td>Debit or Credit (Dr and Cr are read too). Blank: the normal balance of the type. A contra account, such as an allowance or accumulated depreciation, takes the other one.</td>
+</tr>
+<tr>
+<td>with_sl</td>
+<td>Yes when the account keeps a subsidiary ledger of names; blank: No.</td>
+</tr>
+<tr>
+<td>is_active</td>
+<td>Yes or No; blank: Yes.</td>
+</tr>
+<tr>
+<td>description, bank_account_no</td>
+<td>Optional. They are under <strong>...</strong> on each line of the review.</td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="s-coa-import-steps">Step by step<a class="man-hash" href="#s-coa-import-steps" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ol>
+<li>Click <strong>Import</strong> on the Chart of Accounts, choose the file and click <strong>Read the file for review</strong>.</li>
+<li>Choose what to do with an account whose code is already on the chart: <strong>Update it from the file</strong> (its name, type, main account and the other cells of its line; a blank cell keeps what is saved) or <strong>Leave it as it is</strong> (the line is shown but not saved).</li>
+<li>Read the lines. Each line says what it will do: a new account, an account of the chart that will be updated (and what of it), the same as on the chart, or left as it is. A line in red has its reason under it and the cell it names outlined in red.</li>
+<li>Correct a cell by typing in it or choosing from its list: the line is checked again at once. Remove a line with <strong>x</strong> (<strong>Put back the last</strong> brings it back), or remove every line in red at once.</li>
+<li>Click <strong>Save N accounts</strong>. The main accounts are saved first, then their sub-accounts, so a sub-account may come before its main account in the file.</li>
+</ol>
+<h4 id="s-coa-import-checks">What is checked<a class="man-hash" href="#s-coa-import-checks" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li>The code, the name and the type are there; the same code is not on two lines of the file; the type is one of Account Types and is switched on.</li>
+<li>A main account named on a line is on the chart or in the file; it is a main account itself (not a sub-account); it is of the same category; an account with sub-accounts is not made a sub-account. A sub-account whose main account is a line in red waits for that line.</li>
+<li>The rules of the account form for an account of the chart: an account the modules post to (marked <strong>system</strong>) keeps a type that behaves as its built-in type and stays active; an account with transactions or with sub-accounts keeps its category.</li>
+<li>Normal balance is Debit or Credit; With SL and Active are Yes or No.</li>
+</ul>
+<p>Every account added or updated is written to the audit trail, with the name of the file. The import posts nothing: balances are entered as opening balances or journal entries.</p>
 <h2 id="pg-coa-account_types">Account Types<a class="man-hash" href="#pg-coa-account_types" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>Account Types lists the account types: the fifteen built-in ones and the types you add yourself, such as <strong>Cash</strong> or <strong>Loans Receivable</strong>. Each type is a classification of its own on the Balance Sheet and the Income Statement (a heading, its accounts and a total), and each balance sheet type is linked to a section of the Statement of Cash Flows, so the cash flow statement always ties to the cash accounts.</p>
 <p><strong>Where to find it:</strong> Financial &gt; Account Types, or the <strong>Account types</strong> button on the <a href="#pg-coa-accounts">Chart of Accounts</a> and on the account form.</p>

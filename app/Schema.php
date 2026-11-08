@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 final class Schema
 {
-    private const FLAG = 'schema_ok_2027_04_25';
+    private const FLAG = 'schema_ok_2027_05_02';
 
     /**
      * file => one cheap probe.
@@ -204,6 +204,9 @@ final class Schema
                     + 0 * (SELECT COUNT(*) FROM coop_import_batches WHERE 1 = 0)
                     + 0 * (SELECT COUNT(*) FROM coop_import_raw WHERE 1 = 0)
                     + 0 * (SELECT COUNT(member_line_no) FROM coop_import_lines WHERE 1 = 0)", 1],
+        // version 57: the Bill Accounts Center of Water Billing (a page and its rights)
+        'database/migrations/2027_05_02_bill_accounts_center.sql' => [
+            "SELECT COUNT(*) FROM pages WHERE page_key = 'bill.accounts'", 1],
     ];
 
     private static ?array $pending = null;

@@ -1659,6 +1659,109 @@ $ciAnon->get($ci . '&a=lines&id=' . $ciId . '&kind=member');
 Checks::true('not signed in: refused', !str_contains($ciAnon->body, '"lines"'), (string)$ciAnon->status);
 Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
 
+// ======================================================================================== v57
+Checks::section('v57 Bill Accounts Center, the import of the chart of accounts, the address sub-group on the member form, the water bill receipt on Letter paper');
+require_once __DIR__ . '/../../water/common/individualSoaHelpers.php';
+$ba = 'index.php?p=bill.accounts';
+$admin->get($ba);
+Checks::true('Water Billing > Billing > Bill Accounts Center opens on the open bills: Account No., Name, Description, Bill Date, Invoice No., Due Date, Amount, Paid, Balance, Status',
+    $admin->status === 200 && str_contains($admin->body, '<h1>Bill Accounts Center</h1>') && str_contains($admin->body, 'class="table sv-grid ba-grid"')
+    && (bool)preg_match('/Account No\.<\/th><th>Name<\/th>.*Description<\/th>.*Bill Date<\/th>.*Invoice No\.<\/th>.*Due Date<\/th>.*Amount<\/th>.*Paid<\/th>.*Balance<\/th>.*Status<\/th>/s', $admin->body)
+    && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body), substr(strip_tags($admin->body), 0, 200));
+Checks::true('...in the menu after Billing Management', (bool)preg_match('/Billing Management<\/a>\s*<a class="menu-link[^"]*" href="[^"]*p=bill\.accounts"/', $admin->body));
+Checks::true('...the filters: bill status, bill code, zone, address sub-group, members or customers, bill type, bill dates, sort',
+    str_contains($admin->body, 'name="status"') && str_contains($admin->body, 'name="code"') && str_contains($admin->body, 'name="zone"') && str_contains($admin->body, 'name="subgroup"')
+    && str_contains($admin->body, 'name="holder"') && str_contains($admin->body, 'name="type"') && str_contains($admin->body, 'name="from"') && str_contains($admin->body, 'name="sort"')
+    && str_contains($admin->body, 'Closed (fully paid)'));
+// an account with open bills: the center's balance is the Statement of Account's
+$baAcct = 0;
+foreach ($accts as $a) {
+    if (isoa_open_invoices(DB::pdo(), [$a], '2099-12-31')) {
+        $baAcct = $a;
+        break;
+    }
+}
+$baNo = (string)$q('SELECT account_number FROM water_accounts WHERE pkey = :p', ['p' => $baAcct]);
+$soaOpen = 0;
+foreach (isoa_open_invoices(DB::pdo(), [$baAcct], '2099-12-31') as $i) {
+    $soaOpen += (int)$i['balance_cents'];
+}
+$baTot = BillAccounts::totals(BillAccounts::filters(['q' => $baNo]));
+Checks::eq('the open bills of an account: the same invoices and balance as its Statement of Account', [count(isoa_open_invoices(DB::pdo(), [$baAcct], '2099-12-31')), number_format($soaOpen / 100, 2, '.', '')],
+    [$baTot['n'], number_format((float)$baTot['balance'], 2, '.', '')]);
+$admin->get($ba . '&q=' . rawurlencode($baNo) . '&partial=1');
+Checks::true('...the search as you type answers the lines and their totals', $admin->status === 200 && !str_contains($admin->body, '<html') && str_contains($admin->body, 'data-no="' . $baNo . '"')
+    && str_contains($admin->body, 'Balance <strong>' . number_format((float)$baTot['balance'], 2) . '</strong>'));
+$admin->get($ba . '&status=all&q=' . rawurlencode($baNo) . '&export=csv');
+$baCsv = array_map(fn($l) => str_getcsv($l, ',', '"', ''), array_values(array_filter(explode("\n", preg_replace('/^\xEF\xBB\xBF/', '', $admin->body)))));
+Checks::true('Export to CSV: the columns of the center, a line per bill, the total', ($baCsv[0] ?? []) === ['Account No.', 'Name', 'Description', 'Bill Date', 'Invoice No.', 'Due Date', 'Amount', 'Paid', 'Balance', 'Status']
+    && count($baCsv) === BillAccounts::totals(BillAccounts::filters(['status' => 'all', 'q' => $baNo]))['n'] + 2 && str_starts_with((string)end($baCsv)[0], 'Total: '), implode(' | ', $baCsv[0] ?? []));
+$admin->get($ba . '&status=all&export=xlsx');
+Checks::true('Export to Excel: a workbook', $admin->status === 200 && str_starts_with($admin->body, 'PK'));
+$admin->get($ba . '&status=all&a=print');
+Checks::true('Print / PDF: the bills found, landscape, with the totals', $admin->status === 200 && str_contains($admin->body, 'BILL ACCOUNTS') && str_contains($admin->body, 'Print or save as PDF')
+    && str_contains($admin->body, '@page { size: landscape;') && str_contains($admin->body, 'class="table table-sm ba-print-table"'));
+$admin->get('water/views/generate_soa.php?tab=individual&account=' . rawurlencode($baNo));
+Checks::true('Statement (a line of the center): the Individual Statement of Account of the account', $admin->status === 200 && str_contains($admin->body, 'isoaPreset'));
+$baAnon = new Browser($base, 'anon57');
+$baAnon->get($ba . '&partial=1');
+Checks::true('not signed in: no bills', !str_contains($baAnon->body, 'ba-grid'));
+
+// the chart of accounts: Import beside New account; the file reviewed, a line in red corrected and one removed, then saved
+$admin->get('index.php?p=coa.accounts');
+Checks::true('Financial > Chart of Accounts: Import beside New account', (bool)preg_match('/New account<\/a>\s*<a class="btn btn-sm btn-outline-primary" href="[^"]*a=import"/', $admin->body));
+$coa = 'index.php?p=coa.accounts&a=import';
+$admin->get($coa . '&t=template');
+Checks::true('...the CSV template', str_starts_with(preg_replace('/^\xEF\xBB\xBF/', '', $admin->body), 'code,name,type,parent,normal_balance,with_sl,is_active,description,bank_account_no'));
+$coaCsv = "Account Code,Account Title,Account Type,Parent Code,Normal\nE5700,E57 Loans Receivable,Current Asset,,\nE5701,E57 Loans - Regular,Other Current Asset,E5700,\nE5702,E57 Odd,Assets Galore,,\nE5703,E57 Bad parent,Expense,E5799,\n";
+$tmp = sys_get_temp_dir() . '/e2e_coa57.csv';
+file_put_contents($tmp, $coaCsv);
+$ch = $admin->handle('POST', $coa);
+curl_setopt($ch, CURLOPT_POSTFIELDS, ['_csrf' => $admin->csrf(), 'step' => 'read', 'existing' => 'update', 'file' => new CURLFile($tmp, 'text/csv', 'e2e_coa57.csv')]);
+$admin->finish($ch, curl_exec($ch));
+@unlink($tmp);
+Checks::true('...the file read for review: four lines, two in red with their reasons, nothing saved', substr_count($admin->body, 'data-csvr-row') === 4 && substr_count($admin->body, 'csvr-rec is-bad') === 2
+    && str_contains($admin->body, 'is not an account type') && str_contains($admin->body, 'No account on the chart or in the file has the code') && !(int)$q("SELECT COUNT(*) FROM accounts WHERE code LIKE 'E57%'"));
+preg_match('/name="_once" value="([0-9a-f]+)"/', $admin->body, $coaOnce);
+$coaRows = [['_line' => 2, 'code' => 'E5700', 'name' => 'E57 Loans Receivable', 'type' => 'Other Current Asset'], ['_line' => 3, 'code' => 'E5701', 'name' => 'E57 Loans - Regular', 'type' => 'Other Current Asset', 'parent' => 'E5700'],
+    ['_line' => 4, 'code' => 'E5702', 'name' => 'E57 Odd', 'type' => 'Assets Galore']];
+$admin->post($coa, ['_csrf' => $admin->csrf(), 'step' => 'check', 'existing' => 'update', 'rows_json' => json_encode($coaRows)], ['X-CSVR-CHECK: 1']);
+Checks::true('...checked again as the cells change (the line removed is gone, the bad type still red)', ($admin->json['rows'][2]['bad'] ?? null) === true && ($admin->json['rows'][0]['bad'] ?? null) === false && count($admin->json['rows'] ?? []) === 3);
+$coaRows[2]['type'] = 'Other Asset';
+$admin->post($coa, ['_csrf' => $admin->csrf(), '_once' => $coaOnce[1] ?? '', 'step' => 'post', 'existing' => 'update', 'file_name' => 'e2e_coa57.csv', 'rows_json' => json_encode($coaRows)]);
+Checks::true('...saved: the accounts on the chart, the sub-account under its main account', str_contains($admin->body, 'Chart of accounts imported: 3 added')
+    && (string)$q("SELECT p.code FROM accounts a JOIN accounts p ON p.id = a.parent_id WHERE a.code = 'E5701'") === 'E5700' && (string)$q("SELECT account_type FROM accounts WHERE code = 'E5702'") === 'Other Asset', substr(strip_tags($admin->body), 0, 300));
+
+// the address sub-group: added and renamed right on the member form
+$sgMember = (int)$q("SELECT id FROM members WHERE water_account_id IS NOT NULL ORDER BY id LIMIT 1");
+$admin->get('index.php?p=coop.member&id=' . $sgMember . '&dtab=water');
+Checks::true('Member Information > Water Defaults: the address sub-group box with Rename and Add in it', $admin->status === 200 && str_contains($admin->body, 'data-subgroup-inline') && str_contains($admin->body, 'data-sgi="edit"')
+    && str_contains($admin->body, 'data-sgi="new"') && str_contains($admin->body, 'All sub-groups: order, switch off, delete'));
+$admin->postJson('water/process/addressSubgroups.php', ['action' => 'save', 'name' => 'E57 Purok Uno', 'sort_order' => 10, 'is_active' => true, 'page_key' => 'coop.member']);
+$sgId = (int)$q("SELECT id FROM coop_lists WHERE list_key = 'address_subgroup' AND name = 'E57 Purok Uno'");
+Checks::true('...a new sub-group added from the box', ($admin->json['success'] ?? false) === true && $sgId > 0);
+$sgWater = (int)$q('SELECT water_account_id FROM members WHERE id = :m', ['m' => $sgMember]);
+DB::run("UPDATE water_accounts SET address_subgroup = 'E57 Purok Uno' WHERE pkey = :w", ['w' => $sgWater]);
+DB::run("UPDATE members SET address_subgroup = 'E57 Purok Uno' WHERE id = :m", ['m' => $sgMember]);
+$admin->postJson('water/process/addressSubgroups.php', ['action' => 'save', 'id' => $sgId, 'name' => 'E57 Purok 1', 'sort_order' => 10, 'is_active' => true, 'page_key' => 'coop.member']);
+Checks::true('...the chosen one renamed from the box: the member and its water-service account take the new name', ($admin->json['success'] ?? false) === true
+    && (string)$q('SELECT address_subgroup FROM members WHERE id = :m', ['m' => $sgMember]) === 'E57 Purok 1' && (string)$q('SELECT address_subgroup FROM water_accounts WHERE pkey = :w', ['w' => $sgWater]) === 'E57 Purok 1');
+
+// the water bill / collection receipt: Letter, portrait, no header or footer, black
+if ($rF !== '') {
+    $admin->get('water/views/collection_receipt.php?receipt_no=' . rawurlencode($rF));
+    Checks::true('the water bill / collection receipt on plain paper: Letter, portrait, the two copies one above the other', $admin->status === 200 && substr_count($admin->body, '<section class="wb-copy"') === 2
+        && str_contains($admin->body, 'Letter 8.5 &times; 11 in, portrait, two copies') && str_contains($admin->body, 'Cooperative&#039;s Copy') && str_contains($admin->body, 'Consumer&#039;s Copy'));
+    preg_match('/href="\.\.\/resources\/css\/(cowassco_measured_receipt\.css[^"]*)"/', $admin->body, $rcss);
+    $admin->get('water/resources/css/' . html_entity_decode($rcss[1] ?? 'cowassco_measured_receipt.css'));
+    Checks::true('...printed with no margins of the browser (no header or footer), black text, bold Courier New', str_contains($admin->body, '@page { size: 8.5in 11in; margin: 0; }') && str_contains($admin->body, '--wb-ink: #000')
+        && str_contains($admin->body, '"Courier New"') && str_contains($admin->body, 'font-weight: 700'));
+    $admin->get('water/views/collection_receipt.php?receipt_no=' . rawurlencode($rF) . '&type=preprinted');
+    Checks::true('...on a pre-printed form: Letter, portrait, the entries in bold', $admin->status === 200 && str_contains($admin->body, '@page{size:8.5in 11in;margin:0}') && str_contains($admin->body, 'wrl-bold')
+        && substr_count($admin->body, 'data-f="account"') === 2 && str_contains($admin->body, 'pre-printed form 8.5 &times; 11 in'));
+}
+Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

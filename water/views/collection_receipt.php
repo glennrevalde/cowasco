@@ -1,7 +1,5 @@
 <?php
 require_once __DIR__ . '/../database/config.php';
-
-require_once __DIR__ . '/../database/config.php';
 require_once __DIR__ . '/../process/accessControlHelpers.php';
 require_once __DIR__ . '/../common/collectionReceiptHelpers.php';
 require_once __DIR__ . '/../common/institutionConfigurationHelpers.php';
@@ -31,136 +29,84 @@ function re($value): string
     return htmlspecialchars((string)($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function renderCowasscoMeasuredReceiptCopy(array $layout, string $copyLabel, array $issuer = []): void
+/**
+ * One copy of the water bill / collection receipt printed on plain paper (version 57): Letter bond paper, portrait,
+ * the Cooperative's copy on the upper half and the Consumer's copy on the lower half, cut apart on the dashed line.
+ * Black text only; the entries in bold Courier New, the labels in bold Arial, sized for an Epson dot-matrix printer.
+ * The Pre-Printed receipt of Receipt Layout Setup prints the entries where this one prints them.
+ */
+function renderLetterReceiptCopy(array $layout, string $copyLabel, array $issuer = []): void
 {
-    // The measured layout leaves room for the serial of a pre-printed form; printed on plain paper it stays blank.
-    // The system transaction reference remains inside the measured Number cell.
-    $formSerialNumber = '';
+    // the lines of charges that fit under the water fee and the arrears: the rest together on the last one
+    $fees = array_values((array)($layout['other_fee_items'] ?? []));
+    if (count($fees) > 3) {
+        $rest = 0.0;
+        foreach (array_slice($fees, 2) as $f) {
+            $rest += (float)str_replace(',', '', (string)$f['amount']);
+        }
+        $fees = array_merge(array_slice($fees, 0, 2), [['description' => 'OTHER CHARGES', 'amount' => number_format($rest, 2)]]);
+    }
+    $issuerLine = trim(implode(', ', array_filter([trim((string)($issuer['address'] ?? '')), ($issuer['phone'] ?? '') !== '' ? 'Tel. No. ' . $issuer['phone'] : ''])));
     ?>
-    <section class="receipt-copy" aria-label="<?= re($copyLabel) ?>">
-        <section class="copy-inner">
-            <header class="receipt-header">
-                <div class="organization-block">
-                    <div class="organization-name"><?= re(mb_strtoupper((string)($issuer['name'] ?? ''), 'UTF-8')) ?></div>
-                    <div class="organization-address"><?= re($issuer['address'] ?? '') ?></div>
-                </div>
-                <div class="header-bottom-line">
-                    <span class="telephone"><?= ($issuer['phone'] ?? '') !== '' ? 'Tel. No. ' . re($issuer['phone']) : '' ?></span>
-                    <span class="bill-title">WATER BILL</span>
-                    <span class="receipt-number dot-matrix" aria-label="Receipt form serial"><?= re($formSerialNumber) ?></span>
-                </div>
-            </header>
-
-            <!-- Exact measured grid: 0.2 + 1.4 + 2.4 + 0.9 + 2.5 = 7.4 cm inside the 1.5 mm border. -->
-            <div class="bill-frame">
-                <section class="frame-row heading-row">
-                    <div>Account #</div>
-                    <div>Concessionaire's Name</div>
-                    <div>Number</div>
-                </section>
-
-                <section class="frame-row consumer-row">
-                    <div class="consumer-account dot-matrix"><?= re($layout['account_number']) ?></div>
-                    <div class="consumer-information">
-                        <div class="consumer-name dot-matrix" data-fit-text data-fit-min-ratio="0.62" title="<?= re($layout['concessionaire_name']) ?>"><?= re($layout['concessionaire_name']) ?></div>
-                        <div class="consumer-number dot-matrix" data-fit-text data-fit-min-ratio="0.50" title="<?= re($layout['receipt_number']) ?>"><?= re($layout['receipt_number']) ?></div>
-                        <div class="consumer-detail address-detail">
-                            <span class="fixed-label">ADDRESS</span>
-                            <span class="dot-matrix consumer-address-value" data-fit-text data-fit-min-ratio="0.58" title="<?= re($layout['address']) ?>"><?= re($layout['address']) ?></span>
-                        </div>
-                        <div class="consumer-detail">
-                            <span class="fixed-label">Rate Code</span>
-                            <span class="dot-matrix"><?= re($layout['rate_code']) ?></span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="frame-row meter-row">
-                    <div class="date-meter-cell">
-                        <div class="section-heading">DATE / METER READING</div>
-                        <div class="date-list">
-                            <div><span>Previous Rdng</span><b class="dot-matrix"><?= re($layout['previous_reading_date']) ?></b></div>
-                            <div><span>Present Rdng</span><b class="dot-matrix"><?= re($layout['present_reading_date']) ?></b></div>
-                            <div><span>Due Date</span><b class="dot-matrix"><?= re($layout['due_date']) ?></b></div>
-                            <div><span>Charge Mode</span><b class="dot-matrix"><?= re($layout['charge_mode']) ?></b></div>
-                            <div><span>Disconnection</span><b class="dot-matrix"><?= re($layout['disconnection_date']) ?></b></div>
-                        </div>
-                    </div>
-
-                    <div class="meter-right-cell">
-                        <div class="readings-strip">
-                            <div class="reading-box present-box">
-                                <div class="reading-title">Present</div>
-                                <div class="reading-number dot-matrix"><?= re($layout['present_reading']) ?></div>
-                                <div class="water-fee-label">WATER FEE</div>
-                            </div>
-                            <div class="reading-box previous-box">
-                                <div class="reading-title">Previous</div>
-                                <div class="reading-number dot-matrix"><?= re($layout['previous_reading']) ?></div>
-                            </div>
-                            <div class="reading-box usage-box">
-                                <div class="reading-title">Usage (m3)</div>
-                                <div class="reading-number dot-matrix"><?= re($layout['usage']) ?></div>
-                                <div class="water-fee-value dot-matrix"><?= re($layout['water_fee']) ?></div>
-                            </div>
-                        </div>
-
-                        <div class="charges-open-cell">
-                            <div class="charge-entry arrears-entry">
-                                <span>ARREARS</span><b class="dot-matrix"><?= re($layout['arrears']) ?></b>
-                            </div>
-                            <?php foreach (($layout['other_fee_items'] ?? []) as $otherFee): ?>
-                            <div class="charge-entry other-fee-entry">
-                                <span title="<?= re($otherFee['description']) ?>"><?= re($otherFee['description']) ?></span>
-                                <b class="dot-matrix"><?= re($otherFee['amount']) ?></b>
-                            </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="frame-row payment-row">
-                    <div class="payment-cell payment-date-cell">
-                        <div class="payment-value dot-matrix" data-fit-text data-fit-min-ratio="0.68"><?= re($layout['date_time_of_payment']) ?></div>
-                        <div class="payment-label">DATE - TIME OF PAYMENT</div>
-                    </div>
-                    <div class="payment-cell signature-cell">
-                        <div class="signature-value" aria-hidden="true"></div>
-                        <div class="payment-label">RECEIVED BY / SIGNATURE</div>
-                    </div>
-                    <div class="payment-cell amount-due-cell">
-                        <div class="payment-value total-due-value dot-matrix"><?= re($layout['amount_due']) ?></div>
-                        <div class="payment-label total-label">Total Amount Due</div>
-                    </div>
-                </section>
-
-                <section class="frame-row settlement-row">
-                    <div class="amount-words-line">
-                        <span>Amt in Words:</span>
-                        <b class="dot-matrix" data-fit-text data-fit-min-ratio="0.56" title="<?= re($layout['amount_in_words']) ?>"><?= re($layout['amount_in_words']) ?></b>
-                    </div>
-
-                    <p class="receipt-validity">THIS RECEIPT IS NOT<br>VALID UNLESS SIGNED<br>BY OUR COLLECTOR</p>
-
-                    <div class="settlement-values">
-                        <div class="settlement-item">
-                            <div class="dot-matrix"><?= re($layout['cash']) ?></div>
-                            <span>CASH*****</span>
-                        </div>
-                        <div class="settlement-item">
-                            <div class="dot-matrix"><?= re($layout['amount_due']) ?></div>
-                            <span>AMT. DUE</span>
-                        </div>
-                        <div class="settlement-item">
-                            <div class="dot-matrix"><?= re($layout['change']) ?></div>
-                            <span>CHANGE</span>
-                        </div>
-                    </div>
-
-                    <div class="copy-label"><?= re($copyLabel) ?></div>
-                </section>
+    <section class="wb-copy" aria-label="<?= re($copyLabel) ?>">
+        <header class="wb-head">
+            <div class="wb-org"><?= re(mb_strtoupper((string)($issuer['name'] ?? ''), 'UTF-8')) ?></div>
+            <div class="wb-org-sub"><?= re($issuerLine) ?></div>
+            <div class="wb-title-row">
+                <span class="wb-copy-label"><?= re($copyLabel) ?></span>
+                <span class="wb-title">WATER BILL</span>
+                <span class="wb-title-side" aria-hidden="true"></span>
             </div>
-        </section>
+        </header>
+        <div class="wb-frame">
+            <div class="wb-row wb-row-a">
+                <div class="wb-cell wb-c-account"><span class="wb-l">Account #</span><b class="dm" data-wb="account"><?= re($layout['account_number']) ?></b></div>
+                <div class="wb-cell wb-c-name"><span class="wb-l">Concessionaire's Name</span><b class="dm wb-big" data-wb="name" data-fit-text data-fit-min-ratio="0.72" title="<?= re($layout['concessionaire_name']) ?>"><?= re($layout['concessionaire_name']) ?></b></div>
+                <div class="wb-cell wb-c-number"><span class="wb-l">Number</span><b class="dm wb-small" data-wb="number" data-fit-text data-fit-min-ratio="0.7"><?= re($layout['receipt_number']) ?></b></div>
+            </div>
+            <div class="wb-row wb-row-b">
+                <div class="wb-cell wb-c-address"><span class="wb-l wb-l-inline">Address</span><b class="dm" data-wb="address" data-fit-text data-fit-min-ratio="0.7" title="<?= re($layout['address']) ?>"><?= re($layout['address']) ?></b></div>
+                <div class="wb-cell wb-c-rate"><span class="wb-l wb-l-inline">Rate Code</span><b class="dm" data-wb="rate_code"><?= re($layout['rate_code']) ?></b></div>
+            </div>
+            <div class="wb-row wb-row-c">
+                <div class="wb-cell wb-c-dates">
+                    <div class="wb-sec">Date / Meter Reading</div>
+                    <div class="wb-kv"><span>Previous Rdng</span><b class="dm" data-wb="prev_date"><?= re($layout['previous_reading_date']) ?></b></div>
+                    <div class="wb-kv"><span>Present Rdng</span><b class="dm" data-wb="pres_date"><?= re($layout['present_reading_date']) ?></b></div>
+                    <div class="wb-kv"><span>Due Date</span><b class="dm" data-wb="due_date"><?= re($layout['due_date']) ?></b></div>
+                    <div class="wb-kv"><span>Charge Mode</span><b class="dm" data-wb="charge_mode"><?= re($layout['charge_mode']) ?></b></div>
+                    <div class="wb-kv"><span>Disconnection</span><b class="dm" data-wb="disconnection"><?= re($layout['disconnection_date']) ?></b></div>
+                </div>
+                <div class="wb-cell wb-c-meter">
+                    <div class="wb-readings">
+                        <div><span class="wb-l">Present</span><b class="dm wb-big" data-wb="present"><?= re($layout['present_reading']) ?></b></div>
+                        <div><span class="wb-l">Previous</span><b class="dm wb-big" data-wb="previous"><?= re($layout['previous_reading']) ?></b></div>
+                        <div><span class="wb-l">Usage (m3)</span><b class="dm wb-big" data-wb="usage"><?= re($layout['usage']) ?></b></div>
+                    </div>
+                    <div class="wb-charges">
+                        <div class="wb-charge"><span>WATER FEE</span><b class="dm" data-wb="water_fee"><?= re($layout['water_fee']) ?></b></div>
+                        <div class="wb-charge"><span>ARREARS</span><b class="dm" data-wb="arrears"><?= re($layout['arrears']) ?></b></div>
+                        <?php foreach ($fees as $i => $fee): ?>
+                        <div class="wb-charge"><span class="dm" data-wb="line<?= (int)$i ?>" title="<?= re($fee['description']) ?>"><?= re($fee['description']) ?></span><b class="dm" data-wb="line<?= (int)$i ?>_amount"><?= re($fee['amount']) ?></b></div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <div class="wb-row wb-row-d">
+                <div class="wb-cell wb-c-paid"><b class="dm" data-wb="paid_at" data-fit-text data-fit-min-ratio="0.75"><?= re($layout['date_time_of_payment']) ?></b><span class="wb-l">Date - Time of Payment</span></div>
+                <div class="wb-cell wb-c-sign"><b class="dm" aria-hidden="true">&nbsp;</b><span class="wb-l">Received by / Signature</span></div>
+                <div class="wb-cell wb-c-total"><b class="dm wb-total" data-wb="amount_due"><?= re($layout['amount_due']) ?></b><span class="wb-l">Total Amount Due</span></div>
+            </div>
+            <div class="wb-row wb-row-e">
+                <div class="wb-cell wb-c-words"><span class="wb-l wb-l-inline">Amount in Words</span><b class="dm" data-wb="words" data-fit-text data-fit-min-ratio="0.72" title="<?= re($layout['amount_in_words']) ?>"><?= re($layout['amount_in_words']) ?></b></div>
+            </div>
+            <div class="wb-row wb-row-f">
+                <div class="wb-cell wb-c-valid">This receipt is not valid unless signed by our collector</div>
+                <div class="wb-cell wb-c-money"><b class="dm" data-wb="cash"><?= re($layout['cash']) ?></b><span class="wb-l">Cash</span></div>
+                <div class="wb-cell wb-c-money"><b class="dm" data-wb="amount_due2"><?= re($layout['amount_due']) ?></b><span class="wb-l">Amt. Due</span></div>
+                <div class="wb-cell wb-c-money"><b class="dm" data-wb="change"><?= re($layout['change']) ?></b><span class="wb-l">Change</span></div>
+            </div>
+        </div>
     </section>
     <?php
 }
@@ -240,9 +186,7 @@ if ($printType === 'preprinted') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Water Bill Receipt <?= re($receiptNo) ?></title>
-    <link rel="stylesheet" href="../resources/css/cowassco_measured_receipt.css?v=20260724-exact-editor">
-<link rel="stylesheet" href="../common/ui-consistency.css">
-<script src="../common/business-ui-consistency.js" defer></script>
+    <link rel="stylesheet" href="../resources/css/cowassco_measured_receipt.css?v=<?= (int)@filemtime(__DIR__ . '/../resources/css/cowassco_measured_receipt.css') ?>">
 </head>
 <body data-autoprint="<?= $autoPrint ? '1' : '0' ?>"
       data-receipt-no="<?= re($receiptNo) ?>"
@@ -253,7 +197,7 @@ if ($printType === 'preprinted') {
         <a href="payment_history.php">Payment History</a>
         <a href="water_bills_collection.php">Collection</a>
         <a href="collection_receipt.php?receipt_no=<?= urlencode($receiptNo) ?>&amp;type=preprinted" title="Print only the entries, on a pre-printed form, this time">Print on a pre-printed form</a>
-        <span class="receipt-meta">Receipt <?= re($receiptNo) ?>, 22 cm × 10 cm, Print at Actual Size / 100%</span>
+        <span class="receipt-meta">Receipt <?= re($receiptNo) ?>, Letter 8.5 &times; 11 in, portrait, two copies. Print at Actual Size / 100%.</span>
         <?php if ($status !== 'ACTIVE'): ?>
             <span class="status-warning"><?= re($status) ?><?= !empty($receipt['reversal_reason']) ? ': ' . re($receipt['reversal_reason']) : '' ?></span>
         <?php endif; ?>
@@ -261,14 +205,14 @@ if ($printType === 'preprinted') {
 
     <main class="receipt-preview" id="receiptPreview">
         <div class="receipt-preview-scaler" id="receiptPreviewScaler">
-            <article class="receipt-sheet" id="receiptSheet" aria-label="Measured water bill receipt">
-                <?php renderCowasscoMeasuredReceiptCopy($layout, "Cooperative's Copy", $receiptIssuer); ?>
-                <div class="center-perforation" aria-hidden="true"></div>
-                <?php renderCowasscoMeasuredReceiptCopy($layout, "Consumer's Copy", $receiptIssuer); ?>
+            <article class="receipt-sheet" id="receiptSheet" aria-label="Water bill receipt on Letter paper">
+                <?php renderLetterReceiptCopy($layout, "Cooperative's Copy", $receiptIssuer); ?>
+                <div class="wb-cut" aria-hidden="true"><span>cut here</span></div>
+                <?php renderLetterReceiptCopy($layout, "Consumer's Copy", $receiptIssuer); ?>
             </article>
         </div>
     </main>
 
-    <script src="../resources/js/cowassco_measured_receipt.js?v=20260724-exact-editor"></script>
+    <script src="../resources/js/cowassco_measured_receipt.js?v=<?= (int)@filemtime(__DIR__ . '/../resources/js/cowassco_measured_receipt.js') ?>"></script>
 </body>
 </html>

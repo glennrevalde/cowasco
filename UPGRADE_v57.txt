@@ -1,0 +1,67 @@
+G-SMaRT Integrated Cooperative System - version 57 (2026-11-08)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v22.xlsx (docs/ADDITIONAL_MODULE_V22_CHECKLIST.md).
+
+This package holds only the files changed or added since version 56. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is never
+changed. Works on MySQL 5.5 and MySQL 8 as before.
+
+Version 56 must be in place first (its files and database/migrations/2027_04_25_consolidated_import.sql).
+
+What to run on the database (once)
+----------------------------------
+  database/migrations/2027_05_02_bill_accounts_center.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         mysql -u root -p your_database < database/migrations/2027_05_02_bill_accounts_center.sql
+
+It adds the page Water Billing > Billing > Bill Accounts Center and gives it to the roles that have
+Billing List, Generate SOA / Post Billing or Collections (Cashier). No table is added or changed.
+Safe to run more than once. Until it is run the program stops with "Database update needed" and
+names this file. Press Ctrl+F5 once in the browser afterwards (the receipt's style sheet changed).
+
+What is new
+-----------
+Water Billing > Billing > Bill Accounts Center (after Billing Management)
+- Every bill of the members and customers in one grid, laid out like the Loan Accounts Center: the
+  water bills, the one-time, recurring and installment bills (each amortization) and the fixed
+  share capital bills, one line per invoice. It opens on the open bills (not fully paid); the
+  closed (fully paid) bills, the overdue ones, the ones not yet due, or all of them, are a filter
+  away.
+- The columns: Account No., Name, Description, Bill Date, Invoice No., Due Date, Amount, Paid,
+  Balance, Status. Under the grid the count, the overdue bills and the totals of every bill found.
+- Filters: bill status, bill code, zone, address sub-group, members or customers, bill type, bill
+  dates, and the order. Search as you type by name, account no., invoice no. or member no.
+- Export to Excel (.xlsx) or CSV, Print, or Save as PDF from the print window: every bill found.
+- From a bill: Collection (the cashier with the account chosen), Statement (the Individual
+  Statement of Account), Ledger and Account, on the toolbar, by double-click or right-click.
+
+Financial > Chart of Accounts > Import
+- The accounts of a chart of accounts from a CSV file or an Excel workbook: code, name and type,
+  and if you have them the main account, normal balance, With SL, Active, description and bank
+  account no. The columns in any order and in their usual names; the chart's own Export is read
+  back as it is.
+- Every line is shown in a review form before anything is saved: a line with a problem is in red
+  with its reason and its cell, any cell can be corrected (checked again at once) and any line
+  removed. Save saves every account or none, the main accounts first.
+- An account whose code is already on the chart is updated from its line (blank cells keep what is
+  saved) or left as it is, as you choose. The rules of the account form apply.
+
+Member Information > Water Defaults (and Loan and savings grouping)
+- The address sub-group is edited right in its box: the pencil renames the sub-group chosen (every
+  member and water-service account with it takes the new name), + adds a new one and chooses it.
+  "All sub-groups" under the box still opens the whole list (order, switch off, delete).
+
+The water bill / collection receipt (Collections, Payment History)
+- Printed on Letter bond paper, portrait: the Cooperative's copy on the upper half, the
+  Consumer's copy on the lower half, cut apart on the dashed line.
+- Black text only; the entries in bold Courier New and the labels in bold Arial, at sizes an Epson
+  dot-matrix printer prints clearly.
+- No header or footer of the browser any more (no date, title, web address or page number): the
+  page has no browser margins.
+- The pre-printed receipt (Receipt Layout Setup) is the same Letter sheet by default, in the new
+  "Dot matrix, bold" font. A layout you saved without changing the former default is read as the
+  new default; a layout you changed stays as it is, with a note that "Back to the default layout"
+  prints on Letter paper.
+- In the print window choose Letter paper and Actual size / 100%.

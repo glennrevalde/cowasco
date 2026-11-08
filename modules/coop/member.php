@@ -322,14 +322,34 @@ if ($m) {
     }
 }
 $actions[] = btn_link(url('coop.members'), 'Member Center', 'btn-outline-secondary', 'arrow-left');
-// the address sub-groups are kept from the form itself (Manage beside the box): Address Sub-groups or the member lists
+// the address sub-groups are kept from the form itself: a new one is added and the chosen one renamed right in the box
+// (version 57), and the whole list (order, switched off, delete) opens in a window; the rights of Address Sub-groups or
+// of the member lists
 $sgCan = Access::page('water.address_subgroups') || Access::page('coop.lists');
-$sgBox = function (string $html) use ($sgCan): string {
+$sgCreate = Access::can('water.address_subgroups', 'create') || Access::can('coop.lists', 'create');
+$sgEdit = Access::can('water.address_subgroups', 'edit') || Access::can('coop.lists', 'edit');
+$sgBox = function (string $html) use ($sgCan, $sgCreate, $sgEdit): string {
     if (!$sgCan) {
         return $html;
     }
-    $btn = '<button type="button" class="sgm-manage" data-subgroup-manage data-endpoint="' . h(base_url() . '/water/process/addressSubgroups.php') . '" data-page-key="coop.member" data-csrf="' . h(csrf_token()) . '">'
-        . '<i class="bi bi-plus-lg" aria-hidden="true"></i> Add, edit or delete sub-groups</button>';
+    $endpoint = h(base_url() . '/water/process/addressSubgroups.php');
+    $a = strpos($html, '<select');
+    $b = strpos($html, '</select>');
+    if ($a !== false && $b !== false && ($sgCreate || $sgEdit)) {
+        $select = substr($html, $a, $b + 9 - $a);
+        $tools = ($sgEdit ? '<button type="button" class="btn btn-outline-secondary sgi-btn" data-sgi="edit" title="Rename the sub-group chosen (every member and water-service account that has it takes the new name)" aria-label="Rename the sub-group chosen"><i class="bi bi-pencil"></i></button>' : '')
+            . ($sgCreate ? '<button type="button" class="btn btn-outline-secondary sgi-btn" data-sgi="new" title="Add a new sub-group to the list and choose it" aria-label="Add a new sub-group"><i class="bi bi-plus-lg"></i></button>' : '');
+        $inline = '<div class="sgi" data-subgroup-inline data-endpoint="' . $endpoint . '" data-page-key="coop.member" data-csrf="' . h(csrf_token()) . '">'
+            . '<div class="input-group input-group-sm sgi-pick">' . $select . $tools . '</div>'
+            . '<div class="input-group input-group-sm sgi-edit" hidden><input type="text" class="form-control" maxlength="60" autocomplete="off" aria-label="Name of the sub-group" data-sgi-name>'
+            . '<button type="button" class="btn btn-primary" data-sgi="save">Save</button><button type="button" class="btn btn-outline-secondary" data-sgi="cancel">Cancel</button></div>'
+            . '<div class="sgi-msg" role="status" aria-live="polite" hidden></div></div>';
+        $html = substr($html, 0, $a) . $inline . substr($html, $b + 9);
+        // the box and its two buttons take the whole width of a phone
+        $html = (string)preg_replace('/^<div class="col-6 /', '<div class="col-12 ', $html, 1);
+    }
+    $btn = '<button type="button" class="sgm-manage" data-subgroup-manage data-endpoint="' . $endpoint . '" data-page-key="coop.member" data-csrf="' . h(csrf_token()) . '">'
+        . '<i class="bi bi-list-ul" aria-hidden="true"></i> All sub-groups: order, switch off, delete</button>';
     return substr($html, 0, -6) . $btn . '</div>';
 };
 coop_layout($m ? $m['full_name'] : 'New member', ['actions' => implode(' ', $actions), 'js' => $sgCan ? ['js/subgroup_manager.js'] : []]);

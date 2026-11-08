@@ -28,12 +28,12 @@
   // ------------------------------------------------------------------ the measurements
   const num = (k, d) => { const f = form.elements['setup[' + k + ']']; const v = f ? parseFloat(f.value) : NaN; return isNaN(v) ? (d || 0) : v; };
   const m = () => ({
-    pw: Math.max(1440, num('page_width', 12474)), ph: Math.max(1440, num('page_height', 5670)),
+    pw: Math.max(1440, num('page_width', 12240)), ph: Math.max(1440, num('page_height', 15840)),
     mt: Math.max(0, num('margin_top')), mr: Math.max(0, num('margin_right')), mb: Math.max(0, num('margin_bottom')), ml: Math.max(0, num('margin_left')),
     header: [num('header_left'), num('header_top')], body: [num('body_left'), num('body_top')], footer: [num('footer_left'), num('footer_top')],
     interval: Math.max(50, num('body_interval', 139)), max: Math.max(1, Math.round(num('max_lines', 2))),
     copies: kind === 'collection' ? Math.max(1, Math.min(2, Math.round(num('copies', 1)))) : 1, cx: num('copy_left'), cy: num('copy_top'),
-    fs: num('font_size_pt', 6), font: (form.elements['setup[font]'] || {}).value || 'mono', cpi: parseInt((form.elements['setup[cpi]'] || {}).value || '0', 10) || 0,
+    fs: num('font_size_pt', 6), font: (form.elements['setup[font]'] || {}).value || 'mono_bold', cpi: parseInt((form.elements['setup[cpi]'] || {}).value || '0', 10) || 0,
   });
   const squeeze = (mm, fs) => (mm.cpi > 0 && fs > 0) ? Math.min(2, Math.max(0.3, ((mm.font === 'sans' ? 129.5 : 120) / fs) / mm.cpi)) : 1;
 
@@ -120,7 +120,7 @@
     const mm = m();
     const s = scale(mm);
     stage.innerHTML = '';
-    const page = el('rl-paper' + (mm.font === 'sans' ? ' is-sans' : ''), { width: (mm.pw * s) + 'px', height: (mm.ph * s) + 'px' });
+    const page = el('rl-paper' + (mm.font === 'sans' ? ' is-sans' : '') + (mm.font === 'mono_bold' ? ' is-bold' : ''), { width: (mm.pw * s) + 'px', height: (mm.ph * s) + 'px' });
     stage.appendChild(page);
     page.appendChild(el('rl-margin', { left: (mm.ml * s) + 'px', top: (mm.mt * s) + 'px', width: Math.max(0, (mm.pw - mm.ml - mm.mr) * s) + 'px', height: Math.max(0, (mm.ph - mm.mt - mm.mb) * s) + 'px' }));
     const vals = sample.values || {};

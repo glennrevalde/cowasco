@@ -1,8 +1,8 @@
 -- =====================================================================
 --  G-SMaRT Integrated Cooperative System - sample database (company, cooperative and water utility)
---  Generated 2026-11-08 21:17:35 +08:00
+--  Generated 2026-11-08 23:54:47 +08:00
 --  240 tables (152 cooperative, 88 water billing) and 2 views,
---  8,850 rows (420 ledger documents, 33 water-service accounts)
+--  8,858 rows (420 ledger documents, 33 water-service accounts)
 --
 --  Import:  phpMyAdmin > Import > choose this file > Go
 --      or:  mysql -u root -p < accounting_system.sql
@@ -5176,7 +5176,7 @@ INSERT INTO `modules` (`id`,`code`,`name`,`icon`,`sort_order`) VALUES
 (18,'cda','CDA Compliance','clipboard2-check',18),
 (19,'water','Water Billing','droplet-half',7);
 
--- pages (377 rows)
+-- pages (378 rows)
 INSERT INTO `pages` (`id`,`page_key`,`module_id`,`name`,`page_type`,`menu_group`,`sort_order`,`show_in_menu`,`description`) VALUES
 (1,'home.dashboard',1,'Home Dashboard','center','Home',10,1,NULL),
 (2,'home.reports',1,'Report Center','center','Home',20,1,NULL),
@@ -5557,9 +5557,10 @@ INSERT INTO `pages` (`id`,`page_key`,`module_id`,`name`,`page_type`,`menu_group`
 (374,'rpt.cash_flow_class',2,'Statement of Cash Flows by Class','report','Reports',275,1,NULL),
 (375,'rpt.sales_customer_type_detail',4,'Sales by Customer Detail Group by Customer/Member Type','report','Sales Reports',755,1,NULL),
 (376,'water.bill_balance_upload',19,'Upload Bill Balances','transaction','Billing',3197,1,'Upload the open balances of the recurring, installment, one-time and fixed share capital bills from a file, reviewed line by line before they are recorded.'),
-(377,'coop.consolidated_import',13,'Consolidated Import','transaction','Transactions',1982,1,'One file for the members with their savings, loans, water-service account and bill balances, reviewed and corrected before it is saved.');
+(377,'coop.consolidated_import',13,'Consolidated Import','transaction','Transactions',1982,1,'One file for the members with their savings, loans, water-service account and bill balances, reviewed and corrected before it is saved.'),
+(378,'bill.accounts',19,'Bill Accounts Center','center','Billing',3061,1,'Every bill of the members and customers, open or fully paid, with its amount, what was paid and its balance; filtered, exported, printed.');
 
--- role_page_access (1458 rows)
+-- role_page_access (1464 rows)
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (2,1,1,0,0,0,1,0),
 (2,2,1,0,0,0,1,0),
@@ -5857,13 +5858,14 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (2,375,1,0,0,0,1,0),
 (2,376,1,0,0,0,1,0),
 (2,377,1,0,0,0,1,0),
+(2,378,1,0,0,0,1,0),
 (3,1,1,0,0,0,1,0),
 (3,2,1,0,0,0,1,0),
 (3,3,1,0,0,0,1,0),
 (3,4,1,0,0,0,1,0),
-(3,5,1,0,0,0,1,0),
-(3,6,1,0,0,0,1,0);
+(3,5,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(3,6,1,0,0,0,1,0),
 (3,7,1,0,0,0,1,0),
 (3,49,1,1,1,0,1,0),
 (3,50,1,1,1,0,1,0),
@@ -5962,9 +5964,9 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (5,133,1,0,0,0,1,0),
 (5,134,1,0,0,0,1,0),
 (5,135,1,0,0,0,1,0),
-(5,137,1,0,0,0,1,0),
-(5,138,1,0,0,0,1,0);
+(5,137,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(5,138,1,0,0,0,1,0),
 (5,139,1,0,0,0,1,0),
 (6,1,1,0,0,0,1,0),
 (6,2,1,0,0,0,1,0),
@@ -6013,6 +6015,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (7,338,1,1,1,0,1,0),
 (7,359,1,1,1,0,1,0),
 (7,361,1,0,0,0,1,0),
+(7,378,1,0,0,0,1,0),
 (8,1,1,0,0,0,0,0),
 (8,2,1,0,0,0,0,0),
 (8,140,1,1,1,1,1,1),
@@ -6062,10 +6065,10 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,28,1,0,0,0,1,0),
 (9,29,1,0,0,0,1,0),
 (9,30,1,0,0,0,1,0),
-(9,31,1,0,0,0,1,0),
-(9,32,1,0,0,0,1,0),
-(9,33,1,0,0,0,1,0);
+(9,31,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,32,1,0,0,0,1,0),
+(9,33,1,0,0,0,1,0),
 (9,34,1,0,0,0,1,0),
 (9,35,1,0,0,0,1,0),
 (9,36,1,0,0,0,1,0),
@@ -6163,10 +6166,10 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,128,1,0,0,0,1,0),
 (9,129,1,0,0,0,1,0),
 (9,130,1,0,0,0,1,0),
-(9,131,1,0,0,0,1,0),
-(9,132,1,0,0,0,1,0),
-(9,133,1,0,0,0,1,0);
+(9,131,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,132,1,0,0,0,1,0),
+(9,133,1,0,0,0,1,0),
 (9,134,1,0,0,0,1,0),
 (9,135,1,0,0,0,1,0),
 (9,136,1,0,0,0,1,0),
@@ -6264,10 +6267,10 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,242,1,0,0,0,1,0),
 (9,243,1,0,0,0,1,0),
 (9,244,1,0,0,0,1,0),
-(9,245,1,0,0,0,1,0),
-(9,246,1,0,0,0,1,0),
-(9,247,1,0,0,0,1,0);
+(9,245,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,246,1,0,0,0,1,0),
+(9,247,1,0,0,0,1,0),
 (9,248,1,0,0,0,1,0),
 (9,249,1,0,0,0,1,0),
 (9,250,1,0,0,0,1,0),
@@ -6365,10 +6368,10 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,345,1,0,0,0,1,0),
 (9,346,1,0,0,0,1,0),
 (9,347,1,0,0,0,1,0),
-(9,348,1,0,0,0,1,0),
-(9,349,1,0,0,0,1,0),
-(9,350,1,0,0,0,1,0);
+(9,348,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,349,1,0,0,0,1,0),
+(9,350,1,0,0,0,1,0),
 (9,351,1,0,0,0,1,0),
 (9,352,1,0,0,0,1,0),
 (9,353,1,0,0,0,1,0),
@@ -6396,6 +6399,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,375,1,0,0,0,1,0),
 (9,376,1,0,0,0,1,0),
 (9,377,1,0,0,0,1,0),
+(9,378,1,0,0,0,1,0),
 (10,1,1,1,1,1,1,1),
 (10,2,1,1,1,1,1,1),
 (10,3,1,1,1,1,1,1),
@@ -6465,11 +6469,11 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,239,1,1,1,1,1,1),
 (10,240,1,1,1,1,1,1),
 (10,241,1,1,1,1,1,1),
-(10,242,1,1,1,1,1,1),
+(10,242,1,1,1,1,1,1);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (10,243,1,1,1,1,1,1),
 (10,244,1,1,1,1,1,1),
-(10,245,1,1,1,1,1,1);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(10,245,1,1,1,1,1,1),
 (10,246,1,1,1,1,1,1),
 (10,247,1,1,1,1,1,1),
 (10,248,1,1,1,1,1,1),
@@ -6566,11 +6570,11 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,339,1,1,1,1,1,1),
 (10,340,1,1,1,1,1,1),
 (10,341,1,1,1,1,1,1),
-(10,342,1,1,1,1,1,1),
+(10,342,1,1,1,1,1,1);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (10,343,1,1,1,1,1,1),
 (10,344,1,1,1,1,1,1),
-(10,345,1,1,1,1,1,1);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(10,345,1,1,1,1,1,1),
 (10,346,1,1,1,1,1,1),
 (10,347,1,1,1,1,1,1),
 (10,348,1,1,1,1,1,1),
@@ -6598,6 +6602,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,374,1,0,0,0,1,0),
 (10,376,1,1,1,1,1,1),
 (10,377,1,1,1,1,1,1),
+(10,378,1,0,0,0,1,0),
 (11,1,1,1,1,0,1,0),
 (11,2,1,1,1,0,1,0),
 (11,3,1,1,1,0,1,0),
@@ -6666,12 +6671,12 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,245,1,1,1,0,1,0),
 (11,246,1,1,1,0,1,0),
 (11,247,1,1,1,0,1,0),
-(11,248,1,1,1,0,1,0),
+(11,248,1,1,1,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (11,249,1,1,1,0,1,0),
 (11,250,1,1,1,0,1,0),
 (11,251,1,1,1,0,1,0),
-(11,252,1,1,1,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(11,252,1,1,1,0,1,0),
 (11,253,1,1,1,0,1,0),
 (11,254,1,1,1,0,1,0),
 (11,258,1,0,0,0,1,0),
@@ -6767,12 +6772,12 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,358,1,0,0,0,1,0),
 (11,359,1,0,0,0,1,0),
 (11,360,1,0,0,0,1,0),
-(11,364,1,0,0,0,1,0),
+(11,364,1,0,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (11,365,1,0,0,0,1,0),
 (11,366,1,0,0,0,1,0),
 (11,367,1,0,0,0,1,0),
-(11,368,1,0,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(11,368,1,0,0,0,1,0),
 (11,369,1,0,0,0,1,0),
 (11,370,1,0,0,0,1,0),
 (11,371,1,0,0,0,1,0),
@@ -6780,6 +6785,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,374,1,0,0,0,1,0),
 (11,376,1,0,0,0,1,0),
 (11,377,1,1,1,0,1,0),
+(11,378,1,0,0,0,1,0),
 (12,1,1,1,1,0,1,0),
 (12,2,1,1,1,0,1,0),
 (12,3,1,1,1,0,1,0),
@@ -6867,13 +6873,13 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (14,275,1,1,0,0,1,0),
 (14,276,1,1,0,0,1,0),
 (14,277,1,1,0,0,1,0),
-(14,278,1,1,0,0,1,0),
+(14,278,1,1,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (14,279,1,1,0,0,1,0),
 (14,280,1,1,0,0,1,0),
 (14,282,1,1,0,0,1,0),
 (14,298,1,1,1,0,1,0),
-(14,301,1,1,1,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(14,301,1,1,1,0,1,0),
 (14,305,1,1,1,0,1,0),
 (14,320,1,1,1,0,1,0),
 (14,321,1,1,1,0,1,0),
@@ -6886,6 +6892,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (14,338,1,1,1,0,1,0),
 (14,359,1,1,1,0,1,0),
 (14,377,1,1,0,0,1,0),
+(14,378,1,0,0,0,1,0),
 (15,1,1,1,1,0,1,0),
 (15,2,1,1,1,0,1,0),
 (15,3,1,1,1,0,1,0),
@@ -6967,14 +6974,14 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (17,225,1,1,1,1,1,1),
 (17,226,1,1,1,1,1,1),
 (17,227,1,1,1,1,1,1),
-(17,228,1,1,1,1,1,1),
+(17,228,1,1,1,1,1,1);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (17,229,1,1,1,1,1,1),
 (17,230,1,1,1,1,1,1),
 (17,231,1,1,1,1,1,1),
 (17,234,1,1,1,1,1,1),
 (17,235,1,1,1,1,1,1),
-(17,236,1,1,1,1,1,1);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(17,236,1,1,1,1,1,1),
 (17,237,1,1,1,1,1,1),
 (17,238,1,1,1,1,1,1),
 (17,239,1,1,1,1,1,1),
@@ -7117,7 +7124,7 @@ INSERT INTO `role_special_permissions` (`role_id`,`perm_key`,`perm_value`) VALUE
 (17,'max_amount',''),
 (17,'party_merge','1');
 
--- audit_trail (696 rows)
+-- audit_trail (697 rows)
 INSERT INTO `audit_trail` (`id`,`created_at`,`user_id`,`username`,`user_roles`,`ip_address`,`workstation`,`site_id`,`terminal_id`,`module`,`page_key`,`action`,`record_type`,`record_id`,`record_ref`,`amount`,`changes`,`snapshot`,`reason`,`approved_by`) VALUES
 (1,'2026-10-19 01:06:32',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Cooperative Management modules',NULL,NULL,NULL,'Migration 2026_11_01: Cooperative, Savings & Deposits, Loans, Teller, Year-end Distribution and CDA Compliance modules added with their tables, accounts, roles and settings',NULL),
 (2,'2026-10-19 01:06:32',1,'admin','Administrator','cli','CLI',NULL,NULL,'coa','coa.journal','create','transaction',1,'Opening Balance OB-0001','3320000.00',NULL,'{\"txn_type\":\"opening_balance\",\"txn_no\":\"OB-0001\",\"txn_date\":\"2026-07-31\",\"due_date\":null,\"ref_no\":null,\"payee_name\":null,\"site_id\":null,\"site2_id\":null,\"terms_id\":null,\"sales_rep_id\":null,\"memo\":\"Opening balances\",\"subtotal\":\"0.00\",\"tax_total\":\"0.00\",\"discount_amount\":\"0.00\",\"withholding_amount\":\"0.00\",\"total\":\"3320000.00\",\"status\":\"open\",\"is_pending\":0,\"is_voided\":0,\"receipt_no\":null,\"process_type\":null,\"alloc_method\":null,\"process_formula_id\":null,\"process_batches\":null,\"customer\":null,\"vendor\":null,\"account\":null,\"class\":null,\"other_name\":null,\"lines\":[{\"line_kind\":\"journal\",\"item\":null,\"account\":\"1010\",\"description\":\"BDO checking opening balance\",\"qty\":\"0.0000\",\"rate\":\"0.0000\",\"discount_amount\":\"0.00\",\"amount\":\"2500000.00\",\"tax_amount\":\"0.00\",\"site_id\":null,\"is_billable\":0,\"output_role\":null,\"alloc_basis\":\"0.0000\",\"class\":null},{\"line_kind\":\"journal\",\"item\":null,\"account\":\"1020\",\"description\":\"BPI savings opening balance\",\"qty\":\"0.0000\",\"rate\":\"0.0000\",\"discount_amount\":\"0.00\",\"amount\":\"800000.00\",\"tax_amount\":\"0.00\",\"site_id\":null,\"is_billable\":0,\"output_role\":null,\"alloc_basis\":\"0.0000\",\"class\":null},{\"line_kind\":\"journal\",\"item\":null,\"account\":\"1005\",\"description\":\"Petty cash fund\",\"qty\":\"0.0000\",\"rate\":\"0.0000\",\"discount_amount\":\"0.00\",\"amount\":\"10000.00\",\"tax_amount\":\"0.00\",\"site_id\":null,\"is_billable\":0,\"output_role\":null,\"alloc_basis\":\"0.0000\",\"class\":null},{\"line_kind\":\"journal\",\"item\":null,\"account\":\"1001\",\"description\":\"Register cash funds\",\"qty\":\"0.0000\",\"rate\":\"0.0000\",\"discount_amount\":\"0.00\",\"amount\":\"10000.00\",\"tax_amount\":\"0.00\",\"site_id\":null,\"is_billable\":0,\"output_role\":null,\"alloc_basis\":\"0.0000\",\"class\":null},{\"line_kind\":\"journal\",\"item\":null,\"account\":\"3000\",\"description\":\"Owner\'s capital\",\"qty\":\"0.0000\",\"rate\":\"0.0000\",\"discount_amount\":\"0.00\",\"amount\":\"-3320000.00\",\"tax_amount\":\"0.00\",\"site_id\":null,\"is_billable\":0,\"output_role\":null,\"alloc_basis\":\"0.0000\",\"class\":null}]}',NULL,NULL),
@@ -7820,7 +7827,8 @@ INSERT INTO `audit_trail` (`id`,`created_at`,`user_id`,`username`,`user_roles`,`
 (693,'2026-11-07 21:26:46',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Accounting update (version 53)',NULL,NULL,NULL,'Migration 2027_04_04: item groups, Receive Items lists, settle ticks, average cost on the books; 14 reports (POS ending inventory, item group sales, comparative statements, average cost changes, class reports)',NULL),
 (694,'2026-11-07 23:37:20',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Sales by Customer Detail Group by Customer/Member Type',NULL,NULL,NULL,'Migration 2027_04_11: the report page, given to the roles that open Sales by Customer Detail',NULL),
 (695,'2026-11-08 19:44:11',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Upload Bill Balances',NULL,NULL,NULL,'Migration 2027_04_18: the uploads of bill balances and the page, given to the roles that have One-Time Billing',NULL),
-(696,'2026-11-08 21:17:30',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Consolidated Import',NULL,NULL,NULL,'Migration 2027_04_25: the consolidated import of members, savings, loans and bill balances, given to the roles that have Member Center',NULL);
+(696,'2026-11-08 21:17:30',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Consolidated Import',NULL,NULL,NULL,'Migration 2027_04_25: the consolidated import of members, savings, loans and bill balances, given to the roles that have Member Center',NULL),
+(697,'2026-11-08 23:54:46',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Bill Accounts Center',NULL,NULL,NULL,'Migration 2027_05_02: the Bill Accounts Center of Water Billing, given to the roles that have Billing List, Generate SOA / Post Billing or Collections (Cashier)',NULL);
 
 -- sequences (43 rows)
 INSERT INTO `sequences` (`seq_key`,`prefix`,`next_no`,`pad`) VALUES
