@@ -35,6 +35,7 @@ final class WaterPages
         'installment_bill'          => ['Installment Billing', 'Billing', 1, 'Manage installment bills and schedules.'],
         'one_time_billing'          => ['One-Time Billing', 'Billing', 1, 'Manage one-time bills.'],
         'share_capital_billing'     => ['Fixed Share Capital Billing', 'Billing', 1, 'Fixed share capital contributions of members, posted on their day and collected by the water cashier.'],
+        'bill_balance_upload'       => ['Upload Bill Balances', 'Billing', 1, 'Upload the open balances of the recurring, installment, one-time and fixed share capital bills from a file, reviewed line by line before they are recorded.'],
         // water-service accounts and the materials issued to the field (cooperative stock)
         'member_list'               => ['Water Service Accounts', 'Service & Materials', 1, 'Water-service account holders (consumers), each linked to a party.'],
         'address_subgroups'         => ['Address Sub-groups', 'Service & Materials', 1, 'Add, rename, sort, switch off or delete the address sub-groups of the members and the water-service accounts.'],
@@ -169,7 +170,7 @@ final class WaterPages
         static $map = [
             'addBatchInstallmentBill'=>'installment_bill','addInstallmentBill'=>'installment_bill','editInstallmentBill'=>'installment_bill','deleteInstallmentBill'=>'installment_bill','toggleScheduleStatus'=>'installment_bill',
             'addBatchOneTimeBill'=>'one_time_billing','addOneTimeBill'=>'one_time_billing','editBatchOneTimeBill'=>'one_time_billing','editOneTimeBill'=>'one_time_billing','deleteBatchOneTimeBill'=>'one_time_billing','deleteOneTimeBill'=>'one_time_billing',
-            'saveShareCapitalBilling'=>'share_capital_billing','runShareCapitalBilling'=>'share_capital_billing','shareCapitalImport'=>'share_capital_billing','oneTimeBillImport'=>'one_time_billing',
+            'saveShareCapitalBilling'=>'share_capital_billing','runShareCapitalBilling'=>'share_capital_billing','shareCapitalImport'=>'share_capital_billing','oneTimeBillImport'=>'one_time_billing','billBalanceUpload'=>'bill_balance_upload',
             'addBillCode'=>'bill_codes','editBillCode'=>'bill_codes','deleteBillCode'=>'bill_codes','saveWaterBillingBillCode'=>'bill_codes',
             'addBillPeriod'=>'bill_period','editBillPeriod'=>'bill_period','deleteBillPeriod'=>'bill_period','validatePeriodCode'=>'bill_period',
             'addDiscount'=>'discounts','editDiscount'=>'discounts','deleteDiscount'=>'discounts',

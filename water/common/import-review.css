@@ -1,4 +1,4 @@
-/* The import pages of Water Billing (Batch Share Capital Billing, One-Time Billing charges): the page, the file step
+/* The import pages of Water Billing (Batch Share Capital Billing, One-Time Billing charges, Upload Bill Balances): the page, the file step
    and the review grid (water/common/import-review.js). The colours are those of the water pages. */
 :root {
     --white:#ffffff; --surface:#f5f7fa; --surface-2:#eef1f6; --border:#e2e6ed; --border-2:#c9d0dc;
@@ -96,6 +96,10 @@ table.ir-table td { padding:6px 8px; vertical-align:top; }
 .ir-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--green); margin-right:7px; vertical-align:middle; }
 .ir-act { width:44px; text-align:right; }
 .ir-xs { width:76px; } .ir-sm { width:118px; } .ir-md { width:160px; } .ir-lg { width:230px; }
+/* a wide review scrolls sideways instead of squeezing its cells */
+td.ir-xs .ir-in { min-width:70px; } td.ir-sm .ir-in { min-width:104px; } td.ir-md .ir-in { min-width:140px; } td.ir-lg .ir-in { min-width:190px; }
+.ir-in.is-off { background:var(--surface); border-style:dashed; color:var(--text-3); }
+.ir-in.is-off::placeholder { font-style:normal; color:#b4bcc8; }
 .ir-rec .ir-main td { border-top:1px solid var(--border); }
 .ir-rec.is-bad { background:var(--red-bg); }
 .ir-rec.is-bad .ir-main td:first-child { box-shadow:inset 3px 0 0 var(--red); }
@@ -106,9 +110,19 @@ table.ir-table td { padding:6px 8px; vertical-align:top; }
 .ir-in::placeholder { color:#9aa3b2; font-style:italic; }
 .ir-in:focus { border-color:var(--brand-mid); box-shadow:0 0 0 3px rgba(45,82,130,.12); }
 .ir-in.is-bad { border-color:var(--red); background:#fff7f7; }
+select.ir-sel { padding:0 26px 0 9px; appearance:none; -webkit-appearance:none; cursor:pointer; text-overflow:ellipsis;
+    background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%234b5563' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 9px center; }
+select.ir-sel.is-bad { background-color:#fff7f7; }
+.ir-ref { display:block; margin:2px 0 0 15px; font-size:.68rem; color:var(--text-3); white-space:nowrap; }
+.ir-groups { display:flex; flex-wrap:wrap; gap:8px 22px; padding:10px 20px; border-bottom:1px solid var(--border); font-size:.8rem; color:var(--text-2); background:#fff; }
+.ir-group { display:inline-flex; align-items:baseline; gap:6px; }
+.ir-group-name { font-weight:700; color:var(--text-1); }
+.ir-group strong { font-variant-numeric:tabular-nums; color:var(--brand); }
+.ir-group-n { color:var(--text-3); font-size:.74rem; }
 .ir-x { width:32px; height:32px; border-radius:8px; border:1.5px solid var(--border); background:#fff; color:var(--text-2); font-size:1.05rem; cursor:pointer; line-height:1; }
 .ir-x:hover { border-color:var(--red-border); color:var(--red); background:var(--red-bg); }
 .ir-msg td { padding-top:0 !important; padding-bottom:10px !important; }
+.ir-msg td > * { max-width:860px; }
 .ir-info { font-size:.78rem; color:var(--text-1); font-weight:600; margin-bottom:3px; }
 .ir-err { font-size:.78rem; color:var(--red); font-weight:600; line-height:1.45; display:flex; gap:7px; }
 .ir-err span { display:inline-flex; width:16px; height:16px; border-radius:50%; background:var(--red); color:#fff; font-size:.66rem; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
@@ -129,7 +143,8 @@ table.ir-table td { padding:6px 8px; vertical-align:top; }
     .page-title { font-size:1.3rem; }
     .imp-defaults { grid-template-columns:1fr 1fr; }
     .imp-step-foot .btn { flex:1; }
-    .ir-bar, .ir-actions { padding:12px 14px; }
+    .ir-bar, .ir-actions, .ir-groups { padding:12px 14px; }
+    .ir-ref { display:inline; margin:0 0 0 8px; }
     .ir-tools, .ir-tools .search { width:100%; }
     .ir-actions-btns, .ir-actions-btns .btn { width:100%; }
     .ir-actions-btns .btn { flex:1; }
@@ -140,6 +155,7 @@ table.ir-table td { padding:6px 8px; vertical-align:top; }
     .ir-rec .ir-main td { border-top:0; }
     .ir-rec .ir-main { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px 10px; position:relative; }
     .ir-rec .ir-main td { padding:0 !important; width:auto; }
+    .ir-rec .ir-main td .ir-in { min-width:0; }
     .ir-rec .ir-main td.ir-no { grid-column:1 / -1; padding:4px 0 2px !important; }
     .ir-rec .ir-main td.ir-c::before { content:attr(data-label); display:block; font-size:.68rem; color:var(--text-2); font-weight:700; margin-bottom:3px; }
     .ir-rec .ir-main td.ir-lg { grid-column:1 / -1; }

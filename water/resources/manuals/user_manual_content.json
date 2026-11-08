@@ -3,8 +3,8 @@
         "product": "Water Billing",
         "title": "Water Billing User Manual",
         "subtitle": "Water operations in the integrated cooperative system",
-        "version": "2.5",
-        "revision_date": "2 November 2026",
+        "version": "2.6",
+        "revision_date": "8 November 2026",
         "audience": "System administrators, billing officers, meter readers, cashiers, accountants, inventory officers and authorized report users",
         "support_note": "Page availability depends on the user's roles and the pages given to them in Page Access Configuration."
     },
@@ -464,6 +464,46 @@
             ],
             "notes": [
                 "Do not mark recurring bills paid directly from the recurring page."
+            ]
+        },
+        {
+            "id": "upload-bill-balances",
+            "category": "Other Billing",
+            "title": "Upload the unpaid balances of the bills (Upload Bill Balances)",
+            "summary": "Bring in the unpaid recurring, installment, one-time and fixed share capital balances of the members and customers from one file; every balance is reviewed, corrected or removed before it is recorded.",
+            "keywords": [
+                "upload balances",
+                "bill balances",
+                "opening balances",
+                "beginning balances",
+                "cutover",
+                "unpaid balances",
+                "arrears",
+                "recurring balance",
+                "installment balance",
+                "one-time balance",
+                "share capital balance",
+                "import"
+            ],
+            "page": "bill_balance_upload",
+            "page_file": "bill_balance_upload.php",
+            "steps": [
+                "Open Water Billing > Billing > Upload Bill Balances (or Upload Balances on Recurring Billing, Installment Billing, One-Time Billing or Fixed Share Capital Billing).",
+                "Under The columns, choose the layout of your file and download its Excel or CSV template. One row per member: a balance column for each billing type (Recurring, Installment, One-Time, Fixed Share Capital); fill in the ones the member has and leave the others blank, so a member may have 1, 2, 3 or 4 of them. One row per balance: a Billing type column; a member with several balances has several rows. A file may mix both.",
+                "Fill in the water account number and the balance; the charge category (the code name of the bill code) of a recurring, installment or one-time balance; the bill date and the due date. An installment balance also takes the installments left and the payment mode; a fixed share capital balance of a member with more than one account on fixed billing, the share capital account.",
+                "Under Values for the blank cells, set the bill date, the due date, a charge category for each billing type, the installments left and the payment mode that a blank cell takes, and choose the Class of the journal entries.",
+                "Choose the file and click Read the file for review. Every balance is a line, with the row of the file it came from (a row with three balances is three lines). A line with a problem is in red with the reason under it; the totals by billing type are above the lines.",
+                "Correct a cell by typing in it or choosing from its list: the line is checked again at once. Remove a line with its x (Put back the last brings it back), or remove every line in red at once. The cells a line does not use are dimmed (Not used).",
+                "When no line is in red, click Record balances and confirm. Every balance is recorded, or none. The upload is listed under Uploads with its number (BAL-00001); open it to see each line, the bill it made and what is still unpaid on it."
+            ],
+            "notes": [
+                "A recurring balance is a recurring bill on the member's subscription to the plan of its charge category. A member not enrolled in the plan gets an ended subscription that holds the balance only: nothing more is billed until the member is enrolled on Recurring Billing. A charge category with no recurring plan, or with two plans the member is not enrolled in, is refused.",
+                "An installment balance is an installment contract dated the bill date, paid in the installments left from the due date (the due date of the first installment left, which may be before the bill date for installments in arrears).",
+                "A fixed share capital balance is a share capital bill on the member's Fixed Share Capital Billing (active or on hold): put the member on fixed billing first. It makes no journal entry; the cashier's collection is the deposit, as for every share capital bill.",
+                "The recurring, installment and one-time balances are receivables: each gets its invoice, debit the bill code's A/R account, credit the Legacy Water Balances Clearing account (39999). No income is recognised again, no stock moves for a material and no member discount is taken.",
+                "The balances are collected on Collections (Cashier) as any bill and are on the Individual Statement of Account.",
+                "The same balance is not uploaded twice: a line with the account, billing type, charge category, date and balance of an earlier upload is refused (unless that bill was cancelled); one recurring bill a date on a subscription and one share capital bill a date on a fixed billing.",
+                "A bill date after today, or in closed books (without the right to change a closed period), is refused. Recording takes the Create right on Upload Bill Balances; the page is given by the migration to the roles that have One-Time Billing."
             ]
         },
         {

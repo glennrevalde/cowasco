@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-07 23:40:14 (15.1 s)
+- **Run:** 2026-11-08 20:01:59 (16.6 s)
 - **Server:** http://127.0.0.1:8098
-- **Database:** coop_e2e_m8 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Database:** coop_e2e55 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 8.0.46-0ubuntu0.24.04.4
-- **Result:** 438 passed, 0 failed, 438 checks
+- **Result:** 472 passed, 0 failed, 472 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261107-234001-2B15 | COL-20261107-234001-2B15 | PASS |
+| payment number = official receipt number | COL-20261108-200144-B183 | COL-20261108-200144-B183 | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 230 | 230 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261107-234001-2B15 | COL-20261107-234001-2B15 | PASS |
+| retry of the same request returns the same receipt | COL-20261108-200144-B183 | COL-20261108-200144-B183 | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -261,7 +261,7 @@
 | ...and both carry the class chosen | 0 | 0 | PASS |
 | no charge ticked: nothing is issued | 3 | 3 | PASS |
 | the charge category of the bill changed | 5 | 5 | PASS |
-| ...and its date issued | 2026-11-06 | 2026-11-06 | PASS |
+| ...and its date issued | 2026-11-07 | 2026-11-07 | PASS |
 | ...its amount follows the new category (a material at its sales price) | 1,200.00 | 1,200.00 | PASS |
 | the first invoice is voided as replaced, not deleted | replaced | replaced | PASS |
 | the corrected invoice -R1 is posted on the new date issued | yes | yes | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok 3efef B | E2E Purok 3efef B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok 4e43a B | E2E Purok 4e43a B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -535,13 +535,52 @@
 |---|---|---|---|
 | the cashier page has the Loan Due panel (shown once an account is chosen) | yes | yes | PASS |
 | the cashier gets the loans due of a member's water-service account | yes | yes | PASS |
-| a date that is no date is today | 2026-11-07 | 2026-11-07 | PASS |
+| a date that is no date is today | 2026-11-08 | 2026-11-08 | PASS |
 | a non-member's account: no member, no loans (the panel stays hidden) | yes | yes | PASS |
 | not signed in: refused | yes | yes | PASS |
 | Sales by Customer Detail: the Member type filter (All members, the member types, Non-members) | yes | yes | PASS |
 | ...run for All members: named in the heading | yes | yes | PASS |
 | Sales by Customer Detail Group by Customer/Member Type opens with its type groups | yes | yes | PASS |
 | ...listed in the Report Center | yes | yes | PASS |
+
+## v55 Upload Bill Balances: recurring, installment, one-time and fixed share capital balances from a file, reviewed before they are recorded
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| Water Billing > Billing > Upload Bill Balances opens | yes | yes | PASS |
+| ...in the Billing menu, after Fixed Share Capital Billing | yes | yes | PASS |
+| recurring_bill: an Upload Balances button to the page | yes | yes | PASS |
+| installment_bill: an Upload Balances button to the page | yes | yes | PASS |
+| one_time_billing: an Upload Balances button to the page | yes | yes | PASS |
+| share_capital_billing: an Upload Balances button to the page | yes | yes | PASS |
+| the CSV templates: one row per member (a balance column for each billing type) and one row per balance (a Billing type column) | yes | yes | PASS |
+| ...and the Excel templates | yes | yes | PASS |
+| the file read for review: 6 rows of 1 or 2 balances make 8 lines, each with its row; 2 in red (share capital of a non-member, no such account) | yes | yes | PASS |
+| ...each line with its billing type (the group added up on the page) | ["recurring","share_capital","installment","share_capital","one_time","share_capital","recurring","recurring"] | ["recurring","share_capital","installment","share_capital","one_time","share_capital","recurring","recurring"] | PASS |
+| ...the cells a line does not use (an installment uses the installments and the payment mode) | ["share_capital_account"] | ["share_capital_account"] | PASS |
+| ...the lines in red removed: checked again, none with a problem | 0 | 0 | PASS |
+| ...a cell corrected wrongly is in red again (checked as it is typed) | yes | yes | PASS |
+| no class chosen: said above the lines | yes | yes | PASS |
+| recording with a stale form is refused | yes | yes | PASS |
+| Record balances: the six good lines recorded, back to the page with the upload | yes | yes | PASS |
+| ...two recurring bills, an installment contract, a one-time bill and two share capital bills | [2,1,1,2] | [2,1,1,2] | PASS |
+| ...kept as an upload: its number, the file, 6 balances, 1,315.00 | yes | yes | PASS |
+| ...each recurring, installment and one-time balance with its invoice dated the bill date, Dr A/R, Cr 39999 Legacy Water Balances Clearing | 4 | 4 | PASS |
+| ...the share capital balances with no journal entry (four documents for six balances) | 4 | 4 | PASS |
+| ...a material's balance moves no stock | 5.00 | 5.00 | PASS |
+| ...account A, not enrolled in the plan: its recurring balance on an ended subscription | ended | ended | PASS |
+| ...account F, enrolled: on its active subscription | active | active | PASS |
+| ...account B: three monthly installments of 300.00 from the due date | [["2026-11-20","300.00"],["2026-12-20","300.00"],["2027-01-20","300.00"]] | [["2026-11-20","300.00"],["2026-12-20","300.00"],["2027-01-20","300.00"]] | PASS |
+| the upload listed with its lines, the bill each made and what is still unpaid | yes | yes | PASS |
+| the same file read again: every balance recorded is in red (uploaded already), with the two lines of before | 8 | 8 | PASS |
+| ...naming the upload | yes | yes | PASS |
+| the cashier lists account D's one-time balance | yes | yes | PASS |
+| ...collects it in full: the bill paid, its invoice settled | yes | yes | PASS |
+| ...and the first installment of account B's balance | yes | yes | PASS |
+| ...account E's share capital balance is an open item (collected as a deposit) | yes | yes | PASS |
+| the page follows the rights of the roles (a cashier without the page) | yes | yes | PASS |
+| not signed in: refused | yes | yes | PASS |
+| trial balance: debits = credits | 0.00 | 0.00 | PASS |
 
 ## 7.4c Period close
 
@@ -557,5 +596,5 @@
 | trial balance: debits = credits | 0.00 | 0.00 | PASS |
 | every document balances | 0 | 0 | PASS |
 | no ledger document belongs to two water events | 0 | 0 | PASS |
-| A/R control account = open water invoices (subledger) | 10,538.45 | 10,538.45 | PASS |
-| water records open balance = A/R subledger for the accounts used | 10,538.45 | 10,538.45 | PASS |
+| A/R control account = open water invoices (subledger) | 11,253.45 | 11,253.45 | PASS |
+| water records open balance = A/R subledger for the accounts used | 11,253.45 | 11,253.45 | PASS |

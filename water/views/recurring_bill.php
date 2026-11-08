@@ -328,6 +328,9 @@ tr.deleted-row td{ text-decoration:line-through; color:#9ca3af; background:#f9fa
             <p class="subtitle">Create plans, enroll members, generate recurring bills, and track overdue balances.</p>
         </div>
         <div class="actions">
+            <?php if (userCanAccessPage($pdo, 'bill_balance_upload')): ?>
+                <a class="btn btn-secondary" href="bill_balance_upload.php" title="Upload the unpaid balances of the recurring, installment, one-time and fixed share capital bills from a file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Balances</a>
+            <?php endif; ?>
             <button type="button" class="btn btn-secondary" onclick="openModal('planModal')">Create Plan</button>
             <button type="button" class="btn btn-primary" onclick="openModal('subscriptionModal')">Enroll Member</button>
             <button type="button" class="btn btn-brand" onclick="openModal('generateModal')">Generate Due Bills</button>

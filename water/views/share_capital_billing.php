@@ -278,11 +278,15 @@ table.pick input[type=checkbox], .check-line input { width:17px; height:17px; ac
             <h1 class="page-title">Fixed Share Capital Billing</h1>
             <p class="page-sub">The fixed share capital contribution of each member, posted on its day and collected by the water cashier. Posting a bill makes no journal entry: it tracks the contribution still unpaid. The books move only on collection, by the savings transaction code below.</p>
         </div>
-        <?php if ($ready && $canCreate): ?>
+        <?php $canUpload = userCanAccessPage(getDB(), 'bill_balance_upload'); ?>
+        <?php if ($ready && ($canCreate || $canUpload)): ?>
             <div class="head-actions">
+                <?php if ($canUpload): ?><a class="btn btn-ghost" href="bill_balance_upload.php" title="Upload the unpaid balances of the recurring, installment, one-time and fixed share capital bills from a file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Balances</a><?php endif; ?>
+                <?php if ($canCreate): ?>
                 <a class="btn btn-ghost" href="share_capital_import.php"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Import</a>
                 <button type="button" class="btn btn-ghost" onclick="openBatch()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Batch billing</button>
                 <button type="button" class="btn btn-primary" onclick="openPlan(0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add member</button>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </div>

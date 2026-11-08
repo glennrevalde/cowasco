@@ -462,3 +462,20 @@ walk-in sales); a new report, Sales by Customer Detail Group by Customer/Member 
 customer type with a subtotal per customer and per type. One migration, `2027_04_11_sales_by_member_type.sql` (the
 report's page and access, MySQL 5.5), registered in the update check and the installer; both bundled databases written
 again. See `UPGRADE_v54.txt`.
+
+## 31. Version 55: workbook v20 (Upload Bill Balances)
+
+The request of `ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v20.xlsx`, mapped in `docs/ADDITIONAL_MODULE_V20_CHECKLIST.md`:
+Water Billing > Billing > Upload Bill Balances uploads the unpaid balances of the members' and customers' bills of
+Recurring Billing, Installment Billing, One-Time Billing and Fixed Share Capital Billing from a CSV or Excel file. The
+file is one row per member with a balance column for each billing type (1, 2, 3 or 4 of them filled in), one row per
+balance, or a mix; every balance is shown as a line of a review form before anything is recorded, a line with an error
+in red with the reason, corrected in the form or deleted, and Record balances records every line or none. A recurring
+balance becomes a recurring bill on the member's subscription (an ended subscription when the member is not enrolled), an
+installment balance a contract paid in the installments left, a one-time balance a one-time bill, each with its invoice
+(Dr A/R, Cr 39999 Legacy Water Balances Clearing), and a fixed share capital balance a share capital bill on the member's
+fixed billing (no journal entry). The uploads are kept and listed with their lines; the same balance is not uploaded
+twice. An Upload Balances button on the four billing pages and a card on Billing Management. One migration,
+`2027_04_18_bill_balance_upload.sql` (two tables and the page with its access, MySQL 5.5), registered in the update
+check and the installer, its tables added to the water base script; both bundled databases written again. See
+`UPGRADE_v55.txt`.

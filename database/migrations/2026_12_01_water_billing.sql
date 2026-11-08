@@ -1381,6 +1381,40 @@ CREATE TABLE IF NOT EXISTS `share_capital_collections` (
   INDEX `ix_scc_receipt`(`receipt_no`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+-- Upload Bill Balances (migration 2027_04_18): the uploads of the open balances of the bills and their lines
+CREATE TABLE IF NOT EXISTS `water_balance_uploads` (
+  `upload_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `upload_no` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `file_name` varchar(190) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+  `line_count` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `total_amount` decimal(15, 2) NOT NULL DEFAULT 0.00,
+  `class_id` int(10) UNSIGNED NULL DEFAULT NULL,
+  `created_by` int(10) UNSIGNED NULL DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`upload_id`),
+  KEY `ix_wbu_created` (`created_at`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `water_balance_upload_lines` (
+  `line_id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `upload_id` int(10) UNSIGNED NOT NULL,
+  `line_no` int(10) UNSIGNED NOT NULL,
+  `file_row` int(10) UNSIGNED NULL DEFAULT NULL,
+  `billing_type` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `water_account_id` int(11) NOT NULL,
+  `bill_code_id` int(10) UNSIGNED NULL DEFAULT NULL,
+  `sav_account_id` int(10) UNSIGNED NULL DEFAULT NULL,
+  `bill_id` int(10) UNSIGNED NOT NULL,
+  `amount` decimal(15, 2) NOT NULL DEFAULT 0.00,
+  `bill_date` date NOT NULL,
+  `due_date` date NULL DEFAULT NULL,
+  `installments` smallint(5) UNSIGNED NULL DEFAULT NULL,
+  PRIMARY KEY (`line_id`),
+  KEY `ix_wbul_upload` (`upload_id`, `line_no`),
+  KEY `ix_wbul_account` (`water_account_id`, `billing_type`, `bill_date`),
+  KEY `ix_wbul_bill` (`billing_type`, `bill_id`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `syssequence` (
   `pkey` int(11) NOT NULL AUTO_INCREMENT COMMENT 'primary key for the sequence',
   `SeqName` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'Name of the sequence',

@@ -4,8 +4,11 @@
  * are checked again as you type), a row is removed with its x (and put back with Undo), and the rows are posted only
  * when none has a problem: every row or none.
  *
- * window.IMPORT_REVIEW = {endpoint, csrf, token, cols: [{key, label, type, size, req}], noun: [one, many],
- *   total: column key added up, totalLabel, postLabel, confirm, defaults: form selector, canPost}
+ * window.IMPORT_REVIEW = {endpoint, csrf, token, cols: [{key, label, type, size, req, options, blank}], noun: [one, many],
+ *   total: column key added up, totalLabel, postLabel, confirm, defaults: form selector, canPost, groups}
+ * A column with options ([[value, label], ...]) is a list to choose from; blank is the text of its empty choice. A line
+ * may carry ref (the row of the file it came from, shown under its number), group (groups: {key: label} adds the
+ * lines up by it next to the total) and off (the cells it does not use, shown dimmed).
  */
 (function () {
     'use strict';
@@ -23,7 +26,7 @@
         table: $('#irTable'), find: $('#irFind'), badOnly: $('#irBadOnly'), removeBad: $('#irRemoveBad'),
         n: $('#irN'), bad: $('#irBad'), badWrap: $('#irBadWrap'), total: $('#irTotal'), removedWrap: $('#irRemovedWrap'), removedN: $('#irRemovedN'),
         undo: $('#irUndo'), status: $('#irStatus'), post: $('#irPost'), postN: $('#irPostN'), recheck: $('#irRecheck'), restart: $('#irRestart'),
-        general: $('#irGeneral'), fileName: $('#irFileName'), checking: $('#irChecking'), none: $('#irNone'),
+        general: $('#irGeneral'), fileName: $('#irFileName'), checking: $('#irChecking'), none: $('#irNone'), groups: $('#irGroups'),
     };
 
     function defaults() {
@@ -79,12 +82,22 @@
     }
 
     // ------------------------------------------------------------------ 2. the review
+    const isOff = (row, key) => (row.off || []).includes(key);
     function cellInput(row, c) {
         const v = row.values[c.key] ?? '';
         const bad = row.cells.includes(c.key);
+        const off = isOff(row, c.key);
+        if (c.options) {
+            // a list: the value of the file stays a choice (shown in red) when it is not one of the list's
+            const known = c.options.some(o => String(o[0]) === String(v));
+            const opts = [['', off ? 'Not used' : blankText(c)], ...(v !== '' && !known ? [[v, v]] : []), ...c.options];
+            // a plain list (data-no-search): the grid shows its own red and dimmed states on it
+            return `<select class="ir-in ir-sel${bad ? ' is-bad' : ''}${off ? ' is-off' : ''}" data-k="${esc(c.key)}" data-no-search="true" aria-label="${esc(c.label)}"${bad ? ' aria-invalid="true"' : ''}>`
+                + opts.map(o => `<option value="${esc(o[0])}"${String(o[0]) === String(v) ? ' selected' : ''}>${esc(o[1])}</option>`).join('') + '</select>';
+        }
         const num = c.type === 'money' || c.type === 'num';
-        return `<input type="text" class="ir-in${num ? ' is-num' : ''}${bad ? ' is-bad' : ''}" data-k="${esc(c.key)}" value="${esc(v)}"`
-            + ` aria-label="${esc(c.label)}"${bad ? ' aria-invalid="true"' : ''}${num ? ' inputmode="decimal"' : ''} placeholder="${esc(placeholder(c))}" autocomplete="off" spellcheck="false">`;
+        return `<input type="text" class="ir-in${num ? ' is-num' : ''}${bad ? ' is-bad' : ''}${off ? ' is-off' : ''}" data-k="${esc(c.key)}" value="${esc(v)}"`
+            + ` aria-label="${esc(c.label)}"${bad ? ' aria-invalid="true"' : ''}${num ? ' inputmode="decimal"' : ''} placeholder="${esc(off ? 'Not used' : placeholder(c))}" autocomplete="off" spellcheck="false">`;
     }
 
     // a blank cell shows the value of the form it takes
@@ -95,13 +108,19 @@
             const text = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent.replace(/\s*\(.*$/, '') : String(d);
             return text;
         }
-        return c.type === 'date' ? 'YYYY-MM-DD' : '';
+        return c.blank || (c.type === 'date' ? 'YYYY-MM-DD' : '');
+    }
+    function blankText(c) {
+        return placeholder(c) || c.blank || '';
     }
     function placeholders() {
         state.defaults = defaults();
         els.table.querySelectorAll('.ir-in').forEach(inp => {
             const c = cfg.cols.find(x => x.key === inp.dataset.k);
-            if (c) inp.placeholder = placeholder(c);
+            if (!c) return;
+            const off = inp.classList.contains('is-off');
+            if (inp.tagName === 'SELECT') inp.options[0].textContent = off ? 'Not used' : blankText(c);
+            else inp.placeholder = off ? 'Not used' : placeholder(c);
         });
     }
 
@@ -117,7 +136,7 @@
         const state_ = row.errors.length ? 'is-bad' : (row.edited ? 'is-edit' : 'is-ok');
         const cells = cfg.cols.map(c => `<td class="ir-c ir-${esc(c.size || 'md')}" data-label="${esc(c.label)}">${cellInput(row, c)}</td>`).join('');
         return `<tbody class="ir-rec ${state_}" data-line="${row.line}">
-            <tr class="ir-main"><td class="ir-no"><span class="ir-dot" aria-hidden="true"></span>${row.line}</td>${cells}
+            <tr class="ir-main"><td class="ir-no"><span class="ir-dot" aria-hidden="true"></span>${row.line}${row.ref ? `<span class="ir-ref">${esc(row.ref)}</span>` : ''}</td>${cells}
             <td class="ir-act"><button type="button" class="ir-x" data-remove title="Remove this row" aria-label="Remove line ${row.line}">&times;</button></td></tr>
             <tr class="ir-msg"${messages(row) ? '' : ' hidden'}><td></td><td colspan="${cfg.cols.length + 1}">${messages(row)}</td></tr></tbody>`;
     }
@@ -141,6 +160,13 @@
         tb.classList.add(row.errors.length ? 'is-bad' : (row.edited ? 'is-edit' : 'is-ok'));
         tb.querySelectorAll('.ir-in').forEach(inp => {
             const bad = row.cells.includes(inp.dataset.k);
+            const off = isOff(row, inp.dataset.k);
+            if (inp.classList.contains('is-off') !== off) {
+                const c = cfg.cols.find(x => x.key === inp.dataset.k);
+                inp.classList.toggle('is-off', off);
+                if (c && inp.tagName === 'SELECT') inp.options[0].textContent = off ? 'Not used' : blankText(c);
+                else if (c) inp.placeholder = off ? 'Not used' : placeholder(c);
+            }
             inp.classList.toggle('is-bad', bad);
             bad ? inp.setAttribute('aria-invalid', 'true') : inp.removeAttribute('aria-invalid');
             if (document.activeElement !== inp && inp.value !== (row.values[inp.dataset.k] ?? '')) inp.value = row.values[inp.dataset.k] ?? '';
@@ -164,6 +190,19 @@
         if (els.total && cfg.total) {
             const t = state.rows.reduce((s, r) => s + (Number(r.figure ?? String(r.values[cfg.total] || '').replace(/[^0-9.\-]/g, '')) || 0), 0);
             els.total.textContent = '₱' + money(t);
+        }
+        if (els.groups && cfg.groups) {
+            const by = {};
+            state.rows.forEach(r => {
+                if (!r.group || !cfg.groups[r.group]) return;
+                by[r.group] = by[r.group] || [0, 0];
+                by[r.group][0]++;
+                by[r.group][1] += Number(r.figure) || 0;
+            });
+            const keys = Object.keys(cfg.groups).filter(k => by[k]);
+            els.groups.hidden = !keys.length;
+            els.groups.innerHTML = keys.map(k => `<span class="ir-group"><span class="ir-group-name">${esc(cfg.groups[k])}</span>`
+                + ` <strong>₱${money(by[k][1])}</strong> <span class="ir-group-n">${by[k][0]} ${by[k][0] === 1 ? cfg.noun[0] : cfg.noun[1]}</span></span>`).join('');
         }
         els.removedWrap.hidden = state.removed.length === 0;
         els.removedN.textContent = state.removed.length;
@@ -201,7 +240,7 @@
     }
 
     function current() {
-        return state.rows.map(r => ({_line: r.line, ...r.values}));
+        return state.rows.map(r => ({_line: r.line, ...(r.ref ? {_ref: r.ref} : {}), ...r.values}));
     }
 
     async function check() {
@@ -219,7 +258,7 @@
             state.rows.forEach(r => {
                 const c = byLine.get(r.line);
                 if (!c) return;
-                r.errors = c.errors; r.notes = c.notes; r.info = c.info; r.cells = c.cells; r.figure = c.figure;
+                r.errors = c.errors; r.notes = c.notes; r.info = c.info; r.cells = c.cells; r.figure = c.figure; r.group = c.group; r.off = c.off;
                 r.edited = false;
                 refresh(r);
             });
@@ -240,18 +279,23 @@
     }
 
     if (els.table) {
-        els.table.addEventListener('input', ev => {
+        const edit = ev => {
             const inp = ev.target.closest('.ir-in');
             if (!inp) return;
+            // a list answers both input and change: the second sees nothing new
+            if (ev.type === 'change' && inp.tagName !== 'SELECT') return;
             const tb = inp.closest('tbody.ir-rec');
             const row = state.rows.find(r => String(r.line) === tb.dataset.line);
             if (!row) return;
+            if ((row.values[inp.dataset.k] ?? '') === inp.value && ev.type === 'change') return;
             row.values[inp.dataset.k] = inp.value;
             row.edited = true;
             tb.classList.remove('is-ok');
             tb.classList.add(row.errors.length ? 'is-bad' : 'is-edit');
             schedule();
-        });
+        };
+        els.table.addEventListener('input', edit);
+        els.table.addEventListener('change', edit);
         els.table.addEventListener('click', ev => {
             const x = ev.target.closest('[data-remove]');
             if (!x) return;

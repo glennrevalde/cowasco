@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 final class Schema
 {
-    private const FLAG = 'schema_ok_2027_04_11';
+    private const FLAG = 'schema_ok_2027_04_18';
 
     /**
      * file => one cheap probe.
@@ -193,6 +193,11 @@ final class Schema
         // version 54: Sales by Customer Detail Group by Customer/Member Type
         'database/migrations/2027_04_11_sales_by_member_type.sql' => [
             "SELECT COUNT(*) FROM pages WHERE page_key = 'rpt.sales_customer_type_detail'", 1],
+        // version 55: Upload Bill Balances (the uploads and their lines; the page is the last thing the script adds)
+        'database/migrations/2027_04_18_bill_balance_upload.sql' => [
+            "SELECT (SELECT COUNT(*) FROM pages WHERE page_key = 'water.bill_balance_upload')
+                    + 0 * (SELECT COUNT(*) FROM water_balance_uploads WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(*) FROM water_balance_upload_lines WHERE 1 = 0)", 1],
     ];
 
     private static ?array $pending = null;

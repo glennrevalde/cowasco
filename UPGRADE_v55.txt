@@ -1,0 +1,46 @@
+G-SMaRT Integrated Cooperative System - version 55 (2026-11-08)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v20.xlsx (docs/ADDITIONAL_MODULE_V20_CHECKLIST.md).
+
+This package holds only the files changed or added since version 54. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is never
+changed. Works on MySQL 5.5 and MySQL 8 as before.
+
+Version 54 must be in place first (its files and database/migrations/2027_04_11_sales_by_member_type.sql).
+
+What to run on the database (once)
+----------------------------------
+  database/migrations/2027_04_18_bill_balance_upload.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         mysql -u root -p your_database < database/migrations/2027_04_18_bill_balance_upload.sql
+
+It adds two tables (the uploads of bill balances and their lines) and the page Upload Bill
+Balances, given to the roles that have One-Time Billing, with the same rights. Safe to run more
+than once. Until it is run the program stops with "Database update needed" and names this file.
+Press Ctrl+F5 once in the browser afterwards.
+
+What is new
+-----------
+Water Billing > Billing > Upload Bill Balances (also an Upload Balances button on Recurring
+Billing, Installment Billing, One-Time Billing, Fixed Share Capital Billing and a card on Billing
+Management)
+- Upload the unpaid balances of the members' and customers' bills from a CSV or Excel file:
+  Recurring, Installment, One-Time and Fixed Share Capital.
+- The file is flexible: one row per member with a balance column for each billing type (fill in the
+  ones the member has, leave the others blank: 1, 2, 3 or 4 of them), or one row per balance with a
+  Billing type column, or a mix. An Excel and a CSV template of each layout are on the page.
+- Before anything is recorded every balance is shown as a line of a review form, with the row of the
+  file it came from. A line with an error is in red with the reason under it; correct it in the form
+  (it is checked again at once) or delete it (and put it back). Record balances records every line,
+  or none while a line is in red.
+- What a balance becomes: a recurring bill on the member's subscription to the plan of its charge
+  category (a member not enrolled: an ended subscription that holds the balance only, nothing more
+  is billed); an installment contract paid in the installments left; a one-time bill; a share capital
+  bill on the member's Fixed Share Capital Billing (no journal entry). The recurring, installment and
+  one-time balances each get their invoice: debit the bill code's A/R, credit 39999 Legacy Water
+  Balances Clearing (no income again, no stock moved, no member discount).
+- The cashier collects them as any bill; they are on the Individual Statement of Account.
+- Each upload is kept (BAL-00001 ...) with its lines, the bill each made and what is still unpaid on
+  it. The same balance is not uploaded twice.

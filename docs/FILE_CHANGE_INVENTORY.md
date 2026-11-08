@@ -9,10 +9,10 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 | Cooperative system, changed | 209 |
 | Water system, unchanged (under water/) | 26 |
 | Water system, adapted (under water/) | 212 |
-| New | 331 |
+| New | 338 |
 | Cooperative files not shipped | 1 |
 | Water files not shipped | 61 |
-| **Shipped in total** | **1441** |
+| **Shipped in total** | **1448** |
 
 ## New files
 
@@ -43,6 +43,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v52.txt`
 - `UPGRADE_v53.txt`
 - `UPGRADE_v54.txt`
+- `UPGRADE_v55.txt`
 - `app/AccountTypes.php`
 - `app/Clearing.php`
 - `app/CsvImports.php`
@@ -183,6 +184,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `database/migrations/2027_03_28_regular_joint_subgroups_receipts.sql`
 - `database/migrations/2027_04_04_accounting_update.sql`
 - `database/migrations/2027_04_11_sales_by_member_type.sql`
+- `database/migrations/2027_04_18_bill_balance_upload.sql`
 - `database/seeds/water_reference.sql`
 - `docs/ADDITIONAL_MODULE_V10_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V11_CHECKLIST.md`
@@ -194,6 +196,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `docs/ADDITIONAL_MODULE_V17_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V18_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V19_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V20_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V2_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V3_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V4_CHECKLIST.md`
@@ -259,6 +262,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v52.php`
 - `tests/coop/cases_v53.php`
 - `tests/coop/cases_v54.php`
+- `tests/coop/cases_v55.php`
 - `tests/coop/cases_water.php`
 - `tests/platform/provision_test.php`
 - `tests/platform/run.sh`
@@ -311,6 +315,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tools/water_starter.php`
 - `water/common/.htaccess`
 - `water/common/accountProfileHelpers.php`
+- `water/common/billBalanceUploadHelpers.php`
 - `water/common/billEditorHelpers.php`
 - `water/common/fonts.css`
 - `water/common/import-review.css`
@@ -329,6 +334,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `water/common/theme.js`
 - `water/database/.htaccess`
 - `water/process/addressSubgroups.php`
+- `water/process/billBalanceUpload.php`
 - `water/process/deleteReading.php`
 - `water/process/getIndividualSoaData.php`
 - `water/process/getMemberLoanDue.php`
@@ -343,6 +349,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `water/resources/manuals/Water_Billing_User_Manual.docx`
 - `water/resources/manuals/Water_Billing_User_Manual.pdf`
 - `water/views/address_subgroups.php`
+- `water/views/bill_balance_upload.php`
 - `water/views/one_time_billing_import.php`
 - `water/views/receipt_layouts.php`
 - `water/views/share_capital_billing.php`

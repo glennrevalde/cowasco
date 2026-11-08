@@ -122,7 +122,11 @@ if (!function_exists('ir_payload')) {
                 $values[$k] = (string)($r[$k] ?? '');
             }
             $rows[] = ['line' => (int)$r['_line'], 'values' => $values, 'errors' => $errs, 'notes' => array_values((array)($r['_notes'] ?? [])),
-                'info' => (string)($r['_info'] ?? ''), 'cells' => array_keys($named), 'figure' => $r['_figure'] ?? null];
+                'info' => (string)($r['_info'] ?? ''), 'cells' => array_keys($named), 'figure' => $r['_figure'] ?? null,
+                // optional: the row of the file a line came from ("Row 5"), and the group its figure is added up in
+                'ref' => (string)($r['_ref'] ?? ''), 'group' => (string)($r['_group'] ?? ''),
+                // optional: the cells this line does not use (shown dimmed, "Not used")
+                'off' => array_values((array)($r['_off'] ?? []))];
         }
         return ['rows' => $rows, 'bad' => $bad] + $extra;
     }

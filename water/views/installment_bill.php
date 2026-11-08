@@ -178,6 +178,8 @@ try {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
         .header { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 24px; gap: 12px; }
+        .ib-head-row { width: 100%; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+        @media (max-width: 700px) { .ib-head-row .btn { width: 100%; } }
         .title { font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
         .subtitle { font-size: .875rem; color: var(--text-secondary); margin-top: 4px; }
         
@@ -301,9 +303,14 @@ tr.deleted-row td{ text-decoration:line-through; color:#9ca3af; background:#f9fa
                     Back to Billing Management
                 </a>
 
-                <div style="width: 100%;">
-                    <h1 class="title">Installment Bills</h1>
-                    <p class="subtitle">Manage amortized payments, flexible schedules, and bill types</p>
+                <div class="ib-head-row">
+                    <div>
+                        <h1 class="title">Installment Bills</h1>
+                        <p class="subtitle">Manage amortized payments, flexible schedules, and bill types</p>
+                    </div>
+                    <?php if (userCanAccessPage($pdo, 'bill_balance_upload')): ?>
+                        <a class="btn btn-secondary" href="bill_balance_upload.php" title="Upload the unpaid balances of the recurring, installment, one-time and fixed share capital bills from a file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload Balances</a>
+                    <?php endif; ?>
                 </div>
             </div>
 

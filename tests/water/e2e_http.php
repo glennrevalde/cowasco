@@ -1405,6 +1405,133 @@ Checks::true('Sales by Customer Detail Group by Customer/Member Type opens with 
 $admin->get('index.php?p=home.reports');
 Checks::true('...listed in the Report Center', str_contains($admin->body, 'Sales by Customer Detail Group by Customer/Member Type'));
 
+// ======================================================================================== v55
+Checks::section('v55 Upload Bill Balances: recurring, installment, one-time and fixed share capital balances from a file, reviewed before they are recorded');
+$v55Org = ['class_id' => $classId];
+$admin->get('water/views/bill_balance_upload.php');
+Checks::true('Water Billing > Billing > Upload Bill Balances opens', $admin->status === 200 && str_contains($admin->body, '<h1 class="page-title">Upload Bill Balances</h1>')
+    && str_contains($admin->body, 'Recurring Billing') && str_contains($admin->body, 'Installment Billing') && str_contains($admin->body, 'One-Time Billing') && str_contains($admin->body, 'Fixed Share Capital Billing')
+    && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body), substr(strip_tags($admin->body), 0, 200));
+Checks::true('...in the Billing menu, after Fixed Share Capital Billing', (bool)preg_match('/Fixed Share Capital Billing.{0,600}Upload Bill Balances/s', $admin->body));
+foreach (['recurring_bill', 'installment_bill', 'one_time_billing', 'share_capital_billing'] as $v55Page) {
+    $admin->get('water/views/' . $v55Page . '.php');
+    Checks::true($v55Page . ': an Upload Balances button to the page', $admin->status === 200 && str_contains($admin->body, 'href="bill_balance_upload.php"'));
+}
+$tplWide = ltrim($admin->get('water/process/billBalanceUpload.php?action=template&layout=wide&format=csv')->body, "\xEF\xBB\xBF");
+$tplLong = ltrim($admin->get('water/process/billBalanceUpload.php?action=template&layout=long&format=csv')->body, "\xEF\xBB\xBF");
+Checks::true('the CSV templates: one row per member (a balance column for each billing type) and one row per balance (a Billing type column)',
+    str_starts_with($tplWide, 'account_no,member_name,recurring_balance,recurring_code,installment_balance,installment_code,installments,payment_mode,one_time_balance,one_time_code,share_capital_balance')
+    && str_starts_with($tplLong, 'account_no,member_name,billing_type,charge_code,balance,bill_date,due_date'), substr($tplWide, 0, 120));
+Checks::true('...and the Excel templates', str_starts_with($admin->get('water/process/billBalanceUpload.php?action=template&layout=wide&format=xlsx')->body, 'PK')
+    && str_starts_with($admin->get('water/process/billBalanceUpload.php?action=template&layout=long&format=xlsx')->body, 'PK'));
+$v55Date = date('Y-m-d', strtotime($today . ' -3 days'));
+if (date('j', strtotime($v55Date)) === '1') {
+    $v55Date = date('Y-m-d', strtotime($v55Date . ' -1 day'));
+}
+$v55Due = date('Y-m-d', strtotime($v55Date . ' +15 days'));
+$v55Rec = (string)$q('SELECT c.code FROM recurring_plans p JOIN bill_codes c ON c.code_id = p.bill_code_id WHERE p.plan_id = (SELECT plan_id FROM recurring_subscriptions WHERE member_id = :f ORDER BY subscription_id LIMIT 1)', ['f' => $F]);
+$v55Meter = (string)$q('SELECT code FROM bill_codes WHERE code_id = :c', ['c' => $meterCode]);
+$v55Fee = (string)$q('SELECT code FROM bill_codes WHERE code_id = :c', ['c' => $memCode]);
+$v55Stock = (float)$q('SELECT COALESCE(SUM(qty_on_hand), 0) FROM item_site_stock WHERE item_id = (SELECT item_id FROM bill_codes WHERE code_id = :c)', ['c' => $meterCode]);
+$v55Csv = sys_get_temp_dir() . '/e2e_balances_' . bin2hex(random_bytes(4)) . '.csv';
+file_put_contents($v55Csv, "Account No,Member Name,Recurring,Recurring Code,Installment Balance,Installment Code,Installments,Payment Mode,One-Time Balance,One-Time Code,Share Capital,Bill Date,Due Date\n"
+    . $acctNo($A) . ",,40.00,$v55Rec,,,,,,,15.00,,$v55Due\n"
+    . $acctNo($B) . ",,,,900.00,$v55Meter,3,monthly,,,20.00,,$v55Due\n"
+    . $acctNo($D) . ",,,,,,,,250.00,$v55Fee,,,$v55Due\n"
+    . $acctNo($E) . ",,,,,,,,,,35.00,,\n"
+    . $acctNo($F) . ",,75.00,$v55Rec,,,,,,,,,\n"
+    . "99999999,Nobody,10,$v55Rec,,,,,,,,,\n");
+$v55Before = ['rb' => (int)$q('SELECT COUNT(*) FROM recurring_bills'), 'ib' => (int)$q('SELECT COUNT(*) FROM installment_bills'), 'ob' => (int)$q('SELECT COUNT(*) FROM one_time_bills'),
+    'sb' => (int)$q('SELECT COUNT(*) FROM share_capital_bills'), 'tx' => (int)$q('SELECT COUNT(*) FROM transactions')];
+$upload($admin, 'water/process/billBalanceUpload.php', ['action' => 'read', 'bill_date' => $v55Date, 'installments' => '1', 'payment_mode' => 'Monthly', 'class_id' => (string)$classId], $v55Csv);
+$v55Lines = (array)($admin->json['rows'] ?? []);
+$v55Bad = array_values(array_filter($v55Lines, fn($l) => $l['errors']));
+Checks::true('the file read for review: 6 rows of 1 or 2 balances make 8 lines, each with its row; 2 in red (share capital of a non-member, no such account)',
+    count($v55Lines) === 8 && ($admin->json['bad'] ?? -1) === 2 && array_column($v55Lines, 'ref') === ['Row 2', 'Row 2', 'Row 3', 'Row 3', 'Row 4', 'Row 5', 'Row 6', 'Row 7']
+    && str_contains(implode(' ', $v55Bad[0]['errors'] ?? []), 'not a cooperative member') && str_contains(implode(' ', $v55Bad[1]['errors'] ?? []), 'No water-service account'),
+    json_encode(array_map(fn($l) => [$l['ref'], $l['values']['billing_type'], $l['errors']], $v55Lines)));
+Checks::eq('...each line with its billing type (the group added up on the page)', ['recurring', 'share_capital', 'installment', 'share_capital', 'one_time', 'share_capital', 'recurring', 'recurring'], array_column($v55Lines, 'group'));
+Checks::eq('...the cells a line does not use (an installment uses the installments and the payment mode)', ['share_capital_account'], $v55Lines[2]['off'] ?? null);
+$v55Keep = [];
+foreach ($v55Lines as $l) {
+    if (!$l['errors']) {
+        $v55Keep[] = ['_line' => $l['line'], '_ref' => $l['ref']] + $l['values'];
+    }
+}
+$v55Defaults = ['bill_date' => $v55Date, 'due_date' => '', 'recurring_code' => '', 'installment_code' => '', 'one_time_code' => '', 'installments' => '1', 'payment_mode' => 'Monthly'] + $v55Org;
+$admin->postJson('water/process/billBalanceUpload.php', ['action' => 'check', 'rows' => $v55Keep, 'defaults' => $v55Defaults]);
+Checks::eq('...the lines in red removed: checked again, none with a problem', 0, (int)($admin->json['bad'] ?? -1));
+$v55Fix = $v55Keep;
+$v55Fix[0]['balance'] = 'forty';
+$admin->postJson('water/process/billBalanceUpload.php', ['action' => 'check', 'rows' => $v55Fix, 'defaults' => $v55Defaults]);
+Checks::true('...a cell corrected wrongly is in red again (checked as it is typed)', (int)($admin->json['bad'] ?? -1) === 1 && in_array('balance', $admin->json['rows'][0]['cells'] ?? [], true));
+$admin->postJson('water/process/billBalanceUpload.php', ['action' => 'check', 'rows' => $v55Keep, 'defaults' => ['class_id' => ''] + $v55Defaults]);
+Checks::true('no class chosen: said above the lines', str_contains(implode(' ', (array)($admin->json['general'] ?? [])), 'class'));
+$admin->postJson('water/process/billBalanceUpload.php', ['action' => 'post', 'rows' => $v55Keep, 'defaults' => $v55Defaults, 'operation_token' => 'stale', 'file' => 'balances.csv']);
+Checks::true('recording with a stale form is refused', ($admin->json['success'] ?? true) === false && (int)$q('SELECT COUNT(*) FROM one_time_bills') === $v55Before['ob']);
+$v55Token = preg_match('/token: "([0-9a-f]+)"/', $admin->get('water/views/bill_balance_upload.php')->body, $mm) ? $mm[1] : '';
+$admin->postJson('water/process/billBalanceUpload.php', ['action' => 'post', 'rows' => $v55Keep, 'defaults' => $v55Defaults, 'operation_token' => $v55Token, 'file' => 'balances.csv']);
+$v55Upload = (int)$q('SELECT MAX(upload_id) FROM water_balance_uploads');
+Checks::true('Record balances: the six good lines recorded, back to the page with the upload', ($admin->json['success'] ?? false) === true && str_contains((string)($admin->json['redirect'] ?? ''), 'upload=' . $v55Upload),
+    $admin->json['error'] ?? substr($admin->body, 0, 300));
+Checks::eq('...two recurring bills, an installment contract, a one-time bill and two share capital bills',
+    [2, 1, 1, 2], [(int)$q('SELECT COUNT(*) FROM recurring_bills') - $v55Before['rb'], (int)$q('SELECT COUNT(*) FROM installment_bills') - $v55Before['ib'],
+        (int)$q('SELECT COUNT(*) FROM one_time_bills') - $v55Before['ob'], (int)$q('SELECT COUNT(*) FROM share_capital_bills') - $v55Before['sb']]);
+$v55U = $row('SELECT * FROM water_balance_uploads WHERE upload_id = :u', ['u' => $v55Upload]);
+Checks::true('...kept as an upload: its number, the file, 6 balances, 1,315.00', $v55U && preg_match('/^BAL-\d{5}$/', (string)$v55U['upload_no']) && $v55U['file_name'] === 'balances.csv'
+    && (int)$v55U['line_count'] === 6 && $v55U['total_amount'] === '1315.00', json_encode($v55U));
+$v55L = array_column(DB::all('SELECT * FROM water_balance_upload_lines WHERE upload_id = :u ORDER BY line_no', ['u' => $v55Upload]), null, 'billing_type');
+$v55Posted = 0;
+foreach (DB::all("SELECT * FROM water_balance_upload_lines WHERE upload_id = :u AND billing_type <> 'share_capital'", ['u' => $v55Upload]) as $l) {
+    $src = ['recurring' => 'recurring_bill', 'installment' => 'installment_bill', 'one_time' => 'one_time_bill'][$l['billing_type']];
+    $w = $row("SELECT w.*, t.total, t.txn_date FROM water_postings w JOIN transactions t ON t.id = w.txn_id WHERE w.source_type = :s AND w.source_id = :i AND w.status = 'posted'", ['s' => $src, 'i' => (string)$l['bill_id']]);
+    $cr = $w ? (string)$q('SELECT a.code FROM journal_lines j JOIN accounts a ON a.id = j.account_id WHERE j.txn_id = :t AND j.credit > 0', ['t' => $w['txn_id']]) : '';
+    $v55Posted += $w && $money($w['total']) === $money($l['amount']) && $w['txn_date'] === $v55Date && $txnBalanced((int)$w['txn_id']) && $cr === '39999' ? 1 : 0;
+}
+Checks::eq('...each recurring, installment and one-time balance with its invoice dated the bill date, Dr A/R, Cr 39999 Legacy Water Balances Clearing', 4, $v55Posted);
+Checks::eq('...the share capital balances with no journal entry (four documents for six balances)', 4, (int)$q('SELECT COUNT(*) FROM transactions') - $v55Before['tx']);
+Checks::eq('...a material\'s balance moves no stock', $v55Stock, (float)$q('SELECT COALESCE(SUM(qty_on_hand), 0) FROM item_site_stock WHERE item_id = (SELECT item_id FROM bill_codes WHERE code_id = :c)', ['c' => $meterCode]));
+Checks::eq('...account A, not enrolled in the plan: its recurring balance on an ended subscription', 'ended',
+    (string)$q("SELECT s.status FROM recurring_bills b JOIN recurring_subscriptions s ON s.subscription_id = b.subscription_id JOIN water_balance_upload_lines l ON l.bill_id = b.bill_id AND l.billing_type = 'recurring'
+                 WHERE l.upload_id = :u AND l.water_account_id = :a", ['u' => $v55Upload, 'a' => $A]));
+Checks::eq('...account F, enrolled: on its active subscription', 'active',
+    (string)$q("SELECT s.status FROM recurring_bills b JOIN recurring_subscriptions s ON s.subscription_id = b.subscription_id JOIN water_balance_upload_lines l ON l.bill_id = b.bill_id AND l.billing_type = 'recurring'
+                 WHERE l.upload_id = :u AND l.water_account_id = :a", ['u' => $v55Upload, 'a' => $F]));
+Checks::eq('...account B: three monthly installments of 300.00 from the due date', [[$v55Due, '300.00'], [date('Y-m-d', strtotime($v55Due . ' +1 month')), '300.00'], [date('Y-m-d', strtotime($v55Due . ' +2 months')), '300.00']],
+    array_map(fn($s) => [$s['due_date'], $s['amount']], DB::all('SELECT s.* FROM installment_schedules s JOIN water_balance_upload_lines l ON l.bill_id = s.installment_id AND l.billing_type = \'installment\' WHERE l.upload_id = :u ORDER BY s.due_date', ['u' => $v55Upload])));
+$admin->get('water/views/bill_balance_upload.php?upload=' . $v55Upload);
+Checks::true('the upload listed with its lines, the bill each made and what is still unpaid', $admin->status === 200 && str_contains($admin->body, (string)$v55U['upload_no']) && str_contains($admin->body, 'Unpaid now')
+    && substr_count($admin->body, 'data-label="Line"') === 6 && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body));
+$upload($admin, 'water/process/billBalanceUpload.php', ['action' => 'read', 'bill_date' => $v55Date, 'installments' => '1', 'payment_mode' => 'Monthly', 'class_id' => (string)$classId], $v55Csv);
+Checks::eq('the same file read again: every balance recorded is in red (uploaded already), with the two lines of before', 8, (int)($admin->json['bad'] ?? -1));
+Checks::true('...naming the upload', str_contains(implode(' ', array_merge(...array_map(fn($l) => $l['errors'], (array)($admin->json['rows'] ?? [])))), 'Uploaded already: ' . $v55U['upload_no'])
+    || str_contains(implode(' ', array_merge(...array_map(fn($l) => $l['errors'], (array)($admin->json['rows'] ?? [])))), 'already has'));
+// the cashier collects the balances as any bill
+$admin->get('water/process/getAllReceivables.php?member_id=' . $D);
+$v55Otb = (int)$v55L['one_time']['bill_id'];
+$v55Item = array_values(array_filter((array)$admin->json, fn($i) => ($i['db_type'] ?? '') === 'onetime' && (int)$i['db_id'] === $v55Otb));
+Checks::true('the cashier lists account D\'s one-time balance', count($v55Item) === 1 && $money($v55Item[0]['balance']) === 250.0);
+$admin->postJson('water/process/processUnifiedPayment.php', ['member_id' => $D, 'items' => [['type' => 'onetime', 'id' => $v55Otb]], 'tendered' => 250, 'transaction_date' => $today,
+    'idempotency_key' => 'e2e' . bin2hex(random_bytes(10))] + $v55Org);
+$v55Inv = (int)$q("SELECT txn_id FROM water_postings WHERE source_type = 'one_time_bill' AND source_id = :s AND status = 'posted' ORDER BY id LIMIT 1", ['s' => (string)$v55Otb]);
+Checks::true('...collects it in full: the bill paid, its invoice settled', ($admin->json['success'] ?? false) === true && (string)$q('SELECT status FROM one_time_bills WHERE bill_id = :b', ['b' => $v55Otb]) === 'paid'
+    && $openOf($v55Inv) < 0.005, $admin->json['error'] ?? substr($admin->body, 0, 200));
+$v55Sched = $row('SELECT s.* FROM installment_schedules s WHERE s.installment_id = :i ORDER BY s.due_date LIMIT 1', ['i' => $v55L['installment']['bill_id']]);
+$admin->postJson('water/process/processUnifiedPayment.php', ['member_id' => $B, 'items' => [['type' => 'installment', 'id' => (int)$v55Sched['schedule_id']]], 'tendered' => 300, 'transaction_date' => $today,
+    'idempotency_key' => 'e2e' . bin2hex(random_bytes(10))] + $v55Org);
+Checks::true('...and the first installment of account B\'s balance', ($admin->json['success'] ?? false) === true && (string)$q('SELECT status FROM installment_schedules WHERE schedule_id = :s', ['s' => $v55Sched['schedule_id']]) === 'paid',
+    $admin->json['error'] ?? substr($admin->body, 0, 200));
+$admin->get('water/process/getAllReceivables.php?member_id=' . $E);
+Checks::true('...account E\'s share capital balance is an open item (collected as a deposit)', (bool)array_filter((array)$admin->json, fn($i) => ($i['db_type'] ?? '') === 'sharecap' && (int)$i['db_id'] === (int)$v55L['share_capital']['bill_id']));
+$cas->get('water/views/bill_balance_upload.php');
+$casBal = (int)$q("SELECT COUNT(*) FROM role_page_access r JOIN pages p ON p.id = r.page_id WHERE p.page_key = 'water.bill_balance_upload' AND r.role_id = :r AND r.allowed = 1", ['r' => $cashierRole]);
+Checks::true('the page follows the rights of the roles (a cashier ' . ($casBal ? 'with' : 'without') . ' the page)', $casBal ? $cas->status === 200 : ($cas->status === 403 || !str_contains($cas->url, 'bill_balance_upload')), $cas->status . ' ' . $cas->url);
+$v55Anon = new Browser($base, 'anon55');
+$v55Anon->postJson('water/process/billBalanceUpload.php', ['action' => 'check', 'rows' => $v55Keep, 'defaults' => $v55Defaults]);
+Checks::true('not signed in: refused', $v55Anon->status !== 200 || !str_contains($v55Anon->body, '"rows"'), (string)$v55Anon->status);
+@unlink($v55Csv);
+Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

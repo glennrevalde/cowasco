@@ -290,6 +290,22 @@ if (!function_exists('e')) {
             </div>
         </a>
 
+        <?php if (userCanAccessPage(getDB(), 'bill_balance_upload')): ?>
+        <a href="bill_balance_upload.php" class="action-card">
+            <div class="ac-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+            </div>
+            <div>
+                <div class="ac-title">Upload Bill Balances</div>
+                <div class="ac-desc">Bring in the unpaid recurring, installment, one-time and fixed share capital balances from a file, reviewed before they are recorded.</div>
+            </div>
+        </a>
+        <?php endif; ?>
+
         <a href="bill_codes.php" class="action-card">
             <div class="ac-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

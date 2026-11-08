@@ -62,6 +62,7 @@ run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_03_21_share_capital_ter
 run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_03_28_regular_joint_subgroups_receipts.sql');
 run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_04_accounting_update.sql');
 run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_11_sales_by_member_type.sql');
+run_sql_file($pdo, APP_ROOT . '/database/migrations/2027_04_18_bill_balance_upload.sql');
 Settings::flush();
 Accts::reset();
 $adminId = (int)DB::value("SELECT id FROM users WHERE username = 'admin'");
@@ -262,6 +263,7 @@ require __DIR__ . '/cases_v51.php';
 require __DIR__ . '/cases_v52.php';
 require __DIR__ . '/cases_v53.php';
 require __DIR__ . '/cases_v54.php';
+require __DIR__ . '/cases_v55.php';
 
 // ---------------------------------------------------------------------------------------- summary
 $pass = count(array_filter($results, fn($r) => $r['ok']));
@@ -272,7 +274,7 @@ echo "\n$pass passed, $fail failed, $checks checks, {$total}s\n";
 
 $md = "# Cooperative module: automated test results\n\n"
     . '- Run: ' . date('Y-m-d H:i:s') . ' (' . date_default_timezone_get() . ")\n"
-    . '- Database: ' . DB::value('SELECT VERSION()') . " (test database `$dbName`, rebuilt from database/schema.sql + triggers + seed + the 2026_11_01, 2026_11_15, 2026_12_01 (water), 2026_12_20, 2026_12_27, 2027_01_03, 2027_01_10, 2027_01_17, 2027_01_24, 2027_01_31, 2027_02_21, 2027_03_07, 2027_03_14, 2027_03_21, 2027_03_28, 2027_04_04 and 2027_04_11 migrations)\n"
+    . '- Database: ' . DB::value('SELECT VERSION()') . " (test database `$dbName`, rebuilt from database/schema.sql + triggers + seed + the 2026_11_01, 2026_11_15, 2026_12_01 (water), 2026_12_20, 2026_12_27, 2027_01_03, 2027_01_10, 2027_01_17, 2027_01_24, 2027_01_31, 2027_02_21, 2027_03_07, 2027_03_14, 2027_03_21, 2027_03_28, 2027_04_04, 2027_04_11 and 2027_04_18 migrations)\n"
     . '- PHP ' . PHP_VERSION . ', decimal engine: ' . (Dec::$forcePhp || !function_exists('bcadd') ? 'pure PHP' : 'bcmath') . "\n"
     . "- Command: `php tests/coop/run.php" . (isset($opts['pure-php']) ? ' --pure-php' : '') . ($filter !== '' ? " --filter=$filter" : '') . "`\n"
     . "- Result: **$pass passed, $fail failed** ($checks individual checks, {$total}s)\n\n"
