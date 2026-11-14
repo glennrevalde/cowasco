@@ -3,23 +3,30 @@ declare(strict_types=1);
 
 /**
  * Members & Others > Consolidated Import: one file for the members of a cooperative with everything they have, the
- * four imports of the program in one (Import Members, Import Savings, Import Loans, Upload Bill Balances).
+ * five imports of the program in one (Import Members, Import Savings, Import Time Deposit, Import Loans, Upload Bill
+ * Balances).
  *
  * The file has no fixed format. Its first row names the columns; each column is recognised by its name (the names of
- * the four imports and the usual other names) and the user may say what any column holds before the lines are made
+ * the five imports and the usual other names) and the user may say what any column holds before the lines are made
  * (the choice is remembered for the next file). Only the columns of what is imported are needed. A member may have
- * any number of savings accounts, loans and bill balances: on one row (savings2_code, loan2_principal ... for the
- * second one) or on the rows under the member's row (a row with no member name continues the member above; a row with
- * the same member no., or the same name and date of birth, is the same member). The water-service account of a
+ * any number of savings accounts, time deposits, loans and bill balances: on one row (savings2_code, td2_principal,
+ * loan2_principal ... for the second one) or on the rows under the member's row (a row with no member name continues
+ * the member above; a row with the same member no., or the same name and date of birth, is the same member).
+ *
+ * The cut-off date: a Cut-Off Date column dates what each row brings (the savings balances, the totals paid on the
+ * loans, the time deposits' principal and accrued interest, the bill balances). On the member's own row it is the
+ * member's cut-off date, for every line of the member that has no date of its own; on a row under the member it dates
+ * the lines of that row. A line's own column (savings_cut_off_date, loan_cut_off_date, td_cut_off_date, bill_date)
+ * comes first, the cut-off date of the page last. The water-service account of a
  * member is named by its account no. (the member becomes the same person as its holder) or opened from a rate code and
  * a pipe size; a fixed share capital billing is set up from its amount.
  *
  * The file is read into the database (coop_import_raw), not kept in the browser: a file of thousands of rows is read in
  * pieces and checked in steps. Each member, savings account, loan and bill balance is a line of the review
- * (coop_import_lines) with its problems, checked by the checks of the four imports (the member's accounts as of a
+ * (coop_import_lines) with its problems, checked by the checks of the five imports (the member's accounts as of a
  * member not yet on file); a value is corrected in the review or a line removed (a member with its lines), and every
  * line is checked again before anything is saved. Saving makes the members, then their water-service accounts,
- * savings, fixed share capital billings, loans and bill balances, with the postings of the four imports, a few
+ * savings, time deposits, fixed share capital billings, loans and bill balances, with the postings of the five imports, a few
  * members at a time (each group in one transaction), so thousands of members are saved without the server timing out;
  * an interrupted saving goes on where it stopped.
  */
@@ -30,19 +37,23 @@ final class ConsolidatedImport
     /** The parts of a member's row */
     public const SECTIONS = [
         'member' => 'Member', 'water' => 'Water service', 'fsc' => 'Fixed share capital billing',
-        'savings' => 'Savings', 'loan' => 'Loans', 'bill' => 'Bill balances',
+        'savings' => 'Savings', 'td' => 'Time deposits', 'loan' => 'Loans', 'bill' => 'Bill balances',
     ];
 
     /** The lines of the review: kind => [title, one, many] */
     public const KINDS = [
         'member' => ['Members', 'member', 'members'],
         'savings' => ['Savings', 'savings account', 'savings accounts'],
+        'td' => ['Time deposits', 'time deposit', 'time deposits'],
         'loan' => ['Loans', 'loan', 'loans'],
         'bill' => ['Bill balances', 'bill balance', 'bill balances'],
     ];
 
     /** The sections whose columns repeat on a row (savings2_code ...), and the line kind they make */
-    public const REPEAT = ['savings' => 'savings', 'loan' => 'loan', 'bill' => 'bill'];
+    public const REPEAT = ['savings' => 'savings', 'td' => 'td', 'loan' => 'loan', 'bill' => 'bill'];
+
+    /** The column of each kind of line that dates it (the cut-off date of the member or of the page when blank) */
+    public const LINE_DATE = ['savings' => 'savings_cut_off_date', 'td' => 'td_cut_off_date', 'loan' => 'loan_cut_off_date', 'bill' => 'bill_date'];
 
     /** The largest file and the most rows read */
     public const MAX_FILE_BYTES = 150 * 1024 * 1024;
@@ -66,6 +77,10 @@ final class ConsolidatedImport
         'loan_penalties_paid' => 'penalties_paid', 'loan_cut_off_date' => 'cut_off_date', 'loan_past_due_interest' => 'past_due_interest',
         'loan_overdue_penalties' => 'overdue_penalties', 'loan_first_due' => 'first_due', 'loan_no' => 'loan_no', 'loan_pn_no' => 'pn_no',
         'loan_accrued_interest' => 'accrued_interest', 'loan_balancing_account' => 'balancing_account'];
+    /** Consolidated field => the column of Import Time Deposit (td_cut_off_date is its posting date, not a column) */
+    private const TD_MAP = ['td_principal' => 'amount', 'td_accrued_interest' => 'accrued_interest', 'td_date_deposited' => 'date_opened', 'td_term' => 'td_term',
+        'td_rate' => 'rate', 'td_maturity_date' => 'maturity_date', 'td_product' => 'product', 'td_certificate_no' => 'certificate_no',
+        'td_maturity_action' => 'maturity_action', 'td_txn_code' => 'savings_txn_code'];
     private const BILL_MAP = ['bill_type' => 'billing_type', 'bill_charge_code' => 'charge_code', 'bill_balance' => 'balance', 'bill_date' => 'bill_date',
         'bill_due_date' => 'due_date', 'bill_installments' => 'installments', 'bill_payment_mode' => 'payment_mode', 'bill_share_capital_account' => 'share_capital_account'];
 
@@ -95,6 +110,8 @@ final class ConsolidatedImport
         }
         // a file with the whole name in one column: split into the last, first and middle name
         $f['member_name'] = ['section' => 'member', 'file' => true, 'label' => 'Member name (whole name)', 'hint' => '"Dela Cruz, Juan S." or "Juan S. Dela Cruz": split into the last, first and middle name when those columns are not in the file.'];
+        // the cut-off date of a row: on the member's own row, the member's (every line of the member without a date of its own)
+        $f['cut_off_date'] = ['section' => 'member', 'label' => 'Cut-off date', 'type' => 'date', 'size' => 'sm', 'hint' => 'The date of what the row brings: the savings balances, the totals paid on the loans, the time deposits and the bill balances. On the member\'s row it dates every line of the member that has no date of its own. Blank: the cut-off date of the page.'];
         $rateCodes = [];
         $pipes = [];
         $billCodes = [];
@@ -138,6 +155,32 @@ final class ConsolidatedImport
                 $f[$k]['hint'] = 'The balance of the account at the cut-off date (0 opens the account without a balance).';
             }
         }
+        // time deposits, as Import Time Deposit reads them
+        $tdc = CsvImports::cols('time_deposits');
+        $tdText = [
+            'amount' => ['Time deposit principal', 'The principal deposited.'],
+            'accrued_interest' => ['Time deposit accrued interest', 'The interest earned and not yet paid at the cut-off date, as the former books have it (credited to the accrued interest payable). Blank: none; the next accrual run books the interest.'],
+            'date_opened' => ['Date deposited', 'The date the time deposit was placed.'],
+            'td_term' => ['Time deposit term', 'In days (180), months (6 months, 6M) or years (1 year). Blank: from the date deposited to the maturity date.'],
+            'rate' => ['Time deposit interest rate', 'In % a year (4.5). Blank: the rate of the product for the principal and term.'],
+            'maturity_date' => ['Time deposit maturity date', 'Blank: the date deposited plus the term.'],
+            'product' => ['Time deposit product', 'The code or the name of the time deposit product (Savings & Deposit Products). Blank: the time deposit product, when there is only one.'],
+            'certificate_no' => ['Time deposit certificate no.', 'The certificate no. of the former system. Blank: the next certificate no.'],
+            'maturity_action' => ['Time deposit at maturity', 'Pay out, renew the principal, renew with the interest or credit to savings. Blank: pay out.'],
+            'savings_txn_code' => ['Time deposit transaction code', 'A deposit code with a GL account. Blank: the code chosen on the page.'],
+        ];
+        foreach (self::TD_MAP as $k => $t) {
+            $c = $tdc[$t];
+            unset($c['filled'], $c['label'], $c['hint']);
+            $f[$k] = ['section' => 'td', 'label' => $tdText[$t][0], 'hint' => $tdText[$t][1]] + $c;
+            $f[$k]['req'] = in_array($t, ['amount', 'date_opened'], true);
+            $f[$k]['more'] = in_array($t, ['certificate_no', 'maturity_action', 'savings_txn_code'], true);
+            if ($t === 'td_term' || $t === 'rate') {
+                $f[$k]['size'] = 'sm';
+            }
+        }
+        $f['td_cut_off_date'] = ['section' => 'td', 'label' => 'Time deposit cut-off date', 'type' => 'date', 'size' => 'sm', 'more' => true,
+            'hint' => 'The date the principal and the accrued interest are entered on. Blank: the member\'s cut-off date, or the page\'s.'];
         $loan = LoanImport::cols();
         foreach (self::LOAN_MAP as $k => $t) {
             $c = $loan[$t];
@@ -304,6 +347,26 @@ final class ConsolidatedImport
             'installment_charge_category' => 'installment_code', 'one_time' => 'one_time_balance', 'onetime' => 'one_time_balance', 'one_time_billing' => 'one_time_balance',
             'one_time_amount' => 'one_time_balance', 'one_time_charge_category' => 'one_time_code', 'onetime_code' => 'one_time_code', 'fixed_share_capital' => 'share_capital_balance',
             'fixed_share_capital_balance' => 'share_capital_balance', 'fixed_share_capital_billing' => 'share_capital_balance',
+            // the cut-off date of a row (of the member, on the member's row)
+            'cutoff' => 'cut_off_date', 'as_of_date' => 'cut_off_date', 'date_as_of' => 'cut_off_date', 'balance_date' => 'cut_off_date', 'balances_as_of' => 'cut_off_date',
+            'date_of_balance' => 'cut_off_date', 'transaction_date' => 'cut_off_date', 'date_of_transaction' => 'cut_off_date', 'transactions_date' => 'cut_off_date',
+            'cut_off_date_of_transactions' => 'cut_off_date', 'member_cut_off_date' => 'cut_off_date',
+            // time deposits
+            'td' => 'td_principal', 'time_deposit' => 'td_principal', 'time_deposit_principal' => 'td_principal', 'td_amount' => 'td_principal', 'time_deposit_amount' => 'td_principal',
+            'td_balance' => 'td_principal', 'time_deposit_balance' => 'td_principal', 'td_principal_amount' => 'td_principal', 'principal_of_time_deposit' => 'td_principal',
+            'td_accrued' => 'td_accrued_interest', 'td_interest_accrued' => 'td_accrued_interest', 'time_deposit_accrued_interest' => 'td_accrued_interest', 'accrued_interest_td' => 'td_accrued_interest',
+            'td_date_deposit' => 'td_date_deposited', 'td_date' => 'td_date_deposited', 'date_deposit' => 'td_date_deposited', 'date_deposited' => 'td_date_deposited',
+            'deposit_date' => 'td_date_deposited', 'td_deposit_date' => 'td_date_deposited', 'td_date_placed' => 'td_date_deposited', 'td_placement_date' => 'td_date_deposited',
+            'td_date_opened' => 'td_date_deposited', 'time_deposit_date' => 'td_date_deposited', 'time_deposit_date_deposit' => 'td_date_deposited', 'time_deposit_date_deposited' => 'td_date_deposited',
+            'td_terms' => 'td_term', 'td_term_days' => 'td_term', 'time_deposit_term' => 'td_term', 'time_deposit_terms' => 'td_term',
+            'td_interest_rate' => 'td_rate', 'td_interest' => 'td_rate', 'time_deposit_rate' => 'td_rate', 'time_deposit_interest_rate' => 'td_rate', 'td_rate_per_annum' => 'td_rate',
+            'td_maturity' => 'td_maturity_date', 'maturity_date' => 'td_maturity_date', 'maturity' => 'td_maturity_date', 'date_of_maturity' => 'td_maturity_date',
+            'time_deposit_maturity' => 'td_maturity_date', 'time_deposit_maturity_date' => 'td_maturity_date',
+            'td_code' => 'td_product', 'td_product_code' => 'td_product', 'td_type' => 'td_product', 'time_deposit_product' => 'td_product', 'time_deposit_code' => 'td_product',
+            'td_certificate' => 'td_certificate_no', 'td_cert_no' => 'td_certificate_no', 'td_certificate_number' => 'td_certificate_no', 'certificate_no' => 'td_certificate_no',
+            'certificate_number' => 'td_certificate_no', 'time_deposit_certificate_no' => 'td_certificate_no',
+            'td_at_maturity' => 'td_maturity_action', 'at_maturity' => 'td_maturity_action', 'td_cutoff_date' => 'td_cut_off_date', 'time_deposit_cut_off_date' => 'td_cut_off_date',
+            'td_transaction_code' => 'td_txn_code', 'time_deposit_transaction_code' => 'td_txn_code',
         ];
         return $a;
     }
@@ -338,10 +401,11 @@ final class ConsolidatedImport
         if (preg_match('/^(.*?)_?(\d{1,2})$/', $k, $m) && $m[1] !== '') {
             $tries[] = [rtrim($m[1], '_'), (int)$m[2]];
         }
-        if (preg_match('/^(savings|saving|sav|loans?|bills?)_?(\d{1,2})_(.+)$/', $k, $m)) {
+        if (preg_match('/^(savings|saving|sav|loans?|bills?|td|time_deposit)_?(\d{1,2})_(.+)$/', $k, $m)) {
             $sec = match (true) {
                 str_starts_with($m[1], 'sav') => 'savings',
                 str_starts_with($m[1], 'loan') => 'loan',
+                $m[1] === 'td' || $m[1] === 'time_deposit' => 'td',
                 default => 'bill',
             };
             $tries[] = [$sec . '_' . $m[3], (int)$m[2]];
@@ -745,6 +809,10 @@ final class ConsolidatedImport
                             $by[$fields[$f]['section']][$fields[$f]['rep'] ? $slot : 1][$f] = $v;
                         }
                     }
+                    // the cut-off date of the row: the member's on the member's own row, else the date of this row's lines
+                    $rowCut = (string)($by['member'][1]['cut_off_date'] ?? '');
+                    unset($by['member'][1]['cut_off_date']);
+                    $own = false;   // the row is the member's own row (its line made here)
                     [$mv, $split] = self::splitName(($by['member'][1] ?? []) + ($by['water'][1] ?? []) + ($by['fsc'][1] ?? []));
                     if ($split) {
                         $mv['_split'] = '1';
@@ -756,15 +824,17 @@ final class ConsolidatedImport
                             $current = $members[$ident];
                             $fill($current, $mv);
                         } else {
-                            $current = $add('member', $row, $mv, null);
+                            $current = $add('member', $row, $mv + ($rowCut !== '' ? ['cut_off_date' => $rowCut] : []), null);
                             $members[$ident] = $current;
-                            $memberVals[$current] = $mv;
+                            $memberVals[$current] = $mv + ($rowCut !== '' ? ['cut_off_date' => $rowCut] : []);
+                            $own = true;
                         }
                     } elseif ($mv) {
                         if ($current === null) {
                             // member details with no name or member no., and no member above: a member line in red
-                            $current = $add('member', $row, $mv, null);
-                            $memberVals[$current] = $mv;
+                            $current = $add('member', $row, $mv + ($rowCut !== '' ? ['cut_off_date' => $rowCut] : []), null);
+                            $memberVals[$current] = $mv + ($rowCut !== '' ? ['cut_off_date' => $rowCut] : []);
+                            $own = true;
                         } else {
                             // a row under the member's row with more of the member's details
                             $fill($current, $mv);
@@ -773,10 +843,16 @@ final class ConsolidatedImport
                     $accounts = self::accountsOfRow($by);
                     if ($accounts && $current === null) {
                         // accounts before any member: their member line is in red, so they are not lost
-                        $current = $add('member', $row, [], null);
-                        $memberVals[$current] = [];
+                        $current = $add('member', $row, $rowCut !== '' ? ['cut_off_date' => $rowCut] : [], null);
+                        $memberVals[$current] = $rowCut !== '' ? ['cut_off_date' => $rowCut] : [];
+                        $own = true;
                     }
                     foreach ($accounts as [$kind, $vals]) {
+                        // a row under the member's row: its cut-off date dates its own lines (their own date column first)
+                        $dk = self::LINE_DATE[$kind];
+                        if (!$own && $rowCut !== '' && ($vals[$dk] ?? '') === '') {
+                            $vals[$dk] = $rowCut;
+                        }
                         $add($kind, $row, $vals, $current);
                     }
                 }
@@ -808,7 +884,8 @@ final class ConsolidatedImport
     private static function accountsOfRow(array $by): array
     {
         $out = [];
-        foreach ([['savings', ['savings_code', 'savings_balance', 'savings_account_no']], ['loan', ['loan_name', 'loan_principal', 'loan_no']], ['bill', ['bill_type', 'bill_charge_code', 'bill_balance']]] as [$sec, $needs]) {
+        foreach ([['savings', ['savings_code', 'savings_balance', 'savings_account_no']], ['td', ['td_principal', 'td_certificate_no', 'td_date_deposited', 'td_maturity_date']],
+                  ['loan', ['loan_name', 'loan_principal', 'loan_no']], ['bill', ['bill_type', 'bill_charge_code', 'bill_balance']]] as [$sec, $needs]) {
             $slots = $by[$sec] ?? [];
             ksort($slots);
             foreach ($slots as $vals) {
@@ -856,6 +933,7 @@ final class ConsolidatedImport
                 ? mb_substr(mb_strtolower(Members::fullName(['last_name' => $last, 'first_name' => trim((string)$vals['first_name']), 'middle_name' => self::middle((string)($vals['middle_name'] ?? '')), 'suffix' => trim((string)($vals['suffix'] ?? ''))])) . '|' . $bd, 0, 190)
                 : null, $low($vals['water_account_no'] ?? ''), null],
             'savings' => [$low($vals['savings_account_no'] ?? ''), null, null, $amount($vals['savings_balance'] ?? '')],
+            'td' => [$low($vals['td_certificate_no'] ?? ''), null, null, $amount($vals['td_principal'] ?? '')],
             'loan' => [$low($vals['loan_no'] ?? ''), null, null, $amount($vals['loan_principal'] ?? '')],
             // a bill balance: its billing type (the share capital balances make no journal entry, so need no class)
             default => [bbu_type_key((string)($vals['bill_type'] ?? '')), null, null, $amount($vals['bill_balance'] ?? '')],
@@ -1002,7 +1080,7 @@ final class ConsolidatedImport
             } elseif (!Coop::branchAllowed($existing['branch_id'] ? (int)$existing['branch_id'] : null)) {
                 $err($mid, 'Member ' . $no . ' belongs to another branch.', ['member_no']);
             }
-            $details = array_diff(array_keys(array_filter($mv, fn($v) => $v !== '')), ['member_no', 'last_name', 'first_name', 'middle_name', 'suffix', 'birth_date']);
+            $details = array_diff(array_keys(array_filter($mv, fn($v) => $v !== '')), ['member_no', 'last_name', 'first_name', 'middle_name', 'suffix', 'birth_date', 'cut_off_date']);
             $details = array_filter($details, fn($k) => ($fields[$k]['section'] ?? '') === 'member');
             $note($mid, 'Member ' . $no . ' (' . $existing['full_name'] . ') is on file: the file adds the member\'s accounts and balances' . ($details ? '; the member\'s details on file are not changed.' : '.'));
             $member = $existing;
@@ -1062,6 +1140,20 @@ final class ConsolidatedImport
             return trim((string)$asked) === $code ? $member : DB::row('SELECT * FROM members WHERE member_no = :n', ['n' => $asked]);
         };
 
+        // ---------------------------------------------------- the member's cut-off date
+        // (the date of every line of the member without a date of its own; the page's when the member has none)
+        $cutGiven = trim((string)($mv['cut_off_date'] ?? ''));
+        if ($cutGiven !== '') {
+            $cd = CsvReview::date($cutGiven);
+            if (!$cd) {
+                $err($mid, 'The cut-off date "' . $cutGiven . '" is not a date: write it as YYYY-MM-DD or MM/DD/YYYY.', ['cut_off_date']);
+            } elseif ($cd > today()) {
+                $err($mid, 'The cut-off date ' . fdate($cd) . ' is after today.', ['cut_off_date']);
+            } else {
+                $o['cut_off_date'] = $cd;
+            }
+        }
+
         // ---------------------------------------------------- the water-service account
         $water = self::checkWater($b, $ml, $mv, $existing, $memberName, $err, $note);
 
@@ -1069,7 +1161,7 @@ final class ConsolidatedImport
         $savRows = [];
         $savLines = [];
         foreach ($g['savings'] ?? [] as $l) {
-            $savRows[] = self::savingsRow($l, $code, $memberName);
+            $savRows[] = self::savingsRow($l, $code, $memberName, (string)$o['cut_off_date']);
             $savLines[] = $l;
         }
         $scAccounts = [];   // the member's share capital accounts of the file: [line, values]
@@ -1084,6 +1176,7 @@ final class ConsolidatedImport
             foreach ($checked as $i => $r) {
                 $l = $savLines[$i];
                 self::mapResult($res, (int)$l['id'], $r, self::memo('savings_cols', fn() => CsvImports::cols('savings')), self::SAVINGS_MAP, (bool)$res[$mid]['errors'], $line, $code);
+                self::asOf($res[(int)$l['id']], (string)$r['cut_off_date']);
                 if (($products[mb_strtoupper((string)$r['savings_code'])] ?? '') === 'share_capital') {
                     $scAccounts[] = [$l, $r];
                 }
@@ -1098,6 +1191,47 @@ final class ConsolidatedImport
             }
         }
 
+        // ---------------------------------------------------- time deposits (Import Time Deposit), by the date they are entered on
+        $tdByDate = [];
+        foreach ($g['td'] ?? [] as $l) {
+            [$r, $post, $postProblem] = self::tdRow($l, $code, $memberName, $o);
+            $tdByDate[$post][] = [$l, $r, $postProblem];
+        }
+        if ($tdByDate) {
+            CsvImports::$memberResolver = $resolver;
+            try {
+                foreach ($tdByDate as $post => $items) {
+                    [$checked, , $gen] = CsvImports::check('time_deposits', array_column($items, 1), ['post_date' => (string)$post, 'savings_txn_code' => $o['savings_txn_code'], 'product' => '']);
+                    foreach ($checked as $i => $r) {
+                        [$l, , $postProblem] = $items[$i];
+                        $id = (int)$l['id'];
+                        [$r['_errors'], $r['_cells']] = self::tdWords($r['_errors']);
+                        $r['_notes'] = self::tdWords($r['_notes'])[0];
+                        self::mapResult($res, $id, $r, self::tdCols(), self::TD_MAP, (bool)$res[$mid]['errors'], $line, $code);
+                        self::asOf($res[$id], $postProblem === null ? (string)$post : '');
+                        if ($postProblem !== null) {
+                            $err($id, $postProblem, ['td_cut_off_date']);
+                        } else {
+                            foreach ($gen as $gm) {
+                                $err($id, str_starts_with($gm, 'Posting date: ') ? 'Cut-off date ' . fdate((string)$post) . ': ' . substr($gm, 14)
+                                    : (str_contains($gm, 'after today') ? 'The cut-off date ' . fdate((string)$post) . ' is after today.' : 'Enter the cut-off date of the time deposit, or the page\'s.'), ['td_cut_off_date']);
+                            }
+                        }
+                        // the same certificate no. on another line of the file
+                        if ($l['key_no']) {
+                            $first = DB::value("SELECT MIN(line_no) FROM coop_import_lines WHERE batch_id = :b AND kind = 'td' AND status IN ('pending', 'saved') AND key_no = :k AND id <> :id",
+                                ['b' => $b['id'], 'k' => $l['key_no'], 'id' => $id]);
+                            if ($first && (int)$first < (int)$l['line_no']) {
+                                $err($id, 'Certificate no. ' . $l['v']['td_certificate_no'] . ' is also on line ' . $first . ' of the file.', ['td_certificate_no']);
+                            }
+                        }
+                    }
+                }
+            } finally {
+                CsvImports::$memberResolver = null;
+            }
+        }
+
         // ---------------------------------------------------- loans
         $loanRows = [];
         $loanLines = [];
@@ -1105,6 +1239,9 @@ final class ConsolidatedImport
             $r = ['_line' => (int)$l['line_no'], 'member_code' => $code, 'member_name' => $memberName];
             foreach (self::LOAN_MAP as $k => $t) {
                 $r[$t] = trim((string)($l['v'][$k] ?? ''));
+            }
+            if ($r['cut_off_date'] === '') {
+                $r['cut_off_date'] = (string)$o['cut_off_date'];
             }
             $loanRows[] = $r;
             $loanLines[] = $l;
@@ -1120,6 +1257,7 @@ final class ConsolidatedImport
             foreach ($checked as $i => $r) {
                 $l = $loanLines[$i];
                 self::mapResult($res, (int)$l['id'], $r, self::memo('loan_cols', fn() => LoanImport::cols()), self::LOAN_MAP, (bool)$res[$mid]['errors'], $line, $code);
+                self::asOf($res[(int)$l['id']], (string)$r['cut_off_date']);
                 if ($l['key_no']) {
                     $first = DB::value("SELECT MIN(line_no) FROM coop_import_lines WHERE batch_id = :b AND kind = 'loan' AND status IN ('pending', 'saved') AND key_no = :k AND member_line_id <> :m",
                         ['b' => $b['id'], 'k' => $l['key_no'], 'm' => $mid]);
@@ -1152,6 +1290,9 @@ final class ConsolidatedImport
                     $r = ['_line' => (int)$l['line_no'], '_ref' => 'Row ' . $l['file_row'], 'account_no' => $accountNo, 'member_name' => ''];
                     foreach (self::BILL_MAP as $k => $t) {
                         $r[$t] = trim((string)($l['v'][$k] ?? ''));
+                    }
+                    if ($r['bill_date'] === '') {
+                        $r['bill_date'] = (string)$o['cut_off_date'];
                     }
                     $rows[] = $r;
                 }
@@ -1202,7 +1343,7 @@ final class ConsolidatedImport
 
         // the member line says what the member brings
         $parts = [];
-        foreach (['savings' => ['savings account', 'savings accounts'], 'loan' => ['loan', 'loans'], 'bill' => ['bill balance', 'bill balances']] as $k => [$one, $many]) {
+        foreach (['savings' => ['savings account', 'savings accounts'], 'td' => ['time deposit', 'time deposits'], 'loan' => ['loan', 'loans'], 'bill' => ['bill balance', 'bill balances']] as $k => [$one, $many]) {
             $n = count($g[$k] ?? []);
             if ($n) {
                 $parts[] = $n . ' ' . ($n === 1 ? $one : $many);
@@ -1213,6 +1354,10 @@ final class ConsolidatedImport
         }
         if ($fsc) {
             $parts[] = 'fixed share capital billing of ' . Dec::money($fsc['amount']) . ' ' . strtolower(ShareCapitalBilling::FREQUENCIES[$fsc['frequency']][0]);
+        }
+        if ($parts && valid_date((string)$o['cut_off_date'])) {
+            // the date of the member's lines without a date of their own
+            $parts[] = 'cut-off date ' . fdate((string)$o['cut_off_date']) . ($cutGiven !== '' ? '' : ' (the page\'s)');
         }
         if ($parts && !$res[$mid]['errors']) {
             $res[$mid]['info'] .= ($res[$mid]['info'] !== '' ? '; ' : '') . h(implode(', ', $parts));
@@ -1227,7 +1372,7 @@ final class ConsolidatedImport
         if ($badLines) {
             $note($mid, $badLines . ' of the member\'s lines ' . ($badLines === 1 ? 'has' : 'have') . ' a problem (see the other tabs).');
         }
-        $ctx = ['existing' => $existing, 'member' => $member, 'name' => $memberName, 'water' => $water, 'fsc' => $fsc];
+        $ctx = ['existing' => $existing, 'member' => $member, 'name' => $memberName, 'water' => $water, 'fsc' => $fsc, 'cut' => (string)$o['cut_off_date']];
         foreach (array_merge(...array_values($g)) as $l) {
             $out((int)$l['id']);
         }
@@ -1238,11 +1383,15 @@ final class ConsolidatedImport
      * A savings line as Import Savings reads it. The savings code may be written as a spreadsheet leaves it ("1" for
      * "01") or by the product's name: it becomes the product's code when it names one product only.
      */
-    private static function savingsRow(array $l, string $code, string $name): array
+    private static function savingsRow(array $l, string $code, string $name, string $cut = ''): array
     {
         $r = ['_line' => (int)$l['line_no'], 'member_code' => $code, 'member_name' => $name];
         foreach (self::SAVINGS_MAP as $k => $t) {
             $r[$t] = trim((string)($l['v'][$k] ?? ''));
+        }
+        // no cut-off date of its own: the member's (or the page's)
+        if ($r['cut_off_date'] === '' && $cut !== '') {
+            $r['cut_off_date'] = $cut;
         }
         $products = self::memo('sav_codes', fn() => DB::all('SELECT code, name FROM sav_products'));
         $v = mb_strtoupper($r['savings_code']);
@@ -1254,6 +1403,113 @@ final class ConsolidatedImport
             }
         }
         return $r;
+    }
+
+    /**
+     * A time deposit line as Import Time Deposit reads it, with the date its principal is entered on: [row, date, the
+     * problem of its own cut-off date or null]. The product may be written by its code or its name; the term or the
+     * maturity date left blank is worked out from the other and the date deposited.
+     */
+    private static function tdRow(array $l, string $code, string $name, array $o): array
+    {
+        $r = ['_line' => (int)$l['line_no'], 'member_code' => $code, 'member_name' => $name];
+        foreach (self::TD_MAP as $k => $t) {
+            $r[$t] = trim((string)($l['v'][$k] ?? ''));
+        }
+        $products = self::memo('td_products', fn() => DB::all("SELECT code, name FROM sav_products WHERE product_type = 'time_deposit'"));
+        $v = mb_strtoupper($r['product']);
+        if ($v !== '' && !in_array($v, array_map(fn($p) => mb_strtoupper((string)$p['code']), $products), true)) {
+            $hits = array_values(array_filter($products, fn($p) => (ctype_digit($v) && ctype_digit((string)$p['code']) && ltrim((string)$p['code'], '0') === ltrim($v, '0'))
+                || mb_strtoupper(trim((string)$p['name'])) === $v || mb_strtoupper(trim($p['code'] . ' ' . $p['name'])) === $v));
+            if (count($hits) === 1) {
+                $r['product'] = (string)$hits[0]['code'];
+            }
+        }
+        $opened = CsvReview::date($r['date_opened']);
+        $mat = CsvReview::date($r['maturity_date']);
+        if ($r['td_term'] === '' && $opened && $mat && $mat > $opened) {
+            // the days from the date deposited to the maturity date
+            $r['td_term'] = (string)Coop::daysBetween($opened, $mat);
+        } elseif ($r['maturity_date'] === '' && $opened && ($t = CsvImports::term($r['td_term']))) {
+            $r['maturity_date'] = match ($t[1]) {
+                'months' => Coop::addMonths($opened, $t[0]),
+                'years' => Coop::addMonths($opened, 12 * $t[0]),
+                default => Coop::addDays($opened, $t[0]),
+            };
+        }
+        $post = (string)$o['cut_off_date'];
+        $problem = null;
+        $given = trim((string)($l['v']['td_cut_off_date'] ?? ''));
+        if ($given !== '') {
+            $d = CsvReview::date($given);
+            if (!$d) {
+                $problem = 'The cut-off date "' . $given . '" is not a date: write it as YYYY-MM-DD or MM/DD/YYYY.';
+            } elseif ($d > today()) {
+                $problem = 'The cut-off date ' . fdate($d) . ' is after today.';
+            } else {
+                $post = $d;
+            }
+        }
+        return [$r, $post, $problem];
+    }
+
+    /**
+     * The messages of Import Time Deposit in the words of this file (date deposited, principal, cut-off date), with the
+     * cells a message names that its words do not: [messages, cells by message]
+     */
+    private static function tdWords(array $msgs): array
+    {
+        $map = [
+            'Enter the date opened.' => 'Enter the date deposited.', 'The date opened ' => 'The date deposited ', 'not after the date opened' => 'not after the date deposited',
+            'was opened after the posting date' => 'was deposited after its cut-off date', 'Enter the amount.' => 'Enter the principal of the time deposit.',
+            'The amount "' => 'The principal "', 'The amount must be more than zero.' => 'The principal must be more than zero.',
+            'Choose the time deposit product (or choose it on the page for every row).' => 'Choose the time deposit product (Savings & Deposit Products).',
+            'Enter the time deposit term.' => 'Enter the term of the time deposit, or its maturity date.', 'Enter the maturity date.' => 'Enter the maturity date of the time deposit, or its term.',
+        ];
+        $out = [];
+        $cells = [];
+        $msgs = array_values(array_map('strval', $msgs));
+        $neither = in_array('Enter the time deposit term.', $msgs, true);
+        // a maturity date given but wrong: the term is not asked for as well
+        $badMaturity = (bool)array_filter($msgs, fn($m) => str_starts_with($m, 'The maturity date '));
+        foreach ($msgs as $m) {
+            if (($neither && $m === 'Enter the maturity date.') || ($badMaturity && $m === 'Enter the time deposit term.')) {
+                // neither the term nor the maturity date: said once
+                continue;
+            }
+            $t = strtr($m, $map);
+            $c = match (true) {
+                str_contains($t, 'deposited after its cut-off date') => ['date_opened'],
+                str_contains($t, 'placement for') => ['amount'],
+                default => null,
+            };
+            if ($c !== null) {
+                $cells[count($out)] = $c;
+            }
+            $out[] = $t;
+        }
+        return [$out, $cells];
+    }
+
+    /** The columns of Import Time Deposit named as this file names them (the cells a message names) */
+    private static function tdCols(): array
+    {
+        return self::memo('td_cols', function () {
+            $cols = CsvImports::cols('time_deposits');
+            foreach (['amount' => 'Principal', 'accrued_interest' => 'Accrued interest', 'date_opened' => 'Date deposited', 'td_term' => 'Term', 'rate' => 'Rate',
+                      'maturity_date' => 'Maturity date', 'certificate_no' => 'Certificate no.'] as $k => $label) {
+                $cols[$k]['label'] = $label;
+            }
+            return $cols;
+        });
+    }
+
+    /** A good line says the date its balance is entered on */
+    private static function asOf(array &$res, string $date): void
+    {
+        if (!$res['errors'] && $res['info'] !== '' && valid_date($date)) {
+            $res['info'] .= '; as of ' . fdate($date);
+        }
     }
 
     /** The values of Upload Bill Balances for the blank cells of the bill lines: the page's */
@@ -1565,10 +1821,10 @@ final class ConsolidatedImport
     {
         $o = $b['options'];
         $out = [];
-        if ($kinds['savings']['lines'] && trim((string)$o['savings_txn_code']) === '') {
+        if (($kinds['savings']['lines'] || $kinds['td']['lines']) && trim((string)$o['savings_txn_code']) === '') {
             $out[] = 'Choose the savings transaction code of the balances (Values for the blank cells).';
         }
-        if (($kinds['savings']['lines'] || $kinds['loan']['lines'] || $kinds['bill']['lines']) && !valid_date((string)$o['cut_off_date'])) {
+        if (($kinds['savings']['lines'] || $kinds['td']['lines'] || $kinds['loan']['lines'] || $kinds['bill']['lines']) && !valid_date((string)$o['cut_off_date'])) {
             $out[] = 'Enter the cut-off date (Values for the blank cells).';
         } elseif (valid_date((string)$o['cut_off_date']) && $o['cut_off_date'] > today()) {
             $out[] = 'The cut-off date cannot be after today.';
@@ -1666,6 +1922,10 @@ final class ConsolidatedImport
         }
         if (isset($mapped['installments']) || isset($mapped['payment_mode'])) {
             $mapped['bill_installments'] = $mapped['bill_payment_mode'] = true;
+        }
+        // a time deposit needs its term or its maturity date: both shown
+        if ($kind === 'td') {
+            $mapped['td_term'] = $mapped['td_maturity_date'] = true;
         }
         $out = [];
         foreach ($fields as $k => $c) {
@@ -1832,6 +2092,9 @@ final class ConsolidatedImport
         if (!empty($kinds['savings']) && !Access::can('sav.accounts', 'approve')) {
             $missing[] = 'Approve on the Savings Account Center';
         }
+        if (!empty($kinds['td']) && !Access::can('sav.td', 'approve')) {
+            $missing[] = 'Approve on the Time Deposit Center';
+        }
         if (!empty($kinds['loan']) && !Access::can('loan.accounts', 'approve')) {
             $missing[] = 'Approve on the Loan Accounts Center';
         }
@@ -1874,7 +2137,7 @@ final class ConsolidatedImport
             Audit::log('import', 'coop', 'consolidated_import', (int)$b['id'], (string)$b['batch_no'] . ' ' . $b['file_name'] . ': saving started', ['page_key' => self::PAGE]);
         }
         $start = microtime(true);
-        $made = ['members' => 0, 'savings' => 0, 'loans' => 0, 'bills' => 0, 'water' => 0, 'fsc' => 0];
+        $made = ['members' => 0, 'savings' => 0, 'tds' => 0, 'loans' => 0, 'bills' => 0, 'water' => 0, 'fsc' => 0];
         do {
             $ids = array_map('intval', DB::column("SELECT id FROM coop_import_lines WHERE batch_id = :b AND kind = 'member' AND status = 'pending' ORDER BY line_no LIMIT " . self::SAVE_MEMBERS,
                 ['b' => $b['id']]));
@@ -1893,7 +2156,8 @@ final class ConsolidatedImport
             DB::run('DELETE FROM coop_import_raw WHERE batch_id = :b', ['b' => $b['id']]);
             $sum = self::summary(self::batch((int)$b['id']));
             Audit::log('import', 'coop', 'consolidated_import', (int)$b['id'], (string)$b['batch_no'] . ' ' . $b['file_name'] . ': ' . $sum['kinds']['member']['saved'] . ' member(s), '
-                . $sum['kinds']['savings']['saved'] . ' savings account(s), ' . $sum['kinds']['loan']['saved'] . ' loan(s), ' . $sum['kinds']['bill']['saved'] . ' bill balance(s) saved', ['page_key' => self::PAGE]);
+                . $sum['kinds']['savings']['saved'] . ' savings account(s), ' . $sum['kinds']['td']['saved'] . ' time deposit(s), ' . $sum['kinds']['loan']['saved'] . ' loan(s), '
+                . $sum['kinds']['bill']['saved'] . ' bill balance(s) saved', ['page_key' => self::PAGE]);
         }
         return ['done' => !$left, 'saved' => $saved, 'members' => $saved + $left, 'last' => $made];
     }
@@ -1910,7 +2174,7 @@ final class ConsolidatedImport
         LoanImport::$memo = true;
         $o = $b['options'];
         $file = (string)$b['batch_no'] . ' ' . $b['file_name'];
-        $made = ['members' => 0, 'savings' => 0, 'loans' => 0, 'bills' => 0, 'water' => 0, 'fsc' => 0];
+        $made = ['members' => 0, 'savings' => 0, 'tds' => 0, 'loans' => 0, 'bills' => 0, 'water' => 0, 'fsc' => 0];
         $refs = [];          // line id => what it became
         $problem = null;
         try {
@@ -1996,7 +2260,7 @@ final class ConsolidatedImport
                 $savIds = [];
                 foreach ($ctx as $mid => $c) {
                     foreach ($groups[$mid]['savings'] ?? [] as $l) {
-                        $savRows[] = self::savingsRow($l, (string)$memberOf[$mid]['member_no'], (string)$memberOf[$mid]['full_name']);
+                        $savRows[] = self::savingsRow($l, (string)$memberOf[$mid]['member_no'], (string)$memberOf[$mid]['full_name'], (string)$c['cut']);
                         $savIds[] = (int)$l['id'];
                     }
                 }
@@ -2007,6 +2271,24 @@ final class ConsolidatedImport
                         $savNo[$id] = (string)($r['refs'][$i] ?? '');
                         $refs[$id] = 'Account ' . $savNo[$id];
                         $made['savings']++;
+                    }
+                }
+                // 3b. time deposits: each placed Active with its certificate, its principal (and accrued interest) entered on
+                // its cut-off date (one voucher per cut-off date and code, as Import Time Deposit makes them)
+                $tdGroups = [];
+                foreach ($ctx as $mid => $c) {
+                    foreach ($groups[$mid]['td'] ?? [] as $l) {
+                        [$r, $post] = self::tdRow($l, (string)$memberOf[$mid]['member_no'], (string)$memberOf[$mid]['full_name'], ['cut_off_date' => $c['cut']] + $o);
+                        $codeKey = mb_strtoupper(trim((string)$r['savings_txn_code']) !== '' ? trim((string)$r['savings_txn_code']) : (string)$o['savings_txn_code']);
+                        $tdGroups[$post . '|' . $codeKey][] = [(int)$l['id'], $r];
+                    }
+                }
+                foreach ($tdGroups as $key => $items) {
+                    [$post] = explode('|', $key, 2);
+                    $r = CsvImports::post('time_deposits', array_column($items, 1), ['post_date' => $post, 'savings_txn_code' => $o['savings_txn_code'], 'product' => ''], $file, self::PAGE);
+                    foreach ($items as $i => [$id]) {
+                        $refs[$id] = 'Time deposit ' . ($r['refs'][$i] ?? '');
+                        $made['tds']++;
                     }
                 }
                 // 4. fixed share capital billings
@@ -2033,6 +2315,9 @@ final class ConsolidatedImport
                         foreach (self::LOAN_MAP as $k => $t) {
                             $r[$t] = trim((string)($l['v'][$k] ?? ''));
                         }
+                        if ($r['cut_off_date'] === '') {
+                            $r['cut_off_date'] = (string)$c['cut'];
+                        }
                         $loanRows[] = $r;
                         $loanIds[] = (int)$l['id'];
                     }
@@ -2052,6 +2337,9 @@ final class ConsolidatedImport
                         $r = ['_line' => (int)$l['line_no'], '_ref' => 'Row ' . $l['file_row'], 'account_no' => $waterNo[$mid] ?? '', 'member_name' => ''];
                         foreach (self::BILL_MAP as $k => $t) {
                             $r[$t] = trim((string)($l['v'][$k] ?? ''));
+                        }
+                        if ($r['bill_date'] === '') {
+                            $r['bill_date'] = (string)$c['cut'];
                         }
                         $billRows[] = $r;
                         $billIds[] = (int)$l['id'];
@@ -2097,7 +2385,9 @@ final class ConsolidatedImport
         $prod = array_keys(CsvImports::savProducts(['ordinary', 'special']));
         $sc = array_keys(CsvImports::savProducts(['share_capital']));
         $loan = DB::column('SELECT name FROM loan_products WHERE is_active = 1 ORDER BY sort_order, code');
-        $cut = today();
+        $tdCode = (string)(array_key_first(CsvImports::savProducts(['time_deposit'])) ?? '');
+        // the cut-off date of the example: the end of last month
+        $cut = Coop::addDays(substr(today(), 0, 8) . '01', -1);
         $water = (string)(DB::value("SELECT w.account_number FROM water_accounts w WHERE w.status = 'A' AND NOT EXISTS (SELECT 1 FROM members m WHERE m.party_id = w.party_id) ORDER BY w.pkey LIMIT 1") ?: '');
         $waterName = $water !== '' ? DB::row('SELECT lastname, firstname FROM water_accounts WHERE account_number = :n', ['n' => $water]) : null;
         $codes = [];
@@ -2117,18 +2407,24 @@ final class ConsolidatedImport
         $sav2 = ['savings_code' => $sc[0] ?? '03', 'savings_balance' => '5000.00'];
         $ln = ['loan_name' => $loan[0] ?? 'RL', 'loan_principal' => '50000.00', 'loan_term' => '12 months', 'loan_mode' => 'Monthly', 'loan_amort_type' => 'Diminishing, equal amortization',
             'loan_rate' => '18', 'loan_release_date' => Coop::addMonths($cut, -7), 'loan_principal_paid' => '20000.00', 'loan_interest_paid' => '3500.00', 'loan_penalties_paid' => '0'];
+        // a time deposit of 50,000.00 at 4.5 % a year for 180 days, placed 60 days before the cut-off date: 369.86 accrued
+        $deposited = Coop::addDays($cut, -60);
+        $td = ['td_principal' => '50000.00', 'td_accrued_interest' => '369.86', 'td_date_deposited' => $deposited, 'td_term' => '180 days', 'td_rate' => '4.5',
+            'td_maturity_date' => Coop::addDays($deposited, 180), 'td_product' => $tdCode];
+        $cutCol = ['cut_off_date' => $cut];
         if ($layout === 'wide') {
-            $row1 = $m1 + $sav1 + ['savings2_code' => $sav2['savings_code'], 'savings2_balance' => $sav2['savings_balance']] + $ln
-                + ($water !== '' ? ['one_time_balance' => '1500.00', 'one_time_code' => $fee] : []);
-            $row2 = $m2 + ['savings_code' => $sav2['savings_code'], 'savings_balance' => '2000.00'];
+            $row1 = $m1 + $sav1 + ['savings2_code' => $sav2['savings_code'], 'savings2_balance' => $sav2['savings_balance']] + $td + $ln
+                + ($water !== '' ? ['one_time_balance' => '1500.00', 'one_time_code' => $fee] : []) + $cutCol;
+            $row2 = $m2 + ['savings_code' => $sav2['savings_code'], 'savings_balance' => '2000.00'] + $cutCol;
             return [$row1, $row2];
         }
         return [
-            $m1 + $sav1,
+            $m1 + $sav1 + $cutCol,
             $sav2,
+            $td,
             $ln,
             $water !== '' ? ['bill_type' => 'One-Time', 'bill_charge_code' => $fee, 'bill_balance' => '1500.00'] : ['savings_code' => $prod[1] ?? ($prod[0] ?? '01'), 'savings_balance' => '300.00'],
-            $m2 + ['savings_code' => $sav2['savings_code'], 'savings_balance' => '2000.00'],
+            $m2 + ['savings_code' => $sav2['savings_code'], 'savings_balance' => '2000.00'] + $cutCol,
         ];
     }
 
@@ -2142,7 +2438,9 @@ final class ConsolidatedImport
                 $head[$k] = true;
             }
         }
-        $head = array_keys($head);
+        // the cut-off date in the last column, where a file usually has it
+        unset($head['cut_off_date']);
+        $head = array_merge(array_keys($head), ['cut_off_date']);
         $data = array_map(fn($r) => array_map(fn($k) => (string)($r[$k] ?? ''), $head), $rows);
         $name = 'consolidated_import_' . ($layout === 'wide' ? 'one_row_per_member' : 'rows_under_the_member');
         if ($format === 'xlsx' && Xlsx::available()) {
@@ -2158,6 +2456,6 @@ final class ConsolidatedImport
     /** The name of a repeated column for the second account: savings_code => savings2_code */
     public static function secondName(string $k): string
     {
-        return (string)preg_replace('/^(savings|loan|bill)_/', '${1}2_', $k, 1);
+        return (string)preg_replace('/^(savings|td|loan|bill)_/', '${1}2_', $k, 1);
     }
 }

@@ -2,11 +2,12 @@
 declare(strict_types=1);
 
 /**
- * Members & Others > Consolidated Import: the members with their savings accounts, loans, water-service account and
- * bill balances from one file (Import Members, Import Savings, Import Loans and Upload Bill Balances in one). The file is
- * sent in pieces and read into the database, its columns are matched to what they hold (the user may change it), every
- * member, savings account, loan and bill balance becomes a line of the review, checked; a line is corrected in place or
- * removed, and the lines are saved a few members at a time (app/ConsolidatedImport.php).
+ * Members & Others > Consolidated Import: the members with their savings accounts, time deposits, loans, water-service
+ * account and bill balances from one file (Import Members, Import Savings, Import Time Deposit, Import Loans and Upload
+ * Bill Balances in one), each row dated by its cut-off date. The file is sent in pieces and read into the database, its
+ * columns are matched to what they hold (the user may change it), every member, savings account, time deposit, loan and
+ * bill balance becomes a line of the review, checked; a line is corrected in place or removed, and the lines are saved
+ * a few members at a time (app/ConsolidatedImport.php).
  */
 require_once __DIR__ . '/_coop.php';
 $pageKey = ConsolidatedImport::PAGE;
@@ -136,7 +137,7 @@ handle_post(function () use ($pageKey, $ready, $batchOf) {
 });
 
 $statusText = ['reading' => 'Being read', 'review' => 'Under review', 'saving' => 'Being saved', 'saved' => 'Saved', 'cancelled' => 'Closed'];
-$kindIcons = ['member' => 'person-vcard', 'savings' => 'piggy-bank', 'loan' => 'cash-coin', 'bill' => 'droplet-half'];
+$kindIcons = ['member' => 'person-vcard', 'savings' => 'piggy-bank', 'td' => 'safe2', 'loan' => 'cash-coin', 'bill' => 'droplet-half'];
 $b = $ready && gint('id') ? ConsolidatedImport::batch((int)gint('id')) : null;
 if ($b && $b['status'] === 'cancelled') {
     $b = null;
@@ -181,18 +182,19 @@ if (!$b):
       <div class="card ci-read">
         <div class="card-header">Read a file</div>
         <div class="card-body">
-          <p class="ci-lead">One file for the members and everything they have. Each member's savings accounts, loans and water bill balances are imported with the member, in the same file.</p>
+          <p class="ci-lead">One file for the members and everything they have. Each member's savings accounts, time deposits, loans and water bill balances are imported with the member, in the same file, each dated by its cut-off date.</p>
           <div class="ci-kinds">
             <?php foreach ([
                 'member' => ['Members', 'Created Active, as Import Members does. A member already on file only gets the accounts of the file.'],
                 'savings' => ['Savings', 'Any number of savings and share capital accounts a member, each with its balance (Import Savings).'],
+                'td' => ['Time deposits', 'Any number of time deposits a member: principal, accrued interest, date deposited, term, interest rate and maturity date (Import Time Deposit).'],
                 'loan' => ['Loans', 'Any number of loans a member, with what was paid (Import Loans).'],
                 'bill' => ['Bill balances', 'Recurring, installment, one-time and fixed share capital balances of the member\'s water-service account (Upload Bill Balances).'],
             ] as $k => [$t, $d]): ?>
               <div class="ci-kind"><span class="ci-kind-ico"><i class="bi bi-<?= h($kindIcons[$k]) ?>"></i></span><div><strong><?= h($t) ?></strong><span><?= h($d) ?></span></div></div>
             <?php endforeach; ?>
           </div>
-          <p class="ci-sub">A member may have only savings, savings and loans, savings and bill balances, or all of them: leave the columns of what a member does not have blank.</p>
+          <p class="ci-sub">A member may have only savings, savings and time deposits, savings and loans, savings and bill balances, or all of them: leave the columns of what a member does not have blank.</p>
           <?php if ($canCreate): ?>
           <form class="ci-pick" data-ci-pick>
             <label class="form-label" for="ciFile">CSV or Excel file</label>
@@ -204,7 +206,7 @@ if (!$b):
               <div class="progress" role="progressbar" aria-label="Reading the file" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:0%"></div></div>
               <div class="ci-progress-text" data-ci-progress-text>Sending the file</div>
             </div>
-            <div class="small text-muted mt-2">Up to <?= number_format(ConsolidatedImport::MAX_ROWS) ?> rows and <?= ConsolidatedImport::MAX_FILE_BYTES >> 20 ?> MB a file. The file is sent in pieces and kept in the database for the review: nothing is saved to the members, savings, loans or bills until you press Save.</div>
+            <div class="small text-muted mt-2">Up to <?= number_format(ConsolidatedImport::MAX_ROWS) ?> rows and <?= ConsolidatedImport::MAX_FILE_BYTES >> 20 ?> MB a file. The file is sent in pieces and kept in the database for the review: nothing is saved to the members, savings, time deposits, loans or bills until you press Save.</div>
           </form>
           <?php else: ?>
           <div class="alert alert-light border small mb-0">Reading a file needs the Create right on Consolidated Import.</div>
@@ -241,12 +243,14 @@ if (!$b):
       <div class="card">
         <div class="card-header">The format</div>
         <div class="card-body small">
-          <p class="mb-2">There is no fixed format. The first row of the file names the columns, in any order and with your own names: the page recognises the names of the four imports and the usual other ones, and you may say what any column holds before the lines are made (the choice is remembered for the next file). Only the columns of what you import are needed.</p>
+          <p class="mb-2">There is no fixed format. The first row of the file names the columns, in any order and with your own names: the page recognises the names of the five imports and the usual other ones, and you may say what any column holds before the lines are made (the choice is remembered for the next file). Only the columns of what you import are needed.</p>
           <ul class="ci-rules">
-            <li><strong>Several accounts on one row:</strong> number the columns of the second one, <code>savings2_code</code>, <code>savings2_balance</code>, <code>loan2_principal</code> ... (or <code>savings_code_2</code>).</li>
+            <li><strong>Several accounts on one row:</strong> number the columns of the second one, <code>savings2_code</code>, <code>savings2_balance</code>, <code>td2_principal</code>, <code>loan2_principal</code> ... (or <code>savings_code_2</code>).</li>
             <li><strong>Or on the rows under the member:</strong> a row with no member name or member no. adds its accounts to the member above. A row with the same member no., or the same name and date of birth, is the same member.</li>
             <li><strong>A member already on file:</strong> give the member no.; only the accounts and balances of the file are added.</li>
             <li><strong>Water bill balances</strong> go to the member's water-service account: give its account no. (the member becomes the same person as its holder), or a rate code and pipe size to open one.</li>
+            <li><strong>Cut-off date:</strong> a <code>Cut-Off Date</code> column dates what a row brings: the savings balances, the totals paid on the loans, the time deposits and the bill balances. On the member's row it dates every line of the member; on a row under the member, the lines of that row. Blank: the cut-off date of the page.</li>
+            <li><strong>Time deposits:</strong> <code>td_principal</code>, <code>td_accrued_interest</code>, <code>td_date_deposited</code>, <code>td_term</code>, <code>td_rate</code> and <code>td_maturity_date</code> (the term or the maturity date is enough), on the member's row or a row under it.</li>
           </ul>
           <div class="ci-tpls">
             <div class="ci-tpl"><div><strong>One row per member</strong><span>The member and the member's accounts across the row.</span></div>
@@ -255,7 +259,7 @@ if (!$b):
               <div class="ci-tpl-links"><a class="btn btn-sm btn-outline-secondary" href="<?= h(url($pageKey, ['t' => 'template', 'layout' => 'long', 'format' => 'xlsx'])) ?>"><i class="bi bi-file-earmark-excel"></i> Excel</a><a class="btn btn-sm btn-outline-secondary" href="<?= h(url($pageKey, ['t' => 'template', 'layout' => 'long', 'format' => 'csv'])) ?>"><i class="bi bi-filetype-csv"></i> CSV</a></div></div>
           </div>
           <div class="ci-cols-title">Every column a file may have</div>
-          <div class="text-muted mb-2">In bold: needed for that part (a member's savings account needs its savings code and balance, a loan its loan name, principal, term ...).</div>
+          <div class="text-muted mb-2">In bold: needed for that part (a member's savings account needs its savings code and balance, a time deposit its principal and date deposited, a loan its loan name, principal, term ...).</div>
           <?= $columnHelp() ?>
         </div>
       </div>
@@ -311,8 +315,8 @@ $classOptions = Classes::ready() ? Classes::options(((int)($o['class_id'] ?? 0))
 
   <?php if ($b['status'] === 'saved'): $k = $summary['kinds']; ?>
     <div class="ci-done mb-3"><i class="bi bi-check2-circle" aria-hidden="true"></i><div><strong>Saved on <?= h(fdatetime($b['saved_at'])) ?></strong>
-      <span><?= number_format($k['member']['saved']) ?> member(s), <?= number_format($k['savings']['saved']) ?> savings account(s), <?= number_format($k['loan']['saved']) ?> loan(s) and <?= number_format($k['bill']['saved']) ?> bill balance(s). Each line shows what it became.</span>
-      <div class="ci-done-links"><?= page_link('coop.members', [], 'Member Center', 'btn-outline-secondary', 'people') ?> <?= page_link('sav.accounts', [], 'Savings Account Center', 'btn-outline-secondary', 'piggy-bank') ?> <?= page_link('loan.accounts', [], 'Loan Accounts Center', 'btn-outline-secondary', 'cash-coin') ?> <?= page_link('rpt.coop_sl_gl', [], 'SL vs GL reconciliation', 'btn-outline-secondary', 'check2-square') ?></div></div></div>
+      <span><?= number_format($k['member']['saved']) ?> member(s), <?= number_format($k['savings']['saved']) ?> savings account(s), <?= number_format($k['td']['saved']) ?> time deposit(s), <?= number_format($k['loan']['saved']) ?> loan(s) and <?= number_format($k['bill']['saved']) ?> bill balance(s). Each line shows what it became.</span>
+      <div class="ci-done-links"><?= page_link('coop.members', [], 'Member Center', 'btn-outline-secondary', 'people') ?> <?= page_link('sav.accounts', [], 'Savings Account Center', 'btn-outline-secondary', 'piggy-bank') ?> <?= $k['td']['saved'] ? page_link('sav.td', [], 'Time Deposit Center', 'btn-outline-secondary', 'safe2') . ' ' : '' ?><?= page_link('loan.accounts', [], 'Loan Accounts Center', 'btn-outline-secondary', 'cash-coin') ?> <?= page_link('rpt.coop_sl_gl', [], 'SL vs GL reconciliation', 'btn-outline-secondary', 'check2-square') ?></div></div></div>
   <?php elseif ($b['status'] === 'saving'): ?>
     <div class="alert alert-warning small"><i class="bi bi-hourglass-split"></i> Saving was started and has not finished: <?= number_format($summary['saved_members']) ?> of <?= number_format($summary['members']) ?> member(s) are saved. Press <strong>Go on saving</strong> to save the rest.</div>
   <?php endif; ?>
@@ -358,10 +362,10 @@ $classOptions = Classes::ready() ? Classes::options(((int)($o['class_id'] ?? 0))
           <?= csrf_field() ?><input type="hidden" name="action" value="options"><input type="hidden" name="id" value="<?= (int)$b['id'] ?>">
           <div class="row g-2">
             <div class="col-sm-6"><label class="form-label" for="ciCut">Cut-off date</label><input class="form-control form-control-sm" type="date" id="ciCut" name="cut_off_date" value="<?= h((string)$o['cut_off_date']) ?>" max="<?= h(today()) ?>">
-              <div class="form-text">The date of the savings balances, the loans' totals paid and the bill balances.</div></div>
+              <div class="form-text">For the rows with no cut-off date of their own: the date of the savings balances, the loans' totals paid, the time deposits and the bill balances.</div></div>
             <div class="col-sm-6"><label class="form-label" for="ciTxn">Savings transaction code</label><select class="form-select form-select-sm" id="ciTxn" name="savings_txn_code">
               <?php foreach ($codes as $c => $label): ?><option value="<?= h((string)$c) ?>"<?= (string)$c === (string)$o['savings_txn_code'] ? ' selected' : '' ?>><?= h((string)$label) ?></option><?php endforeach; ?></select>
-              <div class="form-text">The deposit code of the balances, against its GL account.</div></div>
+              <div class="form-text">The deposit code of the savings balances and time deposits, against its GL account.</div></div>
             <div class="col-sm-6"><label class="form-label" for="ciBal">Loan balancing account</label><select class="form-select form-select-sm" id="ciBal" name="balancing_account">
               <?php foreach ($accounts as $c => $label): ?><option value="<?= h((string)$c) ?>"<?= (string)$c === (string)$o['balancing_account'] ? ' selected' : '' ?>><?= h((string)$label) ?></option><?php endforeach; ?></select>
               <div class="form-text">The other side of the loans' balances.</div></div>

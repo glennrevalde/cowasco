@@ -519,3 +519,18 @@ no browser margins (so no header or footer); the pre-printed layout of Receipt L
 by default in the new bold dot-matrix font, a layout saved as the former default read as the new one. One migration,
 `2027_05_02_bill_accounts_center.sql` (the page and its access, no table, MySQL 5.5), registered in the update check
 and the installer; both bundled databases written again. See `UPGRADE_v57.txt`.
+
+## 34. Version 58: workbook v23 (the cut-off date of each row, time deposits in the Consolidated Import)
+
+The requests of `ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v23.xlsx`, mapped in `docs/ADDITIONAL_MODULE_V23_CHECKLIST.md`.
+The workbook is the Consolidated Import template with a Cut-Off Date column the user added and two notes. The file's
+Cut-Off Date column now dates the transactions of its row: the savings balances, the totals paid on the loans, the time
+deposits and the bill balances. On the member's row it is the member's cut-off date, for every line of the member
+without a date of its own (the rows under the member too); on a row under the member it dates that row; a line's own
+date column comes first and the page's cut-off date last. The member line shows its date and each good line the date it
+is entered on. Time deposits are a fifth kind of line in the same file, any number a member: principal, accrued
+interest, date deposited, term, interest rate and maturity date (the term or the maturity date is enough), with the
+product, certificate no., action at maturity, cut-off date and transaction code if given; checked as Import Time
+Deposit checks them and saved Active with their certificate, their principal and accrued interest entered on their
+cut-off date. The templates have the Cut-Off Date in the last column and a time deposit; Import time deposits has a
+Consolidated Import button. No migration. See `UPGRADE_v58.txt`.

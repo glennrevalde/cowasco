@@ -1587,8 +1587,8 @@ $ciPost($admin, ['a' => 'parse', 'id' => (string)$ciId]);
 Checks::true('...read into the database, to the page of the file', str_contains((string)($admin->json['url'] ?? ''), 'id=' . $ciId), substr($admin->body, 0, 300));
 Checks::eq('...its rows kept in the database, not in the browser', 4, (int)$q('SELECT COUNT(*) FROM coop_import_raw WHERE batch_id = :b', ['b' => $ciId]));
 $admin->get($ci . '&id=' . $ciId);
-Checks::true('the page of the file: the columns recognised, the values for the blank cells, the four kinds of lines', $admin->status === 200 && str_contains($admin->body, '16 of 16 recognised')
-    && str_contains($admin->body, 'Values for the blank cells') && substr_count($admin->body, 'data-ci-tile=') === 4 && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body));
+Checks::true('the page of the file: the columns recognised, the values for the blank cells, the kinds of lines', $admin->status === 200 && str_contains($admin->body, '16 of 16 recognised')
+    && str_contains($admin->body, 'Values for the blank cells') && substr_count($admin->body, 'data-ci-tile=') === 5 && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body));
 for ($i = 0; $i < 50; $i++) {
     $ciPost($admin, ['a' => 'check', 'id' => (string)$ciId]);
     if (!empty($admin->json['done']) || $admin->status !== 200) {
@@ -1647,7 +1647,7 @@ Checks::eq('...their share capital accounts with their balances (two for the fir
 Checks::eq('...the first member\'s one-time balance on its water account', 320.0, $money($q("SELECT SUM(total_amount) FROM one_time_bills WHERE member_id = :m AND status = 'unpaid'", ['m' => $ciW[0]['pkey']])));
 Checks::true('...every voucher balanced', !(int)$q('SELECT COUNT(*) FROM (SELECT txn_id FROM journal_lines WHERE txn_id > :t GROUP BY txn_id HAVING ABS(SUM(debit - credit)) >= 0.005) x', ['t' => $ciTx]));
 $admin->get($ci . '&id=' . $ciId);
-Checks::true('the page of the file: Saved, what each line became', str_contains($admin->body, 'class="ci-done') && str_contains($admin->body, '3 member(s), 4 savings account(s), 0 loan(s) and 1 bill balance(s)'));
+Checks::true('the page of the file: Saved, what each line became', str_contains($admin->body, 'class="ci-done') && str_contains($admin->body, '3 member(s), 4 savings account(s), 0 time deposit(s), 0 loan(s) and 1 bill balance(s)'));
 $admin->get($ci . '&a=lines&id=' . $ciId . '&kind=savings&status=saved');
 Checks::true('...each savings line with its account no.', ($admin->json['total'] ?? 0) === 4 && !array_filter((array)$admin->json['lines'], fn($l) => !str_starts_with($l['saved_ref'], 'Account ')));
 $ciPost($admin, ['a' => 'save', 'id' => (string)$ciId]);
@@ -1760,6 +1760,99 @@ if ($rF !== '') {
     Checks::true('...on a pre-printed form: Letter, portrait, the entries in bold', $admin->status === 200 && str_contains($admin->body, '@page{size:8.5in 11in;margin:0}') && str_contains($admin->body, 'wrl-bold')
         && substr_count($admin->body, 'data-f="account"') === 2 && str_contains($admin->body, 'pre-printed form 8.5 &times; 11 in'));
 }
+Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
+
+// ======================================================================================== v58
+Checks::section('v58 Consolidated Import: the cut-off date of each row, time deposits in the file');
+$admin->get($ci);
+Checks::true('Consolidated Import: five kinds, time deposits among them; the format explains the Cut-Off Date column and the time deposit columns', $admin->status === 200
+    && substr_count($admin->body, 'class="ci-kind"') === 5 && str_contains($admin->body, '<strong>Time deposits</strong>') && str_contains($admin->body, '<code>Cut-Off Date</code> column dates what a row brings')
+    && str_contains($admin->body, '<code>td_principal</code>') && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body));
+$admin->get('index.php?p=sav.td&a=import');
+Checks::true('Import time deposits: a Consolidated Import button', $admin->status === 200 && str_contains($admin->body, 'p=coop.consolidated_import'));
+$ciTpl = ltrim($admin->get($ci . '&t=template&layout=long&format=csv')->body, "\xEF\xBB\xBF");
+$ciHead = str_getcsv(strtok($ciTpl, "\n"), ',', '"', '');
+Checks::true('the template of rows under the member: a time deposit on its own row, the cut-off date in the last column', end($ciHead) === 'cut_off_date'
+    && !array_diff(['td_principal', 'td_accrued_interest', 'td_date_deposited', 'td_term', 'td_rate', 'td_maturity_date'], $ciHead), implode(',', $ciHead));
+// a time deposit product of the cooperative, with its rate
+$e58Td = (int)($q("SELECT id FROM sav_products WHERE code = 'E58'") ?: DB::insert('sav_products', ['code' => 'E58', 'name' => 'E2E Time Deposit', 'product_type' => 'time_deposit', 'is_active' => 1,
+    'calendar_days' => 365, 'opening_amount' => '1000']));
+if (!$q('SELECT id FROM sav_product_rates WHERE product_id = :p', ['p' => $e58Td])) {
+    DB::insert('sav_product_rates', ['product_id' => $e58Td, 'amount_from' => '0', 'amount_to' => '999999999999.99', 'term_from' => 0, 'term_to' => 0, 'effective_date' => '2020-01-01',
+        'rate' => '4.0000', 'posting_method' => 'maturity']);
+}
+Savings::resetProducts();
+$cutA = date('Y-m-d', strtotime($today . ' -20 days'));
+$cutB = date('Y-m-d', strtotime($today . ' -12 days'));
+$dep = date('Y-m-d', strtotime($today . ' -50 days'));
+// the layout of the workbook v23 (rows under the member) with its Cut-Off Date column, and the time deposit columns
+$ciCsv = "member_no,last_name,first_name,middle_name,birth_date,member_type,membership_date,barangay,city,province,savings_code,savings_balance,savings_account_no,td_principal,TD Accrued Interest,Date Deposit,TD Term,TD Interest Rate,Maturity Date,Cut-Off Date\n"
+    . "E58-001,Saldivar,Teresita,-,1983-03-09,REG,2018-04-01,Poblacion,San Isidro,Nueva Ecija,03,1000,E58-SC-1,,,,,,,$cutA\n"
+    . ",,,,,,,,,,,,,20000,55.25,$dep,180 days,4.5,,\n"
+    . ",,,,,,,,,,03,500,E58-SC-2,,,,,,,$cutB\n"
+    . "E58-002,Villaroman,Arnel,-,1979-12-01,REG,2017-08-15,San Roque,San Isidro,Nueva Ecija,03,300,,,,,,,,2026-13-40\n";
+$ciPost($admin, ['a' => 'create', 'file_name' => 'cutoff_td_e2e.csv', 'bytes' => (string)strlen($ciCsv)]);
+$c58 = (int)($admin->json['id'] ?? 0);
+$ciPost($admin, ['a' => 'chunk', 'id' => (string)$c58, 'index' => '0'], $ciCsv);
+$ciPost($admin, ['a' => 'parse', 'id' => (string)$c58]);
+$admin->get($ci . '&id=' . $c58);
+Checks::true('the file read: the columns Cut-Off Date and the time deposit columns recognised, a Time deposits tab', $admin->status === 200 && str_contains($admin->body, '20 of 20 recognised')
+    && str_contains($admin->body, 'data-ci-tile="td"') && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body));
+for ($i = 0; $i < 50; $i++) {
+    $ciPost($admin, ['a' => 'check', 'id' => (string)$c58]);
+    if (!empty($admin->json['done']) || $admin->status !== 200) {
+        break;
+    }
+}
+$s58 = (array)($admin->json['summary'] ?? []);
+Checks::true('every line checked: 2 members, 3 savings accounts, 1 time deposit (20,000.00); 1 line in red', [$s58['kinds']['member']['lines'] ?? 0, $s58['kinds']['savings']['lines'] ?? 0, $s58['kinds']['td']['lines'] ?? 0,
+    $s58['kinds']['td']['total'] ?? '', $s58['bad'] ?? 0] === [2, 3, 1, '20000.00', 1], json_encode($s58));
+$admin->get($ci . '&a=lines&id=' . $c58 . '&kind=member&bad=1');
+$m58 = $admin->json['lines'][0] ?? [];
+Checks::true('...the member whose cut-off date is not a date: in red, its cell', ($m58['cells'] ?? []) === ['cut_off_date'] && str_contains(implode(' ', $m58['errors'] ?? []), 'is not a date'));
+$ciPost($admin, ['a' => 'edit', 'id' => (string)$c58, 'line' => (string)($m58['id'] ?? 0), 'field' => 'cut_off_date', 'value' => $cutB]);
+Checks::eq('...corrected in the review: no line in red', 0, (int)($admin->json['summary']['bad'] ?? -1));
+$admin->get($ci . '&a=lines&id=' . $c58 . '&kind=td');
+$t58 = $admin->json['lines'][0] ?? [];
+Checks::true('the time deposit line: its principal, accrued interest, date deposited, term and rate; dated by the member\'s cut-off date', ($t58['values']['td_principal'] ?? '') === '20000'
+    && ($t58['values']['td_accrued_interest'] ?? '') === '55.25' && ($t58['values']['td_date_deposited'] ?? '') === $dep && str_contains((string)($t58['info'] ?? ''), '180 days at 4.5 %')
+    && str_ends_with(strip_tags((string)($t58['info'] ?? '')), 'as of ' . fdate($cutA)), strip_tags((string)($t58['info'] ?? '')));
+$admin->get($ci . '&a=lines&id=' . $c58 . '&kind=savings');
+$sv58 = array_values((array)($admin->json['lines'] ?? []));
+Checks::eq('...the savings line of the row under the member with a cut-off date of its own', [null, $cutB, null], array_map(fn($l) => $l['values']['savings_cut_off_date'] ?? null, $sv58));
+$admin->post($ci . '&id=' . $c58, ['_csrf' => $admin->csrf(), 'action' => 'options', 'id' => (string)$c58, 'cut_off_date' => $today, 'savings_txn_code' => 'INI', 'balancing_account' => '3900',
+    'class_id' => (string)$classId, 'installments' => '1', 'payment_mode' => 'Monthly']);
+for ($i = 0; $i < 50; $i++) {
+    $ciPost($admin, ['a' => 'check', 'id' => (string)$c58]);
+    if (!empty($admin->json['done']) || $admin->status !== 200) {
+        break;
+    }
+}
+Checks::true('...checked again: ready', ($admin->json['summary']['ready'] ?? false) === true, json_encode($admin->json['summary']['general'] ?? $admin->json));
+$ciTx = (int)$q('SELECT COALESCE(MAX(id), 0) FROM transactions');
+for ($i = 0; $i < 50; $i++) {
+    $ciPost($admin, ['a' => 'save', 'id' => (string)$c58]);
+    if (!empty($admin->json['done']) || $admin->status !== 200) {
+        break;
+    }
+}
+Checks::true('Save: both members saved', ($admin->json['done'] ?? false) === true && ($admin->json['saved'] ?? 0) === 2, substr($admin->body, 0, 300));
+$st58 = DB::all("SELECT m.member_no, p.product_type, t.txn_date, t.credit FROM sav_txns t JOIN sav_accounts a ON a.id = t.account_id JOIN sav_products p ON p.id = a.product_id
+                  JOIN members m ON m.id = a.member_id WHERE m.member_no LIKE 'E58-%' ORDER BY m.member_no, t.credit DESC");
+Checks::eq('the balances entered on their cut-off dates: the member\'s, the row\'s own, the date corrected', [['E58-001', 'time_deposit', $cutA, '20000.00'], ['E58-001', 'share_capital', $cutA, '1000.00'],
+    ['E58-001', 'share_capital', $cutB, '500.00'], ['E58-002', 'share_capital', $cutB, '300.00']], array_map(fn($r) => [$r['member_no'], $r['product_type'], $r['txn_date'], $r['credit']], $st58));
+$tp58 = DB::row("SELECT p.* FROM td_placements p JOIN sav_accounts a ON a.id = p.account_id JOIN members m ON m.id = a.member_id WHERE m.member_no = 'E58-001'");
+Checks::eq('the time deposit placed Active: principal, rate, term, date deposited, maturity date, accrued interest', ['20000.00', '4.5000', 180, $dep, date('Y-m-d', strtotime($dep . ' +180 days')), 'active', '55.25'],
+    [$tp58['principal'] ?? null, $tp58['rate'] ?? null, (int)($tp58['term_days'] ?? 0), $tp58['placement_date'] ?? null, $tp58['maturity_date'] ?? null, $tp58['status'] ?? null, $tp58['accrued_interest'] ?? null]);
+Checks::eq('...its accrued interest booked on the cut-off date', [$cutA, '55.25'], array_values((array)DB::row('SELECT accrual_date, amount FROM td_accruals WHERE placement_id = :p', ['p' => $tp58['id'] ?? 0])));
+Checks::true('...every voucher balanced', !(int)$q('SELECT COUNT(*) FROM (SELECT txn_id FROM journal_lines WHERE txn_id > :t GROUP BY txn_id HAVING ABS(SUM(debit - credit)) >= 0.005) x', ['t' => $ciTx]));
+$admin->get($ci . '&id=' . $c58);
+Checks::true('the page of the file: Saved, with its time deposit, a link to the Time Deposit Center', str_contains($admin->body, '2 member(s), 3 savings account(s), 1 time deposit(s), 0 loan(s) and 0 bill balance(s)')
+    && str_contains($admin->body, 'p=sav.td'));
+$admin->get($ci . '&a=lines&id=' . $c58 . '&kind=td&status=saved');
+Checks::true('...the time deposit line with its certificate', str_starts_with((string)($admin->json['lines'][0]['saved_ref'] ?? ''), 'Time deposit ' . ($tp58['certificate_no'] ?? '?')));
+$admin->get('index.php?p=sav.td');
+Checks::true('the Time Deposit Center lists it', $admin->status === 200 && str_contains($admin->body, (string)($tp58['certificate_no'] ?? '?')));
 Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
 
 // ======================================================================================== period close

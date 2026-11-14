@@ -1,0 +1,51 @@
+G-SMaRT Integrated Cooperative System - version 58 (2026-11-14)
+=================================================================
+
+The requests of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v23.xlsx (docs/ADDITIONAL_MODULE_V23_CHECKLIST.md).
+
+This package holds only the files changed or added since version 57. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is never
+changed. Works on MySQL 5.5 and MySQL 8 as before.
+
+Version 57 must be in place first (its files and database/migrations/2027_05_02_bill_accounts_center.sql).
+
+What to run on the database
+---------------------------
+Nothing. Version 58 adds no table, column or page. Press Ctrl+F5 once in the browser afterwards
+(the script and the style sheet of Consolidated Import changed).
+
+What is new
+-----------
+Members & Others > Consolidated Import: the cut-off date of each row
+- A "Cut-Off Date" column in the file (also read as cut_off_date, Cutoff Date, As of Date) dates
+  the transactions the row brings: the savings balances, the totals paid on the loans, the time
+  deposits' principal and accrued interest, and the bill balances.
+- On the member's row it is the member's cut-off date: it dates every line of the member that has
+  no date of its own, also the accounts on the rows under the member. On a row under the member it
+  dates the lines of that row only.
+- A line's own date column comes first (savings_cut_off_date, loan_cut_off_date,
+  td_cut_off_date, bill_date), the Cut-off date of the page last.
+- The member line shows its cut-off date in the review (corrected there like any cell); each good
+  line says the date it is entered on ("as of 10/31/2026"). A cut-off date that is not a date, or is
+  after today, is in red.
+- The vouchers are one for each cut-off date and code, as before.
+
+Members & Others > Consolidated Import: time deposits
+- The time deposits of the members in the same file, any number a member, on the member's row or
+  on a row under it: td_principal, td_accrued_interest, td_date_deposited, td_term, td_rate and
+  td_maturity_date (headings such as "TD Principal", "Date Deposit", "TD Interest Rate", "Maturity
+  Date" are recognised), and if you have them td_product, td_certificate_no, td_maturity_action,
+  td_cut_off_date and td_txn_code. A second one on the same row: td2_principal ...
+- The term or the maturity date is enough: the other is worked out from the date deposited. The
+  rate, when blank, is the product's rate for the principal and term; the product, when blank, is
+  the time deposit product when there is only one (or write its code or its name).
+- Each time deposit is a line of its own tab, checked as Import Time Deposit checks it (the product,
+  the minimum and maximum placement, the dates, the rate, the certificate no.), in red with its
+  reason and cell when it has a problem, corrected in place or removed.
+- Saved Active with its certificate, rate, term and maturity date; its principal (credited to Time
+  Deposits) and its accrued interest (credited to the accrued interest payable) entered on its
+  cut-off date with the savings transaction code. Saving them needs the Approve right on the Time
+  Deposit Center.
+- The templates (Excel and CSV, both layouts) have the Cut-Off Date in the last column and a time
+  deposit; the Columns sheet of the Excel template explains every column.
+- Import time deposits (Time Deposit Center) has a Consolidated Import button.

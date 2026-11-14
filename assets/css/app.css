@@ -3354,3 +3354,20 @@ table tr.avg-jump td a { color: inherit; text-decoration-color: rgba(180, 35, 24
 
 /* Financial > Chart of Accounts > Import (version 57): the counts under the review */
 .coa-imp-sum { margin: .5rem .25rem 0; }
+
+/* =====================================================================
+   Version 58: Consolidated Import with time deposits (five kinds of lines) and the cut-off date of a row
+   ===================================================================== */
+.ci-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ci-kinds > .ci-kind:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (max-width: 1399.98px) {
+  .ci-tile { padding: .65rem .7rem; gap: .55rem; }
+  .ci-tile-ico { width: 1.9rem; height: 1.9rem; font-size: .95rem; }
+}
+@media (max-width: 1199.98px) {
+  .ci-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 767.98px) {
+  .ci-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ci-tiles > .ci-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}

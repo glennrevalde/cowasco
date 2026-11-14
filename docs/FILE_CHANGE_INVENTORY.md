@@ -9,10 +9,10 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 | Cooperative system, changed | 209 |
 | Water system, unchanged (under water/) | 24 |
 | Water system, adapted (under water/) | 214 |
-| New | 356 |
+| New | 360 |
 | Cooperative files not shipped | 1 |
 | Water files not shipped | 61 |
-| **Shipped in total** | **1466** |
+| **Shipped in total** | **1470** |
 
 ## New files
 
@@ -46,6 +46,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v55.txt`
 - `UPGRADE_v56.txt`
 - `UPGRADE_v57.txt`
+- `UPGRADE_v58.txt`
 - `app/AccountTypes.php`
 - `app/BillAccounts.php`
 - `app/Clearing.php`
@@ -96,6 +97,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/manual/img/coa_account_types__new.jpg`
 - `assets/manual/img/coa_accounts__import.jpg`
 - `assets/manual/img/coop_consolidated_import__main.jpg`
+- `assets/manual/img/coop_consolidated_import__td.jpg`
 - `assets/manual/img/coop_member__water.jpg`
 - `assets/manual/img/coop_members__import.jpg`
 - `assets/manual/img/coop_passbooks__test.jpg`
@@ -211,6 +213,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `docs/ADDITIONAL_MODULE_V20_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V21_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V22_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V23_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V2_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V3_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V4_CHECKLIST.md`
@@ -281,6 +284,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v55.php`
 - `tests/coop/cases_v56.php`
 - `tests/coop/cases_v57.php`
+- `tests/coop/cases_v58.php`
 - `tests/coop/cases_water.php`
 - `tests/platform/provision_test.php`
 - `tests/platform/run.sh`

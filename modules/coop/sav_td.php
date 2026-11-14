@@ -58,7 +58,7 @@ if (g('a') === 'import') {
         'help' => 'The term in days (180), months (6 months) or years (1 year). The rate comes from the product\'s rates for the amount and term, unless the rate column is filled.',
     ];
     $state = CsvReview::handle($cfg);
-    coop_layout('Import time deposits', ['actions' => btn_link(url($pageKey), 'Time Deposit Center', 'btn-outline-secondary', 'arrow-left'), 'js' => ['js/csv_review.js']]);
+    coop_layout('Import time deposits', ['actions' => (Access::can('coop.consolidated_import', 'create') ? btn_link(url('coop.consolidated_import'), 'Consolidated Import', 'btn-outline-primary', 'files') . ' ' : '') . btn_link(url($pageKey), 'Time Deposit Center', 'btn-outline-secondary', 'arrow-left'), 'js' => ['js/csv_review.js']]);
     echo CsvReview::render($cfg, $state);
     layout_end();
     exit;

@@ -2,7 +2,7 @@
  * Members & Others > Consolidated Import (modules/coop/consolidated_import.php).
  *
  * The first page sends the file in pieces (any size the server allows a request), then has it read into the database.
- * The page of a file shows its lines a page at a time, by kind (members, savings, loans, bill balances): a cell is
+ * The page of a file shows its lines a page at a time, by kind (members, savings, time deposits, loans, bill balances): a cell is
  * corrected by typing in it or choosing from its list and the member is checked again at once on the server; a line is
  * removed with its x (a member with its lines) and put back. Checking every line and saving run in short steps, with a
  * progress bar, so a file of thousands of rows never times out; saving goes on where it stopped.
@@ -144,7 +144,7 @@
       const bad = t.querySelector('[data-bad]');
       bad.textContent = !saved && x.bad ? num(x.bad) + ' with a problem' : (!saved && x.unchecked ? num(x.unchecked) + ' to check' : (n ? (saved ? 'Saved' : 'No problem') : 'None in the file'));
       bad.className = 'ci-tile-sub' + (!saved && x.bad ? ' is-bad' : (!saved && x.unchecked ? ' is-wait' : (n && !saved ? ' is-ok' : '')));
-      t.querySelector('[data-total]').textContent = k !== 'member' && !saved && x.lines ? (k === 'loan' ? 'Principal ' : 'Balances ') + fmt(x.total) : '';
+      t.querySelector('[data-total]').textContent = k !== 'member' && !saved && x.lines ? (k === 'loan' || k === 'td' ? 'Principal ' : 'Balances ') + fmt(x.total) : '';
       t.classList.toggle('is-bad', !saved && x.bad > 0);
       t.classList.toggle('is-on', k === st.kind);
       t.setAttribute('aria-pressed', k === st.kind ? 'true' : 'false');
@@ -168,7 +168,7 @@
       msg.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> ' + (s.bad ? num(s.bad) + ' line(s) have a problem (in red): correct them or remove them.' : 'See the problem above the lines.') + ' Nothing is saved until every line is good.</span>';
     } else if (s.pending) {
       msg.innerHTML = '<span class="text-success"><i class="bi bi-check2-circle"></i> Every line is good: ' + num(s.kinds.member.lines) + ' member(s), ' + num(s.kinds.savings.lines) + ' savings account(s), '
-        + num(s.kinds.loan.lines) + ' loan(s), ' + num(s.kinds.bill.lines) + ' bill balance(s).</span>';
+        + num(s.kinds.td.lines) + ' time deposit(s), ' + num(s.kinds.loan.lines) + ' loan(s), ' + num(s.kinds.bill.lines) + ' bill balance(s).</span>';
     } else {
       msg.innerHTML = '<span class="text-muted">No line left to save.</span>';
     }
@@ -234,7 +234,7 @@
     h += '<td class="csvr-act">';
     if (more.length) h += '<button type="button" class="csvr-btn' + (openMore ? ' is-on' : '') + '" data-ci-more aria-expanded="' + (openMore ? 'true' : 'false') + '" title="The other columns of the line"><i class="bi bi-three-dots"></i></button>';
     if (cfg.editable && l.status === 'pending') {
-      h += '<button type="button" class="csvr-btn is-danger" data-ci-remove title="' + (st.kind === 'member' ? 'Remove the member with its savings, loans and bill balances' : 'Remove this line from the import') + '" aria-label="Remove line ' + l.line + '"><i class="bi bi-x-lg"></i></button>';
+      h += '<button type="button" class="csvr-btn is-danger" data-ci-remove title="' + (st.kind === 'member' ? 'Remove the member with its savings, time deposits, loans and bill balances' : 'Remove this line from the import') + '" aria-label="Remove line ' + l.line + '"><i class="bi bi-x-lg"></i></button>';
     } else if (cfg.editable && l.status === 'removed') {
       h += '<button type="button" class="btn btn-sm btn-outline-primary" data-ci-restore><i class="bi bi-arrow-counterclockwise"></i> Put back</button>';
     }
@@ -409,7 +409,7 @@
   function saveAll() {
     if (st.busy) return;
     const k = summary.kinds;
-    ask('Save the file to the database? ' + num(k.member.lines) + ' member(s) with ' + num(k.savings.lines) + ' savings account(s), ' + num(k.loan.lines) + ' loan(s) and '
+    ask('Save the file to the database? ' + num(k.member.lines) + ' member(s) with ' + num(k.savings.lines) + ' savings account(s), ' + num(k.td.lines) + ' time deposit(s), ' + num(k.loan.lines) + ' loan(s) and '
       + num(k.bill.lines) + ' bill balance(s) are saved, a few members at a time, each line checked again first. Keep this page open until it ends: if it stops, saving goes on from where it stopped.', 'Save')
       .then((yes) => {
         if (!yes) return;
