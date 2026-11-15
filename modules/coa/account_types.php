@@ -4,7 +4,8 @@ declare(strict_types=1);
 /**
  * Chart of Accounts > Account Types: the fifteen built-in types and the user's own (Cash, Loans Receivable ...). A type
  * of the user's behaves as one built-in type (what the modules do with its accounts), is a classification of its own on
- * the Balance Sheet and the Income Statement, and is linked to a section of the Statement of Cash Flows.
+ * the Balance Sheet and the Income Statement, and is linked to a section of the Statement of Cash Flows. The name of a
+ * built-in type can be changed (version 59): what it is does not.
  */
 $pageKey = 'coa.account_types';
 $a = (string)g('a');
@@ -109,16 +110,18 @@ if ($a === 'new' || $a === 'edit') {
           <div class="card-body row g-3">
             <?= csrf_field() ?><input type="hidden" name="action" value="save">
             <div class="col-md-6"><label class="form-label" for="atName">Name</label>
-              <input class="form-control form-control-sm" id="atName" name="name" maxlength="60" value="<?= h((string)fv('name', $rec)) ?>" <?= $isSystem ? 'readonly' : 'required autofocus' ?> placeholder="Loans Receivable">
-              <?php if ($isSystem): ?><div class="form-text">A built-in type keeps its name and what it is.</div><?php endif; ?></div>
+              <input class="form-control form-control-sm" id="atName" name="name" maxlength="60" value="<?= h((string)fv('name', $rec)) ?>" required<?= $isSystem ? '' : ' autofocus' ?> placeholder="<?= $isSystem ? h($rec['base_type']) : 'Loans Receivable' ?>">
+              <?php if ($isSystem): ?><div class="form-text">Shown on the Chart of Accounts, the financial statements and wherever an account type is chosen. Write it in your own words; what the type is does not change.</div>
+                <button type="button" class="btn btn-link btn-sm acty-orig" data-acty-orig="<?= h($rec['base_type']) ?>"<?= (string)fv('name', $rec) === (string)$rec['base_type'] ? ' hidden' : '' ?>><i class="bi bi-arrow-counterclockwise"></i> Use the original name (<?= h($rec['base_type']) ?>)</button><?php endif; ?></div>
             <div class="col-md-6"><label class="form-label" for="atBase">Behaves as</label>
               <?php if ($baseLocked): ?>
-                <input type="hidden" name="base_type" value="<?= h($base) ?>"><input class="form-control form-control-sm" id="atBase" value="<?= h($base) ?>" readonly data-base="<?= h($base) ?>">
-                <?php if (!$isSystem): ?><div class="form-text"><?= $inUse ?> account(s) are of this type: move them to another type to change it.</div><?php endif; ?>
+                <input type="hidden" name="base_type" value="<?= h($base) ?>"><input class="form-control form-control-sm" id="atBase" value="<?= h($isSystem ? $base : AccountTypes::label($base)) ?>" readonly data-base="<?= h($base) ?>">
+                <?php if ($isSystem): ?><div class="form-text">The built-in type it is, which the program goes by. It does not change.</div>
+                <?php else: ?><div class="form-text"><?= $inUse ?> account(s) are of this type: move them to another type to change it.</div><?php endif; ?>
               <?php else: ?>
                 <select class="form-select form-select-sm" id="atBase" name="base_type" required data-no-combo>
                   <?php foreach (AccountTypes::CATEGORIES as $cat => $catLabel): ?><optgroup label="<?= h($catLabel) ?>">
-                    <?php foreach (AccountTypes::BASE as $b => $info): if ($info[0] !== $cat) { continue; } ?><option value="<?= h($b) ?>"<?= $b === $base ? ' selected' : '' ?>><?= h($b) ?></option><?php endforeach; ?>
+                    <?php foreach (AccountTypes::BASE as $b => $info): if ($info[0] !== $cat) { continue; } ?><option value="<?= h($b) ?>"<?= $b === $base ? ' selected' : '' ?>><?= h(AccountTypes::label($b)) ?></option><?php endforeach; ?>
                   </optgroup><?php endforeach; ?>
                 </select>
               <?php endif; ?></div>
@@ -179,7 +182,7 @@ if ($a === 'new' || $a === 'edit') {
           <div class="acty-list acty-pick">
             <?php foreach ($others as $acc): $isSub = (int)$acc['_main']['id'] !== (int)$acc['id']; ?>
               <label class="acty-item<?= $isSub ? ' is-sub' : '' ?>" data-text="<?= h(strtolower($acc['code'] . ' ' . $acc['name'])) ?>"><input class="form-check-input" type="checkbox" name="accounts[]" value="<?= (int)$acc['id'] ?>" data-main="<?= (int)$acc['_main']['id'] ?>" data-id="<?= (int)$acc['id'] ?>">
-                <span><strong><?= h($acc['code']) ?></strong> <?= h($acc['name']) ?><span class="d-block small text-muted"><?= h($acc['_type']) ?><?= $acc['account_type'] !== $type['base_type'] ? ', will behave as ' . h($type['base_type']) : '' ?></span></span></label>
+                <span><strong><?= h($acc['code']) ?></strong> <?= h($acc['name']) ?><span class="d-block small text-muted"><?= h($acc['_type']) ?><?= $acc['account_type'] !== $type['base_type'] ? ', will behave as ' . h(AccountTypes::label($type['base_type'])) : '' ?></span></span></label>
             <?php endforeach; ?>
           </div>
           <div class="card-body pt-2"><button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Give them the type <?= h($type['name']) ?></button>
@@ -193,6 +196,11 @@ if ($a === 'new' || $a === 'edit') {
     (function () {
       const bases = <?= json_encode(array_map(fn($b) => ['cat' => $b[0], 'group' => $b[2], 'flow' => $b[3]], AccountTypes::BASE), JSON_UNESCAPED_UNICODE) ?>;
       const notes = <?= json_encode(AccountTypes::BASE_NOTE, JSON_UNESCAPED_UNICODE) ?>;
+      // the names the built-in types are shown by (a built-in type's own page says what it is by its original name)
+      const labels = <?= json_encode($isSystem ? (object)[] : array_combine(array_keys(AccountTypes::BASE), array_map([AccountTypes::class, 'label'], array_keys(AccountTypes::BASE))), JSON_UNESCAPED_UNICODE) ?>;
+      const lbl = (k) => labels[k] || k;
+      // a built-in type alone in its part of the statements (Fixed Assets, Income ...): the part takes its name when renamed
+      const alone = <?= $isSystem && AccountTypes::alone($rec) ? json_encode((string)$rec['base_type']) : 'null' ?>;
       const cats = <?= json_encode(AccountTypes::CATEGORIES) ?>;
       const flows = <?= json_encode(AccountTypes::CASH_FLOW) ?>;
       const base = document.getElementById('atBase'), name = document.getElementById('atName');
@@ -208,20 +216,30 @@ if ($a === 'new' || $a === 'edit') {
         if (bs && (fresh || !box.querySelector('input:checked'))) {
           const d = box.querySelector('input[value="' + b.flow + '"]'); if (d) d.checked = true;
         }
-        note.textContent = 'The program treats its accounts as ' + baseOf() + ' accounts: ' + (notes[baseOf()] || '') + '.';
+        note.textContent = 'The program treats its accounts as ' + lbl(baseOf()) + ' accounts: ' + (notes[baseOf()] || '') + '.';
         const nm = (name.value || '').trim() || 'this type';
         const f = box.querySelector('input:checked');
         where.innerHTML = '';
         const i = document.createElement('i'); i.className = 'bi bi-diagram-3';
         const t = document.createElement('div');
+        // where the accounts are: under a heading of the type in its group; a built-in type alone in its part is the part
+        // (named after the type when renamed)
+        const grp = bs ? cats[b.cat] + (b.group !== cats[b.cat] ? ' > ' + b.group : '') : b.group;
+        const top = bs ? cats[b.cat] + ' > ' : '';
+        const part = alone === null ? grp + ' > ' + nm + ' (its accounts and a total)'
+          : (nm !== alone ? top + nm + ' (in place of ' + b.group + ': its accounts and a total)' : grp + ' (its accounts and a total)');
         t.textContent = bs
-          ? 'Balance Sheet: ' + cats[b.cat] + (b.group !== cats[b.cat] ? ' > ' + b.group : '') + ' > ' + nm + ' (its accounts and a total).  Statement of Cash Flows: ' + (f ? flows[f.value] : '') + '.'
-          : 'Income Statement: ' + b.group + ' > ' + nm + ' (its accounts and a total).  Statement of Cash Flows: part of the net income.';
+          ? 'Balance Sheet: ' + part + '.  Statement of Cash Flows: ' + (f ? flows[f.value] : '') + '.'
+          : 'Income Statement: ' + part + '.  Statement of Cash Flows: part of the net income.';
         where.append(i, t);
       };
       if (base && base.tagName === 'SELECT') base.addEventListener('change', () => sync(true));
       box.addEventListener('change', () => sync(false));
-      if (name) name.addEventListener('input', () => sync(false));
+      // a built-in type: back to its original name
+      const orig = document.querySelector('[data-acty-orig]');
+      const origShow = () => { if (orig) orig.hidden = name.value.trim() === orig.dataset.actyOrig; };
+      if (orig) orig.addEventListener('click', () => { name.value = orig.dataset.actyOrig; origShow(); sync(false); name.focus(); });
+      if (name) name.addEventListener('input', () => { origShow(); sync(false); });
       sync(false);
       // the accounts to give the type: a filter, and a main account brings its sub-accounts
       const find = document.querySelector('[data-acty-find]');
@@ -255,7 +273,7 @@ foreach ($all as $t) {
 layout_start('Account Types', ['actions' => ($canChange ? page_link($pageKey, ['a' => 'new'], 'New account type', 'btn-primary', 'plus-lg', 'create') : '')
     . ' ' . page_link('coa.accounts', [], 'Chart of Accounts', 'btn-outline-secondary', 'journal-bookmark')]);
 ?>
-<p class="acty-intro">Every account type is a classification of its own on the Balance Sheet and the Income Statement (a heading, its accounts and a total), and is linked to a section of the Statement of Cash Flows. A type of your own, such as Cash or Loans Receivable, behaves as one of the built-in types.</p>
+<p class="acty-intro">Every account type is a classification of its own on the Balance Sheet and the Income Statement (a heading, its accounts and a total), and is linked to a section of the Statement of Cash Flows. A type of your own, such as Cash or Loans Receivable, behaves as one of the built-in types. The name of a built-in type can be changed too; what it is stays.</p>
 <div class="row g-3">
   <div class="col-xl-8">
     <?php foreach (AccountTypes::CATEGORIES as $cat => $catLabel): if (empty($byCat[$cat])) { continue; } ?>
@@ -267,11 +285,11 @@ layout_start('Account Types', ['actions' => ($canChange ? page_link($pageKey, ['
           <tr class="<?= (int)$t['is_active'] ? '' : 'text-muted' ?>">
             <td data-label="Type"><strong><?= h($t['name']) ?></strong><?= (int)$t['is_system'] === 1 ? ' <span class="acty-sys">built-in</span>' : '' ?><?= (int)$t['is_active'] ? '' : ' <span class="acty-sys">inactive</span>' ?>
               <?= $t['description'] ? '<div class="small text-muted">' . h((string)$t['description']) . '</div>' : '' ?></td>
-            <td data-label="Behaves as" class="small"><?= (int)$t['is_system'] === 1 ? '<span class="text-muted">itself</span>' : h($t['base_type']) ?></td>
-            <td data-label="Shown under" class="small"><?= h($t['group']) ?></td>
+            <td data-label="Behaves as" class="small"><?= (int)$t['is_system'] === 1 ? '<span class="text-muted">itself</span>' . (AccountTypes::renamed($t) ? '<div class="text-muted">originally ' . h($t['base_type']) . '</div>' : '') : h(AccountTypes::label($t['base_type'])) ?></td>
+            <td data-label="Shown under" class="small"><?= h(AccountTypes::partName($t)) ?><?= AccountTypes::partName($t) !== $t['group'] ? '<div class="text-muted">in place of ' . h($t['group']) . '</div>' : '' ?></td>
             <td data-label="Cash flow" class="small"><?= $t['cash_flow'] !== '' ? h($flowWords[$t['cash_flow']]) : '<span class="text-muted">Net income</span>' ?></td>
             <td data-label="Accounts" class="num"><?= (int)($usage[$tid] ?? 0) ?></td>
-            <td class="text-nowrap small text-end"><?= $canChange && Access::can($pageKey, 'edit') && $tid > 0 ? '<a href="' . h(url($pageKey, ['a' => 'edit', 'id' => $tid])) . '">' . ((int)$t['is_system'] === 1 ? 'Open' : 'Edit') . '</a>' : '' ?></td>
+            <td class="text-nowrap small text-end"><?= $canChange && Access::can($pageKey, 'edit') && $tid > 0 ? '<a href="' . h(url($pageKey, ['a' => 'edit', 'id' => $tid])) . '">Edit</a>' : '' ?></td>
           </tr>
         <?php endforeach; ?>
         </tbody>
@@ -296,6 +314,7 @@ layout_start('Account Types', ['actions' => ($canChange ? page_link($pageKey, ['
           <li>Give it its accounts: tick them under <strong>Give accounts this type</strong>, or choose the type on an account.</li>
           <li>The Balance Sheet, the Income Statement, their summaries and the Statement of Cash Flows show it as a classification of its own.</li>
         </ol>
+        <p class="acty-rename"><strong>Renaming a built-in type.</strong> Click <strong>Edit</strong> on it, write the new name (for example Property and Equipment for Fixed Asset) and save. The Chart of Accounts, the financial statements and the type pickers show the new name; its accounts, their entries and what the type does stay as they are.</p>
       </div></div>
   </div>
 </div>

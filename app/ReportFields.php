@@ -311,7 +311,7 @@ final class ReportFields
             case 'account':
                 $rows = DB::all("SELECT a.*, pa.name AS parent_name, pa.code AS parent_code FROM accounts a LEFT JOIN accounts pa ON pa.id = a.parent_id WHERE a.id IN $in", $p);
                 foreach ($rows as $a) {
-                    $out[(int)$a['id']] = ['code' => $a['code'], 'name' => $a['name'], 'type' => ucwords(str_replace('_', ' ', (string)$a['account_type'])),
+                    $out[(int)$a['id']] = ['code' => $a['code'], 'name' => $a['name'], 'type' => AccountTypes::label((string)$a['account_type']),
                         'category' => ucwords(str_replace('_', ' ', (string)$a['category'])), 'parent' => $a['parent_name'] ? trim($a['parent_code'] . ' ' . $a['parent_name']) : '',
                         'desc' => self::oneLine($a['description']), 'bank_no' => $a['bank_account_no']];
                 }

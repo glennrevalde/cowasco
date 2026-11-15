@@ -47,7 +47,7 @@ function v36Id(string $code): int
     return (int)DB::value('SELECT id FROM accounts WHERE code = :c', ['c' => $code]);
 }
 
-test('Account types: the fifteen built-in ones, types of your own behaving as one and linked to the Statement of Cash Flows; unique names; a built-in type keeps its name and what it is', function () {
+test('Account types: the fifteen built-in ones, types of your own behaving as one and linked to the Statement of Cash Flows; unique names; a built-in type keeps what it is', function () {
     Auth::actAs($GLOBALS['adminId']);
     AccountTypes::reset();
     $sys = array_filter(AccountTypes::all(), fn($t) => (int)$t['is_system'] === 1);
@@ -68,11 +68,12 @@ test('Account types: the fifteen built-in ones, types of your own behaving as on
     $loans = AccountTypes::save(['name' => 'Loans Receivable', 'base_type' => 'Other Current Asset', 'cash_flow' => 'operating', 'sort_order' => 5], null, 'coa.account_types');
     eq(array_slice(array_values(array_map(fn($x) => $x['name'], array_filter(AccountTypes::all(), fn($x) => $x['category'] === 'Asset'))), 0, 4),
         ['Cash', 'Bank', 'Accounts Receivable', 'Loans Receivable'], 'the order of the statements: by built-in type, then the order given');
-    // a built-in type: its cash flow section and order change, its name and base type stay
+    // a built-in type: its cash flow section and order change, its base type stays (its name can be changed since
+    // version 59: tests/coop/cases_v59.php)
     $bank = (int)AccountTypes::system('Bank')['id'];
-    AccountTypes::save(['name' => 'Banks', 'base_type' => 'Expense', 'cash_flow' => 'operating', 'sort_order' => 10, 'is_active' => 0], $bank, 'coa.account_types');
+    AccountTypes::save(['base_type' => 'Expense', 'cash_flow' => 'operating', 'sort_order' => 10, 'is_active' => 0], $bank, 'coa.account_types');
     $b = AccountTypes::get($bank);
-    eq([$b['name'], $b['base_type'], $b['cash_flow'], (int)$b['is_active']], ['Bank', 'Bank', 'operating', 1], 'a built-in type keeps its name, what it is and stays active');
+    eq([$b['name'], $b['base_type'], $b['cash_flow'], (int)$b['is_active']], ['Bank', 'Bank', 'operating', 1], 'a built-in type keeps what it is and stays active (its name, not given, stays)');
     AccountTypes::save(['cash_flow' => 'cash', 'sort_order' => 10], $bank, 'coa.account_types');
     refuses(fn() => AccountTypes::delete($bank, 'coa.account_types'), 'built-in', 'a built-in type cannot be deleted');
     $tmp = AccountTypes::save(['name' => 'Spare', 'base_type' => 'Other Asset', 'cash_flow' => 'investing'], null, 'coa.account_types');

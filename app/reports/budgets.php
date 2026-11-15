@@ -66,7 +66,7 @@ Report::define('trial_balance_range', [
                 continue;
             }
             $rows[] = [
-                'account' => $a['code'] . ' - ' . $a['name'], 'type' => $a['account_type'],
+                'account' => $a['code'] . ' - ' . $a['name'], 'type' => AccountTypes::label((string)$a['account_type']),
                 'debit' => $net > 0 ? $net : '', 'credit' => $net < 0 ? r2(-$net) : '',
                 '_links' => ['account' => Report::link('rpt.general_ledger', ['account_id' => $a['id'], 'from' => $f['from'], 'to' => $f['to'], 'dates' => 'custom', 'class_id' => $cls])],
             ];
@@ -106,7 +106,7 @@ Report::define('trial_balance_totals', [
                 continue;
             }
             $rows[] = [
-                'account' => $a['code'] . ' - ' . $a['name'], 'type' => $a['account_type'],
+                'account' => $a['code'] . ' - ' . $a['name'], 'type' => AccountTypes::label((string)$a['account_type']),
                 'debit' => r2($m['dr']), 'credit' => r2($m['cr']), 'net' => r2($m['dr'] - $m['cr']),
                 '_links' => ['account' => Report::link('rpt.general_ledger', ['account_id' => $a['id'], 'from' => $f['from'], 'to' => $f['to'], 'dates' => 'custom', 'class_id' => $cls])],
             ];

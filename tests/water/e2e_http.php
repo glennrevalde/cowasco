@@ -1855,6 +1855,50 @@ $admin->get('index.php?p=sav.td');
 Checks::true('the Time Deposit Center lists it', $admin->status === 200 && str_contains($admin->body, (string)($tp58['certificate_no'] ?? '?')));
 Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
 
+// ======================================================================================== v59
+Checks::section('v59 Account Types: the name of a built-in type can be changed');
+$at59 = 'index.php?p=coa.account_types';
+$fa59 = $row("SELECT * FROM account_types WHERE is_system = 1 AND base_type = 'Fixed Asset'");
+$faId59 = (int)($fa59['id'] ?? 0);
+$plain59 = fn() => html_entity_decode(strip_tags($admin->body), ENT_QUOTES);
+$admin->get($at59 . '&a=edit&id=' . $faId59);
+$nameIn59 = preg_match('/<input[^>]*id="atName"[^>]*>/', $admin->body, $m59) ? $m59[0] : '';
+$baseIn59 = preg_match('/<input[^>]*id="atBase"[^>]*>/', $admin->body, $m59) ? $m59[0] : '';
+Checks::true('the page of the built-in type Fixed Asset: its Name can be written in (not read-only), Behaves as stays Fixed Asset (read-only)',
+    $admin->status === 200 && $nameIn59 !== '' && !str_contains($nameIn59, 'readonly') && str_contains($nameIn59, 'value="Fixed Asset"') && str_contains($nameIn59, 'required')
+    && str_contains($baseIn59, 'readonly') && str_contains($baseIn59, 'value="Fixed Asset"') && !str_contains($admin->body, 'A built-in type keeps its name')
+    && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body), $nameIn59);
+Checks::true('...the "Use the original name" button is hidden while the name is the original one', (bool)preg_match('/data-acty-orig="Fixed Asset"[^>]*hidden/', $admin->body));
+$form59 = ['_csrf' => $admin->csrf(), 'action' => 'save', 'name' => 'Property and Equipment', 'base_type' => 'Expense', 'cash_flow' => (string)$fa59['cash_flow'],
+    'sort_order' => (string)$fa59['sort_order'], 'description' => (string)$fa59['description']];
+$admin->post($at59 . '&a=edit&id=' . $faId59, $form59);
+$fa59b = $row('SELECT * FROM account_types WHERE id = :id', ['id' => $faId59]);
+Checks::eq('saved from the page: the new name; it still behaves as Fixed Asset, built-in, active', ['Property and Equipment', 'Fixed Asset', 1, 1],
+    [$fa59b['name'], $fa59b['base_type'], (int)$fa59b['is_system'], (int)$fa59b['is_active']]);
+Checks::true('...the page says so, under its new name, with the button back to the original name',
+    str_contains($admin->body, 'Account type saved.') && str_contains($admin->body, 'Account type: Property and Equipment') && (bool)preg_match('/data-acty-orig="Fixed Asset"(?![^>]*hidden)[^>]*>/', $admin->body));
+Checks::true('...in the audit trail with the old name and the new one', (bool)$q("SELECT COUNT(*) FROM audit_trail WHERE record_type = 'account_type' AND record_id = :t AND action = 'edit'
+    AND changes LIKE '%Fixed Asset%' AND changes LIKE '%Property and Equipment%'", ['t' => $faId59]));
+$admin->get($at59);
+Checks::true('Account Types lists it by its new name, built-in, behaving as itself, originally Fixed Asset', str_contains($plain59(), 'Property and Equipment built-in') && str_contains($plain59(), 'originally Fixed Asset'));
+$admin->get('index.php?p=coa.accounts');
+Checks::true('the Chart of Accounts shows its accounts as Property and Equipment', str_contains($admin->body, 'data-label="Type" class="small">Property and Equipment'));
+$admin->get('index.php?p=coa.accounts&a=new');
+Checks::true('the account form offers it by its new name', str_contains($admin->body, '>Property and Equipment</option>') && !str_contains($admin->body, '>Fixed Asset</option>'));
+$fa59n = (int)$q("SELECT COUNT(*) FROM accounts a JOIN journal_lines j ON j.account_id = a.id WHERE a.account_type = 'Fixed Asset' AND j.txn_date <= :d", ['d' => $today]);
+$admin->get('index.php?p=rpt.balance_sheet&asof=' . $today);
+Checks::true('the Balance Sheet: its part is Property and Equipment' . ($fa59n ? '' : ' (no fixed asset entry: not shown)'), $admin->status === 200
+    && ($fa59n === 0 || (str_contains($plain59(), 'Total Property and Equipment') && !str_contains($plain59(), 'Total Fixed Assets'))) && !preg_match('/(Fatal error|Warning:|Notice:|SQLSTATE)/', $admin->body));
+// another type cannot take the original name
+$admin->post($at59 . '&a=new', ['_csrf' => $admin->csrf(), 'action' => 'save', 'name' => 'Fixed Asset', 'base_type' => 'Fixed Asset', 'cash_flow' => 'investing', 'sort_order' => '0', 'description' => '', 'is_active' => '1']);
+Checks::true('a type of your own named Fixed Asset is refused with the reason', str_contains($plain59(), 'original name of the built-in type now named Property and Equipment')
+    && !(int)$q("SELECT COUNT(*) FROM account_types WHERE is_system = 0 AND name = 'Fixed Asset'"));
+// back to the original name
+$admin->post($at59 . '&a=edit&id=' . $faId59, ['name' => 'Fixed Asset'] + $form59);
+Checks::eq('back to its original name from the page', 'Fixed Asset', (string)$q('SELECT name FROM account_types WHERE id = :id', ['id' => $faId59]));
+$admin->get($at59);
+Checks::true('...Account Types lists it as before', str_contains($plain59(), 'Fixed Asset built-in') && !str_contains($plain59(), 'originally Fixed Asset'));
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

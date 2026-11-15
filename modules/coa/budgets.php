@@ -128,7 +128,7 @@ if ($a === 'edit') {
         <tbody>
         <?php $lastType = null; foreach ($accounts as $ac): ?>
           <?php if ($ac['account_type'] !== $lastType): $lastType = $ac['account_type']; ?>
-            <tr class="table-light"><td colspan="14" class="fw-semibold small"><?= h($ac['account_type']) ?></td></tr>
+            <tr class="table-light"><td colspan="14" class="fw-semibold small"><?= h(AccountTypes::label((string)$ac['account_type'])) ?></td></tr>
           <?php endif; ?>
           <tr data-row><td class="small"><?= h($ac['code'] . ' - ' . $ac['name']) ?></td>
             <?php $rowTotal = 0.0; foreach ($periods as $p): $v = $lines[(int)$ac['id']][$custId][$p['key']] ?? null; $rowTotal += (float)$v; ?>

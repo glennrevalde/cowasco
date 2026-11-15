@@ -315,7 +315,7 @@
 </tr>
 <tr>
 <td><strong>type</strong></td>
-<td>The account type (required), as <a href="#pg-coa-account_types">Account Types</a> lists it: Bank, Accounts Receivable, Other Current Asset, Fixed Asset, Accounts Payable, Equity, Income, Expense ... or a type of your own. The usual other words are read too (Current Asset, Revenue, Cost of Sales, Capital ...), and the review says how each was read.</td>
+<td>The account type (required), as <a href="#pg-coa-account_types">Account Types</a> lists it: Bank, Accounts Receivable, Other Current Asset, Fixed Asset, Accounts Payable, Equity, Income, Expense ... or a type of your own. A built-in type you renamed is read by its new name and by its original one. The usual other words are read too (Current Asset, Revenue, Cost of Sales, Capital ...), and the review says how each was read.</td>
 </tr>
 <tr>
 <td>parent</td>
@@ -372,15 +372,15 @@
 <tbody>
 <tr>
 <td>Type</td>
-<td>The name of the type and its description. The fifteen built-in types carry the word <strong>built-in</strong> in grey; a type you made inactive carries <strong>inactive</strong>.</td>
+<td>The name of the type and its description. The fifteen built-in types carry the word <strong>built-in</strong> in grey; a type you made inactive carries <strong>inactive</strong>. A built-in type you renamed is listed by its new name.</td>
 </tr>
 <tr>
 <td>Behaves as</td>
-<td>The built-in type it behaves as (<strong>itself</strong> for a built-in type).</td>
+<td>The built-in type it behaves as (<strong>itself</strong> for a built-in type). A built-in type you renamed also shows its original name, for example <strong>originally Fixed Asset</strong>; a type of yours shows the built-in type by its new name.</td>
 </tr>
 <tr>
 <td>Shown under</td>
-<td>The group of the statement its heading is shown in, for example Current Assets.</td>
+<td>The group of the statement its heading is shown in, for example Current Assets. A built-in type you renamed that is the only type of its group is shown in place of the group, under its new name: <strong>Property and Equipment</strong>, with <strong>in place of Fixed Assets</strong> under it.</td>
 </tr>
 <tr>
 <td>Cash flow section</td>
@@ -391,8 +391,8 @@
 <td>How many accounts are of the type.</td>
 </tr>
 <tr>
-<td>Open / Edit</td>
-<td>Opens the type: <strong>Open</strong> for a built-in type, <strong>Edit</strong> for one of yours.</td>
+<td>Edit</td>
+<td>Opens the type, built-in or yours.</td>
 </tr>
 </tbody>
 </table></div>
@@ -409,11 +409,11 @@
 <tbody>
 <tr>
 <td>Name</td>
-<td>Up to 60 characters, for example <strong>Loans Receivable</strong>. Two types cannot have the same name. A built-in type keeps its name.</td>
+<td>Up to 60 characters, for example <strong>Loans Receivable</strong>. Two types cannot have the same name. The name of a built-in type can be changed too, to the words you use (<strong>Property and Equipment</strong> for Fixed Asset, <strong>Revenue</strong> for Income): see <a href="#s-acty-rename">Renaming a built-in type</a>.</td>
 </tr>
 <tr>
 <td>Behaves as</td>
-<td>The built-in type the accounts of this type behave as. The line under it says what the program does with them. It cannot be changed on a built-in type, or on a type that accounts use: move the accounts to another type first.</td>
+<td>The built-in type the accounts of this type behave as. The line under it says what the program does with them. It cannot be changed on a built-in type, or on a type that accounts use: move the accounts to another type first. On a built-in type it shows the built-in type by its original name (Fixed Asset), whatever its name now.</td>
 </tr>
 <tr>
 <td>On the Statement of Cash Flows</td>
@@ -462,23 +462,42 @@
 <p><strong>To move accounts to another type:</strong> open the type they are of, tick them under <strong>Accounts of this type</strong>, choose the other type in <strong>Move the ticked accounts to</strong> and click <strong>Move</strong>. Only types of the same category are offered.</p>
 <p><strong>To change a type:</strong> open it, change what you need and click <strong>Save account type</strong>. The statements follow at once; no entry changes.</p>
 <p><strong>To delete a type:</strong> open a type of yours that no account uses and click <strong>Delete this type</strong>, then confirm. A type with accounts must give them to another type first.</p>
+<h4 id="s-acty-rename">Renaming a built-in type<a class="man-hash" href="#s-acty-rename" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>The fifteen built-in types are named as the program names them: Bank, Fixed Asset, Income, Expense and so on. You can give any of them the name your cooperative uses on its statements. Only the name changes: what the type is (its <strong>Behaves as</strong>), its accounts, their entries and what the modules do with them stay as they are.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/coa_account_types__rename.jpg" title="Click to enlarge"><img src="assets/manual/img/coa_account_types__rename.jpg" alt="The built-in type Fixed Asset being renamed Property and Equipment: it still behaves as Fixed Asset" width="1094" height="880" loading="lazy" decoding="async"></a><figcaption>The built-in type Fixed Asset being renamed Property and Equipment: it still behaves as Fixed Asset</figcaption></figure>
+<p><strong>To rename a built-in type, for example Fixed Asset to Property and Equipment:</strong></p>
+<ol>
+<li>Open <strong>Financial &gt; Account Types</strong> and click <strong>Edit</strong> on the line of <strong>Fixed Asset</strong>.</li>
+<li>In <strong>Name</strong>, type <strong>Property and Equipment</strong>. The box at the bottom of the form shows where the type will be: "Balance Sheet: Assets &gt; Property and Equipment (in place of Fixed Assets: its accounts and a total)".</li>
+<li>Click <strong>Save account type</strong>. The message "Account type saved." appears and the page is headed <strong>Account type: Property and Equipment</strong>.</li>
+</ol>
+<p><strong>To go back to the original name:</strong> open the type, click <strong>Use the original name (Fixed Asset)</strong> under the Name (it shows only while the name is another one) and click <strong>Save account type</strong>.</p>
+<p>From then on the new name is shown:</p>
+<ul>
+<li>on <strong>Account Types</strong> and on the <a href="#pg-coa-accounts">Chart of Accounts</a> (its accounts are of the type Property and Equipment, also in the export);</li>
+<li>wherever a type is chosen: the account form, <strong>Behaves as</strong> on a new type of yours (a type of yours is listed as "Loans Receivable (Other Current Assets)" when Other Current Asset was renamed), <strong>Move the ticked accounts to</strong>;</li>
+<li>on the financial statements (see <a href="#s-acty-statements">How the statements show the types</a>), the Trial Balance by date range, the budgets and the messages that name a type.</li>
+</ul>
+<p>The original name stays the built-in type's own: no other type can be named Fixed Asset, and a file to import (Chart of Accounts &gt; Import, Import Data) that says Fixed Asset still means the type, as does its new name.</p>
 <h4 id="s-acty-statements">How the statements show the types<a class="man-hash" href="#s-acty-statements" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <ul>
-<li><strong>Balance Sheet and Income Statement:</strong> inside the group of its built-in type (Current Assets, Fixed Assets, Expenses ...), every type has a heading with its name, its accounts and the line <strong>Total</strong> and the type's name. Where a group holds only one built-in type and none of yours, the group's own heading is enough and the type heading is left out, for example Fixed Assets.</li>
+<li><strong>Balance Sheet and Income Statement:</strong> inside the group of its built-in type (Current Assets, Fixed Assets, Expenses ...), every type has a heading with its name, its accounts and the line <strong>Total</strong> and the type's name. Where a group holds only one built-in type and none of yours, the group's own heading is enough and the type heading is left out, for example Fixed Assets. When you renamed that built-in type, the group takes its new name: <strong>Property and Equipment</strong> and <strong>Total Property and Equipment</strong> in place of Fixed Assets, <strong>Revenue</strong> in place of Income. A renamed built-in type in a group with other types (Bank renamed Cash in Banks, under Current Assets) has its heading and total under its new name. The totals do not change.</li>
 <li><strong>Main accounts and sub-accounts:</strong> a sub-account is shown under its main account, in the classification of the main account's type. On the Balance Sheet and the Income Statement a main account with sub-accounts is a heading followed by its sub-accounts, a line for its own entries when it has any, and its total. The <a href="#pg-rpt-balance_sheet_summary">Balance Sheet Summary</a> and the <a href="#pg-rpt-income_statement_summary">Income Statement Summary</a> show the main accounts only, each with its total.</li>
 <li><strong>Statement of Cash Flows:</strong> the accounts of the types in <strong>Cash and cash equivalents</strong> give the cash at the beginning and at the end of the period. The change in every other balance sheet account is shown in the section of its type, under the type's heading with the line <strong>Net change in</strong> and the type's name. Each account is counted once, so the cash at the end of the period equals the total of the cash accounts on the Balance Sheet.</li>
 </ul>
 <h4 id="s-acty-records">What it records<a class="man-hash" href="#s-acty-records" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
-<p>Adding or changing a type and giving accounts a type post nothing and change no amount. Every change is written to the audit trail; giving an account a type is written as a change of that account.</p>
+<p>Adding or changing a type, renaming a built-in type and giving accounts a type post nothing and change no amount. Every change is written to the audit trail (a new name with the old one); giving an account a type is written as a change of that account.</p>
 <h4 id="s-acty-good-to-know">Good to know<a class="man-hash" href="#s-acty-good-to-know" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <ul>
 <li>"There is already an account type named "Cash"." Names are compared without regard to capitals.</li>
 <li>"Choose the section of the Statement of Cash Flows the accounts of this type belong to." An asset, liability or equity type needs its section.</li>
 <li>"5 account(s) are of this type. Move them to another type first." A type with accounts cannot be deleted, and the built-in type it behaves as cannot change.</li>
+<li>""Fixed Asset" is the original name of the built-in type now named Property and Equipment, and still means it in the files to import. Choose another name." No other type takes the original name of a built-in type (capitals, spaces and dashes aside).</li>
+<li>A built-in type cannot be deleted or made inactive, renamed or not.</li>
 <li>"The account 1100 is one the modules post to: it can only take a type that behaves as Accounts Receivable." Such accounts keep their built-in type.</li>
 <li>A sub-account keeps the category of its main account, and an account with entries keeps its category, so types are given within one category.</li>
 <li>Adding, changing and deleting types needs the special permission <strong>Can change the Chart of Accounts and default accounts</strong>; giving accounts a type also needs Edit on the Chart of Accounts. Users without it see the list only.</li>
-<li>Import Data accepts the name of any type, built-in or yours, in the account type column of the accounts file.</li>
+<li>Import Data accepts the name of any type, built-in or yours, in the account type column of the accounts file; for a built-in type you renamed, its new name or its original one.</li>
 </ul>
 <h2 id="pg-coa-classes">Class List<a class="man-hash" href="#pg-coa-classes" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>Classes split the books your own way: by branch, department, project or product line. Every transaction form has a <strong>Class</strong> box, the class is copied to every ledger line the transaction posts, and the financial reports can be filtered by class or shown with one column per class. You name the classes yourself and can rename them at any time.</p>

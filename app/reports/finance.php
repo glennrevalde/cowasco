@@ -199,6 +199,19 @@ function fin_classify(array $bases, callable $vals, array $cols): array
 }
 
 /**
+ * The heading of a part of a statement that holds one built-in type (Fixed Assets, Equity, Income, Expenses ...):
+ * the name the built-in type was given, when it was renamed and is the only type shown there (Property and Equipment,
+ * Revenue); the part's own name otherwise. $bases: the built-in types of the part; $blocks: fin_classify().
+ */
+function fin_part_name(string $name, array $bases, array $blocks): string
+{
+    if (count($bases) === 1 && count($blocks) === 1 && AccountTypes::renamed($blocks[0]['type'])) {
+        return (string)$blocks[0]['type']['name'];
+    }
+    return $name;
+}
+
+/**
  * The rows of classified accounts (fin_classify()): a heading and a total for each account type (left out when the
  * part shows one built-in type only, its own heading being enough), each main account, and in the detailed statement
  * a main account with sub-accounts as a heading, its sub-accounts, its own entries and its total. The summary shows
@@ -206,13 +219,16 @@ function fin_classify(array $bases, callable $vals, array $cols): array
  *  $row    : fn(string $name, ?array $vals, string $class, ?string $url): array (the report's own row)
  *  $link   : fn(array $account): ?string (the drill-down of an account)
  *  $mainLink : fn(array $account): ?string (the drill-down of a main account with sub-accounts, in the summary)
+ *  $ownPart : the part holds one built-in type and takes the name it was renamed to (fin_part_name()); otherwise a
+ *             renamed built-in type shown alone has its heading, so its name is on the statement
  * Returns [rows, total].
  */
-function fin_block_rows(array $blocks, array $cols, callable $row, int $indent, bool $summary, callable $link, ?callable $mainLink = null, ?callable $totalName = null): array
+function fin_block_rows(array $blocks, array $cols, callable $row, int $indent, bool $summary, callable $link, ?callable $mainLink = null, ?callable $totalName = null, bool $ownPart = false): array
 {
     $rows = [];
     $total = array_fill_keys($cols, 0.0);
-    $heads = count($blocks) > 1 || ($blocks && (int)$blocks[0]['type']['is_system'] !== 1);
+    $one = count($blocks) === 1 ? $blocks[0]['type'] : null;
+    $heads = count($blocks) > 1 || ($one && ((int)$one['is_system'] !== 1 || (!$ownPart && AccountTypes::renamed($one))));
     $totalName ??= fn(string $n) => 'Total ' . $n;
     foreach ($blocks as $b) {
         $i = $indent;
@@ -419,7 +435,9 @@ function fin_balance_sheet_rows(array $cols, array $bal, array $prior, array $yt
                 }
                 return $v;
             };
-            [$gRows, $gTotal] = fin_block_rows(fin_classify($types, $vals, $cols), $cols, $row, 2, $summary, $link, $mainLink);
+            $blocks = fin_classify($types, $vals, $cols);
+            $gLabel = fin_part_name($gname, $types, $blocks);
+            [$gRows, $gTotal] = fin_block_rows($blocks, $cols, $row, 2, $summary, $link, $mainLink, null, count($types) === 1);
             if ($sec === 'EQUITY') {
                 $gRows[] = $withVals(['name' => $niLabel ?? 'Net Income (fiscal year to date)', '_class' => 'indent-2',
                     '_links' => ['name' => Report::link('rpt.income_statement' . ($summary ? '_summary' : ''), ['from' => $fy, 'to' => $asof, 'dates' => 'custom'] + $linkExtra)]], $ytd);
@@ -430,9 +448,9 @@ function fin_balance_sheet_rows(array $cols, array $bal, array $prior, array $yt
             if (!$gRows) {
                 continue;
             }
-            $rows[] = ['name' => $gname, '_class' => 'indent-1 fw-semibold'];
+            $rows[] = ['name' => $gLabel, '_class' => 'indent-1 fw-semibold'];
             $rows = array_merge($rows, $gRows);
-            $rows[] = $withVals(['name' => 'Total ' . $gname, '_class' => 'subtotal-row indent-1'], $gTotal);
+            $rows[] = $withVals(['name' => 'Total ' . $gLabel, '_class' => 'subtotal-row indent-1'], $gTotal);
             foreach ($cols as $k) {
                 $secTotal[$k] += $gTotal[$k];
             }
@@ -582,12 +600,14 @@ function fin_income_rows(array $by, array $keys, callable $link, bool $summary =
     };
     foreach ($sections as $sec => [$types, $sign]) {
         $vals = fn(array $a): array => array_map(fn($v) => $sign * $v, $by[$a['id']] ?? []);
-        [$secRows, $secVals] = fin_block_rows(fin_classify($types, $vals, $cols), $cols, $makeRow, 1, $summary, fn($a) => $link($a), $mainLink);
+        $blocks = fin_classify($types, $vals, $cols);
+        $secLabel = fin_part_name($sec, $types, $blocks);
+        [$secRows, $secVals] = fin_block_rows($blocks, $cols, $makeRow, 1, $summary, fn($a) => $link($a), $mainLink, null, true);
         $sum[$sec] = $secVals;
         if ($secRows) {
-            $rows[] = ['name' => $sec, '_class' => 'group-row'];
+            $rows[] = ['name' => $secLabel, '_class' => 'group-row'];
             $rows = array_merge($rows, $secRows);
-            $rows[] = $makeRow('Total ' . $sec, $secVals, 'subtotal-row');
+            $rows[] = $makeRow('Total ' . $secLabel, $secVals, 'subtotal-row');
         }
         if ($sec === 'Cost of Goods Sold') {
             $gp = [];

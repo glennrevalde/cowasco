@@ -45,7 +45,7 @@ final class CoaImport
         $types = [];
         foreach (AccountTypes::all() as $t) {
             if ((int)$t['is_active']) {
-                $types[(string)$t['name']] = (string)$t['name'] . ((int)$t['is_system'] === 1 ? '' : ' (' . $t['base_type'] . ')');
+                $types[(string)$t['name']] = (string)$t['name'] . ((int)$t['is_system'] === 1 ? '' : ' (' . AccountTypes::label((string)$t['base_type']) . ')');
             }
         }
         $yesNo = ['Yes' => 'Yes', 'No' => 'No'];
@@ -53,7 +53,8 @@ final class CoaImport
             'code' => ['label' => 'Code', 'req' => true, 'size' => 'sm', 'hint' => 'The account code, used by no other account (at most 20 characters): 1000, 1010-01.'],
             'name' => ['label' => 'Name', 'req' => true, 'size' => 'lg', 'hint' => 'The name of the account (at most 120 characters).'],
             'type' => ['label' => 'Type', 'req' => true, 'type' => 'select', 'options' => $types, 'size' => 'lg',
-                'hint' => 'As Financial > Account Types lists it: Bank, Accounts Receivable, Other Current Asset, Fixed Asset, Accounts Payable, Equity, Income, Expense ... or a type of your own. Usual other names are read too (Current Asset, Revenue, Cost of Sales).'],
+                'hint' => 'As Financial > Account Types lists it: ' . implode(', ', array_map([AccountTypes::class, 'label'], ['Bank', 'Accounts Receivable', 'Other Current Asset', 'Fixed Asset', 'Accounts Payable', 'Equity', 'Income', 'Expense']))
+                    . ' ... or a type of your own. The original names of the built-in types and usual other names are read too (Current Asset, Revenue, Cost of Sales).'],
             'parent' => ['label' => 'Sub-account of', 'size' => 'sm', 'hint' => 'The code of the main account it is under (on the chart or in the file, of the same category); blank for a main account.'],
             'normal_balance' => ['label' => 'Normal balance', 'type' => 'select', 'options' => ['Debit' => 'Debit', 'Credit' => 'Credit'], 'size' => 'sm',
                 'hint' => 'Debit or Credit; blank: the normal balance of the type (a contra account, such as accumulated depreciation, takes the other one).'],
@@ -216,7 +217,7 @@ final class CoaImport
             } else {
                 $t = self::typeOf($r['type']);
                 if (!$t) {
-                    $err('"' . $r['type'] . '" is not an account type. Choose one of Account Types (Bank, Accounts Receivable, Other Current Asset, Fixed Asset, Expense ...).', ['type']);
+                    $err('"' . $r['type'] . '" is not an account type. Choose one of Account Types (' . implode(', ', array_map([AccountTypes::class, 'label'], ['Bank', 'Accounts Receivable', 'Other Current Asset', 'Fixed Asset', 'Expense'])) . ' ...).', ['type']);
                 } else {
                     if ($t['name'] !== $r['type']) {
                         $r['_notes'][] = 'Type "' . $r['type'] . '" read as ' . $t['name'] . '.';
@@ -357,7 +358,7 @@ final class CoaImport
                 if ($acc) {
                     // the rules of the account form for an account on the chart
                     if ((int)$acc['is_system'] === 1 && $acc['account_type'] !== $t['base_type']) {
-                        $err('The account ' . $acc['code'] . ' is one the modules post to: it keeps a type that behaves as ' . $acc['account_type'] . '.', ['type']);
+                        $err('The account ' . $acc['code'] . ' is one the modules post to: it keeps a type that behaves as ' . AccountTypes::label((string)$acc['account_type']) . '.', ['type']);
                     } elseif ($acc['category'] !== $t['category']) {
                         if ($used((int)$acc['id'])) {
                             $err('The account ' . $acc['code'] . ' has transactions: it cannot be moved to another category (' . $acc['category'] . ' to ' . $t['category'] . ').', ['type']);

@@ -5,14 +5,14 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 
 | Class | Files |
 |---|---:|
-| Cooperative system, unchanged | 663 |
-| Cooperative system, changed | 209 |
+| Cooperative system, unchanged | 661 |
+| Cooperative system, changed | 211 |
 | Water system, unchanged (under water/) | 24 |
 | Water system, adapted (under water/) | 214 |
-| New | 360 |
+| New | 364 |
 | Cooperative files not shipped | 1 |
 | Water files not shipped | 61 |
-| **Shipped in total** | **1470** |
+| **Shipped in total** | **1474** |
 
 ## New files
 
@@ -47,6 +47,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `UPGRADE_v56.txt`
 - `UPGRADE_v57.txt`
 - `UPGRADE_v58.txt`
+- `UPGRADE_v59.txt`
 - `app/AccountTypes.php`
 - `app/BillAccounts.php`
 - `app/Clearing.php`
@@ -95,6 +96,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `assets/manual/img/coa_account_types__edit.jpg`
 - `assets/manual/img/coa_account_types__main.jpg`
 - `assets/manual/img/coa_account_types__new.jpg`
+- `assets/manual/img/coa_account_types__rename.jpg`
 - `assets/manual/img/coa_accounts__import.jpg`
 - `assets/manual/img/coop_consolidated_import__main.jpg`
 - `assets/manual/img/coop_consolidated_import__td.jpg`
@@ -214,6 +216,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `docs/ADDITIONAL_MODULE_V21_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V22_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V23_CHECKLIST.md`
+- `docs/ADDITIONAL_MODULE_V24_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V2_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V3_CHECKLIST.md`
 - `docs/ADDITIONAL_MODULE_V4_CHECKLIST.md`
@@ -285,6 +288,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `tests/coop/cases_v56.php`
 - `tests/coop/cases_v57.php`
 - `tests/coop/cases_v58.php`
+- `tests/coop/cases_v59.php`
 - `tests/coop/cases_water.php`
 - `tests/platform/provision_test.php`
 - `tests/platform/run.sh`
@@ -410,6 +414,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `app/Provision.php`
 - `app/Receipt.php`
 - `app/Report.php`
+- `app/ReportFields.php`
 - `app/ReportLayout.php`
 - `app/SavBatch.php`
 - `app/Savings.php`
@@ -494,6 +499,7 @@ byte for byte. The water system lives under `water/` (its former root folder); e
 - `modules/banking/cash_voucher.php`
 - `modules/banking/deposits.php`
 - `modules/coa/accounts.php`
+- `modules/coa/budgets.php`
 - `modules/coa/classes.php`
 - `modules/coa/journal.php`
 - `modules/coop/_coop.php`

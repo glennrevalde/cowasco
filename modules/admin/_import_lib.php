@@ -337,7 +337,7 @@ function import_write_record(string $type, array $r, string $pageKey): array
         $existing = DB::row('SELECT * FROM accounts WHERE code = :c', ['c' => $d['code']]);
         if ($existing) {
             if ((int)$existing['is_system'] === 1 && $existing['account_type'] !== $d['account_type']) {
-                fail('The account ' . $d['code'] . ' is one the modules post to; it keeps a type that behaves as ' . $existing['account_type'] . ' (line ' . $r['_line'] . ').');
+                fail('The account ' . $d['code'] . ' is one the modules post to; it keeps a type that behaves as ' . AccountTypes::label((string)$existing['account_type']) . ' (line ' . $r['_line'] . ').');
             }
             if ($existing['category'] !== $d['category']
                 && (int)DB::value('SELECT COUNT(*) FROM journal_lines WHERE account_id = :a', ['a' => $existing['id']]) > 0) {

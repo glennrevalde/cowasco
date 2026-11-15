@@ -1,0 +1,39 @@
+G-SMaRT Integrated Cooperative System - version 59 (2026-11-15)
+=================================================================
+
+The request of ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v24.xlsx (docs/ADDITIONAL_MODULE_V24_CHECKLIST.md).
+
+This package holds only the files changed or added since version 58. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is never
+changed. Works on MySQL 5.5 and MySQL 8 as before.
+
+Version 58 must be in place first.
+
+What to run on the database
+---------------------------
+Nothing. Version 59 adds no table, column or page. Press Ctrl+F5 once in the browser afterwards
+(the style sheet changed).
+
+What is new
+-----------
+Financial > Account Types: the name of a built-in type can be changed
+- Click Edit on a built-in type (Bank, Fixed Asset, Income ...), write the name you use (for
+  example Property and Equipment for Fixed Asset) and click Save account type.
+- Only the name changes. What the type is (Behaves as), its accounts, their entries and what the
+  modules do with them stay as they are. A built-in type stays active and cannot be deleted.
+- "Use the original name (Fixed Asset)" under the Name puts the original name back.
+- The change is in the audit trail with the old name and the new one.
+
+Where the new name is shown
+- Account Types (with "originally Fixed Asset" under it), the Chart of Accounts and its export,
+  the account form, Behaves as on a type of your own, the budgets, the Trial Balance by date range
+  and the messages that name a type.
+- The financial statements: a renamed built-in type that is the only type of its group heads the
+  group (Property and Equipment and Total Property and Equipment in place of Fixed Assets, Revenue
+  in place of Income). In a group with other types (Bank renamed Cash in Banks, under Current
+  Assets) it has its heading and total under its new name. The totals do not change.
+
+The original name
+- It stays the built-in type's own: no other type can be named Fixed Asset.
+- A file to import (Chart of Accounts > Import, Import Data) that says Fixed Asset still means the
+  type, as does its new name.

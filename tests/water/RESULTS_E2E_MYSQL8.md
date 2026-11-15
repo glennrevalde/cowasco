@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-14 23:15:53 (21.7 s)
+- **Run:** 2026-11-15 20:18:01 (13 s)
 - **Server:** http://127.0.0.1:8098
-- **Database:** coop_e2e58 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Database:** coop_e2e59 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 8.0.46-0ubuntu0.24.04.5
-- **Result:** 552 passed, 0 failed, 552 checks
+- **Result:** 564 passed, 0 failed, 564 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261114-231533-C01F | COL-20261114-231533-C01F | PASS |
+| payment number = official receipt number | COL-20261115-201749-0F3D | COL-20261115-201749-0F3D | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 230 | 230 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261114-231533-C01F | COL-20261114-231533-C01F | PASS |
+| retry of the same request returns the same receipt | COL-20261115-201749-0F3D | COL-20261115-201749-0F3D | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -261,7 +261,7 @@
 | ...and both carry the class chosen | 0 | 0 | PASS |
 | no charge ticked: nothing is issued | 3 | 3 | PASS |
 | the charge category of the bill changed | 5 | 5 | PASS |
-| ...and its date issued | 2026-11-13 | 2026-11-13 | PASS |
+| ...and its date issued | 2026-11-14 | 2026-11-14 | PASS |
 | ...its amount follows the new category (a material at its sales price) | 1,200.00 | 1,200.00 | PASS |
 | the first invoice is voided as replaced, not deleted | replaced | replaced | PASS |
 | the corrected invoice -R1 is posted on the new date issued | yes | yes | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok 8a25e B | E2E Purok 8a25e B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok 6a240 B | E2E Purok 6a240 B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -535,7 +535,7 @@
 |---|---|---|---|
 | the cashier page has the Loan Due panel (shown once an account is chosen) | yes | yes | PASS |
 | the cashier gets the loans due of a member's water-service account | yes | yes | PASS |
-| a date that is no date is today | 2026-11-14 | 2026-11-14 | PASS |
+| a date that is no date is today | 2026-11-15 | 2026-11-15 | PASS |
 | a non-member's account: no member, no loans (the panel stays hidden) | yes | yes | PASS |
 | not signed in: refused | yes | yes | PASS |
 | Sales by Customer Detail: the Member type filter (All members, the member types, Non-members) | yes | yes | PASS |
@@ -570,7 +570,7 @@
 | ...a material's balance moves no stock | 5.00 | 5.00 | PASS |
 | ...account A, not enrolled in the plan: its recurring balance on an ended subscription | ended | ended | PASS |
 | ...account F, enrolled: on its active subscription | active | active | PASS |
-| ...account B: three monthly installments of 300.00 from the due date | [["2026-11-26","300.00"],["2026-12-26","300.00"],["2027-01-26","300.00"]] | [["2026-11-26","300.00"],["2026-12-26","300.00"],["2027-01-26","300.00"]] | PASS |
+| ...account B: three monthly installments of 300.00 from the due date | [["2026-11-27","300.00"],["2026-12-27","300.00"],["2027-01-27","300.00"]] | [["2026-11-27","300.00"],["2026-12-27","300.00"],["2027-01-27","300.00"]] | PASS |
 | the upload listed with its lines, the bill each made and what is still unpaid | yes | yes | PASS |
 | the same file read again: every balance recorded is in red (uploaded already), with the two lines of before | 8 | 8 | PASS |
 | ...naming the upload | yes | yes | PASS |
@@ -665,17 +665,34 @@
 | ...the member whose cut-off date is not a date: in red, its cell | yes | yes | PASS |
 | ...corrected in the review: no line in red | 0 | 0 | PASS |
 | the time deposit line: its principal, accrued interest, date deposited, term and rate; dated by the member's cut-off date | yes | yes | PASS |
-| ...the savings line of the row under the member with a cut-off date of its own | [null,"2026-11-02",null] | [null,"2026-11-02",null] | PASS |
+| ...the savings line of the row under the member with a cut-off date of its own | [null,"2026-11-03",null] | [null,"2026-11-03",null] | PASS |
 | ...checked again: ready | yes | yes | PASS |
 | Save: both members saved | yes | yes | PASS |
-| the balances entered on their cut-off dates: the member's, the row's own, the date corrected | [["E58-001","time_deposit","2026-10-25","20000.00"],["E58-001","share_capital","2026-10-25","1000.00"],["E58-001","share | [["E58-001","time_deposit","2026-10-25","20000.00"],["E58-001","share_capital","2026-10-25","1000.00"],["E58-001","share_capital","2026-11-02","500.00"],["E58-0 | PASS |
-| the time deposit placed Active: principal, rate, term, date deposited, maturity date, accrued interest | ["20000.00","4.5000",180,"2026-09-25","2027-03-24","active","55.25"] | ["20000.00","4.5000",180,"2026-09-25","2027-03-24","active","55.25"] | PASS |
-| ...its accrued interest booked on the cut-off date | ["2026-10-25","55.25"] | ["2026-10-25","55.25"] | PASS |
+| the balances entered on their cut-off dates: the member's, the row's own, the date corrected | [["E58-001","time_deposit","2026-10-26","20000.00"],["E58-001","share_capital","2026-10-26","1000.00"],["E58-001","share | [["E58-001","time_deposit","2026-10-26","20000.00"],["E58-001","share_capital","2026-10-26","1000.00"],["E58-001","share_capital","2026-11-03","500.00"],["E58-0 | PASS |
+| the time deposit placed Active: principal, rate, term, date deposited, maturity date, accrued interest | ["20000.00","4.5000",180,"2026-09-26","2027-03-25","active","55.25"] | ["20000.00","4.5000",180,"2026-09-26","2027-03-25","active","55.25"] | PASS |
+| ...its accrued interest booked on the cut-off date | ["2026-10-26","55.25"] | ["2026-10-26","55.25"] | PASS |
 | ...every voucher balanced | yes | yes | PASS |
 | the page of the file: Saved, with its time deposit, a link to the Time Deposit Center | yes | yes | PASS |
 | ...the time deposit line with its certificate | yes | yes | PASS |
 | the Time Deposit Center lists it | yes | yes | PASS |
 | trial balance: debits = credits | 0.00 | 0.00 | PASS |
+
+## v59 Account Types: the name of a built-in type can be changed
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| the page of the built-in type Fixed Asset: its Name can be written in (not read-only), Behaves as stays Fixed Asset (read-only) | yes | yes | PASS |
+| ...the "Use the original name" button is hidden while the name is the original one | yes | yes | PASS |
+| saved from the page: the new name; it still behaves as Fixed Asset, built-in, active | ["Property and Equipment","Fixed Asset",1,1] | ["Property and Equipment","Fixed Asset",1,1] | PASS |
+| ...the page says so, under its new name, with the button back to the original name | yes | yes | PASS |
+| ...in the audit trail with the old name and the new one | yes | yes | PASS |
+| Account Types lists it by its new name, built-in, behaving as itself, originally Fixed Asset | yes | yes | PASS |
+| the Chart of Accounts shows its accounts as Property and Equipment | yes | yes | PASS |
+| the account form offers it by its new name | yes | yes | PASS |
+| the Balance Sheet: its part is Property and Equipment (no fixed asset entry: not shown) | yes | yes | PASS |
+| a type of your own named Fixed Asset is refused with the reason | yes | yes | PASS |
+| back to its original name from the page | Fixed Asset | Fixed Asset | PASS |
+| ...Account Types lists it as before | yes | yes | PASS |
 
 ## 7.4c Period close
 

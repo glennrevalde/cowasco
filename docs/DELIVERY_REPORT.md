@@ -534,3 +534,15 @@ product, certificate no., action at maturity, cut-off date and transaction code 
 Deposit checks them and saved Active with their certificate, their principal and accrued interest entered on their
 cut-off date. The templates have the Cut-Off Date in the last column and a time deposit; Import time deposits has a
 Consolidated Import button. No migration. See `UPGRADE_v58.txt`.
+
+## 35. Version 59: workbook v24 (the name of a built-in account type)
+
+The request of `ADDITIONAL_MODULE_FOR_WATER_COOP_SYSTEMS_v24.xlsx`, mapped in `docs/ADDITIONAL_MODULE_V24_CHECKLIST.md`.
+The workbook is a screenshot of Financial > Account Types > Fixed Asset with a note and an arrow onto its Name. The
+name of a built-in account type is now written in on its page like the name of a type of your own; only the name
+changes (what the type is, its accounts and their entries stay; it stays active and is not deleted), "Use the original
+name" puts the original back, and the change is in the audit trail. The new name is shown wherever the type is: Account
+Types, the Chart of Accounts and its export, the type pickers, Behaves as on a type of your own, the financial statements
+(a renamed built-in type alone in its group heads the group: Property and Equipment in place of Fixed Assets), the
+budgets and the messages. The original name stays the built-in type's own: no other type takes it, and the files to
+import still read it. No migration. See `UPGRADE_v59.txt`.

@@ -988,7 +988,7 @@ Report::define('water_mapping_check', [
             if (!$a) {
                 return ['#' . $id, '', 'missing'];
             }
-            return [$a['code'] . ' ' . $a['name'], (string)$a['account_type'], (int)$a['is_active'] === 1 ? 'Active' : 'Inactive'];
+            return [$a['code'] . ' ' . $a['name'], AccountTypes::label((string)$a['account_type']), (int)$a['is_active'] === 1 ? 'Active' : 'Inactive'];
         };
         $rows = [];
         $line = function (string $what, ?int $id, string $use = '', ?string $problemKey = null, string $extra = '') use (&$rows, $acct, $problems) {

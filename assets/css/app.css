@@ -3371,3 +3371,16 @@ table tr.avg-jump td a { color: inherit; text-decoration-color: rgba(180, 35, 24
   .ci-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ci-tiles > .ci-tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
+
+/* =====================================================================
+   Version 59: Financial > Account Types, the name of a built-in type can be changed
+   ===================================================================== */
+.acty-orig { display: inline-flex; align-items: center; gap: .3rem; padding: 0; margin-top: .3rem; border: 0; font-size: .8rem; font-weight: 600; color: var(--blue-deep); text-decoration: none; }
+.acty-orig:hover, .acty-orig:focus-visible { text-decoration: underline; }
+.acty-orig[hidden] { display: none; }
+.acty-rename { margin: .85rem 0 0; padding-top: .75rem; border-top: 1px solid var(--line-soft); }
+.acty-sys { white-space: nowrap; }
+.acty-table td[data-label="Behaves as"] div.text-muted, .acty-table td[data-label="Shown under"] div.text-muted { font-size: .76rem; }
+@media (max-width: 575.98px) {
+  .acty-orig { min-height: 2rem; }
+}

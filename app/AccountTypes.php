@@ -17,6 +17,10 @@ declare(strict_types=1);
  *    activity, so every balance sheet account is counted once and the statement ties to the cash accounts.
  *
  * A sub-account is shown under its main account, whose type decides where both are shown.
+ *
+ * The name of a built-in type can be changed (Fixed Asset to Property and Equipment, Income to Revenue ...): only the
+ * name shown changes. What the type is stays its base_type, which the modules and accounts.account_type go by, and its
+ * original name stays its own: a file to import that says "Fixed Asset" still means it (label(), byName()).
  */
 final class AccountTypes
 {
@@ -70,10 +74,12 @@ final class AccountTypes
 
     private static ?array $all = null;
     private static ?bool $ready = null;
+    private static ?array $labels = null;
 
     public static function reset(): void
     {
         self::$all = null;
+        self::$labels = null;
     }
 
     /** True once the table exists (upgrade 2027_01_24_account_types.sql) */
@@ -155,6 +161,29 @@ final class AccountTypes
     }
 
     /**
+     * The name a built-in type is shown by: its name on Account Types, which can be changed (the base type itself, as
+     * "Fixed Asset", when it was not, or before the upgrade). For every place that shows what an account behaves as.
+     */
+    public static function label(string $base): string
+    {
+        if (self::$labels === null) {
+            self::$labels = [];
+            foreach (self::all() as $t) {
+                if ((int)$t['is_system'] === 1 && !isset(self::$labels[$t['base_type']])) {
+                    self::$labels[$t['base_type']] = (string)$t['name'];
+                }
+            }
+        }
+        return self::$labels[$base] ?? $base;
+    }
+
+    /** True for a built-in type whose name was changed (its name is no longer that of its base type) */
+    public static function renamed(array $t): bool
+    {
+        return (int)($t['is_system'] ?? 0) === 1 && (string)$t['name'] !== (string)$t['base_type'];
+    }
+
+    /**
      * The type of an account: the one chosen for it, or (none chosen, or one that no longer fits its base type) the
      * built-in type of its account_type
      */
@@ -193,29 +222,53 @@ final class AccountTypes
             foreach ($types as $id => $name) {
                 $t = $all[$id];
                 $html .= '<option value="' . (int)$id . '" data-base="' . h($t['base_type']) . '" data-category="' . h($t['category']) . '"'
-                    . ((int)$id === (int)$selected ? ' selected' : '') . '>' . h($name) . ((int)$t['is_system'] === 1 ? '' : ' (' . h($t['base_type']) . ')') . '</option>';
+                    . ((int)$id === (int)$selected ? ' selected' : '') . '>' . h($name) . ((int)$t['is_system'] === 1 ? '' : ' (' . h(self::label($t['base_type'])) . ')') . '</option>';
             }
             $html .= '</optgroup>';
         }
         return $html;
     }
 
-    /** A type by its name (any case and spacing), for the CSV import */
+    /** A name compared loosely: any case, without spaces, underscores and dashes */
+    private static function loose(string $x): string
+    {
+        return strtolower((string)preg_replace('/[\s_\-]+/', '', trim($x)));
+    }
+
+    /**
+     * A type by its name (any case and spacing), for the CSV import; also a built-in type by its original name ("Fixed
+     * Asset" after it was renamed Property and Equipment), so the files of before still read
+     */
     public static function byName(string $name): ?array
     {
-        $loose = fn(string $x): string => strtolower(preg_replace('/[\s_\-]+/', '', trim($x)));
+        $want = self::loose($name);
+        if ($want === '') {
+            return null;
+        }
         foreach (self::all() as $t) {
-            if ($loose($t['name']) === $loose($name)) {
+            if (self::loose((string)$t['name']) === $want) {
                 return $t;
+            }
+        }
+        foreach (array_keys(self::BASE) as $base) {
+            if (self::loose($base) === $want) {
+                $t = self::system($base);
+                return isset(self::all()[(int)$t['id']]) ? $t : null;
             }
         }
         return null;
     }
 
-    /** Every type's name (the CSV import accepts these) */
+    /** Every type's name, and the original name of a built-in type that was renamed (the CSV import accepts these) */
     public static function names(): array
     {
-        return array_values(array_map(fn($t) => (string)$t['name'], self::all()));
+        $out = array_values(array_map(fn($t) => (string)$t['name'], self::all()));
+        foreach (self::all() as $t) {
+            if (self::renamed($t) && !in_array($t['base_type'], $out, true)) {
+                $out[] = (string)$t['base_type'];
+            }
+        }
+        return $out;
     }
 
     /** How many accounts use each type: id => count (an account without a type counts for the built-in one) */
@@ -243,18 +296,48 @@ final class AccountTypes
     public static function placement(array $t): string
     {
         $cat = self::CATEGORIES[$t['category']];
+        $group = self::partName($t);
         if (self::isBalanceSheet($t['base_type'])) {
-            return 'Balance Sheet: ' . $cat . ($t['group'] !== $cat ? ' > ' . $t['group'] : '') . '; Statement of Cash Flows: '
+            return 'Balance Sheet: ' . $cat . ($group !== $cat ? ' > ' . $group : '') . '; Statement of Cash Flows: '
                 . ($t['cash_flow'] === 'cash' ? 'cash and cash equivalents' : self::CASH_FLOW[$t['cash_flow']] ?? '');
         }
-        return 'Income Statement: ' . $t['group'] . '; Statement of Cash Flows: part of the net income';
+        return 'Income Statement: ' . $group . '; Statement of Cash Flows: part of the net income';
+    }
+
+    /**
+     * True when a type is the only one of its part of the statements: the only built-in type of its group (Fixed
+     * Assets, Equity, Income, Expenses ... not Current Assets or Current Liabilities) and no other type behaves as it
+     */
+    public static function alone(array $t): bool
+    {
+        $group = self::BASE[$t['base_type']][2] ?? '';
+        if (count(array_filter(self::BASE, fn($b) => $b[2] === $group)) !== 1) {
+            return false;
+        }
+        foreach (self::all() as $o) {
+            if ((int)$o['id'] !== (int)$t['id'] && $o['base_type'] === $t['base_type']) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The heading of the part of the statements a type is shown in: its group (Current Assets, Fixed Assets ...), or
+     * the new name of a renamed built-in type alone in its part (Property and Equipment in place of Fixed Assets), as
+     * the statements show it (fin_part_name())
+     */
+    public static function partName(array $t): string
+    {
+        return self::renamed($t) && self::alone($t) ? (string)$t['name'] : (string)$t['group'];
     }
 
     // ------------------------------------------------------------------ changes
 
     /**
      * Saves a type. $d: name, base_type, cash_flow, sort_order, description, is_active. The base type of a type that
-     * accounts use cannot change (move the accounts first); a built-in type keeps its name and base type.
+     * accounts use cannot change (move the accounts first); a built-in type keeps its base type and stays active, its
+     * name can be changed. The original name of a built-in type stays its own: no other type takes it.
      */
     public static function save(array $d, ?int $id, string $pageKey): int
     {
@@ -262,12 +345,12 @@ final class AccountTypes
         if ($id && !$old) {
             fail('Account type not found.');
         }
+        $isSystem = $old && (int)$old['is_system'] === 1;
         // what is not given stays as it is (a new type is active)
         $d += $old ? array_intersect_key($old, array_flip(['name', 'base_type', 'cash_flow', 'sort_order', 'description', 'is_active'])) : ['is_active' => 1];
         $name = trim(preg_replace('/\s+/', ' ', (string)($d['name'] ?? '')));
         $base = (string)($d['base_type'] ?? '');
-        if ($old && (int)$old['is_system'] === 1) {
-            $name = (string)$old['name'];
+        if ($isSystem) {
             $base = (string)$old['base_type'];
         }
         if ($name === '') {
@@ -282,6 +365,14 @@ final class AccountTypes
         if (DB::value('SELECT id FROM account_types WHERE name = :n AND id <> :id', ['n' => $name, 'id' => $id ?? 0])) {
             fail('There is already an account type named "' . $name . '".');
         }
+        if (!$old || self::loose($name) !== self::loose((string)$old['name'])) {
+            foreach (array_keys(self::BASE) as $b) {
+                if (self::loose($b) === self::loose($name) && !($isSystem && $b === $base)) {
+                    fail(self::label($b) === $b ? 'There is already an account type named "' . $b . '".'
+                        : '"' . $name . '" is the original name of the built-in type now named ' . self::label($b) . ', and still means it in the files to import. Choose another name.');
+                }
+            }
+        }
         $flow = (string)($d['cash_flow'] ?? '');
         if (self::isBalanceSheet($base)) {
             if (!isset(self::CASH_FLOW[$flow])) {
@@ -291,7 +382,7 @@ final class AccountTypes
             $flow = '';
         }
         $active = !empty($d['is_active']) ? 1 : 0;
-        if ($old && (int)$old['is_system'] === 1) {
+        if ($isSystem) {
             $active = 1;
         }
         if ($old && $old['base_type'] !== $base) {
@@ -350,7 +441,7 @@ final class AccountTypes
             }
         }
         if ((int)$a['is_system'] === 1 && $t['base_type'] !== $a['account_type']) {
-            return 'The account ' . $a['code'] . ' is one the modules post to: it can only take a type that behaves as ' . $a['account_type'] . '.';
+            return 'The account ' . $a['code'] . ' is one the modules post to: it can only take a type that behaves as ' . self::label((string)$a['account_type']) . '.';
         }
         return null;
     }

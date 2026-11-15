@@ -137,7 +137,7 @@ if ($a === 'new' || $a === 'edit') {
             fail('This account has transactions; it cannot be moved to a different category.');
         }
         if ($acc && (int)$acc['is_system'] === 1 && $acc['account_type'] !== $type) {
-            fail('This account is one the modules post to: it can only take a type that behaves as ' . $acc['account_type'] . '.');
+            fail('This account is one the modules post to: it can only take a type that behaves as ' . AccountTypes::label((string)$acc['account_type']) . '.');
         }
         if ($acc && $acc['category'] !== $d['category'] && (int)DB::value('SELECT COUNT(*) FROM accounts WHERE parent_id = :a', ['a' => $acc['id']]) > 0) {
             fail('This account has sub-accounts of its category; it cannot be moved to another category.');
@@ -189,7 +189,7 @@ if ($a === 'new' || $a === 'edit') {
     <script>
     (function () {
       // what the type chosen means, and a new sub-account takes the type of its main account
-      const types = <?= json_encode(array_map(fn($t) => ['name' => $t['name'], 'base' => $t['base_type'], 'system' => (int)$t['is_system'], 'where' => AccountTypes::placement($t),
+      const types = <?= json_encode(array_map(fn($t) => ['name' => $t['name'], 'base' => AccountTypes::label($t['base_type']), 'system' => (int)$t['is_system'], 'where' => AccountTypes::placement($t),
           'note' => AccountTypes::BASE_NOTE[$t['base_type']] ?? ''], AccountTypes::all()), JSON_UNESCAPED_UNICODE) ?>;
       const sel = document.getElementById('acType'), note = document.getElementById('acTypeNote'), par = document.getElementById('acParent');
       if (!sel || !note) return;
@@ -262,7 +262,7 @@ if (g('export') === 'csv') {
     csv_download('chart_of_accounts.csv', ['Code', 'Name', 'Type', 'Behaves as', 'Category', 'Normal balance', 'Parent', 'With SL', 'Balance', 'Total with sub-accounts', 'Active'],
         array_map(function ($r) use ($subTotal, $subCount) {
             $sign = $r['normal_balance'] === 'Credit' ? -1 : 1;
-            return [$r['code'], $r['name'], AccountTypes::nameOf($r), $r['account_type'], $r['category'], $r['normal_balance'], $r['parent_code'],
+            return [$r['code'], $r['name'], AccountTypes::nameOf($r), AccountTypes::label((string)$r['account_type']), $r['category'], $r['normal_balance'], $r['parent_code'],
                 (int)$r['with_sl'] ? 'Yes' : '', $sign * $r['net'], empty($subCount[(int)$r['id']]) ? '' : $sign * ($subTotal[(int)$r['id']] ?? 0), $r['is_active']];
         }, $ordered));
 }
@@ -295,7 +295,7 @@ layout_start('Chart of Accounts', ['actions' => ($canChange ? page_link($pageKey
         <td data-label="Code"><?= h($r['code']) ?></td>
         <td data-label="Name" class="<?= $isSub ? 'ps-4' : '' ?>"><?= $isSub ? '<i class="bi bi-arrow-return-right" aria-hidden="true"></i> ' : '' ?><?= safe_link('rpt.general_ledger', ['account_id' => $r['id']], $r['name']) ?>
           <?= (int)$r['is_system'] ? '<span class="coa-sys">system</span>' : '' ?><?= $hasSubs ? '<div class="small text-muted">' . (int)$subCount[$id] . ' sub-account' . ($subCount[$id] === 1 ? '' : 's') . '</div>' : '' ?></td>
-        <td data-label="Type" class="small"><?= h($t['name']) ?><?= (int)$t['is_system'] === 1 ? '' : '<div class="text-muted">' . h($r['account_type']) . '</div>' ?></td><td data-label="Normal" class="small"><?= h($r['normal_balance']) ?></td>
+        <td data-label="Type" class="small"><?= h($t['name']) ?><?= (int)$t['is_system'] === 1 ? '' : '<div class="text-muted">' . h(AccountTypes::label((string)$r['account_type'])) . '</div>' ?></td><td data-label="Normal" class="small"><?= h($r['normal_balance']) ?></td>
         <td data-label="With SL" class="small"><?php if ((int)$r['with_sl']): ?><i class="bi bi-check-lg text-success"></i> Yes<?php endif; ?></td>
         <td data-label="<?= $hasSubs ? 'Total with sub-accounts' : 'Balance' ?>" class="num">
           <?php if ($masked): ?>•••<?php elseif ($hasSubs): ?><strong title="Its own balance and its sub-accounts'"><?= money($total) ?></strong>

@@ -277,7 +277,7 @@ final class WaterPosting
         $id = self::assertAccount($preferred ?: (self::defaultAccount('water_ar') ?: (int)DB::value("SELECT account_id FROM default_accounts WHERE setting_key = 'ar'")), 'The water Accounts Receivable account');
         $a = DB::row('SELECT code, name, account_type FROM accounts WHERE id = :id', ['id' => $id]);
         if (($a['account_type'] ?? '') !== 'Accounts Receivable') {
-            fail('The A/R account of this bill, ' . $a['code'] . ' ' . $a['name'] . ', is a ' . $a['account_type'] . ' account, not Accounts Receivable. Correct the bill code on Water Billing > Bill Codes (or the water A/R default) before posting.');
+            fail('The A/R account of this bill, ' . $a['code'] . ' ' . $a['name'] . ', is a ' . AccountTypes::label((string)$a['account_type']) . ' account, not ' . AccountTypes::label('Accounts Receivable') . '. Correct the bill code on Water Billing > Bill Codes (or the water A/R default) before posting.');
         }
         return $id;
     }
@@ -292,7 +292,7 @@ final class WaterPosting
         $id = self::assertAccount($accountId, $label);
         $a = DB::row('SELECT code, name, category, account_type FROM accounts WHERE id = :id', ['id' => $id]);
         if (!in_array($a['category'] ?? '', ['Income', 'Liability', 'Equity'], true)) {
-            fail($label . ', ' . $a['code'] . ' ' . $a['name'] . ', is a ' . $a['account_type'] . ' account; a bill credits income (or a deposit / prepayment liability). Correct the bill code on Water Billing > Bill Codes.');
+            fail($label . ', ' . $a['code'] . ' ' . $a['name'] . ', is a ' . AccountTypes::label((string)$a['account_type']) . ' account; a bill credits income (or a deposit / prepayment liability). Correct the bill code on Water Billing > Bill Codes.');
         }
         return $id;
     }
