@@ -11,6 +11,7 @@
 <p>Write Checks records a payment made by check, or charged to a company credit card, that is not the payment of a bill already entered: rent paid on the spot, a purchase paid at once, a loan payment, a cash advance by check. To pay bills you have entered, use <a href="manual.php?c=vendors#pg-vend-pay_bills">Pay Bills</a> instead, so the bills are marked paid.</p>
 <p><strong>Where to find it:</strong> Banking &gt; Write Checks opens the list of checks. The Home page quick action <strong>Write Checks</strong> opens a blank check. <a href="manual.php?c=vendors#pg-vend-receipts">Receipt Management</a> can also open this form filled from a scanned receipt.</p>
 <div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>A loan released by cheque on the <a href="manual.php?c=cooperative#pg-loan-release">Loan Release Form</a> is a check of this list, numbered with the cheque no., with the member as the payee and the loan number as the reference. It prints as the <strong>Check Voucher</strong> of the loan release, it is never edited or deleted, and voiding it cancels the loan (only while the loan has no payment). Every voucher of a loan release is also listed on <a href="manual.php?c=cooperative#pg-loan-vouchers">Loan Release Vouchers</a>.</p></div>
+<p><strong>Attachments:</strong> the signed copy of the check voucher and its supporting documents are attached in the <strong>Attachments</strong> box of the form, or later on its page with <strong>Add files</strong>; see <a href="manual.php?c=getting-started#sec-attachments">Attaching files</a>.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_write_checks__main.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_write_checks__main.jpg" alt="The Checks list" width="1094" height="497" loading="lazy" decoding="async"></a><figcaption>The Checks list</figcaption></figure>
 <p>The list shows the checks of a date range (from 90 days back to 30 days ahead when it opens). Use <strong>From</strong>, <strong>To</strong>, <strong>Status</strong>, <strong>Class</strong> and <strong>Search</strong> (number, name or memo), then click <strong>Filter</strong>. A voided check is struck through. A check waiting to be printed has a <strong>to print</strong> tag in the <strong>Status</strong> column. Click a check number to open it.</p>
 <h4 id="s-the-columns">The columns<a class="man-hash" href="#s-the-columns" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
@@ -135,15 +136,16 @@
 <td>The description of the line.</td>
 </tr>
 <tr>
-<td>Customer:Job</td>
-<td>The customer or job the cost is for, if any.</td>
+<td>Customer / Supplier</td>
+<td>The customer or job the cost is for, or a supplier, if any. A supplier puts the line on that supplier's subsidiary ledger, even when the check is made out to someone else. The expense line of the general ledger then carries that supplier, so the Subsidiary Ledger and Expenses by Vendor list it under the supplier. Type part of the name; the list shows "Customer" or "Supplier" after each name. A cooperative member is on the list as before, by its member type; a member's own supplier record is not listed there.</td>
 </tr>
 <tr>
 <td>Billable</td>
-<td>Tick, with a Customer:Job, to bill the cost to that customer later.</td>
+<td>Tick, with a customer or job, to bill the cost to that customer later. It is switched off while a supplier is chosen.</td>
 </tr>
 </tbody>
 </table></div>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_write_checks__supplier.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_write_checks__supplier.jpg" alt="The Customer / Supplier box of an expense line: typing co lists the customers and the suppliers whose names contain it" width="1094" height="320" loading="lazy" decoding="async"></a><figcaption>The Customer / Supplier box of an expense line: typing co lists the customers and the suppliers whose names contain it</figcaption></figure>
 <p><strong>Items</strong> tab:</p>
 <div class="table-responsive man-table"><table class="table table-sm">
 <thead>
@@ -183,7 +185,7 @@
 </tr>
 <tr>
 <td>Customer:Job and Billable</td>
-<td>As on the Expenses tab.</td>
+<td>As on the Expenses tab, for customers only.</td>
 </tr>
 </tbody>
 </table></div>
@@ -289,6 +291,7 @@
 <p>A cash voucher records cash paid out of a cash fund, such as the petty cash fund or a revolving fund: delivery fares, small purchases, cash advances to employees, government fees. The voucher is entered like a journal entry (the accounts debited and credited), and the cash account is credited for the cash amount. The same page lists the vouchers already saved.</p>
 <p><strong>Where to find it:</strong> Banking &gt; Cash Voucher. The <strong>Cash Voucher</strong> button on <a href="manual.php?c=chart-of-accounts#pg-coa-names">Employees &amp; Other Names</a> also opens it.</p>
 <div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>A loan released in cash on the <a href="manual.php?c=cooperative#pg-loan-release">Loan Release Form</a> is a cash voucher of this list, paid from the cash account chosen on the form, with "Loan release" and the loan number under the payee. It prints as the <strong>Cash Voucher</strong> of the loan release; <strong>Edit</strong> and <strong>Delete</strong> stay greyed on it, and voiding it cancels the loan (only while the loan has no payment). Every voucher of a loan release is also listed on <a href="manual.php?c=cooperative#pg-loan-vouchers">Loan Release Vouchers</a>.</p></div>
+<p><strong>Attachments:</strong> the signed copy of the cash voucher and its supporting documents are attached in the <strong>Attachments</strong> box of the form, or later on its page with <strong>Add files</strong>; see <a href="manual.php?c=getting-started#sec-attachments">Attaching files</a>.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/bank_cash_voucher__main.jpg" title="Click to enlarge"><img src="assets/manual/img/bank_cash_voucher__main.jpg" alt="The Cash Voucher page: the entry form at the top and the voucher list below" width="1094" height="1022" loading="lazy" decoding="async"></a><figcaption>The Cash Voucher page: the entry form at the top and the voucher list below</figcaption></figure>
 <h4 id="s-fields_1">Fields<a class="man-hash" href="#s-fields_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <div class="table-responsive man-table"><table class="table table-sm">
@@ -1142,7 +1145,7 @@
 <li>Reconciling is best done by someone who does not also receive customer payments.</li>
 </ul>
 <h2 id="s-banking-reports">Banking reports<a class="man-hash" href="#s-banking-reports" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
-<p>The Banking reports are listed under <strong>Banking &gt; Reports</strong> in the sidebar and in the Banking card of the <a href="manual.php?c=home-and-reports#pg-home-reports">Report Center</a>. The common report tools (<strong>Refresh</strong>, <strong>Print / PDF</strong>, <strong>Export to spreadsheet</strong>, <strong>Email link</strong>, <strong>Modify Report</strong>, <strong>Memorize</strong> and clicking a number to open the transaction) are explained in <a href="manual.php?c=home-and-reports#sec-reports">Working with reports</a>.</p>
+<p>The Banking reports are listed under <strong>Banking &gt; Reports</strong> in the sidebar and in the Banking card of the <a href="manual.php?c=home-and-reports#pg-home-reports">Report Center</a>. The common report tools (<strong>Refresh</strong>, <strong>Print</strong>, <strong>Save as PDF</strong>, <strong>Export to spreadsheet</strong>, <strong>Email link</strong>, <strong>Modify Report</strong>, <strong>Memorize</strong> and clicking a number to open the transaction) are explained in <a href="manual.php?c=home-and-reports#sec-reports">Working with reports</a>.</p>
 <h3 id="pg-rpt-recon_summary">Reconciliation Summary<a class="man-hash" href="#pg-rpt-recon_summary" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>A one-page summary of a completed reconciliation: what was cleared, what was still outstanding, and how the register balance compares with the statement. Print it and file it with the bank statement.</p>
 <p><strong>Where to find it:</strong> Banking &gt; Reports &gt; Reconciliation Summary, or <strong>Summary</strong> in the reconciliation history on <a href="#pg-bank-reconcile">Reconcile</a>.</p>

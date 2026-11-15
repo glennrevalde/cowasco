@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 final class Schema
 {
-    private const FLAG = 'schema_ok_2027_05_02';
+    private const FLAG = 'schema_ok_2027_05_09';
 
     /**
      * file => one cheap probe.
@@ -207,6 +207,16 @@ final class Schema
         // version 57: the Bill Accounts Center of Water Billing (a page and its rights)
         'database/migrations/2027_05_02_bill_accounts_center.sql' => [
             "SELECT COUNT(*) FROM pages WHERE page_key = 'bill.accounts'", 1],
+        // version 60, the accounting update to G-SMaRT Accounting version 40: the FB POS (the item columns, the menu
+        // groups, two pages), the Cash Count Sheet (the bills and coins counted, its report) and the files attached to
+        // transactions (the queries fail without the tables and columns)
+        'database/migrations/2027_05_09_accounting_update_v40.sql' => [
+            "SELECT (SELECT COUNT(*) FROM pages WHERE page_key IN ('pos.fb', 'pos.fb_menu', 'rpt.pos_cash_count'))
+                    + 0 * (SELECT COUNT(fb_pos) + COUNT(fb_group_id) + COUNT(fb_sort) + COUNT(image_file) FROM items WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(*) FROM fb_pos_groups WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(*) FROM pos_cash_counts WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(transaction_id) + COUNT(stage_key) FROM txn_attachments WHERE 1 = 0)
+                    + 0 * (SELECT COUNT(*) FROM txn_attachment_chunks WHERE 1 = 0)", 3],
     ];
 
     private static ?array $pending = null;

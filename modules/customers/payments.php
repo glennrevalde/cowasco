@@ -288,7 +288,7 @@ $lead = 6 + ($showJob ? 1 : 0) + ($showEarly ? 1 : 0) + 2;   // columns before C
 <?= csrf_field() ?>
 <div class="card mb-3"><div class="card-body"><div class="row g-2">
   <div class="col-md-4"><label class="form-label">Received from</label>
-    <select class="form-select form-select-sm" name="customer_id" <?= $edit ? 'disabled' : '' ?> onchange="location='<?= h(url($pageKey)) ?>&customer_id='+this.value">
+    <select class="form-select form-select-sm" name="customer_id"<?= $edit ? ' disabled' : QuickAdd::attr('customer') ?> onchange="location='<?= h(url($pageKey)) ?>&customer_id='+this.value">
       <?= options(Lookup::customerOptions(false), $customerId, '— choose customer —') ?></select>
     <?php if ($edit): ?><input type="hidden" name="customer_id" value="<?= (int)$customerId ?>"><?php endif; ?>
   </div>

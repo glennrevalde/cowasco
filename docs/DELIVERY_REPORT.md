@@ -546,3 +546,29 @@ Types, the Chart of Accounts and its export, the type pickers, Behaves as on a t
 (a renamed built-in type alone in its group heads the group: Property and Equipment in place of Fixed Assets), the
 budgets and the messages. The original name stays the built-in type's own: no other type takes it, and the files to
 import still read it. No migration. See `UPGRADE_v59.txt`.
+
+## 36. Version 60: the accounting update (G-SMaRT Accounting versions 35 to 40)
+
+The accounting side of the program brought up to G-SMaRT Accounting version 40, from `accounting-system (2).zip`, mapped
+in `docs/ACCOUNTING_UPDATE_V40_CHECKLIST.md`: Disassemble / Process Items costed within 2% of its inputs and labor, and
+the later inventory transactions costed again in date order after a back-dated, edited, voided or deleted processing
+order, with their settings (v35, v36); the FB POS with its menu groups and item pictures (v35); a supplier on an expense
+line, carried to its general ledger line (v36); "Add new" in the customer, supplier, name, account and item drop-downs,
+and one New item button on the Inventory Center (v37, v38); POS Receipts with dates and times, a Cashier filter and
+totals, an item group's price variance in the gross sales, the General Ledger's Cashier filter and the Cash Count Sheet
+of a shift with its report on a quarter page (v38); Print and Save as PDF on every report (v39); files attached to
+journal entries, checks, cash vouchers, bills, purchase orders, sales orders and invoices, kept in the database in
+pieces of 256 KB and carried by the backups (v40).
+
+As asked, only the accounting was taken: the links of the members to the invoices, sales receipts, cash vouchers, check
+vouchers, journal entries and the other documents, and to water billing, are exactly as they were, and no new feature
+adds a member anywhere (the expense line's supplier list leaves out a member's own supplier record; "Add new" adds
+customers, suppliers, accounts and items, never a member). No water file changed.
+
+How it was merged: the accounting's 46 changed program and manual files three ways (version 34 as the base, this
+program, version 40); 28 merged by themselves and 18 were joined by hand keeping the cooperative and water changes; the
+accounting's 12 new program files added and fitted to this program's lists, account types and register. The
+accounting's three migrations are one script, `database/migrations/2027_05_09_accounting_update_v40.sql` (safe to run
+again, MySQL 5.5), registered in the update check, the installer and the tests; the two bundled databases were upgraded
+with it and written again. The accounting's own upgrade notes are in `docs/accounting/ACCOUNTING_UPGRADE_v35.txt` to
+`v40.txt`. See `UPGRADE_v60.txt`.

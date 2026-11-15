@@ -1,0 +1,52 @@
+G-SMaRT Accounting - version 36 (2026-12-31)
+=============================================
+
+This package holds only the files that were added or changed since version 35.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No database update this time: no new migration, no table or column change, and the
+bundled database files are unchanged. (If 2026_12_24_fb_pos.sql of version 35 was
+not run yet, run it.)
+
+After copying the files, press Ctrl+F5 once in the browser.
+
+What is new
+-----------
+1. A supplier on an expense line (Write Checks, Enter Bills, supplier credits,
+   Enter Bill for Received Items)
+ - The Customer:Job column of the Expenses tab is now "Customer / Supplier". Type
+   part of a name: the list shows the customers and jobs and the suppliers, with
+   "Customer" or "Supplier" after each name.
+ - A supplier chosen on a line goes with that line into the general ledger, so the
+   cost is on that supplier's subsidiary ledger and in Expenses by Vendor, even when
+   the check is made out to someone else. The bank or A/P line keeps the payee.
+ - Billable applies to customers only: it is cleared and switched off while a
+   supplier is chosen on the line.
+ - The saved check or bill shows the customer or supplier of each expense line.
+ - The Items tab is unchanged (Customer:Job).
+
+2. The 2% rule and the re-costing: Disassemble / Process Items only
+ - The 2% check (outputs against inputs plus labor) is made on Disassemble /
+   Process Items only. Bills, item receipts, checks, cash vouchers and the other
+   transactions are never checked against it.
+ - The automatic re-costing of version 35 is now started only by a processing order
+   that is back-dated, edited, voided or deleted. A back-dated or edited bill, item
+   receipt, check, sale, adjustment or transfer is saved at once, with no message
+   such as "The costs of the 7,690 inventory transactions dated from 10/02/2026 were
+   not worked out again".
+ - System Administration > Company, Security & Closing Date > Inventory and POS >
+   "Cost the later inventory transactions again ...": Disassemble / Process Items
+   only (the standard), Every inventory transaction (as in version 35), or Never.
+ - After entering a batch of back-dated bills or item receipts (for example at month
+   end), run System Administration > Utilities: Verify & Rebuild Data > Rebuild data
+   so the later costs follow them.
+ - The messages now read "Verify & Rebuild Data" (they showed "Verify &amp; Rebuild
+   Data").
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v36.docx) are updated: Vendors (Enter Bills),
+Banking (Write Checks), Inventory (the 2% rule, costing again) and System
+Administration (the settings).

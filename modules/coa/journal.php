@@ -78,15 +78,18 @@ handle_post(function () use ($t, $pageKey) {
             }
             return $reqId;
         });
+        // files attached or removed on the form change no amount: they are attached to the entry at once (v40)
+        $files = Attachments::claim((int)$t['id'], $pageKey);
         if ($approver) {
-            flash('success', 'Journal entry ' . $t['txn_no'] . ' changed, approved by ' . $approver['full_name'] . '. The entry as it was and the reason stay on file.');
+            flash('success', 'Journal entry ' . $t['txn_no'] . ' changed, approved by ' . $approver['full_name'] . '. The entry as it was and the reason stay on file.' . ($files !== '' ? ' ' . $files : ''));
         } else {
-            flash('info', 'The change to journal entry ' . $t['txn_no'] . ' was sent for approval (request ' . $done . '). The entry stays as it is until an approver approves the change.');
+            flash('info', 'The change to journal entry ' . $t['txn_no'] . ' was sent for approval (request ' . $done . '). The entry stays as it is until an approver approves the change.' . ($files !== '' ? ' ' . $files : ''));
         }
         redirect(url($pageKey, ['a' => 'view', 'id' => $t['id']]));
     }
     $id = Txn::save($type, $h, $lines, $t ? (int)$t['id'] : null, ['reason' => p('reason') ?: null]);
-    flash('success', 'Journal entry saved.');
+    $files = Attachments::claim($id, $pageKey);
+    flash('success', 'Journal entry saved.' . ($files !== '' ? ' ' . $files : ''));
     redirect_after_save(url($pageKey, ['a' => 'new']), url($pageKey, ['a' => 'view', 'id' => $id]));
 });
 
@@ -111,7 +114,7 @@ if ($approvalFlow): ?>
   <?php if ($pendingChange): ?><div class="mt-1 small">A change requested by <?= h((string)$pendingChange['requester']) ?> on <?= h(fdatetime($pendingChange['requested_at'])) ?> is already waiting; saving another one replaces it.</div><?php endif; ?>
 </div></div>
 <?php endif; ?>
-<form method="post"><?= csrf_field() ?>
+<form method="post"<?= Attachments::enctype('journal') ?>><?= csrf_field() ?>
 <div class="card mb-3"><div class="card-body row g-2">
   <?= input_field('txn_date', 'Date', fv('txn_date', $rec, today()), ['type' => 'date', 'class' => 'col-md-2']) ?>
   <?= input_field('txn_no', 'Entry no.', fv('txn_no', $t, ''), ['class' => 'col-md-2', 'extra' => 'placeholder="' . h($t ? '' : Seq::peek('journal') . ' (auto)') . '"']) ?>
@@ -132,6 +135,7 @@ if ($approvalFlow): ?>
   <div class="col-12"><?= Approval::fields() ?><div class="small text-muted mt-1">Leave the approval empty to send the change for approval; the approver sees the entry before and after.</div></div>
 </div></div>
 <?php endif; ?>
+<?= Attachments::formCard('journal', $t) ?>
 <div class="d-flex flex-wrap gap-2 align-items-center">
   <?= $approvalFlow ? '' : posted_change_field($t) ?>
   <?= $approvalFlow ? '<div class="d-flex gap-1 flex-wrap align-items-center"><button class="btn btn-primary btn-sm" name="save" value="1"><i class="bi bi-send-check"></i> Save the change</button> <a class="btn btn-outline-secondary btn-sm" href="' . h(url($pageKey, ['a' => 'view', 'id' => $t['id']])) . '">Cancel</a></div>'

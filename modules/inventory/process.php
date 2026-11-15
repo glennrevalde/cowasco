@@ -342,6 +342,10 @@ $runForm = function (bool $auto) use (&$st, &$preview, $t, $sites, $pageKey, $tx
         return;
     }
     $pending = $do === 'pending';
+    // v35: the outputs must cost what the inputs and labor cost, within the tolerance (2%); otherwise the order is not
+    // saved and the user revises the output costs (the allocation stays on the form to work from)
+    $preview = [$est, $alloc];
+    Processing::assertReconciled((float)$est['pool'], (float)$alloc['allocated'], (float)$est['materials'], (float)$est['extra']);
     $short = Processing::shortInputs($in, $siteId, $t && (int)$t['is_pending'] === 0 ? (int)$t['id'] : null, $st['txn_date']);
     if ($short && !$pending) {
         fail('Not enough stock at the processing site: ' . implode(', ', $short) . '. Save the order as pending, or transfer or receive the items first.');
@@ -439,7 +443,7 @@ $outRow = function ($i, array $r) use ($outOpts, $showCosts, $alloc): string {
     $unitVal = ($r['unit_cost'] ?? '') !== '' ? to_num($r['unit_cost'])
         : ($res['unit'] ?? ($allocVal !== null && $qtyVal > 0 ? round($allocVal / $qtyVal, 4) : null));
     $html = '<tr><td class="col-item"><input type="hidden" name="' . $n . '[id]" value="' . h($r['id'] ?? '') . '">'
-        . '<select class="form-select form-select-sm" name="' . $n . '[item_id]">' . options($outOpts, ($r['item_id'] ?? '') ?: null, '') . '</select></td>'
+        . '<select class="form-select form-select-sm" name="' . $n . '[item_id]"' . QuickAdd::attr('item', Processing::OUTPUT_TYPES) . '>' . options($outOpts, ($r['item_id'] ?? '') ?: null, '') . '</select></td>'
         . '<td class="col-desc"><input class="form-control form-control-sm" name="' . $n . '[description]" value="' . h($r['description'] ?? '') . '"></td>'
         . '<td><select class="form-select form-select-sm" name="' . $n . '[output_role]" data-f="output_role" style="min-width:150px">' . options(Processing::ROLES, $r['output_role'] ?? 'co_product') . '</select></td>'
         . '<td class="col-sm num text-muted small">' . (($r['planned_qty'] ?? null) !== null && ($r['planned_qty'] ?? '') !== '' ? qty($r['planned_qty']) : '')
@@ -459,7 +463,7 @@ $costRow = function ($i, array $r) use ($accounts, $absorbedAcct): string {
     $n = 'costs[' . $i . ']';
     $amt = $r['amount'] ?? '';
     return '<tr><td class="col-item"><input type="hidden" name="' . $n . '[id]" value="' . h($r['id'] ?? '') . '">'
-        . '<select class="form-select form-select-sm" name="' . $n . '[account_id]">' . options($accounts, ($r['account_id'] ?? '') ?: ($i === '__i__' ? $absorbedAcct : null), '') . '</select></td>'
+        . '<select class="form-select form-select-sm" name="' . $n . '[account_id]"' . QuickAdd::attr('account') . '>' . options($accounts, ($r['account_id'] ?? '') ?: ($i === '__i__' ? $absorbedAcct : null), '') . '</select></td>'
         . '<td class="col-desc"><input class="form-control form-control-sm" name="' . $n . '[description]" value="' . h($r['description'] ?? '') . '" placeholder="e.g. Labor, machine time, overhead"></td>'
         . '<td class="col-num"><input class="form-control form-control-sm text-end" name="' . $n . '[amount]" value="' . h(is_numeric($amt) && (float)$amt != 0.0 ? number_format((float)$amt, 2, '.', '') : (is_numeric($amt) ? '' : $amt)) . '"></td>'
         . grid_row_buttons() . '</tr>';
@@ -496,7 +500,7 @@ $methodHelp = array_map(fn($x) => $x[1], Processing::METHODS);
     <select class="form-select form-select-sm" name="alloc_method" id="methodSel"><?= options(array_map(fn($x) => $x[0], Processing::METHODS), $method) ?></select>
     <div class="form-text" id="methodHelp"><?= h($methodHelp[$method] ?? '') ?></div></div>
   <div class="col-md-4" data-toggle-by="#methodSel" data-show-when="average_cost,manual"><label class="form-label">Variance account (difference)</label>
-    <select class="form-select form-select-sm" name="account_id"><?= options($accounts, $st['account_id'], '— default —') ?></select></div>
+    <select class="form-select form-select-sm" name="account_id"<?= QuickAdd::attr('account') ?>><?= options($accounts, $st['account_id'], '— default —') ?></select></div>
   <?= input_field('memo', 'Memo', $st['memo'], ['class' => 'col-md-4']) ?>
   <?= Classes::field($st['class_id'], 'col-md-3') ?>
 </div></div>
@@ -551,10 +555,11 @@ $methodHelp = array_map(fn($x) => $x[1], Processing::METHODS);
         <td colspan="<?= $showCosts ? 5 : 3 ?>"></td>
       </tr>
       <?php if ($showCosts): ?>
-      <tr class="small text-muted" id="outAllocCompare" <?= $alloc ? '' : 'hidden' ?> data-pool="<?= h($alloc ? number_format((float)$alloc['pool'], 2, '.', '') : '') ?>">
+      <tr class="small text-muted" id="outAllocCompare" <?= $alloc ? '' : 'hidden' ?> data-pool="<?= h($alloc ? number_format((float)$alloc['pool'], 2, '.', '') : '') ?>" data-tol="<?= h((string)Processing::tolerance()) ?>">
         <td colspan="7" class="text-end">Total cost to allocate <strong id="outPool"><?= $alloc ? money($alloc['pool']) : '' ?></strong>, difference from the allocated total</td>
-        <td class="num fw-semibold" id="outAllocDiff"></td><td colspan="2"></td>
+        <td class="num fw-semibold" id="outAllocDiff"></td><td colspan="2" class="small" id="outAllocPct"></td>
       </tr>
+      <tr id="outAllocWarn" hidden><td colspan="10" class="proc-recon-warn"><div class="proc-recon-msg">The outputs differ from the cost of the inputs and labor by more than <?= h(rtrim(rtrim(number_format(Processing::tolerance(), 2), '0'), '.')) ?>%: the order cannot be saved. Revise the Allocated cost or Unit cost of the outputs so they add up to the input cost.</div></td></tr>
       <?php endif; ?>
     </tfoot>
   </table></div>
@@ -743,6 +748,12 @@ $methodHelp = array_map(fn($x) => $x[1], Processing::METHODS);
         cellDiff.classList.toggle('text-danger', Math.abs(diff) >= 0.005);
         cellDiff.classList.toggle('text-success', Math.abs(diff) < 0.005);
       }
+      // v35: the difference as a percentage of the input cost, and a warning beyond the tolerance (2%)
+      const pool = num(cmp.dataset.pool), tol = num(cmp.dataset.tol || '2');
+      const pctCell = document.getElementById('outAllocPct'), warn = document.getElementById('outAllocWarn');
+      const pctv = pool > 0 ? (total - pool) / pool * 100 : 0;
+      if (pctCell) { pctCell.textContent = Math.abs(diff) >= 0.005 && pool > 0 ? (pctv > 0 ? '+' : '') + pctv.toFixed(2) + '%' : ''; }
+      if (warn) { warn.hidden = !(pool > 0 && Math.abs(pctv) > tol + 0.000001); }
     }
   }
 

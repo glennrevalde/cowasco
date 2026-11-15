@@ -78,7 +78,10 @@ function item_grid(array $lines, array $opt): string
     $units = array_filter($units, fn($u) => count($u) > 1);
     $showUom = (bool)$units;
 
-    $row = function (array $l, string $i) use ($name, $items, $taxOpts, $sites, $jobs, $opt, $mode, $units, $showUom) {
+    // v37: "Add new item" (of the types this grid takes) and "Add new customer" in the boxes (QuickAdd)
+    $addItem = ($opt['quick_add'] ?? true) ? QuickAdd::attr('item', $mode === 'purchase' ? QuickAdd::PURCHASE_TYPES : []) : '';
+    $addJob = ($opt['quick_add'] ?? true) ? QuickAdd::attr('customer') : '';
+    $row = function (array $l, string $i) use ($name, $items, $taxOpts, $sites, $jobs, $opt, $mode, $units, $showUom, $addItem, $addJob) {
         $n = fn($f) => h($name . '[' . $i . '][' . $f . ']');
         $isSub = !empty($l['item_id']) && ($items[(int)$l['item_id']]['type'] ?? '') === 'subtotal';
         $html = '<tr>';
@@ -86,7 +89,7 @@ function item_grid(array $lines, array $opt): string
             . '<input type="hidden" name="' . $n('source_line_id') . '" value="' . h($l['source_line_id'] ?? '') . '">'
             . '<input type="hidden" name="' . $n('account_id') . '" value="' . h($l['account_id'] ?? '') . '">'
             . grid_group_fields($l, $n)
-            . '<select class="form-select form-select-sm" data-f="item_id" name="' . $n('item_id') . '">' . grid_item_options($items, $l['item_id'] ?? '') . '</select></td>';
+            . '<select class="form-select form-select-sm" data-f="item_id" name="' . $n('item_id') . '"' . $addItem . '>' . grid_item_options($items, $l['item_id'] ?? '') . '</select></td>';
         $html .= '<td class="col-desc"><input class="form-control form-control-sm" data-f="description" name="' . $n('description') . '" value="' . h($l['description'] ?? '') . '">'
             . ($isSub ? '<span class="small text-muted">Subtotal: <span data-subtotal></span></span>' : '<span data-subtotal class="d-none"></span>') . '</td>';
         // quantity and price are entered in the line's own unit; qty / rate are stored in base units
@@ -119,7 +122,7 @@ function item_grid(array $lines, array $opt): string
             $html .= '<td class="col-num"><select class="form-select form-select-sm" name="' . $n('site_id') . '">' . options($sites, $l['site_id'] ?? '', 'Default') . '</select></td>';
         }
         if (!empty($opt['show_job'])) {
-            $html .= '<td class="col-item"><select class="form-select form-select-sm" name="' . $n('customer_id') . '">' . options($jobs, $l['customer_id'] ?? '', '') . '</select></td>'
+            $html .= '<td class="col-item"><select class="form-select form-select-sm" name="' . $n('customer_id') . '"' . $addJob . '>' . options($jobs, $l['customer_id'] ?? '', '') . '</select></td>'
                 . '<td class="text-center"><input type="checkbox" class="form-check-input" name="' . $n('is_billable') . '" value="1"' . checked(!empty($l['is_billable'])) . '></td>';
         }
         if (!empty($opt['show_fulfilled'])) {
@@ -159,6 +162,38 @@ function item_grid(array $lines, array $opt): string
         . grid_add_buttons($id);
 }
 
+/**
+ * The names an expense line can be for (v36): the customers and jobs, and the suppliers, so a cost can be put on
+ * a supplier's subsidiary ledger as well as on a customer's. Code => label ("c12", "v5"), customers first, each
+ * searchable by name. A name already on the lines stays in the list even when it is no longer active.
+ * The customers are those of Customer:Job as before (a cooperative member by its member type, "Santos, Maria
+ * (Regular Member)"); the suppliers are the suppliers of the business: a member's own supplier record is not added
+ * to the expense lines (the accounting update brings no member onto the documents).
+ */
+function expense_name_options(array $lines = []): array
+{
+    $out = [];
+    $kinds = class_exists('Members') ? Members::nameKinds() : ['c' => [], 'v' => []];
+    foreach (Lookup::customerOptions() as $id => $label) {
+        $out['c' . $id] = isset($kinds['c'][$id]) ? $label : $label . ' (Customer)';
+    }
+    foreach (Lookup::vendorNames() as $id => $label) {
+        if (!isset($kinds['v'][$id])) {
+            $out['v' . $id] = $label . ' (Supplier)';
+        }
+    }
+    foreach ($lines as $l) {
+        $code = expense_name_code($l);
+        if ($code !== '' && !isset($out[$code]) && in_array($code[0], ['c', 'v'], true)) {
+            $label = Names::label(Names::parse($code));
+            if ($label !== '') {
+                $out[$code] = $label . ($code[0] === 'c' ? ' (Customer, inactive)' : ' (Supplier, inactive)');
+            }
+        }
+    }
+    return $out;
+}
+
 /** Expense-account grid (bills, checks, vendor credits) */
 function expense_grid(array $lines, array $opt = []): string
 {
@@ -166,19 +201,22 @@ function expense_grid(array $lines, array $opt = []): string
     $name = $opt['name'] ?? 'expenses';
     $accounts = Accts::all();
     $taxOpts = Lookup::taxCodes();
-    $jobs = Lookup::customerOptions();
+    $jobs = expense_name_options($lines);
     $group = $opt['total_group'] ?? 'main';
-    $row = function (array $l, string $i) use ($name, $accounts, $taxOpts, $jobs) {
+    $addAcct = QuickAdd::attr('account');
+    $addName = QuickAdd::attr('name');
+    $row = function (array $l, string $i) use ($name, $accounts, $taxOpts, $jobs, $addAcct, $addName) {
         $n = fn($f) => h($name . '[' . $i . '][' . $f . ']');
+        $sel = expense_name_code($l);
         return '<tr>'
             . '<td class="col-item"><input type="hidden" name="' . $n('id') . '" value="' . h($l['id'] ?? '') . '">'
-            . '<select class="form-select form-select-sm" name="' . $n('account_id') . '">' . options($accounts, $l['account_id'] ?? '', '') . '</select></td>'
+            . '<select class="form-select form-select-sm" name="' . $n('account_id') . '"' . $addAcct . '>' . options($accounts, $l['account_id'] ?? '', '') . '</select></td>'
             . '<td class="col-num"><input class="form-control form-control-sm text-end" data-f="amount" name="' . $n('amount') . '" value="' . h(isset($l['amount']) ? number_format((float)$l['amount'], 2, '.', '') : '') . '"></td>'
             . '<td class="col-num"><select class="form-select form-select-sm" data-f="tax_code_id" name="' . $n('tax_code_id') . '">' . options($taxOpts, $l['tax_code_id'] ?? '', '') . '</select>'
             . '<input type="hidden" data-f="tax_amount" value="' . h(number_format((float)($l['tax_amount'] ?? 0), 2, '.', '')) . '"></td>'
             . '<td class="col-desc"><input class="form-control form-control-sm" name="' . $n('description') . '" value="' . h($l['description'] ?? '') . '"></td>'
-            . '<td class="col-item"><select class="form-select form-select-sm" name="' . $n('customer_id') . '">' . options($jobs, $l['customer_id'] ?? '', '') . '</select></td>'
-            . '<td class="text-center"><input type="checkbox" class="form-check-input" name="' . $n('is_billable') . '" value="1"' . checked(!empty($l['is_billable'])) . '></td>'
+            . '<td class="col-item"><select class="form-select form-select-sm" data-combo data-combo-placeholder="Type a customer or supplier" data-f="exp_name" name="' . $n('name') . '" aria-label="Customer or supplier"' . $addName . '>' . options($jobs, $sel, '') . '</select></td>'
+            . '<td class="text-center"><input type="checkbox" class="form-check-input" data-f="exp_billable" name="' . $n('is_billable') . '" value="1"' . checked(!empty($l['is_billable'])) . ($sel !== '' && $sel[0] === 'v' ? ' disabled title="Only a cost for a customer can be billed"' : '') . '></td>'
             . grid_row_buttons(true, !empty($l['billed_txn_id']) ? '<span class="small text-success ms-1">billed</span>' : '')
             . '</tr>';
     };
@@ -189,7 +227,7 @@ function expense_grid(array $lines, array $opt = []): string
     }
     return '<div class="table-responsive"><table class="table table-sm line-grid mb-1" id="' . h($id) . '" data-template="tpl-' . h($id) . '" data-mode="expense"'
         . ' data-total-group="' . h($group) . '" data-min-rows="' . (int)($opt['min_rows'] ?? 2) . '" data-taxes="' . h(json_encode(Lookup::taxRates())) . '">'
-        . '<thead><tr><th>Account</th><th class="num">Amount</th><th>Tax</th><th>Memo</th><th>Customer:Job</th><th>Billable</th><th></th></tr></thead>'
+        . '<thead><tr><th>Account</th><th class="num">Amount</th><th>Tax</th><th>Memo</th><th>Customer / Supplier</th><th>Billable</th><th></th></tr></thead>'
         . '<tbody>' . $body . '</tbody></table></div>'
         . '<template id="tpl-' . h($id) . '">' . $row([], '__i__') . '</template>'
         . grid_add_buttons($id);
@@ -248,16 +286,18 @@ function journal_grid(array $lines, array $opt = []): string
         }
     }
     $names = combo_name_options($names);
-    $row = function (array $l, string $i) use ($name, $accounts, $names, $showClass) {
+    $addAcct = QuickAdd::attr('account');
+    $addName = QuickAdd::attr('name');
+    $row = function (array $l, string $i) use ($name, $accounts, $names, $showClass, $addAcct, $addName) {
         $n = fn($f) => h($name . '[' . $i . '][' . $f . ']');
         $amt = (float)($l['amount'] ?? 0);
         $sel = $l['name_code'] ?? Names::code($l);
         return '<tr>'
-            . '<td class="col-item"><input type="hidden" name="' . $n('id') . '" value="' . h($l['id'] ?? '') . '"><select class="form-select form-select-sm" data-combo data-combo-placeholder="Type the account name" name="' . $n('account_id') . '">' . options($accounts, $l['account_id'] ?? '', '') . '</select></td>'
+            . '<td class="col-item"><input type="hidden" name="' . $n('id') . '" value="' . h($l['id'] ?? '') . '"><select class="form-select form-select-sm" data-combo data-combo-placeholder="Type the account name" name="' . $n('account_id') . '"' . $addAcct . '>' . options($accounts, $l['account_id'] ?? '', '') . '</select></td>'
             . '<td class="col-num"><input class="form-control form-control-sm text-end" data-f="debit" name="' . $n('debit') . '" value="' . ($amt > 0 ? number_format($amt, 2, '.', '') : '') . '"></td>'
             . '<td class="col-num"><input class="form-control form-control-sm text-end" data-f="credit" name="' . $n('credit') . '" value="' . ($amt < 0 ? number_format(-$amt, 2, '.', '') : '') . '"></td>'
             . '<td class="col-desc"><input class="form-control form-control-sm" name="' . $n('description') . '" value="' . h($l['description'] ?? '') . '"></td>'
-            . '<td class="col-item"><select class="form-select form-select-sm" data-combo data-combo-placeholder="Type a name" name="' . $n('name') . '">' . options($names, $sel, '') . '</select></td>'
+            . '<td class="col-item"><select class="form-select form-select-sm" data-combo data-combo-placeholder="Type a name" name="' . $n('name') . '"' . $addName . '>' . options($names, $sel, '') . '</select></td>'
             . ($showClass ? '<td class="col-class">' . Classes::lineSelect($name . '[' . $i . '][class_id]', $l['class_id'] ?? '') . '</td>' : '')
             . grid_row_buttons() . '</tr>';
     };

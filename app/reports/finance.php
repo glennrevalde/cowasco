@@ -958,13 +958,22 @@ Report::define('cash_flow_class', [
 ]);
 
 Report::define('general_ledger', [
-    'filters' => ['range', 'account', 'class', 'search'],
+    'filters' => ['range', 'account', 'class', 'cashier', 'search'],
     'sortable' => false,
     'run' => function (array $f): array {
         $accts = $f['account_id'] ? array_filter(fin_accounts(), fn($a) => (int)$a['id'] === $f['account_id']) : fin_accounts();
         $cls = $f['class_id'] ?: null;
         [$csql, $cp] = Classes::sqlFilter($cls, '');
         [$cjsql, $cjp] = Classes::sqlFilter($cls, 'j', 'fclassj');
+        // v38: a cashier chosen: only the transactions that cashier entered (POS sales, returns, payments ...),
+        // the beginning balance too, so the running balance is the cashier's own
+        $cashier = (int)($f['user_id'] ?? 0);
+        if ($cashier) {
+            $csql .= ' AND EXISTS (SELECT 1 FROM transactions tc WHERE tc.id = journal_lines.txn_id AND tc.created_by = :glcu)';
+            $cp['glcu'] = $cashier;
+            $cjsql .= ' AND t.created_by = :glcuj';
+            $cjp['glcuj'] = $cashier;
+        }
         $rows = [];
         foreach ($accts as $a) {
             $opening = (float)DB::value("SELECT COALESCE(SUM(debit - credit),0) FROM journal_lines WHERE account_id = :a AND txn_date < :f $csql", ['a' => $a['id'], 'f' => $f['from']] + $cp);
@@ -1013,7 +1022,9 @@ Report::define('general_ledger', [
                 ['key' => 'name', 'label' => 'Name'], ['key' => 'memo', 'label' => 'Memo'], ['key' => 'class', 'label' => 'Class'],
                 ['key' => 'debit', 'label' => 'Debit', 'type' => 'money'],
                 ['key' => 'credit', 'label' => 'Credit', 'type' => 'money'], ['key' => 'balance', 'label' => 'Balance', 'type' => 'money']],
-            'notes' => fin_class_note($cls, false) . 'The balance is shown on each account\'s normal side: debits increase a debit-balance account (assets, expenses), credits increase a credit-balance account (liabilities, equity, income). A negative balance is on the other side.',
+            'notes' => fin_class_note($cls, false) . 'The balance is shown on each account\'s normal side: debits increase a debit-balance account (assets, expenses), credits increase a credit-balance account (liabilities, equity, income). A negative balance is on the other side.'
+                . ($cashier ? ' Only the transactions entered by the cashier ' . h((string)DB::value("SELECT COALESCE(NULLIF(full_name, ''), username) FROM users WHERE id = :u", ['u' => $cashier]))
+                . ' are shown, and the beginning balance is of that cashier\'s transactions alone.' : ''),
             'rows' => array_map(function ($r) {
                 if (($r['_class'] ?? '') !== '' && !valid_date((string)($r['date'] ?? ''))) {
                     $r['_html']['date'] = '<strong>' . h($r['date']) . '</strong>';

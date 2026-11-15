@@ -405,6 +405,7 @@ handle_post(function () use ($t, $docType, $pageKey, $isSalesDoc, $type) {
     }
 
     $newId = Txn::save($docType, $h, $lines, $id, $opt);
+    $files = Attachments::claim($newId, $pageKey);
 
     if (!empty($opt['credit_override'])) {
         Audit::log('credit_limit_override', 'cust', 'transaction', $newId, Txn::ref(Txn::load($newId)), ['reason' => $opt['reason'], 'page_key' => $pageKey]);
@@ -443,7 +444,7 @@ handle_post(function () use ($t, $docType, $pageKey, $isSalesDoc, $type) {
         redirect(url($pageKey, ['a' => 'apply', 'id' => $newId]));
     }
 
-    flash('success', Txn::label($docType) . ' saved.');
+    flash('success', Txn::label($docType) . ' saved.' . ($files !== '' ? ' ' . $files : ''));
     redirect_after_save(
         url($pageKey, ['a' => 'new']),
         url($pageKey, ['a' => 'view', 'id' => $newId])
@@ -491,7 +492,7 @@ if ($source && !is_post()) {
     echo '<div class="alert alert-info py-2">Creating from ' . Txn::link($source, Txn::ref($source)) . (g('pct') ? ' — progress invoice for ' . h(g('pct')) . '%' : '') . '.</div>';
 }
 ?>
-<form method="post" id="txnForm">
+<form method="post" id="txnForm"<?= Attachments::enctype($docType) ?>>
 <?= csrf_field() ?>
 <?= in_array($docType, ['invoice', 'sales_receipt'], true) ? negative_stock_fields() : '' ?>
 <?php if ($receiptDoc): ?><input type="hidden" name="receipt_document_id" value="<?= (int)$receiptDoc['id'] ?>"><?php endif; ?>
@@ -651,6 +652,7 @@ if ($docType === 'invoice' && $customerId):
     <?php endif; ?>
     <?= posted_change_field($t) ?>
     <?= in_array($docType, ['estimate', 'sales_order', 'invoice', 'sales_receipt', 'check', 'purchase_order', 'bill', 'item_receipt'], true) ? Approval::fields() : '' ?>
+    <?= Attachments::formCard($docType, $t) ?>
   </div>
   <div class="col-md-6"><?= totals_box() ?></div>
 </div>

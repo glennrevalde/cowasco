@@ -1,0 +1,71 @@
+G-SMaRT Accounting - version 40 (2027-01-28)
+=============================================
+
+This package holds only the files that were added or changed since version 39.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+1. Back up the database.
+2. Run database/migrations/2027_01_28_transaction_attachments.sql on it
+   (phpMyAdmin: Import; Navicat: Execute SQL File). It works on MySQL 5.5 and can
+   be run a second time. It adds:
+    - the table txn_attachments: the files attached to transactions (name, type,
+      size, who attached it and when), empty at first;
+    - the table txn_attachment_chunks: the content of the files, in pieces of
+      256 KB, so a file of any size is saved under MySQL 5.5's default 1 MB
+      packet limit (max_allowed_packet need not be changed).
+   Nothing is deleted and no amount changes. Until it is run, the system stops
+   after log-in with a page that names it.
+3. Press Ctrl+F5 once in the browser (the page script and the style sheet changed).
+
+PHP upload size (recommended)
+-----------------------------
+A new PHP install takes files of up to 2 MB (upload_max_filesize) and 8 MB in
+one save (post_max_size). The Attachments box shows the limit in force. For
+scanned copies, raise them, for example on Ubuntu with Apache (change 8.x to
+your PHP version):
+
+  sudo sed -i 's/^upload_max_filesize.*/upload_max_filesize = 25M/; s/^post_max_size.*/post_max_size = 30M/' /etc/php/8.x/apache2/php.ini
+  sudo systemctl restart apache2
+
+(With XAMPP: edit xampp\php\php.ini the same way and restart Apache.)
+A save carrying more than post_max_size is refused with a message that says so.
+
+What is new
+-----------
+1. Attachments on vouchers, bills, orders and invoices
+ - Make Journal Entries, Write Checks, Cash Voucher, Enter Bills (also Receive
+   Items and Enter Bills, and Enter Bill for Received Items), Create Purchase
+   Orders, Create Sales Orders and Create Invoices have an Attachments box for
+   the signed copy and its supporting documents. One or more files at a time:
+   click Add files (again to add more) or drop the files on the box. Each file is
+   listed with its size and a Remove; the files are saved with the transaction.
+   If the form comes back with a question or an error, the files stay listed and
+   are attached with the next Save.
+ - Accepted: .pdf, .jpg, .jpeg, .png and other pictures, Word, Excel and
+   PowerPoint files, web files (.html, .css, .js, .xml, .json), text, e-mails,
+   .zip and most other files. Program files (.exe, .bat, .msi, .ps1 and the
+   like) are refused. The files are kept in the database and go with every
+   backup.
+ - The page of a saved transaction lists its files with View (PDF and pictures
+   open in a new tab), Download and Remove, and Add files + Attach attaches more
+   straight away, for instance the signed copy after printing, without editing
+   the transaction.
+ - The edit form lists the files too; Remove takes one off when the form is
+   saved (Undo keeps it).
+ - The lists of journal entries, checks, cash vouchers, bills, purchase orders,
+   sales orders and invoices show a paper clip, with the number of files,
+   beside a document that has attachments.
+ - Rights: users who may open the transaction's page see and download its
+   files; attaching needs the Create or Edit right on the page; removing needs
+   Edit or Delete. Every file attached or removed is in the audit trail
+   (Attach File, Remove File). Deleting a transaction deletes its files; voiding
+   keeps them.
+ - Backup & Restore writes the files as hex, in statements under 1 MB, so a
+   backup with attachments reads back on MySQL 5.5 with its default settings.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v40.docx) are updated: Getting Started
+(Attaching files) and a line on each of the seven pages.

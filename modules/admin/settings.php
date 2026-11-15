@@ -29,6 +29,9 @@ $groups = [
         'allow_negative_stock' => ['Allow selling or moving stock below zero (with warning)', 'bool'],
         'block_zero_cost_sales' => ['Block sales of items with no unit cost (inventory parts and the items of item groups)', 'bool'],
         'block_zero_cost_processing' => ['Block posting processing orders with no unit cost (inputs, co-products and by-products)', 'bool'],
+        'processing_cost_tolerance' => ['Disassemble / Process Items only: largest difference allowed between the cost of the outputs and the cost of the inputs and labor (%)', 'num'],
+        'auto_recost_scope' => ['Cost the later inventory transactions again, in date order, when one of these is back-dated, edited, voided or deleted', 'select'],
+        'auto_recost_limit' => ['Cost again at most this many later transactions at once (more: run Rebuild Data)', 'int'],
     ],
     'POS receipt wording' => [
         'pos_receipt_title'         => ['Receipt title for sales', 'text'],
@@ -54,7 +57,8 @@ $groups = [
 ];
 
 // choices of the 'select' settings
-$choices = ['bt_printer_width' => Receipt::WIDTHS, 'water_collection_receipt_type' => WaterReceiptLayout::TYPES, 'water_official_receipt_type' => WaterReceiptLayout::TYPES];
+$choices = ['bt_printer_width' => Receipt::WIDTHS, 'water_collection_receipt_type' => WaterReceiptLayout::TYPES, 'water_official_receipt_type' => WaterReceiptLayout::TYPES,
+    'auto_recost_scope' => Recost::SCOPES];
 
 handle_post(function () use ($groups, $pageKey, $choices) {
     Access::require($pageKey, 'edit');
@@ -99,6 +103,9 @@ handle_post(function () use ($groups, $pageKey, $choices) {
             }
             if ($k === 'max_failed_logins' && (int)$v < 1) {
                 fail('Allow at least one failed login.');
+            }
+            if ($k === 'processing_cost_tolerance' && ((float)$v < 0 || (float)$v > 100)) {
+                fail('The difference allowed on processing orders must be between 0% and 100%.');
             }
             if ($k === 'session_timeout_minutes' && (int)$v < 1) {
                 fail('The session timeout must be at least one minute.');
@@ -357,7 +364,7 @@ layout_start('Company, Security & Closing Date', ['js' => ['js/btprint.js']]);
               </div></div>
           <?php endforeach; ?>
         </div>
-        <div class="form-text">The logo is printed beside the company name on the reports and vouchers ticked here, on screen, on Print / PDF and on the printed page.</div>
+        <div class="form-text">The logo is printed beside the company name on the reports and vouchers ticked here, on screen, on the print page and on the printed page.</div>
       </div>
     </div>
   </div></div></div>

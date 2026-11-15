@@ -2,7 +2,7 @@
 
 One side menu for the whole system, the same on the cooperative/accounting pages and on the water pages. Every page is
 listed with its page-access key (the key Page Access Configuration and User Role Configuration work on). A user sees
-only the pages given to his roles. Generated from the page registry of `cowasco_sample` on 2026-11-08.
+only the pages given to his roles. Generated from the page registry of `cowasco_sample` on 2026-11-08; the three pages of version 60 (FB POS, FB POS Menu & Groups, Cash Count Sheet) added.
 
 There is one Accounting (Financial, Banking, reports), one Inventory and one Membership (Members & Others, Parties)
 section. The Water Billing menu holds only water operations; the former water accounting, inventory and user pages
@@ -68,9 +68,9 @@ are retired (table at the end) and open the page that replaces them.
 
 ## Point of Sale
 
-- **Transactions** (4): POS Register `pos.register`; Shifts, Cash Drops & Readings `pos.shifts`; POS Receipts, Returns & Voids `pos.receipts`; Approval Codes `pos.approval_codes`
-- **Setup** (1): POS Terminals `pos.terminals`
-- **Reports** (11): POS Sales by Transaction No. (detail) `rpt.pos_sales_txn`; POS Sales by Item `rpt.pos_sales_item`; POS Sales by Item Group `rpt.pos_sales_item_group`; POS Sales by Category `rpt.pos_sales_category`; POS Sales by Cashier & Payment Method `rpt.pos_sales_cashier`; POS Sales by Hour `rpt.pos_sales_hour`; POS Daily Sales Summary `rpt.pos_daily_summary`; X- and Z-Reading Summary `rpt.pos_readings`; POS Discount Log `rpt.pos_discount_log`; POS Void and Refund Log `rpt.pos_void_log`; Ending Inventory - POS Cashier `rpt.pos_ending_inventory`
+- **Transactions** (5): POS Register `pos.register`; FB POS `pos.fb`; Shifts, Cash Drops & Readings `pos.shifts`; POS Receipts, Returns & Voids `pos.receipts`; Approval Codes `pos.approval_codes`
+- **Setup** (2): POS Terminals `pos.terminals`; FB POS Menu & Groups `pos.fb_menu`
+- **Reports** (12): POS Sales by Transaction No. (detail) `rpt.pos_sales_txn`; POS Sales by Item `rpt.pos_sales_item`; POS Sales by Item Group `rpt.pos_sales_item_group`; POS Sales by Category `rpt.pos_sales_category`; POS Sales by Cashier & Payment Method `rpt.pos_sales_cashier`; POS Sales by Hour `rpt.pos_sales_hour`; POS Daily Sales Summary `rpt.pos_daily_summary`; X- and Z-Reading Summary `rpt.pos_readings`; POS Discount Log `rpt.pos_discount_log`; POS Void and Refund Log `rpt.pos_void_log`; Ending Inventory - POS Cashier `rpt.pos_ending_inventory`; Cash Count Sheet `rpt.pos_cash_count`
 
 ## Vendors
 

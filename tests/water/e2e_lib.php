@@ -73,6 +73,37 @@ final class Browser
         return $this->finish($ch, curl_exec($ch));
     }
 
+    /**
+     * A form with files (multipart/form-data, as the browser sends a form with a file box): $files = field name =>
+     * [path, file name, type] or a list of them (field[] for several files)
+     */
+    public function postMultipart(string $path, array $form, array $files): self
+    {
+        $flat = [];
+        $walk = function ($v, string $k) use (&$walk, &$flat) {
+            if (is_array($v)) {
+                foreach ($v as $kk => $vv) {
+                    $walk($vv, $k . '[' . $kk . ']');
+                }
+            } else {
+                $flat[$k] = (string)$v;
+            }
+        };
+        foreach ($form as $k => $v) {
+            $walk($v, (string)$k);
+        }
+        foreach ($files as $field => $list) {
+            $list = isset($list[0]) && is_array($list[0]) ? $list : [$list];
+            foreach ($list as $i => [$fpath, $fname, $type]) {
+                $flat[count($list) > 1 || str_ends_with($field, '[]') ? rtrim($field, '[]') . '[' . $i . ']' : $field] = new CURLFile($fpath, $type, $fname);
+            }
+        }
+        $ch = $this->handle('GET', $path);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $flat);
+        return $this->finish($ch, curl_exec($ch));
+    }
+
     public function postJson(string $path, array $data): self
     {
         $data['csrf_token'] ??= $this->csrf();

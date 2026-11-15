@@ -97,6 +97,14 @@ function build_menu(): array
 function layout_start(string $title, array $opt = []): void
 {
     $GLOBALS['LAYOUT_TITLE'] = $title;
+    // v37: a list's form opened from a drop-down's "Add new" (QuickAdd): drawn without the menu and the top bar,
+    // and without the page buttons, which would lead away from the form
+    if (QuickAdd::popup()) {
+        $opt['bare'] = true;
+        $opt['body_class'] = trim((string)($opt['body_class'] ?? '') . ' is-popup');
+        $opt['actions'] = '';
+        $opt['no_help'] = true;
+    }
     $GLOBALS['LAYOUT_BARE'] = !empty($opt['bare']);
     // extra scripts this page needs, loaded after app.js by layout_end(): ['js' => ['js/btprint.js']]
     $GLOBALS['LAYOUT_JS'] = array_values(array_filter((array)($opt['js'] ?? [])));
@@ -124,7 +132,7 @@ function layout_start(string $title, array $opt = []): void
 <script src="<?= h(asset('js/fmt.js')) ?>"></script>
 <script src="<?= h(asset('js/wht.js')) ?>"></script>
 </head>
-<body class="<?= h(trim((!empty($opt['bare']) ? 'bare ' : '') . (string)($opt['body_class'] ?? ''))) ?>">
+<body class="<?= h(trim((!empty($opt['bare']) ? 'bare ' : '') . (string)($opt['body_class'] ?? ''))) ?>"<?= QuickAdd::bodyAttr() ?>>
 <?php if (empty($opt['bare'])): ?>
 <nav class="navbar navbar-dark bg-dark app-bar sticky-top px-3 no-print">
   <div class="d-flex align-items-center gap-2">
@@ -255,7 +263,7 @@ function layout_start(string $title, array $opt = []): void
     <?php if (empty($opt['no_title'])): ?>
     <div class="page-bar">
       <h1><?= h($title) ?></h1>
-      <div class="page-actions no-print"><?= $opt['actions'] ?? '' ?><?= $user ? Manual::helpButton(Manual::forPage($current, is_string($_GET['a'] ?? null) ? $_GET['a'] : '')) : '' ?></div>
+      <div class="page-actions no-print"><?= $opt['actions'] ?? '' ?><?= $user && empty($opt['no_help']) ? Manual::helpButton(Manual::forPage($current, is_string($_GET['a'] ?? null) ? $_GET['a'] : '')) : '' ?></div>
     </div>
     <?php endif; ?>
     <?= form_error() ?>
@@ -327,8 +335,10 @@ function select_field(string $name, string $label, array $opts, $value, array $a
     $cls = $attr['class'] ?? 'col-md-4';
     $req = !empty($attr['required']) ? ' required' : '';
     $extra = $attr['extra'] ?? '';
+    // v37: customers, suppliers, names and accounts get the "Add new" lines (QuickAdd), unless 'no_add' is set
+    $add = empty($attr['no_add']) ? QuickAdd::infer($name, $opts) : '';
     return '<div class="' . h($cls) . '"><label class="form-label">' . h($label) . '</label>'
-        . '<select class="form-select form-select-sm" name="' . h($name) . '"' . $req . ' ' . $extra . '>' . options($opts, $value, $blank) . '</select></div>';
+        . '<select class="form-select form-select-sm" name="' . h($name) . '"' . $req . $add . ' ' . $extra . '>' . options($opts, $value, $blank) . '</select></div>';
 }
 
 function input_field(string $name, string $label, $value, array $attr = []): string
@@ -446,6 +456,11 @@ function gints(string $name, string $single = ''): array
 function save_buttons(string $label = 'Save', ?string $cancelUrl = null, bool $showNew = true, string $extra = ''): string
 {
     $html = '<button class="btn btn-primary btn-sm" name="save" value="1"><i class="bi bi-check-lg"></i> ' . h($label) . '</button>';
+    if (QuickAdd::popup()) {
+        // in the "Add new" window: save, or close the window
+        return '<div class="d-flex gap-1 flex-wrap align-items-center">' . $html
+            . ' <button type="button" class="btn btn-outline-secondary btn-sm" data-popup-close>Cancel</button></div>';
+    }
     if ($showNew) {
         $html .= ' <button class="btn btn-outline-primary btn-sm" name="save_new" value="1" title="Save this one and start another with empty fields">'
             . '<i class="bi bi-plus-lg"></i> ' . h($label) . ' &amp; New</button>';

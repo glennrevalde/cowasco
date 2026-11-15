@@ -639,6 +639,29 @@ final class Report
             Audit::log('print', $pageDef['module'], 'report', null, $title, ['page_key' => $pageKey, 'reason' => self::basis($def, $f)]);
         }
 
+        // v39: Save as PDF: the report written straight to a PDF file (a report can draw its own: 'pdf' => fn(...))
+        if (g('pdf') === '1') {
+            Access::require($pageKey, 'print');
+            Audit::log('export', $pageDef['module'], 'report', null, $title, ['page_key' => $pageKey, 'reason' => 'PDF: ' . self::basis($def, $f)]);
+            $file = preg_replace('/\W+/', '_', strtolower($title)) . '_' . date('Ymd_His') . '.pdf';
+            if (isset($def['pdf']) && is_callable($def['pdf'])) {
+                ($def['pdf'])($f, $rows, $data, $title, $file);
+            }
+            $st = Settings::all();
+            ReportPdf::send($file, [
+                'company' => !empty($opt['show_company']) ? (string)$st['company_name'] : '',
+                'company_lines' => array_values(array_filter([
+                    !empty($opt['show_address']) ? trim((string)$st['company_address']) : '',
+                    !empty($opt['show_tin']) && trim((string)$st['company_tin']) !== '' ? 'TIN ' . trim((string)$st['company_tin']) : '',
+                ])),
+                'title' => $title, 'subtitle' => (string)($opt['subtitle'] ?? ''), 'lines' => ReportLayout::lines($opt['header_lines'] ?? ''),
+                'basis' => !empty($opt['show_basis']) ? $basis : '',
+                'printed' => 'Printed ' . date('m/d/Y h:i A') . ' by ' . (Auth::user()['full_name'] ?? ''),
+            ], $visible, $rows, $showTotal ? $data['totals'] : null, $opt,
+                !empty($opt['prepared_by']) ? (ReportLayout::lines($opt['sign_labels'] ?? '') ?: ['Prepared by', 'Checked by', 'Approved by']) : [],
+                ReportLayout::lines($opt['sign_names'] ?? ''));
+        }
+
         // a report that also prints on a POS roll printer ('pos_print' => fn(...) that writes the slip)
         if (g('print') === 'pos' && isset($def['pos_print']) && is_callable($def['pos_print'])) {
             Access::require($pageKey, 'print');
@@ -656,7 +679,9 @@ final class Report
             $actions .= btn_link(current_url(['print' => 'pos']), 'Print to POS printer', 'btn-outline-secondary', 'receipt') . ' ';
         }
         if (Access::can($pageKey, 'print')) {
-            $actions .= btn_link(current_url(['print' => '1']), 'Print / PDF', 'btn-outline-secondary', 'printer') . ' '
+            // v39 (accounting): Print and Save as PDF are two buttons
+            $actions .= btn_link(current_url(['print' => '1']), 'Print', 'btn-outline-secondary', 'printer') . ' '
+                . btn_link(current_url(['pdf' => '1', 'print' => null]), 'Save as PDF', 'btn-outline-secondary', 'file-earmark-pdf') . ' '
                 . btn_link(current_url(['export' => 'xlsx']), 'Excel', 'btn-outline-secondary', 'file-earmark-excel') . ' '
                 . btn_link(current_url(['export' => 'csv']), 'CSV', 'btn-outline-secondary', 'file-earmark-spreadsheet') . ' '
                 . '<a class="btn btn-sm btn-outline-secondary" href="mailto:?subject=' . rawurlencode($title) . '&body=' . rawurlencode(($_SERVER['HTTP_HOST'] ?? '') ? 'http://' . $_SERVER['HTTP_HOST'] . current_url() : current_url()) . '"><i class="bi bi-envelope"></i> Email link</a> ';
@@ -677,11 +702,20 @@ final class Report
         if (Access::page('home.memorized')) {
             $actions .= '<button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#memModal"><i class="bi bi-bookmark-plus"></i> Memorize</button>';
         }
+        // v39 (accounting): a report with a printed page of its own ('print_view' => fn(...), the Cash Count Sheet on a quarter sheet)
+        if ($print && isset($def['print_view']) && is_callable($def['print_view'])) {
+            layout_start($title, ['bare' => true, 'no_title' => true]);
+            ($def['print_view'])($f, $rows, $data, $title);
+            layout_end();
+            return;
+        }
         layout_start($title, ['actions' => $actions, 'bare' => $print, 'no_title' => $print, 'js' => $print ? [] : (array)($def['js'] ?? []),
             'body_class' => ($opt['orientation'] ?? 'portrait') === 'landscape' ? 'print-landscape' : '']);
         echo ReportLayout::pageCss($opt, $title);
         if ($print) {
-            echo '<div class="no-print text-center mb-2"><button class="btn btn-primary btn-sm" onclick="window.print()">Print / Save as PDF</button> <a class="btn btn-outline-secondary btn-sm" href="' . h(current_url(['print' => null])) . '">Back</a></div>';
+            echo '<div class="no-print text-center mb-2 print-bar"><button class="btn btn-primary btn-sm" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button> '
+                . '<a class="btn btn-outline-primary btn-sm" href="' . h(current_url(['print' => null, 'pdf' => '1'])) . '"><i class="bi bi-file-earmark-pdf"></i> Save as PDF</a> '
+                . '<a class="btn btn-outline-secondary btn-sm" href="' . h(current_url(['print' => null])) . '">Back</a></div>';
         } else {
             self::filterForm($def, $f, $pageKey, $allCols, $hidden, $canDesign);
             if ($canDesign) {
@@ -1029,8 +1063,10 @@ final class Report
             $parts[] = ctype_digit($f['member_type']) ? 'Member type ' . $mtName : $mtName;
         }
         if (!empty($f['user_id'])) {
-            $parts[] = (in_array('cashier', $def['filters'] ?? [], true) ? 'Cashier ' : 'User ')
-                . DB::value('SELECT username FROM users WHERE id = :id', ['id' => $f['user_id']]);
+            // v38: a cashier by name (Cashier Ella Ramos), a user by user name
+            $parts[] = in_array('cashier', $def['filters'] ?? [], true)
+                ? 'Cashier ' . DB::value("SELECT COALESCE(NULLIF(full_name, ''), username) FROM users WHERE id = :id", ['id' => $f['user_id']])
+                : 'User ' . DB::value('SELECT username FROM users WHERE id = :id', ['id' => $f['user_id']]);
         }
         foreach ($def['extra_filters'] ?? [] as $k => $spec) {
             [$label, $opts] = $spec;

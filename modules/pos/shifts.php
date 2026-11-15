@@ -88,11 +88,19 @@ if (is_post()) {
             foreach ((array)($_POST['drop'] ?? []) as $did => $v) {
                 $drops[(int)$did] = trim((string)$v) === '' ? 0.0 : to_num((string)$v);
             }
+            // v38: a Cash Count Sheet filled in again: its total is the cash counted, and it replaces the one kept
+            $sheet = CashCount::ready() ? CashCount::fromPost() : null;
+            if ($sheet) {
+                $_POST['counted_cash'] = number_format($sheet['total'], 2, '.', '');
+            }
             $approver = Approval::check($pageKey, true, 'correcting the closing entries of a shift');
             $res = Pos::correctShift($sid, [
                 'opening_float' => $raw('opening_float'), 'counted_cash' => $raw('counted_cash'), 'drops' => $drops,
                 'new_drop' => [$raw('new_drop_amount') ?? 0, (string)p('new_drop_reason')],
             ], trim((string)p('reason')), $approver);
+            if ($sheet) {
+                CashCount::save($sid, $sheet['rows']);
+            }
             $txnNote = $res['txn_id'] ? ' The Cash Over/Short entry ' . ($res['old_txn_id'] && (int)$res['old_txn_id'] === (int)$res['txn_id'] ? 'was changed' : 'was made') . ' to follow it.'
                 : ($res['old_txn_id'] ? ' The Cash Over/Short entry was voided: the drawer now agrees.' : '');
             $depNote = !empty($res['deposit']['changed'])
@@ -123,6 +131,11 @@ if (is_post()) {
         }
         if ($do === 'close') {
             Access::require($pageKey, 'create');
+            // v38: the Cash Count Sheet (bills and coins); its total is the cash counted
+            $sheet = CashCount::ready() ? CashCount::fromPost() : null;
+            if ($sheet) {
+                $_POST['counted_cash'] = number_format($sheet['total'], 2, '.', '');
+            }
             $counted = r2(pnum('counted_cash'));
             if (p('counted_cash') === '') {
                 fail('Count the drawer and enter the cash counted.');
@@ -130,8 +143,11 @@ if (is_post()) {
             $sum = Pos::summary((int)$shift['id']);
             $diff = r2($counted - $sum['expected_cash']);
             $approver = Approval::check($pageKey, true, 'closing the register (Z-reading)');
-            $zid = DB::tx(function () use ($shift, $counted, $sum, $diff, $approver, $terminal) {
+            $zid = DB::tx(function () use ($shift, $counted, $sum, $diff, $approver, $terminal, $sheet) {
                 $osTxn = null;
+                if ($sheet) {
+                    CashCount::save((int)$shift['id'], $sheet['rows']);
+                }
                 if (abs($diff) >= 0.01) {
                     $cashAcct = (int)DB::value('SELECT cash_account_id FROM pos_terminals WHERE id = :id', ['id' => $shift['terminal_id']]);
                     $osTxn = Txn::save('pos_over_short', [
@@ -209,7 +225,8 @@ if ($a === 'shift') {
     $cashIn = r2($sum['expected_cash'] - (float)$sh['opening_float'] + $sum['cash_drops']);
     layout_start('Shift: ' . $sh['terminal'] . ', ' . fdate($sh['business_date']), ['actions' => btn_link(url($pageKey), 'All shifts', 'btn-outline-secondary', 'arrow-left')
         . ($zId ? ' ' . btn_link(url($pageKey, ['a' => 'reading', 'id' => $zId]), 'Z-reading', 'btn-outline-secondary', 'printer') : '')
-        . (Access::page('rpt.pos_ending_inventory') ? ' ' . btn_link(url('rpt.pos_ending_inventory', ['shift_id' => $sh['id']]), 'Ending inventory', 'btn-outline-secondary', 'box-seam') : '')]);
+        . (Access::page('rpt.pos_ending_inventory') ? ' ' . btn_link(url('rpt.pos_ending_inventory', ['shift_id' => $sh['id']]), 'Ending inventory', 'btn-outline-secondary', 'box-seam') : '')
+        . ($sh['status'] === 'closed' && CashCount::ready() && Access::page('rpt.pos_cash_count') ? ' ' . btn_link(url('rpt.pos_cash_count', ['shift_id' => $sh['id']]), 'Cash count sheet', 'btn-outline-secondary', 'cash-stack') : '')]);
     ?>
     <div class="row g-3">
       <div class="col-lg-7">
@@ -245,7 +262,10 @@ if ($a === 'shift') {
             <?php if ($deposited): ?><div class="alert alert-info py-2 small">The cash of this shift is on deposit <?= Txn::link(['id' => $dep['id'], 'txn_type' => $dep['txn_type'], 'txn_no' => $dep['txn_no']], $dep['txn_no']) ?>. The deposit is changed to follow the correction: its line for this shift becomes the new cash to deposit.</div><?php endif; ?>
             <div class="row g-2">
               <div class="col-6"><label class="form-label">Opening cash float</label><input class="form-control form-control-sm text-end" name="opening_float" inputmode="decimal" value="<?= h(fv('opening_float', null, number_format((float)$sh['opening_float'], 2, '.', ''))) ?>" data-sc="float"></div>
-              <div class="col-6"><label class="form-label">Cash counted</label><input class="form-control form-control-sm text-end" name="counted_cash" inputmode="decimal" value="<?= h(fv('counted_cash', null, number_format((float)$sh['counted_cash'], 2, '.', ''))) ?>" data-sc="counted"></div>
+              <div class="col-6"><label class="form-label" for="ccCounted">Cash counted</label>
+                <div class="input-group input-group-sm cc-field"><input class="form-control form-control-sm text-end" name="counted_cash" id="ccCounted" inputmode="decimal" value="<?= h(fv('counted_cash', null, number_format((float)$sh['counted_cash'], 2, '.', ''))) ?>" data-sc="counted">
+                <?php if (CashCount::ready()): ?><button class="btn btn-outline-primary" type="button" data-cash-count="#ccSheet" title="Count again with the Cash Count Sheet" aria-label="Open the Cash Count Sheet"><i class="bi bi-cash-stack"></i></button><?php endif; ?></div></div>
+              <?= CashCount::ready() ? CashCount::modal('ccSheet', 'ccCounted', fdatetime($sh['opened_at']) . ' to ' . fdatetime($sh['closed_at'] ?: date('Y-m-d H:i:s')), (string)$sh['full_name'], CashCount::forShift((int)$sh['id'])) : '' ?>
               <?php foreach ($shDrops as $d): ?>
                 <div class="col-6"><label class="form-label">Cash drop #<?= (int)$d['id'] ?> <span class="text-muted fw-normal">(<?= h(mb_strimwidth((string)$d['reason'], 0, 24, '...')) ?>)</span></label>
                   <input class="form-control form-control-sm text-end" name="drop[<?= (int)$d['id'] ?>]" inputmode="decimal" value="<?= h($_POST['drop'][$d['id']] ?? number_format((float)$d['amount'], 2, '.', '')) ?>" data-sc="drop"></div>
@@ -401,8 +421,12 @@ layout_start('Shifts, Cash Drops & Readings', ['actions' => page_link('pos.regis
     </div>
     <form method="post" class="card mt-3 border-danger"><div class="card-header">Close register (count drawer + Z-reading)</div><div class="card-body row g-2">
       <?= csrf_field() ?><input type="hidden" name="do" value="close">
-      <div class="col-md-5"><label class="form-label">Cash counted in drawer</label><input class="form-control text-end" name="counted_cash" required></div>
-      <div class="col-md-7 small text-muted d-flex align-items-end">Any difference from the expected cash is posted to Cash Over and Short. The Z-reading closes the day's totals.</div>
+      <?php $ccOn = CashCount::ready(); ?>
+      <div class="col-md-5"><label class="form-label" for="ccCounted">Cash counted in drawer</label>
+        <div class="input-group cc-field"><input class="form-control text-end" name="counted_cash" id="ccCounted" required<?= $ccOn ? ' readonly data-cash-count="#ccSheet" placeholder="Count"' : '' ?> value="<?= h(is_post() && p('do') === 'close' ? (string)p('counted_cash') : '') ?>">
+        <?php if ($ccOn): ?><button class="btn btn-outline-primary" type="button" data-cash-count="#ccSheet" title="Open the Cash Count Sheet" aria-label="Open the Cash Count Sheet"><i class="bi bi-cash-stack"></i></button><?php endif; ?></div></div>
+      <div class="col-md-7 small text-muted d-flex align-items-end"><?= $ccOn ? 'Click the box to fill in the Cash Count Sheet: the bills and coins in the drawer. ' : '' ?>Any difference from the expected cash is posted to Cash Over and Short. The Z-reading closes the day's totals.</div>
+      <?= $ccOn ? CashCount::modal('ccSheet', 'ccCounted', fdatetime($shift['opened_at']) . ' to ' . fdatetime(date('Y-m-d H:i:s')), (string)($shift['full_name'] ?? '')) : '' ?>
       <div class="col-12"><?= Access::can($pageKey, 'approve') ? '' : Approval::fields(true) ?></div>
       <div class="col-12"><button class="btn btn-danger" data-confirm="Close the register now?">Close register and print Z-reading</button></div>
     </div></form>
@@ -433,7 +457,7 @@ layout_start('Shifts, Cash Drops & Readings', ['actions' => page_link('pos.regis
       <thead><tr><th>Date / terminal</th><th>Cashier</th><th>Status</th><th class="num">Float</th><th class="num">Expected</th><th class="num">Counted</th><th class="num">Over/short</th><th></th></tr></thead>
       <tbody>
       <?php if (!$history): ?><tr><td colspan="8" class="text-muted text-center py-3"><?= $hFiltered ? 'No shift for these choices.' : 'No shift yet.' ?></td></tr><?php endif; ?>
-      <?php $canEndInv = Access::page('rpt.pos_ending_inventory'); foreach ($history as $hsh): $hDeposited = $hsh['deposit_txn_id'] && (int)$hsh['dep_void'] === 0; ?>
+      <?php $canEndInv = Access::page('rpt.pos_ending_inventory'); $canCcs = CashCount::ready() && Access::page('rpt.pos_cash_count'); foreach ($history as $hsh): $hDeposited = $hsh['deposit_txn_id'] && (int)$hsh['dep_void'] === 0; ?>
         <tr><td class="text-nowrap"><?= h(fdate($hsh['business_date'])) ?><div class="small text-muted"><?= h($hsh['terminal']) ?></div></td><td><?= h($hsh['full_name']) ?></td><td><?= status_badge($hsh['status'] === 'open' ? 'open' : 'closed') ?><?= $hsh['corrected_at'] ? '<div class="small text-muted">corrected</div>' : '' ?></td>
           <td class="num"><?= money($hsh['opening_float']) ?></td>
           <td class="num"><?= $hsh['expected_cash'] !== null ? money($hsh['expected_cash']) : '' ?></td><td class="num"><?= $hsh['counted_cash'] !== null ? money($hsh['counted_cash']) : '' ?></td>
@@ -441,7 +465,8 @@ layout_start('Shifts, Cash Drops & Readings', ['actions' => page_link('pos.regis
           <?php $canFix = $hsh['status'] === 'closed' && Access::can($pageKey, 'edit'); ?>
           <td class="text-nowrap text-end shift-acts"><a href="<?= h(url($pageKey, ['a' => 'shift', 'id' => $hsh['id']])) ?>" title="<?= $canFix ? 'Correct the closing entries' : 'The figures of the shift' ?>" aria-label="<?= $canFix ? 'Correct' : 'Details' ?>"><i class="bi bi-<?= $canFix ? 'pencil-square' : 'eye' ?>"></i></a>
             <?= $hsh['z_id'] ? '<a class="ms-2" href="' . h(url($pageKey, ['a' => 'reading', 'id' => $hsh['z_id']])) . '" title="Print the Z-reading">Z</a>' : '' ?>
-            <?= $canEndInv ? '<a class="ms-2" href="' . h(url('rpt.pos_ending_inventory', ['shift_id' => $hsh['id']])) . '" title="Ending inventory of this shift" aria-label="Ending inventory"><i class="bi bi-box-seam"></i></a>' : '' ?> <?= $hDeposited ? '<div class="small">' . Txn::link((int)$hsh['deposit_txn_id'], 'deposited') . '</div>' : '' ?></td></tr>
+            <?= $canEndInv ? '<a class="ms-2" href="' . h(url('rpt.pos_ending_inventory', ['shift_id' => $hsh['id']])) . '" title="Ending inventory of this shift" aria-label="Ending inventory"><i class="bi bi-box-seam"></i></a>' : '' ?>
+            <?= $canCcs && $hsh['status'] === 'closed' ? '<a class="ms-2" href="' . h(url('rpt.pos_cash_count', ['shift_id' => $hsh['id']])) . '" title="Cash Count Sheet of this shift" aria-label="Cash Count Sheet"><i class="bi bi-cash-stack"></i></a>' : '' ?> <?= $hDeposited ? '<div class="small">' . Txn::link((int)$hsh['deposit_txn_id'], 'deposited') . '</div>' : '' ?></td></tr>
       <?php endforeach; ?>
       </tbody>
       <?php if ($hTot && $hTot['n'] > 0): ?>

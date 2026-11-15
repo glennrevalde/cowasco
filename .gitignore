@@ -9,3 +9,5 @@
 !/storage/receipts/inbox/.gitkeep
 /storage/platform/multi_company.json
 /water/files/*.csv
+/storage/items/
+/storage/companies/*/items/

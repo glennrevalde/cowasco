@@ -212,6 +212,21 @@ function parse_item_lines(array $rows, string $mode, array $ctx = []): array
     return $out;
 }
 
+/** The name code of an expense line: from the form ("name"), else from its saved customer or supplier */
+function expense_name_code(array $l): string
+{
+    if (isset($l['name']) && is_string($l['name']) && preg_match('/^[cv]\d+$/', $l['name'])) {
+        return $l['name'];
+    }
+    if (!empty($l['customer_id'])) {
+        return 'c' . (int)$l['customer_id'];
+    }
+    if (!empty($l['vendor_id'])) {
+        return 'v' . (int)$l['vendor_id'];
+    }
+    return '';
+}
+
 /** Expense-tab lines (bills, checks, vendor credits) */
 function parse_expense_lines(array $rows): array
 {
@@ -233,9 +248,21 @@ function parse_expense_lines(array $rows): array
             'amount'      => $amount,
             'tax_code_id' => $taxId,
             'tax_amount'  => r2($amount * tax_rate($taxId) / 100),
-            'customer_id' => !empty($r['customer_id']) ? (int)$r['customer_id'] : null,
-            'is_billable' => !empty($r['is_billable']) && !empty($r['customer_id']) ? 1 : 0,
+            'customer_id' => null,
+            'vendor_id'   => null,
+            'is_billable' => 0,
         ];
+        // the Customer / Supplier box: a customer (job costing, billable) or a supplier (its subsidiary ledger)
+        $code = expense_name_code($r);
+        if ($code !== '') {
+            $id = (int)substr($code, 1);
+            $table = $code[0] === 'c' ? 'customers' : 'vendors';
+            if (!DB::value("SELECT 1 FROM $table WHERE id = :id", ['id' => $id])) {
+                fail('Choose the customer or supplier of every expense line from the list.');
+            }
+            $line[$code[0] === 'c' ? 'customer_id' : 'vendor_id'] = $id;
+            $line['is_billable'] = $code[0] === 'c' && !empty($r['is_billable']) ? 1 : 0;
+        }
         if (!empty($r['id']) && ctype_digit((string)$r['id'])) {
             $line['id'] = (int)$r['id'];
         }
@@ -768,7 +795,7 @@ function render_txn_view(array $t, string $pageKey): void
               <th>Item / Account</th><th>Description</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Disc</th><th class="num">Amount</th><th>Tax</th>
               <?php if (in_array($type, ['sales_order', 'purchase_order'], true)): ?><th class="num"><?= $type === 'sales_order' ? 'Invoiced' : 'Received' ?></th><?php endif; ?>
               <?php if ($showCosts && $isSales && $posting): ?><th class="num">Cost</th><?php endif; ?>
-              <?php if (in_array($type, PURCHASE_TYPES, true)): ?><th>Customer:Job</th><?php endif; ?>
+              <?php if (in_array($type, PURCHASE_TYPES, true)): ?><th>Customer / Supplier</th><?php endif; ?>
             <?php endif; ?>
           </tr></thead>
           <tbody>
@@ -793,7 +820,7 @@ function render_txn_view(array $t, string $pageKey): void
                 <td class="small"><?= $l['tax_code_id'] ? h(Lookup::taxCodes()[$l['tax_code_id']] ?? '') . ' ' . money($l['tax_amount'], true) : '' ?></td>
                 <?php if (in_array($type, ['sales_order', 'purchase_order'], true)): ?><td class="num"><?= qty($l['qty_fulfilled']) ?><?= (int)$l['is_closed'] ? ' <span class="badge text-bg-secondary">closed</span>' : '' ?></td><?php endif; ?>
                 <?php if ($showCosts && $isSales && $posting): ?><td class="num"><?= money($l['cost_amount'], true) ?></td><?php endif; ?>
-                <?php if (in_array($type, PURCHASE_TYPES, true)): ?><td><?= h($l['customer_name']) ?></td><?php endif; ?>
+                <?php if (in_array($type, PURCHASE_TYPES, true)): ?><td><?= h($l['customer_name'] ?: ($l['line_kind'] === 'expense' ? ($l['vendor_name'] ?? '') : '')) ?></td><?php endif; ?>
               </tr>
             <?php endif; ?>
           <?php endforeach; ?>
@@ -840,6 +867,7 @@ function render_txn_view(array $t, string $pageKey): void
             <?php if ($advLeft !== null): ?><tr><td>Applied to bills</td><td class="num"><?= money(Advances::applied($id)) ?></td></tr><tr class="fw-semibold"><td>Left to apply</td><td class="num"><?= money($advLeft) ?></td></tr><?php endif; ?>
           </table>
         </div></div>
+        <?= Attachments::viewCard($t, $pageKey) ?>
         <?php $whtRows = in_array($type, ['bill_payment', 'payment'], true) ? Withholding::forPayment($id) : []; if ($whtRows): ?>
         <div class="card mb-3"><div class="card-header small fw-semibold"><?= $type === 'payment' ? 'Taxes withheld by the customer' : 'Taxes withheld from the supplier' ?></div>
           <div class="table-responsive"><table class="table table-sm mb-0 small"><thead><tr><th>Document</th><th>Tax</th><th class="num">Base</th><th class="num">Amount</th></tr></thead>
@@ -1366,6 +1394,9 @@ function render_txn_list(string $pageKey, array $types, string $title, array $op
         ], $rows));
     }
 
+    // v40: a paper clip beside the number of a document with attached files
+    $attCounts = array_intersect($types, Attachments::TYPES) ? Attachments::counts(array_column($rows, 'id')) : [];
+
     $actions = $opt['actions'] ?? '';
     if (Access::can($pageKey, 'create') && empty($opt['no_new'])) {
         $actions = btn_link(url($pageKey, ['a' => 'new']), $opt['new_label'] ?? 'New', 'btn-primary', 'plus-lg') . ' ' . $actions;
@@ -1410,7 +1441,7 @@ function render_txn_list(string $pageKey, array $types, string $title, array $op
         <tr class="<?= (int)$r['is_voided'] ? 'text-muted text-decoration-line-through' : '' ?>">
           <td><?= h(fdate($r['txn_date'])) ?></td>
           <?php if (count($types) > 1): ?><td><?= h(Txn::label($r['txn_type'])) ?></td><?php endif; ?>
-          <td><a href="<?= h(!empty($opt['own_link']) ? Txn::url($r) : url($pageKey, ['a' => 'view', 'id' => $r['id']])) ?>"><?= h($r['txn_no'] ?: '#' . $r['id']) ?></a></td>
+          <td><a href="<?= h(!empty($opt['own_link']) ? Txn::url($r) : url($pageKey, ['a' => 'view', 'id' => $r['id']])) ?>"><?= h($r['txn_no'] ?: '#' . $r['id']) ?></a><?= Attachments::clip($attCounts[(int)$r['id']] ?? 0) ?></td>
           <?php if ($siteCols): ?>
             <td><?= h($siteNames[$r['site_id']] ?? '') ?></td><td><i class="bi bi-arrow-right-short text-muted"></i> <?= h($siteNames[$r['site2_id']] ?? '') ?></td>
           <?php else: ?>

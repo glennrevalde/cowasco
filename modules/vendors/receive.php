@@ -147,7 +147,8 @@ handle_post(function () use ($mode, $docType, $vendorId, $po, $pageKey, $edit) {
         $h['received_via'] = $mode === 'bill' ? 'bill' : 'receipt';
     }
     $id = Txn::save($docType, $h, $lines);
-    flash('success', ($mode === 'bill' ? 'Items received and bill entered.' : 'Items received. The bill can be entered when it arrives.'));
+    $files = Attachments::claim($id, $pageKey);
+    flash('success', ($mode === 'bill' ? 'Items received and bill entered.' : 'Items received. The bill can be entered when it arrives.') . ($files !== '' ? ' ' . $files : ''));
     redirect_after_save(url($pageKey), url($mode === 'bill' ? 'vend.bills' : $pageKey, ['a' => 'view', 'id' => $id]));
 });
 
@@ -197,7 +198,7 @@ echo memorized_loaded_note($mem);
 <?php endif; ?>
 
 <?php if ($vendorId): ?>
-<form method="post">
+<form method="post"<?= $edit ? '' : Attachments::enctype($docType) ?>>
 <?= csrf_field() ?>
 <div class="card mb-3"><div class="card-body row g-2">
   <?= input_field('txn_date', $mode === 'bill' ? 'Bill date' : 'Date received', fv('txn_date', $edit, today()), ['type' => 'date', 'class' => 'col-md-2']) ?>
@@ -220,6 +221,7 @@ echo memorized_loaded_note($mem);
       ? 'Posting debits Inventory and Input Tax and credits Accounts Payable, and updates the purchase order.'
       : 'Posting increases inventory now (debit Inventory, credit Accounts Payable at the PO cost). The receipt is not a bill, so it does not appear in Pay Bills until you enter the bill.' ?></p>
 </div>
+<?= $edit ? '' : Attachments::formCard($docType, null) ?>
 <div class="d-flex flex-wrap gap-2 align-items-center">
   <?php if ($edit): ?>
     <button class="btn btn-primary"><i class="bi bi-check2"></i> Save changes</button>

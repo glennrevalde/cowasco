@@ -5,10 +5,7 @@ require_once APP_ROOT . '/modules/txn/_common.php';
 
 $pageKey = 'inv.items';
 $a = g('a');
-$typeLabels = [
-    'service' => 'Service', 'inventory' => 'Inventory part', 'non_inventory' => 'Non-inventory part', 'assembly' => 'Inventory assembly',
-    'other_charge' => 'Other charge', 'subtotal' => 'Subtotal', 'group' => 'Group', 'discount' => 'Discount', 'payment' => 'Payment',
-];
+$typeLabels = QuickAdd::ITEM_TYPES;
 $viewCosts = Access::viewCosts();
 
 // ------------------------------------------------------------------ Import items: every type of item from a CSV file, reviewed, then uploaded
@@ -151,6 +148,7 @@ if ($a === 'new' || $a === 'edit') {
     $components = $it ? DB::all('SELECT ic.*, i.code, i.name, i.cost, i.avg_cost, i.item_type FROM item_components ic JOIN items i ON i.id = ic.component_item_id WHERE ic.parent_item_id = :p', ['p' => $it['id']]) : [];
 
     handle_post(function () use ($it, $type, $tracked, $pageKey, $canEdit) {
+        $isNew = $it === null;
         if (!$canEdit) {
             Access::denyPage($pageKey, 'edit');
         }
@@ -185,6 +183,14 @@ if ($a === 'new' || $a === 'edit') {
         }
         if (Access::viewCosts()) {
             $d['cost'] = round(pnum('cost'), 4);
+        }
+        // v35: the FB POS: shown on it, its menu group and its order there (the picture is stored after the save)
+        $fb = FbPos::ready() && in_array($type, FbPos::TYPES, true);
+        if ($fb) {
+            $fbGroups = FbPos::groups();
+            $d['fb_pos'] = p('fb_pos', '0') === '1' ? 1 : 0;
+            $d['fb_group_id'] = isset($fbGroups[pint('fb_group_id') ?? 0]) ? pint('fb_group_id') : null;
+            $d['fb_sort'] = (int)p('fb_sort', '0');
         }
         // an item group: the account its price variance (group price less consolidated price) goes to
         if ($type === 'group' && ItemGroups::ready()) {
@@ -293,7 +299,21 @@ if ($a === 'new' || $a === 'edit') {
             }
             $it = ['id' => $id];
         });
+        // v35: the picture of the item for the FB POS
+        if ($fb) {
+            $up = $_FILES['fb_image'] ?? null;
+            if ($up && ($up['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $file = FbPos::storeImage((int)$it['id'], $up);
+                DB::update('items', ['image_file' => $file], 'id = :id', ['id' => $it['id']]);
+            } elseif (p('fb_image_remove') === '1') {
+                FbPos::removeImage((int)$it['id']);
+                DB::update('items', ['image_file' => null], 'id = :id', ['id' => $it['id']]);
+            }
+        }
         flash('success', 'Item saved.');
+        if ($isNew) {
+            QuickAdd::finish('item', (int)$it['id']);   // v37: added from a drop-down's "Add new": back to the transaction
+        }
         redirect_after_save(url($pageKey, ['a' => 'new', 'type' => $type]), url($pageKey, ['a' => 'edit', 'id' => $it['id']]));
     });
 
@@ -304,11 +324,11 @@ if ($a === 'new' || $a === 'edit') {
     $components = is_post() ? array_map(fn($c) => ['component_item_id' => $c['item_id'] ?? '', 'qty' => $c['qty'] ?? ''], (array)($_POST['comp'] ?? [])) : $components;
     $compItems = Lookup::itemPairs("is_active = 1 AND item_type IN " . ($type === 'assembly' ? "('inventory','assembly','service','other_charge','non_inventory')" : "('inventory','assembly','service','non_inventory','other_charge')"));
     ?>
-    <form method="post"><?= csrf_field() ?>
+    <form method="post" enctype="multipart/form-data"><?= csrf_field() ?>
     <fieldset <?= $canEdit ? '' : 'disabled' ?>>
     <div class="card mb-3"><div class="card-header"><?= h($typeLabels[$type]) ?></div><div class="card-body row g-2">
-      <?= input_field('code', 'Item name / code', fv('code', $it), ['required' => true, 'class' => 'col-md-3']) ?>
-      <?= input_field('name', 'Display name', fv('name', $it), ['required' => true, 'class' => 'col-md-5']) ?>
+      <?= input_field('code', 'Item name / code', fv('code', $it, QuickAdd::prefill()), ['required' => true, 'class' => 'col-md-3', 'extra' => QuickAdd::popup() ? 'autofocus' : '']) ?>
+      <?= input_field('name', 'Display name', fv('name', $it, QuickAdd::prefill()), ['required' => true, 'class' => 'col-md-5']) ?>
       <?php if (in_array($type, ['inventory', 'assembly', 'non_inventory'], true)): ?><?= input_field('barcode', 'Barcode', fv('barcode', $it), ['class' => 'col-md-2']) ?><?php endif; ?>
       <?php
       $uomSets = Uom::sets(true, $it && $it['uom_set_id'] ? (int)$it['uom_set_id'] : null);
@@ -429,6 +449,25 @@ if ($a === 'new' || $a === 'edit') {
         <?php endif; ?>
       </div></div></div>
     </div>
+    <?php endif; ?>
+
+    <?php if (FbPos::ready() && in_array($type, FbPos::TYPES, true)): $fbImg = $it ? FbPos::imageUrl($it) : ''; ?>
+    <div class="card my-3"><div class="card-header d-flex justify-content-between align-items-center"><span>FB POS</span>
+      <?= page_link('pos.fb_menu', [], 'Menu & groups', 'btn-outline-secondary', 'grid-3x3-gap') ?></div><div class="card-body row g-3 align-items-center">
+      <div class="col-md-6 col-lg-5"><div class="item-pic">
+        <div class="item-pic-box"><?= $fbImg ? '<img src="' . h($fbImg) . '" alt="Picture of ' . h($it['name']) . '">' : h(FbPos::initials((string)fv('name', $it, '?'))) ?></div>
+        <div class="flex-grow-1" style="min-width:180px"><label class="form-label" for="f_fb_image">Picture</label>
+          <input class="form-control form-control-sm" type="file" id="f_fb_image" name="fb_image" accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
+          <div class="form-text">JPG, PNG, GIF or WEBP, up to 3 MB. A square or 4:3 photo looks best.</div>
+          <?php if ($fbImg): ?><div class="form-check mt-1"><input class="form-check-input" type="checkbox" name="fb_image_remove" value="1" id="f_fb_rm"><label class="form-check-label small" for="f_fb_rm">Remove the picture</label></div><?php endif; ?></div>
+      </div></div>
+      <div class="col-md-6 col-lg-7 row g-2 m-0">
+        <?= check_field('fb_pos', 'Show on the FB POS', fv('fb_pos', $it, 0), 'col-12') ?>
+        <?= select_field('fb_group_id', 'Menu group', FbPos::groupOptions($it && $it['fb_group_id'] ? (int)$it['fb_group_id'] : null), fv('fb_group_id', $it), ['blank' => 'Other (no group)', 'class' => 'col-sm-8']) ?>
+        <?= input_field('fb_sort', 'Order in the group', fv('fb_sort', $it, '0'), ['type' => 'number', 'class' => 'col-sm-4']) ?>
+        <div class="col-12 form-text mt-0">The FB POS shows the item's picture, name and sales price under its menu group. The groups are named and ordered in Point of Sale &gt; FB POS Menu &amp; Groups.</div>
+      </div>
+    </div></div>
     <?php endif; ?>
 
     <?php if ($tracked): ?>

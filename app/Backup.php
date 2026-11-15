@@ -126,23 +126,45 @@ final class Backup
                 continue;
             }
             $colList = '`' . implode('`, `', $cols) . '`';
+            // v40: binary columns (the files attached to transactions) are always written as hex, the table is read
+            // row by row instead of all at once, and an INSERT is closed before it passes about 600 KB, so the file
+            // reads back under MySQL's usual 1 MB packet limit
+            $blobs = array_flip(DB::column('SELECT column_name FROM information_schema.columns
+                                              WHERE table_schema = DATABASE() AND table_name = :t
+                                                AND data_type IN (\'tinyblob\', \'blob\', \'mediumblob\', \'longblob\', \'binary\', \'varbinary\')', ['t' => $table]));
+            if ($blobs) {
+                $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+            }
             $stmt = $pdo->query('SELECT * FROM `' . str_replace('`', '', $table) . '`');
             $n = 0;
             $buf = [];
+            $bytes = 0;
             while (($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
                 $vals = [];
                 foreach ($cols as $c) {
-                    $vals[] = self::quote($pdo, $row[$c] ?? null);
+                    $v = $row[$c] ?? null;
+                    $vals[] = isset($blobs[$c]) && $v !== null ? ((string)$v === '' ? "''" : '0x' . bin2hex((string)$v)) : self::quote($pdo, $v);
                 }
-                $buf[] = '(' . implode(',', $vals) . ')';
+                $tuple = '(' . implode(',', $vals) . ')';
+                if ($buf && ($bytes + strlen($tuple) > 600000)) {
+                    $write("INSERT INTO `$table` ($colList) VALUES\n" . implode(",\n", $buf) . ";\n");
+                    $buf = [];
+                    $bytes = 0;
+                }
+                $buf[] = $tuple;
+                $bytes += strlen($tuple);
                 $n++;
                 $rowCount++;
                 if (count($buf) >= self::CHUNK) {
                     $write("INSERT INTO `$table` ($colList) VALUES\n" . implode(",\n", $buf) . ";\n");
                     $buf = [];
+                    $bytes = 0;
                 }
             }
             $stmt->closeCursor();
+            if ($blobs) {
+                $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+            }
             if ($buf) {
                 $write("INSERT INTO `$table` ($colList) VALUES\n" . implode(",\n", $buf) . ";\n");
             }

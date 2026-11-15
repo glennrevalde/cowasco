@@ -213,6 +213,14 @@ function negative_stock_ask(): bool
 function verify_csrf(): void
 {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+        // a save carrying more than post_max_size arrives with nothing in it at all: say why, instead of "session expired"
+        $sent = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+        $max = Attachments::iniBytes('post_max_size');
+        if (!$_POST && !$_FILES && $max > 0 && $sent > $max) {
+            http_response_code(413);
+            exit('Nothing was saved: the files sent (' . Attachments::size($sent) . ') are more than the server takes in one save (' . Attachments::size($max) . '). '
+                . 'Go back and attach fewer or smaller files at a time, or ask the administrator to raise post_max_size and upload_max_filesize in php.ini.');
+        }
         $packed = unpack_posted_form();
         $t = $_POST['_csrf'] ?? '';
         if (!is_string($t) || !hash_equals(csrf_token(), $t)) {

@@ -212,14 +212,17 @@ final class Maintenance
                 DB::run('DELETE FROM inventory_movements');
                 DB::run('UPDATE item_site_stock SET qty_on_hand = 0');
                 DB::run("UPDATE items SET avg_cost = 0 WHERE item_type IN ('inventory','assembly')");
-                // re-posting history is not a new sale: the below-zero rule is for documents being saved now
+                // re-posting history is not a new sale: the below-zero rule is for documents being saved now; and (v35) the
+                // checks of a document being saved (processing orders that must reconcile) and re-costing are left out
                 Posting::$stockCheck = false;
+                Posting::$replaying = true;
                 try {
                     foreach ($txns as $t) {
                         Posting::post((int)$t['id']);
                     }
                 } finally {
                     Posting::$stockCheck = true;
+                    Posting::$replaying = false;
                 }
                 // v31: and every quick-lookup quantity agrees with the movements it came from
                 Stock::resync();

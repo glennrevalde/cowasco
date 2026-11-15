@@ -468,3 +468,308 @@ Report::define('pos_sales_txn', [
         ];
     },
 ]);
+
+// ------------------------------------------------------------------ v38: Cash Count Sheet (Point of Sale > Reports)
+
+/** The completed shifts the Shift filter offers, newest first (of the cashier chosen, or of the user alone) */
+function pos_ccs_shifts(?int $only = null): array
+{
+    $cashier = $only ?: (int)g('cashier_id');
+    $sql = "SELECT s.*, t.name AS terminal, t.site_id, si.name AS site, COALESCE(NULLIF(u.full_name, ''), u.username) AS cashier
+              FROM pos_shifts s JOIN pos_terminals t ON t.id = s.terminal_id JOIN sites si ON si.id = t.site_id JOIN users u ON u.id = s.cashier_id
+             WHERE s.status = 'closed'";
+    $p = [];
+    if ($cashier) {
+        $sql .= ' AND s.cashier_id = :c';
+        $p['c'] = $cashier;
+    }
+    [$sf, $sp] = Access::siteFilter('t.site_id', 'ccst');
+    $out = [];
+    foreach (DB::all($sql . $sf . ' ORDER BY s.closed_at DESC LIMIT 300', $p + $sp) as $s) {
+        $out[(int)$s['id']] = $s['cashier'] . ', ' . $s['terminal'] . ', ' . fdatetime($s['opened_at']) . ' to ' . fdatetime($s['closed_at']);
+    }
+    return $out;
+}
+
+Report::define('pos_cash_count', [
+    'filters' => ['range', 'terminal'],
+    'default_dates' => 'today',
+    'sortable' => false,
+    'extra_filters' => [
+        'cashier_id' => ['Cashier', function () {
+            $only = pos_endinv_only();
+            $all = inv_move_cashiers();
+            return $only ? array_intersect_key($all, [$only => 1]) + [$only => (string)(Auth::user()['full_name'] ?? 'Me')] : $all;
+        }],
+        'shift_id' => ['Shift', fn() => pos_ccs_shifts(pos_endinv_only()), 'Every completed shift of the dates', true, true],
+    ],
+    'filter_hook' => function (array $f): array {
+        $only = pos_endinv_only();
+        if ($only) {
+            $f['cashier_id'] = (string)$only;
+            // a cashier opening the report: the sheet of their latest completed shift
+            if ((string)($f['shift_id'] ?? '') === '' && !isset($_GET['from'])) {
+                $f['shift_id'] = (string)(int)DB::value("SELECT id FROM pos_shifts WHERE cashier_id = :c AND status = 'closed' ORDER BY closed_at DESC LIMIT 1", ['c' => $only]);
+            }
+        }
+        if ((int)($f['shift_id'] ?? 0) && !isset(pos_ccs_shifts($only)[(int)$f['shift_id']])) {
+            $f['shift_id'] = '';
+        }
+        return $f;
+    },
+    'basis' => function (array $f): string {
+        return (int)($f['shift_id'] ?? 0) ? 'One completed shift' : 'Completed shifts with business dates ' . fdate($f['from']) . ' to ' . fdate($f['to']);
+    },
+    'layout_defaults' => ['prepared_by' => 1, 'sign_labels' => "Remitted by:\nReceived by:"],
+    // v39: printed on a quarter of a Letter or Government Legal sheet, and saved as a PDF of that size
+    'print_view' => 'pos_ccs_print',
+    'pdf' => 'pos_ccs_pdf',
+    'run' => function (array $f): array {
+        $sid = (int)($f['shift_id'] ?? 0);
+        $shifts = pos_ccs_list($f);
+        $rows = [];
+        $grand = 0.0;
+        foreach ($shifts as $s) {
+            $sheet = CashCount::forShift((int)$s['id']);
+            $rows[] = ['what' => 'Date cover: ' . fdatetime($s['opened_at']) . ' to ' . fdatetime($s['closed_at']) . '. Cashier name: ' . $s['cashier'] . '. ' . $s['terminal'],
+                '_class' => 'group-row', '_links' => ['what' => Report::link('pos.shifts', ['a' => 'shift', 'id' => $s['id']])]];
+            $total = 0.0;
+            if ($sheet) {
+                foreach (CashCount::DENOMS as $kind => $denoms) {
+                    $first = true;
+                    foreach ($denoms as $d) {
+                        $q = (int)($sheet[$kind][$d] ?? 0);
+                        if (!$sid && $q === 0) {
+                            continue;
+                        }
+                        $amt = r2($q * (float)$d);
+                        $total += $amt;
+                        $rows[] = ['what' => $first ? CashCount::KINDS[$kind] : '', 'denom' => CashCount::label($d), 'qty' => $q ?: '', 'amount' => $q ? $amt : '', '_class' => 'indent-1'];
+                        $first = false;
+                    }
+                }
+                $total = r2($total);
+                $rows[] = ['what' => 'Total cash', 'amount' => $total, '_class' => 'subtotal-row'];
+                if (abs($total - (float)$s['counted_cash']) >= 0.005) {
+                    // the cash counted was corrected afterwards without counting the sheet again
+                    $rows[] = ['what' => 'Cash counted, as corrected after this count', 'amount' => r2((float)$s['counted_cash']), '_class' => 'indent-1'];
+                }
+            } else {
+                $total = r2((float)$s['counted_cash']);
+                $rows[] = ['what' => 'No Cash Count Sheet was kept for this shift (counted without it). Cash counted', 'amount' => $total, '_class' => 'indent-1'];
+            }
+            $rows[] = ['what' => 'Expected cash in drawer', 'amount' => r2((float)$s['expected_cash']), '_class' => 'indent-1'];
+            $rows[] = ['what' => 'Over / (short)', 'amount' => r2((float)$s['over_short']), '_class' => 'indent-1'];
+            $grand += $total;
+        }
+        return [
+            'grouped' => true,
+            'columns' => [['key' => 'what', 'label' => ''], ['key' => 'denom', 'label' => 'Denomination', 'align' => 'end'],
+                ['key' => 'qty', 'label' => 'Qty.', 'type' => 'qty'], ['key' => 'amount', 'label' => 'Amount', 'type' => 'money']],
+            'rows' => $rows,
+            'totals' => count($shifts) > 1 ? ['what' => 'TOTAL CASH (' . count($shifts) . ' shifts)', 'amount' => r2($grand)] : null,
+            'notes' => 'The bills and coins counted in the drawer when each shift was closed (Shifts, Cash Drops &amp; Readings &gt; Close register, Cash counted in drawer). '
+                . 'Choose a <strong>Shift</strong> for the sheet of one shift with every denomination; without one, every completed shift of the dates is listed with the bills and coins counted. Click a shift to open it.',
+        ];
+    },
+]);
+
+/** The completed shifts of the report: one chosen, or those of the dates (cashier, terminal) */
+function pos_ccs_list(array $f): array
+{
+    $sid = (int)($f['shift_id'] ?? 0);
+        $sql = "SELECT s.*, t.name AS terminal, COALESCE(NULLIF(u.full_name, ''), u.username) AS cashier
+                  FROM pos_shifts s JOIN pos_terminals t ON t.id = s.terminal_id JOIN users u ON u.id = s.cashier_id WHERE s.status = 'closed'";
+        $p = [];
+        if ($sid) {
+            $sql .= ' AND s.id = :s';
+            $p['s'] = $sid;
+        } else {
+            $sql .= ' AND s.business_date BETWEEN :f AND :t';
+            $p += ['f' => $f['from'], 't' => $f['to']];
+            if ((int)($f['cashier_id'] ?? 0)) {
+                $sql .= ' AND s.cashier_id = :c';
+                $p['c'] = (int)$f['cashier_id'];
+            }
+            if ($f['terminal_id']) {
+                $sql .= ' AND s.terminal_id = :term';
+                $p['term'] = $f['terminal_id'];
+            }
+        }
+        [$sf, $sp] = Access::siteFilter('t.site_id', 'ccsr');
+        $shifts = DB::all($sql . $sf . ' ORDER BY s.closed_at, s.id', $p + $sp);
+    return $shifts;
+}
+
+/** The two papers of the printed sheet: a quarter of a Letter sheet, or of a Government Legal (8.5 x 13 in) sheet */
+const POS_CCS_PAPERS = [
+    'letter4' => ['1/4 Letter (4.25 x 5.5 in)', 4.25, 5.5],
+    'legal4'  => ['1/4 Government Legal (4.25 x 6.5 in)', 4.25, 6.5],
+];
+
+/** The paper asked for (?paper=), Letter quarter when none */
+function pos_ccs_paper(): string
+{
+    return isset(POS_CCS_PAPERS[(string)g('paper')]) ? (string)g('paper') : 'letter4';
+}
+
+/** The printed page: one quarter sheet per shift, with the paper to choose and Print / Save as PDF */
+function pos_ccs_print(array $f, array $rows, array $data, string $title): void
+{
+    $paper = pos_ccs_paper();
+    [, $pw, $ph] = POS_CCS_PAPERS[$paper];
+    $company = (string)Settings::get('company_name');
+    $shifts = pos_ccs_list($f);
+    echo '<style id="ccsPage">@page { size: ' . $pw . 'in ' . $ph . 'in; margin: 0; }</style>';
+    echo '<div class="ccs-bar no-print"><label class="form-label mb-0" for="ccsPaper">Paper</label>'
+        . '<select class="form-select form-select-sm" id="ccsPaper" data-no-combo>';
+    foreach (POS_CCS_PAPERS as $k => [$label]) {
+        echo '<option value="' . h($k) . '"' . ($k === $paper ? ' selected' : '') . '>' . h($label) . '</option>';
+    }
+    echo '</select><button class="btn btn-primary btn-sm" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>'
+        . '<a class="btn btn-outline-primary btn-sm" id="ccsPdf" href="' . h(current_url(['print' => null, 'pdf' => '1', 'paper' => $paper])) . '"><i class="bi bi-file-earmark-pdf"></i> Save as PDF</a>'
+        . '<a class="btn btn-outline-secondary btn-sm" href="' . h(current_url(['print' => null, 'paper' => null])) . '">Back</a></div>';
+    echo '<div class="ccs-sheets paper-' . h($paper) . '" id="ccsSheets">';
+    if (!$shifts) {
+        echo '<p class="text-muted text-center py-4">No completed shift for these settings.</p>';
+    }
+    foreach ($shifts as $s) {
+        $sheet = CashCount::forShift((int)$s['id']);
+        $total = 0.0;
+        echo '<section class="ccs-sheet"><div class="ccs-co">' . h($company) . '</div><div class="ccs-title">Cash Count Sheet</div>'
+            . '<div class="ccs-info"><div><span>Date cover:</span> ' . h(fdatetime($s['opened_at'])) . ' to ' . h(fdatetime($s['closed_at'])) . '</div>'
+            . '<div><span>Cashier name:</span> <strong>' . h($s['cashier']) . '</strong></div><div><span>Terminal:</span> ' . h($s['terminal']) . '</div></div>'
+            . '<table class="ccs-table"><thead><tr><th></th><th class="num">Denom.</th><th class="num">Qty.</th><th class="num">Amount</th></tr></thead><tbody>';
+        foreach (CashCount::DENOMS as $kind => $denoms) {
+            $first = true;
+            foreach ($denoms as $d) {
+                $q = (int)($sheet[$kind][$d] ?? 0);
+                $amt = r2($q * (float)$d);
+                $total += $amt;
+                echo '<tr' . ($first ? ' class="ccs-first"' : '') . '><td>' . ($first ? h(CashCount::KINDS[$kind]) : '') . '</td><td class="num">' . h(CashCount::label($d)) . '</td>'
+                    . '<td class="num">' . ($q ? number_format($q) : '') . '</td><td class="num">' . ($q ? money($amt) : '') . '</td></tr>';
+                $first = false;
+            }
+        }
+        $total = $sheet ? r2($total) : r2((float)$s['counted_cash']);
+        echo '</tbody><tfoot><tr class="ccs-total"><td colspan="3">Total cash</td><td class="num">' . money($total) . '</td></tr>'
+            . ($sheet && abs($total - (float)$s['counted_cash']) >= 0.005 ? '<tr><td colspan="3">Cash counted (corrected)</td><td class="num">' . money($s['counted_cash']) . '</td></tr>' : '')
+            . '<tr><td colspan="3">Expected cash in drawer</td><td class="num">' . money($s['expected_cash']) . '</td></tr>'
+            . '<tr><td colspan="3">Over / (short)</td><td class="num">' . money($s['over_short']) . '</td></tr></tfoot></table>'
+            . (!$sheet ? '<div class="ccs-note">No Cash Count Sheet was kept for this shift; the total is the cash counted.</div>' : '')
+            . '<div class="ccs-sign"><div><span class="ccs-lab">Remitted by:</span><span class="ccs-line"></span><span class="ccs-name">' . h($s['cashier']) . '</span><span class="ccs-cap">Cashier</span></div>'
+            . '<div><span class="ccs-lab">Received by:</span><span class="ccs-line"></span><span class="ccs-name">&nbsp;</span><span class="ccs-cap">&nbsp;</span></div></div>'
+            . '</section>';
+    }
+    echo '</div>';
+    $sizes = json_encode(array_map(fn($p) => [$p[1], $p[2]], POS_CCS_PAPERS));
+    echo '<script>(function () {
+  var sel = document.getElementById("ccsPaper"), box = document.getElementById("ccsSheets"), st = document.getElementById("ccsPage"), pdf = document.getElementById("ccsPdf");
+  var sizes = ' . $sizes . ';
+  if (!sel) { return; }
+  sel.addEventListener("change", function () {
+    var s = sizes[sel.value];
+    st.textContent = "@page { size: " + s[0] + "in " + s[1] + "in; margin: 0; }";
+    box.className = "ccs-sheets paper-" + sel.value;
+    pdf.href = pdf.href.replace(/([?&]paper=)[^&]*/, "$1" + sel.value);
+    try { var u = new URL(window.location.href); u.searchParams.set("paper", sel.value); history.replaceState(null, "", u.toString()); } catch (e) {}
+  });
+})();</script>';
+}
+
+/** Save as PDF: the same quarter sheets, one shift to a page of that size */
+function pos_ccs_pdf(array $f, array $rows, array $data, string $title, string $file): never
+{
+    $paper = pos_ccs_paper();
+    [, $pwIn, $phIn] = POS_CCS_PAPERS[$paper];
+    $pw = $pwIn * 72;
+    $ph = $phIn * 72;
+    $pdf = new SimplePdf($pw, $ph, $title);
+    $company = (string)Settings::get('company_name');
+    $shifts = pos_ccs_list($f);
+    $m = 18.0;
+    $legal = $paper === 'legal4';
+    $rh = $legal ? 14.2 : 11.2;
+    $fs = $legal ? 7.8 : 7.2;
+    $xs = [$m, $m + 70, $m + 150, $pw - $m];   // label, denomination (right edge), qty (right edge), amount (right edge)
+    if (!$shifts) {
+        $pdf->addPage();
+        $pdf->text($pw / 2, 60, 'No completed shift for these settings.', 9, false, 'C', 0.4);
+    }
+    foreach ($shifts as $s) {
+        $pdf->addPage();
+        $sheet = CashCount::forShift((int)$s['id']);
+        $y = $m + 4;
+        $pdf->text($pw / 2, $y + 8, $company, 8.5, true, 'C', 0.15);
+        $y += 11;
+        $pdf->text($pw / 2, $y + 11, 'CASH COUNT SHEET', 11, true, 'C', 0);
+        $y += 17;
+        $pdf->text($m, $y + 7, 'Date cover: ' . fdatetime($s['opened_at']) . ' to ' . fdatetime($s['closed_at']), 6.8, false, 'L', 0.15);
+        $y += 9;
+        $pdf->text($m, $y + 7, 'Cashier name: ' . $s['cashier'] . '    Terminal: ' . $s['terminal'], 6.8, false, 'L', 0.15);
+        $y += 12;
+        $pdf->fill($m, $y, $pw - 2 * $m, $rh, 0.92);
+        $pdf->text($xs[1] + 30, $y + $rh - 3.2, 'Denom.', $fs, true, 'R', 0.2);
+        $pdf->text($xs[2] + 20, $y + $rh - 3.2, 'Qty.', $fs, true, 'R', 0.2);
+        $pdf->text($xs[3] - 3, $y + $rh - 3.2, 'Amount', $fs, true, 'R', 0.2);
+        $y += $rh;
+        $total = 0.0;
+        foreach (CashCount::DENOMS as $kind => $denoms) {
+            $first = true;
+            foreach ($denoms as $d) {
+                $q = (int)($sheet[$kind][$d] ?? 0);
+                $amt = r2($q * (float)$d);
+                $total += $amt;
+                if ($first) {
+                    $pdf->line($m, $y, $pw - $m, $y, 0.5, 0.55);
+                    $pdf->text($m + 3, $y + $rh - 3.2, CashCount::KINDS[$kind], $fs, true, 'L', 0.1);
+                }
+                $pdf->text($xs[1] + 30, $y + $rh - 3.2, CashCount::label($d), $fs, false, 'R', 0);
+                if ($q) {
+                    $pdf->text($xs[2] + 20, $y + $rh - 3.2, number_format($q), $fs, false, 'R', 0);
+                    $pdf->text($xs[3] - 3, $y + $rh - 3.2, number_format($amt, 2), $fs, false, 'R', 0);
+                }
+                $pdf->line($xs[1] - 10, $y + $rh, $pw - $m, $y + $rh, 0.25, 0.85);
+                $y += $rh;
+                $first = false;
+            }
+        }
+        $total = $sheet ? r2($total) : r2((float)$s['counted_cash']);
+        $pdf->line($m, $y, $pw - $m, $y, 0.9, 0.2);
+        $pdf->fill($m, $y + 0.5, $pw - 2 * $m, $rh + 1, 0.95);
+        $pdf->text($m + 3, $y + $rh - 2.6, 'TOTAL CASH', $fs + 0.6, true, 'L', 0);
+        $pdf->text($xs[3] - 3, $y + $rh - 2.6, number_format($total, 2), $fs + 0.6, true, 'R', 0);
+        $y += $rh + 2;
+        $extra = [];
+        if ($sheet && abs($total - (float)$s['counted_cash']) >= 0.005) {
+            $extra[] = ['Cash counted (corrected)', (float)$s['counted_cash']];
+        }
+        $extra[] = ['Expected cash in drawer', (float)$s['expected_cash']];
+        $extra[] = ['Over / (short)', (float)$s['over_short']];
+        foreach ($extra as [$label, $v]) {
+            $pdf->text($m + 3, $y + $rh - 3.2, $label, $fs, false, 'L', 0.2);
+            $pdf->text($xs[3] - 3, $y + $rh - 3.2, $v < 0 ? '(' . number_format(-$v, 2) . ')' : number_format($v, 2), $fs, false, 'R', 0.2);
+            $y += $rh - 1;
+        }
+        if (!$sheet) {
+            $pdf->text($m + 3, $y + 8, 'No Cash Count Sheet was kept for this shift; the total is the cash counted.', 6.2, false, 'L', 0.45);
+            $y += 10;
+        }
+        // Remitted by (the cashier) and Received by, at the foot of the sheet
+        $sy = max($y + 26, $ph - $m - 26);
+        $cw = ($pw - 2 * $m - 14) / 2;
+        foreach ([['Remitted by:', (string)$s['cashier'], 'Cashier'], ['Received by:', '', '']] as $i => [$lab, $name, $cap]) {
+            $sx = $m + $i * ($cw + 14);
+            $lw = $pdf->textWidth($lab, 6.8, true) + 3;
+            $pdf->text($sx, $sy, $lab, 6.8, true, 'L', 0.15);
+            $pdf->line($sx + $lw, $sy + 1, $sx + $cw, $sy + 1, 0.6, 0.2);
+            if ($name !== '') {
+                $pdf->text($sx + $lw + ($cw - $lw) / 2, $sy + 9, $pdf->fit($name, $cw - $lw, 6.6, true), 6.6, true, 'C', 0.1);
+            }
+            if ($cap !== '') {
+                $pdf->text($sx + $lw + ($cw - $lw) / 2, $sy + 17, $cap, 6.2, false, 'C', 0.45);
+            }
+        }
+    }
+    $pdf->download($file);
+}

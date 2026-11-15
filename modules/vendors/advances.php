@@ -108,7 +108,7 @@ layout_start($t ? 'Edit Advance ' . $t['txn_no'] : 'Advance Payment to Supplier'
 <div class="card mb-3"><div class="card-body">
   <div class="row g-2">
     <div class="col-md-5"><label class="form-label">Supplier</label>
-      <select class="form-select form-select-sm" name="vendor_id" required <?= $t ? 'disabled' : '' ?> data-combo onchange="if(this.value){location='<?= h(url($pageKey, ['a' => 'new'])) ?>&vendor_id='+this.value}">
+      <select class="form-select form-select-sm" name="vendor_id" required <?= $t ? 'disabled' : QuickAdd::attr('vendor') ?> data-combo onchange="if(this.value){location='<?= h(url($pageKey, ['a' => 'new'])) ?>&vendor_id='+this.value}">
         <?= options(Lookup::vendors(), $vendorId ?: null, '— choose the supplier —') ?></select>
       <?php if ($t): ?><input type="hidden" name="vendor_id" value="<?= (int)$vendorId ?>"><?php endif; ?></div>
     <?= input_field('txn_date', 'Date paid', fv('txn_date', $t, today()), ['type' => 'date', 'class' => 'col-6 col-md-2', 'required' => true]) ?>

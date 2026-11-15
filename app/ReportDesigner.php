@@ -198,7 +198,7 @@ final class ReportDesigner
             . self::select('orientation', $o, [], 'col-md-4')
             . self::select('margins', $o, [], 'col-md-4')
             . self::check('repeat_title', $o, [], 'col-12', 'From the second printed page on, in the top margin (Chrome and Edge).')
-            . '<div class="col-12 small text-muted">These are for the printed page. Press <strong>Print / PDF</strong> above the report to see them.</div>'
+            . '<div class="col-12 small text-muted">These are for the printed page. Press <strong>Print</strong> above the report to see them.</div>'
             . '</div></div>';
 
         // ================================================================ Layouts

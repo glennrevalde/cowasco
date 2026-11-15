@@ -1,0 +1,103 @@
+G-SMaRT Accounting - version 35 (2026-12-24)
+=============================================
+
+This package holds only the files that were added or changed since version 34.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+1. Back up the database.
+2. Run database/migrations/2026_12_24_fb_pos.sql on it (phpMyAdmin: Import;
+   Navicat: Execute SQL File). It works on MySQL 5.5 and can be run a second time.
+   It adds:
+    - four columns on items: fb_pos (shown on the FB POS, 0 at first),
+      fb_group_id (its menu group), fb_sort (its order) and image_file (its picture);
+    - the table fb_pos_groups (the menu groups, empty at first);
+    - the pages Point of Sale > FB POS, for the roles that may open the POS
+      Register, and Point of Sale > FB POS Menu & Groups, for the roles that may
+      open POS Terminals, with the same rights.
+   Nothing is deleted and no amount changes. Until it is run, the system stops
+   after log-in with a page that names it.
+3. Log in as an administrator and run System Administration > Utilities: Verify &
+   Rebuild Data > Rebuild data once. It works the costs of all the inventory
+   transactions out again in date order, so the averages that jumped after
+   processing orders, back-dated bills and edits are put right (see below).
+4. Press Ctrl+F5 once in the browser.
+
+The item pictures are saved in storage/items (storage/companies/cNNN/items for
+the other companies). The web server must be able to write in the storage folder,
+as it already must for backups and the company logo.
+
+What is new
+-----------
+1. Disassemble / Process Items: outputs must cost what the inputs cost
+ - A processing order is not saved when the total Allocated cost of its outputs
+   differs by more than 2% from the cost of its inputs plus labor and other costs:
+   "The outputs are costed at 156,565.90, but the inputs cost 15,581.25 (...): a
+   difference of ... The outputs may differ from the input cost by at most 2%.
+   Revise the Allocated cost or Unit cost of the outputs (or their Basis) so they
+   add up to the input cost."
+ - The form shows the difference and its percentage under the outputs while you
+   type, and a red warning as soon as it is beyond 2%, before you save. Save and
+   post, Save as pending and Complete and post are all checked.
+ - The 2% is a setting: System Administration > Company, Security & Closing Date >
+   Inventory and POS > "Processing orders: largest difference allowed ...".
+ - The cause of the case reported: under "Current average cost" the Basis of an
+   output is a cost PER UNIT. A total typed there (or a formula whose basis is a
+   total) costed every unit at that total, ten times the input cost, and the
+   difference was posted to the variance account. Orders saved before this version
+   are not changed: the Average Cost Changes report (Inventory > Reports, tick
+   "Processing, disassembly and builds only") shows them; open each and correct
+   its Allocated cost.
+
+2. Average cost: the later transactions are costed again
+ - The average unit cost is worked out as each transaction is posted. A bill,
+   processing order, adjustment, transfer or sale that was back-dated, or edited,
+   voided or deleted after later ones were posted, left the later ones at the
+   costs of the moment they were entered. That is what made the averages jump
+   (263.64 > 110.45 > 260.56 > 568.78; 514.52 > 112.65): a processing order
+   costed its outputs at ten times their value, the stock was sold at the inflated
+   average, then the order was corrected and the few units left carried the rest.
+ - Now, after such a save, void or delete, every inventory transaction dated from
+   that date is posted again in date order (on each date the stock received before
+   the stock used or sold), exactly as Rebuild data does for the whole history. The
+   averages, the cost of sales and their journal entries follow the dates. A blue
+   message says how many were costed again; the audit trail records it (recost).
+ - A new transaction dated today (a POS sale, a bill) has nothing after it and
+   starts nothing, so the counter is not slowed down.
+ - Two settings under Inventory and POS: switch it off, and the largest number of
+   transactions costed again at once (2,000; above that nothing is changed and a
+   message asks you to run Rebuild data).
+
+3. FB POS (Point of Sale > FB POS)
+ - A second selling screen for a food and beverage counter: the items are shown as
+   pictures with their name, price and stock, under menu groups shown as tabs
+   (All, the groups in your order, Other). Tap a picture to add it; + and - change
+   the quantity; a search box and barcode scanning work too.
+ - It sells exactly as the POS Register does: the same terminals, shifts, cash
+   drops and readings, payment methods, approval codes, suspend / recall, charge to
+   account, counter payments, receipts, returns and voids, and the same Point of
+   Sale reports. Only the screen differs.
+ - Point of Sale > FB POS Menu & Groups: add, rename, order, hide and delete the
+   menu groups; tick which items are on the FB POS, choose their group and order,
+   and save the whole menu at once.
+ - Item List > the item > FB POS: the picture (JPG, PNG, GIF or WEBP, up to 3 MB),
+   Show on the FB POS, Menu group and Order. Inventory parts, assemblies,
+   non-inventory parts, services, other charges and item groups can be shown.
+ - On a phone the order moves under the menu and a bar at the bottom shows the
+   number of items and the total.
+
+Setting up the FB POS
+ 1. Run the migration (above).
+ 2. Point of Sale > FB POS Menu & Groups: add the groups, for example Combo Meals,
+    Burgers, Fries & Sides and Drinks.
+ 3. On the same page choose Show: All items that can be, tick the items, choose
+    their group and click Save the menu.
+ 4. Open each item and upload its picture under FB POS.
+ 5. A cashier with an open shift opens Point of Sale > FB POS.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v35.docx) are updated: Point of Sale (FB POS, FB
+POS Menu & Groups), Inventory (the FB POS part of the item form, the 2% rule,
+costing again) and System Administration (the three new settings).

@@ -385,7 +385,7 @@ layout_start($title, ['actions' => $dep ? btn_link(Txn::url($dep), 'Back to the 
   <?php for ($i = 0; $i < $otherRows; $i++): $o = $others[$i] ?? []; ?>
     <tr><td><input class="form-control form-control-sm" name="other[<?= $i ?>][from]" value="<?= h($o['from'] ?? '') ?>" aria-label="Received from">
         <input type="hidden" name="other[<?= $i ?>][customer_id]" value="<?= h((string)($o['customer_id'] ?? '')) ?>"></td>
-      <td><select class="form-select form-select-sm" name="other[<?= $i ?>][account_id]" aria-label="From account"><?= options(Accts::all(), $o['account_id'] ?? '', '') ?></select></td>
+      <td><select class="form-select form-select-sm" name="other[<?= $i ?>][account_id]" aria-label="From account"<?= QuickAdd::attr('account') ?>><?= options(Accts::all(), $o['account_id'] ?? '', '') ?></select></td>
       <td><input class="form-control form-control-sm" name="other[<?= $i ?>][memo]" value="<?= h($o['memo'] ?? '') ?>" aria-label="Memo"></td>
       <td><input class="form-control form-control-sm text-end ms-auto" style="width:120px" name="other[<?= $i ?>][amount]" data-sum inputmode="decimal" value="<?= h($o['amount'] ?? '') ?>" aria-label="Amount"></td></tr>
   <?php endfor; ?>

@@ -8,6 +8,7 @@
   // ------------------------------------------------------------------ line grids
   function initGrid(table) {
     const items = JSON.parse(table.dataset.items || '{}');
+    table._gridItems = items;   // v37: an item added with "Add new item" is put in here (QuickAdd)
     const taxes = JSON.parse(table.dataset.taxes || '{}');
     const unitsByItem = JSON.parse(table.dataset.units || '{}'); // item id -> [{id, code, factor, base, sd, pd}]
     const mode = table.dataset.mode || 'sales'; // sales | purchase | expense | journal
@@ -303,6 +304,175 @@
     });
   });
 
+  // ------------------------------------------------------------------ "Add new" from a drop-down (v37)
+  // A box marked data-add (customer, vendor, name, account, item) ends its list with "Add new ..." for the users who
+  // may create that kind of record (the page says which in <body data-quick-add>). Choosing it opens the list's own
+  // form in a window over the transaction; once saved there the new record is put in the box, and in every other box
+  // of the same kind on the page, without leaving the transaction. See app/QuickAdd.php.
+  window.AppQuickAdd = (function () {
+    let cfg = null;
+    try { cfg = JSON.parse(document.body.dataset.quickAdd || 'null'); } catch (e) { cfg = null; }
+    const NOUN = { customer: 'customer', vendor: 'supplier', account: 'account', item: 'item' };
+    const TITLE = { customer: 'New customer or job', vendor: 'New supplier', account: 'New account', item: 'New item' };
+    let modalEl = null, modal = null, frame = null, origin = null, originKind = null, added = false, ready = false;
+
+    function entries(sel) {
+      if (!cfg || !sel || !sel.dataset.add || sel.disabled) return [];
+      const form = sel.form || sel.closest('form');
+      // a form that saves; or, on a transaction page, a form that chooses the vendor or customer to work with
+      if (form && (form.getAttribute('method') || 'get').toLowerCase() !== 'post' && cfg.ptype !== 'transaction') return [];
+      const kinds = sel.dataset.add === 'name' ? ['customer', 'vendor'] : [sel.dataset.add];
+      return kinds.filter((k) => cfg.kinds[k]).map((k) => ({ kind: k, noun: NOUN[k] }));
+    }
+
+    function build() {
+      modalEl = document.createElement('div');
+      modalEl.className = 'modal fade qa-modal';
+      modalEl.tabIndex = -1;
+      modalEl.setAttribute('aria-labelledby', 'qaTitle');
+      modalEl.innerHTML = '<div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-md-down"><div class="modal-content">'
+        + '<div class="modal-header"><span class="qa-ico"><i class="bi bi-plus-lg"></i></span><h5 class="modal-title" id="qaTitle"></h5>'
+        + '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>'
+        + '<div class="modal-body p-0"><div class="qa-types"></div><div class="qa-frame-wrap"><div class="qa-loading"><span class="spinner-border spinner-border-sm"></span> Opening the form</div><iframe class="qa-frame" title="New record"></iframe></div></div>'
+        + '</div></div>';
+      document.body.appendChild(modalEl);
+      frame = modalEl.querySelector('iframe');
+      frame.addEventListener('load', () => { modalEl.classList.remove('is-loading'); });
+      modal = new bootstrap.Modal(modalEl);
+      modalEl.addEventListener('shown.bs.modal', () => { ready = true; });
+      modalEl.addEventListener('hidden.bs.modal', () => {
+        frame.src = 'about:blank';
+        // closed without adding: back to the box it was opened from
+        const back = !added && origin && origin.parentNode && origin.parentNode.querySelector('.combo-input');
+        if (back) back.focus();
+      });
+    }
+
+    function load(url) {
+      modalEl.classList.remove('is-picking');
+      modalEl.classList.add('is-loading');
+      frame.src = url;
+    }
+
+    function open(sel, kind, typed) {
+      if (!cfg || !cfg.kinds[kind] || !window.bootstrap) return;
+      if (!modalEl) build();
+      origin = sel;
+      originKind = kind;
+      added = false;
+      const q = '&from=' + encodeURIComponent(cfg.from || '') + (typed ? '&prefill=' + encodeURIComponent(typed) : '');
+      ready = false;
+      modalEl.querySelector('.modal-title').textContent = TITLE[kind];
+      const types = modalEl.querySelector('.qa-types');
+      types.innerHTML = '';
+      if (kind === 'item') {
+        // first the type of item, as on the Item List's "New item" menu
+        const allowed = (sel.dataset.addTypes || '').split(',').filter(Boolean);
+        const list = Object.keys(cfg.types).filter((t) => !allowed.length || allowed.indexOf(t) >= 0);
+        types.innerHTML = '<p class="qa-types-q">What kind of item?</p><div class="qa-type-list">' + list.map((t) => '<button type="button" class="qa-type" data-type="' + t + '"><i class="bi bi-'
+          + ({ service: 'tools', inventory: 'box-seam', non_inventory: 'bag', assembly: 'diagram-3', other_charge: 'receipt', subtotal: 'calculator', group: 'collection', discount: 'percent', payment: 'cash-coin' }[t] || 'box')
+          + '"></i><span>' + cfg.types[t] + '</span></button>').join('') + '</div>';
+        types.querySelectorAll('.qa-type').forEach((b) => b.addEventListener('click', () => {
+          modalEl.querySelector('.modal-title').textContent = 'New ' + cfg.types[b.dataset.type].toLowerCase();
+          load(cfg.kinds.item + '&type=' + encodeURIComponent(b.dataset.type) + q);
+        }));
+        modalEl.classList.add('is-picking');
+        modalEl.classList.remove('is-loading');
+        frame.src = 'about:blank';
+      } else {
+        const t = kind === 'account' && sel.dataset.addTypes ? '&types=' + encodeURIComponent(sel.dataset.addTypes) : '';
+        load(cfg.kinds[kind] + t + q);
+      }
+      modal.show();
+    }
+
+    // the text of the new choice, written the way the box writes its others
+    function nameText(sel, name, word) {
+      const colon = Array.prototype.some.call(sel.options, (o) => /^(Customer|Supplier|Employee|Other): /.test(o.text));
+      return colon ? word + ': ' + name : name + ' (' + word + ')';
+    }
+    function accountText(sel, r) {
+      const opts = Array.prototype.filter.call(sel.options, (o) => o.value !== '');
+      if (opts.some((o) => /^\S+ - /.test(o.text))) return r.code + ' - ' + r.name;
+      if (opts.some((o) => /\([^()]*\)$/.test(o.text))) return r.name + ' (' + r.code + ')';
+      return r.code + ' - ' + r.name;
+    }
+    function addOption(sel, value, text) {
+      if (Array.prototype.some.call(sel.options, (o) => o.value === String(value))) return;
+      const o = document.createElement('option');
+      o.value = String(value);
+      o.textContent = text;
+      const key = text.toLocaleLowerCase();
+      const before = Array.prototype.find.call(sel.options, (x) => x.value !== '' && x.text.toLocaleLowerCase() > key);
+      sel.insertBefore(o, before || null);
+    }
+    function boxes() {
+      const out = Array.prototype.slice.call(document.querySelectorAll('select[data-add]'));
+      document.querySelectorAll('template').forEach((t) => t.content.querySelectorAll('select[data-add]').forEach((s) => out.push(s)));
+      return out;
+    }
+
+    function apply(r) {
+      added = true;
+      const typesOf = (s) => (s.dataset.addTypes || '').split(',').filter(Boolean);
+      boxes().forEach((s) => {
+        const k = s.dataset.add;
+        if (r.kind === 'customer' || r.kind === 'vendor') {
+          if (k === r.kind) addOption(s, r.id, r.label);
+          else if (k === 'name') addOption(s, (r.kind === 'customer' ? 'c' : 'v') + r.id, nameText(s, r.label, r.kind === 'customer' ? 'Customer' : 'Supplier'));
+        } else if (r.kind === 'account' && k === 'account') {
+          const ts = typesOf(s);
+          if (!ts.length || ts.indexOf(r.type) >= 0 || s === origin) addOption(s, r.id, accountText(s, r));
+        } else if (r.kind === 'item' && k === 'item') {
+          const ts = typesOf(s);
+          if (!ts.length || ts.indexOf(r.type) >= 0 || s === origin) addOption(s, r.id, r.label);
+        }
+      });
+      if (r.kind === 'item' && r.grid) {
+        document.querySelectorAll('table.line-grid').forEach((t) => { if (t._gridItems) t._gridItems[r.id] = r.grid[t.dataset.mode === 'purchase' ? 'purchase' : 'sales']; });
+      }
+      if (origin) {
+        const v = origin.dataset.add === 'name' ? (r.kind === 'customer' ? 'c' : 'v') + r.id : String(r.id);
+        if (Array.prototype.some.call(origin.options, (o) => o.value === v)) {
+          origin.value = v;
+          if (origin.comboSync) origin.comboSync();
+          origin.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+      toast((r.kind === 'vendor' ? 'Supplier' : r.kind.charAt(0).toUpperCase() + r.kind.slice(1)) + ' added: ' + r.label);
+    }
+
+    function toast(text) {
+      const t = document.createElement('div');
+      t.className = 'qa-toast';
+      t.setAttribute('role', 'status');
+      t.innerHTML = '<i class="bi bi-check-circle-fill"></i><span></span>';
+      t.querySelector('span').textContent = text;
+      document.body.appendChild(t);
+      requestAnimationFrame(() => t.classList.add('is-on'));
+      setTimeout(() => { t.classList.remove('is-on'); setTimeout(() => t.remove(), 400); }, 3200);
+    }
+
+    window.addEventListener('message', (e) => {
+      if (e.origin !== window.location.origin || !frame || e.source !== frame.contentWindow) return;
+      const d = e.data && e.data.gsQuickAdd;
+      if (!d) return;
+      // a window still opening (a very quick save) is closed as soon as it has opened
+      const close = () => { if (ready) modal.hide(); else modalEl.addEventListener('shown.bs.modal', () => modal.hide(), { once: true }); };
+      if (d.close) { close(); return; }
+      if (d.kind && d.id) { try { apply(d); } finally { close(); } }
+    });
+
+    // inside the window: Cancel (and Escape) close it
+    if (document.body.classList.contains('is-popup') && window.parent !== window) {
+      const close = () => window.parent.postMessage({ gsQuickAdd: { close: true } }, window.location.origin);
+      document.querySelectorAll('[data-popup-close]').forEach((b) => b.addEventListener('click', close));
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !document.querySelector('.combo-list[style*="block"]')) close(); });
+    }
+
+    return { entries, open, apply };
+  })();
+
   // ------------------------------------------------------------------ searchable drop-downs
   // <select data-combo> becomes a box you type in: the list narrows with every letter (incremental search) and
   // matches any part of the text, so an account is found by its description and a name by any word of it.
@@ -380,8 +550,15 @@
           + (tail ? '<span class="combo-tail">' + mark(tail) + '</span>' : '') + '</div>';
       });
       if (!c.items.length) html += '<div class="combo-none">Nothing matches "' + esc(c.input.value.trim()) + '"</div>';
+      // v37: "Add new customer / supplier / account / item" at the foot of the list (QuickAdd)
+      c.adds = window.AppQuickAdd ? window.AppQuickAdd.entries(c.sel) : [];
+      if (c.adds.length) {
+        const typed = c.typed ? c.input.value.trim() : '';
+        html += '<div class="combo-adds">' + c.adds.map((a, j) => '<div class="combo-opt combo-add" role="option" data-i="' + (c.items.length + j) + '"><i class="bi bi-plus-circle"></i><span>'
+          + (typed ? 'Add "' + esc(typed) + '" as a new ' + esc(a.noun) : 'Add new ' + esc(a.noun)) + '</span></div>').join('') + '</div>';
+      }
       list.innerHTML = html;
-      c.hi = c.items.length ? 0 : -1;
+      c.hi = c.items.length ? 0 : (c.adds.length && c.typed && c.input.value.trim() ? 0 : -1);
       if (!words.length) { const cur = c.items.findIndex((o) => o.value === c.sel.value); if (cur >= 0) c.hi = cur; }
       paintHi(c, true);
     }
@@ -413,6 +590,14 @@
     }
 
     function choose(c, i) {
+      // an "Add new" line: the form of that list opens over the page, with what was typed as the name
+      if (i >= c.items.length && c.adds && c.adds[i - c.items.length]) {
+        const add = c.adds[i - c.items.length];
+        const typed = c.typed ? c.input.value.trim() : '';
+        hide(true);
+        window.AppQuickAdd.open(c.sel, add.kind, typed);
+        return;
+      }
       const val = i < 0 ? '' : (c.items[i] ? c.items[i].value : null);
       if (val === null) return;
       const changed = c.sel.value !== val;
@@ -476,15 +661,15 @@
         if (open !== c) return;
         // leaving with text typed: take the highlighted match; leaving it empty clears the choice
         if (c.typed && input.value.trim() === '' && c.blank) choose(c, -1);
-        else if (c.typed && c.hi >= 0) choose(c, c.hi);
+        else if (c.typed && c.hi >= 0 && c.hi < c.items.length) choose(c, c.hi);
         else hide(true);
       });
       input.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
           e.preventDefault();
           if (open !== c) { show(c); return; }
-          const n = c.items.length; if (!n) return;
-          c.hi = e.key === 'ArrowDown' ? Math.min(n - 1, c.hi + 1) : Math.max(c.blank ? -1 : 0, c.hi - 1);
+          const n = c.items.length; if (!n && !(c.adds && c.adds.length)) return;
+          c.hi = e.key === 'ArrowDown' ? Math.min(n + (c.adds ? c.adds.length : 0) - 1, c.hi + 1) : Math.max(c.blank ? -1 : 0, c.hi - 1);
           paintHi(c, true);
         } else if (e.key === 'Enter') {
           if (open === c) { e.preventDefault(); if (c.typed && input.value.trim() === '' && c.blank) choose(c, -1); else if (c.hi >= -1) choose(c, c.hi); }
@@ -507,6 +692,8 @@
     function auto(sel) {
       if (sel.multiple || sel.hasAttribute('data-no-combo') || sel.closest('[data-no-combo]')) return false;
       if (sel.hasAttribute('data-combo')) return true;
+      // a box with "Add new" lines is always a searchable box, however short its list (QuickAdd)
+      if (sel.dataset.add && window.AppQuickAdd && window.AppQuickAdd.entries(sel).length) return true;
       let n = 0;
       for (let i = 0; i < sel.options.length; i++) { if (sel.options[i].value !== '') n++; if (n > AUTO_MIN) return true; }
       return false;
@@ -752,6 +939,132 @@
     if (document.readyState === 'complete') setTimeout(show, 50); else window.addEventListener('load', () => setTimeout(show, 50));
   })();
 
+  // ------------------------------------------------------------------ attachments (v40, app/Attachments.php)
+  // The Attachments box of a form keeps every file chosen (more can be added with the button or by dropping them on
+  // it), lists each with its size and a Remove, and turns away a file the server would not take before anything is
+  // sent. On the page of a saved document the same box attaches the files straight away with its Attach button.
+  (function () {
+    const BLOCK = /\.(exe|msi|msp|bat|cmd|com|scr|pif|cpl|dll|sys|vbs|vbe|jse|wsf|wsh|ps1|psm1|hta|lnk|reg|msc|jar|apk|app|deb|rpm|sh|php|phtml|phar)$/i;
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const size = (b) => (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : (b >= 1024 ? Math.round(b / 1024) + ' KB' : b + ' bytes'));
+    const icon = (n) => {
+      const e = (String(n).split('.').pop() || '').toLowerCase();
+      if (e === 'pdf') return 'file-earmark-pdf';
+      if (/^(jpe?g|png|gif|webp|bmp|tiff?|heic|svg)$/.test(e)) return 'file-earmark-image';
+      if (/^(docx?|rtf|odt)$/.test(e)) return 'file-earmark-word';
+      if (/^(xlsx?|xlsm|csv|ods)$/.test(e)) return 'file-earmark-excel';
+      if (/^(pptx?|odp)$/.test(e)) return 'file-earmark-ppt';
+      if (/^(zip|rar|7z|gz|tar)$/.test(e)) return 'file-earmark-zip';
+      if (/^(html?|css|js|json|xml)$/.test(e)) return 'file-earmark-code';
+      if (/^(txt|eml|msg)$/.test(e)) return 'file-earmark-text';
+      return 'file-earmark';
+    };
+    document.querySelectorAll('[data-att]').forEach((box) => {
+      const input = box.querySelector('[data-att-input]');
+      if (!input) return;
+      const list = box.querySelector('[data-att-list]');
+      const warn = box.querySelector('[data-att-warn]');
+      const drop = box.querySelector('.att-drop');
+      const send = box.querySelector('[data-att-send]');
+      const countLabel = box.querySelector('[data-att-count-label]');
+      const maxFile = +box.dataset.attMax || 0;
+      const maxPost = +box.dataset.attPost || 0;
+      const maxCount = +box.dataset.attCount || 20;
+      let dt = null;
+      try { dt = new DataTransfer(); } catch (e) { dt = null; }
+      const say = (msgs) => { if (!warn) return; warn.hidden = !msgs.length; warn.innerHTML = msgs.map((m) => '<i class="bi bi-exclamation-triangle"></i> ' + esc(m)).join('<br>'); };
+      const queued = () => (dt ? Array.from(dt.files) : Array.from(input.files || []));
+      function counts() {
+        if (!countLabel || !list) return;
+        const n = list.querySelectorAll('.att-item:not(.is-removing)').length;
+        countLabel.textContent = n ? n + (n === 1 ? ' file' : ' files') : 'None yet';
+      }
+      function render() {
+        if (!list) return;
+        list.querySelectorAll('.is-queued').forEach((li) => li.remove());
+        queued().forEach((f, i) => {
+          const li = document.createElement('li');
+          li.className = 'att-item is-new is-queued';
+          li.innerHTML = '<span class="att-ico"><i class="bi bi-' + icon(f.name) + '"></i></span>'
+            + '<span class="att-text"><span class="att-name">' + esc(f.name) + '</span><span class="att-meta">' + size(f.size)
+            + (send ? ', ready to attach' : ', attached when you save') + '</span></span>'
+            + (dt ? '<span class="att-actions"><button type="button" class="btn btn-sm btn-light att-btn" data-i="' + i + '" title="Take it off"><i class="bi bi-x-lg"></i><span> Remove</span></button></span>' : '');
+          list.appendChild(li);
+        });
+        if (send) {
+          const n = queued().length;
+          send.hidden = !n;
+          const lab = send.querySelector('[data-att-n]');
+          if (lab) lab.textContent = n === 1 ? '1 file' : n + ' files';
+        }
+        counts();
+      }
+      function add(files) {
+        const msgs = [];
+        let total = queued().reduce((s, f) => s + f.size, 0);
+        Array.from(files).forEach((f) => {
+          if (BLOCK.test(f.name)) { msgs.push('"' + f.name + '" is a program file; program files cannot be attached.'); return; }
+          if (!f.size) { msgs.push('"' + f.name + '" is empty.'); return; }
+          if (maxFile && f.size > maxFile) { msgs.push('"' + f.name + '" (' + size(f.size) + ') is larger than ' + size(maxFile) + ', the most the server takes for one file.'); return; }
+          if (!dt) return;
+          if (Array.from(dt.files).some((x) => x.name === f.name && x.size === f.size)) return;
+          if (dt.files.length >= maxCount) { msgs.push('Up to ' + maxCount + ' files can go in one save. Save, then add "' + f.name + '" and the rest.'); return; }
+          if (maxPost && total + f.size > maxPost * 0.95) { msgs.push('"' + f.name + '" would take the files of this save over ' + size(maxPost) + '. Save first, then add it.'); return; }
+          dt.items.add(f);
+          total += f.size;
+        });
+        if (dt) input.files = dt.files;
+        say(msgs);
+        render();
+      }
+      input.addEventListener('change', () => {
+        const picked = Array.from(input.files || []);
+        if (!dt) {   // an older browser: the box holds what was picked last
+          const bad = picked.filter((f) => BLOCK.test(f.name) || (maxFile && f.size > maxFile));
+          if (bad.length) { input.value = ''; add(bad); return; }
+          say([]); render(); return;
+        }
+        input.files = dt.files;   // the files chosen before stay; the new ones are added to them
+        add(picked);
+      });
+      if (drop) {
+        ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('is-over'); }));
+        ['dragleave', 'dragend'].forEach((ev) => drop.addEventListener(ev, () => drop.classList.remove('is-over')));
+        drop.addEventListener('drop', (e) => {
+          e.preventDefault();
+          drop.classList.remove('is-over');
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+            if (dt) add(e.dataTransfer.files); else { input.files = e.dataTransfer.files; render(); }
+          }
+        });
+      }
+      if (list) {
+        list.addEventListener('click', (e) => {
+          const q = e.target.closest('button[data-i]');
+          if (q && dt) { dt.items.remove(+q.dataset.i); input.files = dt.files; render(); return; }
+          const k = e.target.closest('[data-att-drop]');
+          if (k) { k.closest('.att-item').remove(); counts(); }
+        });
+        list.addEventListener('change', (e) => {
+          const cb = e.target.closest('[data-att-remove]');
+          if (!cb) return;
+          const li = cb.closest('.att-item');
+          li.classList.toggle('is-removing', cb.checked);
+          const lab = cb.parentElement.querySelector('span');
+          if (lab) lab.textContent = cb.checked ? ' Undo' : ' Remove';
+          counts();
+        });
+        list.querySelectorAll('[data-att-remove]:checked').forEach((cb) => { const lab = cb.parentElement.querySelector('span'); if (lab) lab.textContent = ' Undo'; });
+      }
+      if (send && box.tagName === 'FORM') {
+        box.addEventListener('submit', () => {
+          const b = send.querySelector('button');
+          if (b) { b.disabled = true; b.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Attaching…'; }
+        });
+      }
+    });
+  })();
+
   // ------------------------------------------------------------------ long forms travel in one field
   // PHP reads only the first max_input_vars fields of a form (1000 as installed) and silently drops the rest:
   // a bill of 122 lines has more than 1,400 fields and would be saved without its last 40 lines. A long form
@@ -762,7 +1075,7 @@
     const form = e.target;
     if (e.defaultPrevented || !(form instanceof HTMLFormElement)) return;
     if ((form.getAttribute('method') || 'get').toLowerCase() !== 'post') return;
-    if ((form.getAttribute('enctype') || '').toLowerCase() === 'multipart/form-data') return;
+    // a form that sends files (multipart) is packed too: its files are left out of the pairs and go as they are
     const named = Array.prototype.filter.call(form.elements, (el) => el.name && !el.disabled);
     if (named.length <= PACK_ABOVE) return;
     let fd;
@@ -772,7 +1085,7 @@
     fd.forEach((v, k) => { if (k === '_csrf') { csrf = v; } else if (typeof v === 'string') { pairs.push([k, v]); } });
     // everything else is left out of this submission; the boxes are given back at once, so a form that opens in
     // another tab, or a page the browser keeps, still works
-    const off = named.filter((el) => el.name !== '_csrf');
+    const off = named.filter((el) => el.name !== '_csrf' && el.type !== 'file');
     off.forEach((el) => { el.disabled = true; });
     if (e.submitter && e.submitter.name) { e.submitter.dataset.packName = e.submitter.name; e.submitter.removeAttribute('name'); }
     let box = form.querySelector('input[name="_packed"]');
@@ -947,5 +1260,77 @@
       document.querySelectorAll('select[data-module="' + mod + '"]').forEach((s) => { s.value = val; s.dispatchEvent(new Event('change', { bubbles: true })); });
       document.querySelectorAll('input[type=checkbox][data-module="' + mod + '"][data-kind="' + (btn.dataset.kind || 'allowed') + '"]').forEach((c) => { c.checked = val === '1'; });
     });
+  });
+})();
+
+// v36 Expenses tab: the Customer / Supplier box. Only a cost for a customer can be billed, so Billable is
+// cleared and switched off while a supplier is chosen on the line.
+(function () {
+  document.addEventListener('change', (e) => {
+    const sel = e.target;
+    if (!sel.matches || !sel.matches('select[data-f="exp_name"]')) return;
+    const tr = sel.closest('tr');
+    const bill = tr && tr.querySelector('input[data-f="exp_billable"]');
+    if (!bill) return;
+    const supplier = sel.value.charAt(0) === 'v';
+    if (supplier) bill.checked = false;
+    bill.disabled = supplier;
+    bill.title = supplier ? 'Only a cost for a customer can be billed' : '';
+  });
+})();
+
+// v38 Cash Count Sheet (Shifts, Cash Drops & Readings): clicking the "Cash counted" box (or its button) opens the
+// sheet of bills and coins; each line's amount and the total cash follow the quantities typed, and "Use this count"
+// puts the total in the box. See app/CashCount.php.
+(function () {
+  const sheets = document.querySelectorAll('.cc-modal');
+  if (!sheets.length || !window.bootstrap) return;
+  const money = (v) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  sheets.forEach((m) => {
+    const target = document.querySelector(m.dataset.ccTarget);
+    const used = m.querySelector('[data-cc-used]');
+    const modal = new bootstrap.Modal(m);
+    const total = () => {
+      let t = 0;
+      m.querySelectorAll('input[data-cc-den]').forEach((i) => {
+        const q = parseInt(String(i.value).replace(/[^0-9]/g, ''), 10) || 0;
+        const amt = Math.round(q * parseFloat(i.dataset.ccDen) * 100) / 100;
+        i.closest('tr').querySelector('[data-cc-amt]').textContent = money(amt);
+        i.closest('tr').classList.toggle('has-qty', q > 0);
+        t += amt;
+      });
+      t = Math.round(t * 100) / 100;
+      m.querySelector('[data-cc-total]').textContent = money(t);
+      return t;
+    };
+    m.addEventListener('input', (e) => { if (e.target.matches('input[data-cc-den]')) { e.target.value = e.target.value.replace(/[^0-9]/g, ''); total(); } });
+    m.addEventListener('keydown', (e) => {
+      // Enter moves down the sheet instead of sending the form
+      if (e.key === 'Enter' && e.target.matches('input[data-cc-den]')) {
+        e.preventDefault();
+        const all = Array.from(m.querySelectorAll('input[data-cc-den]'));
+        const next = all[all.indexOf(e.target) + 1];
+        if (next) next.focus(); else m.querySelector('[data-cc-use]').focus();
+      }
+    });
+    m.querySelector('[data-cc-clear]').addEventListener('click', () => { m.querySelectorAll('input[data-cc-den]').forEach((i) => { i.value = ''; }); total(); });
+    m.querySelector('[data-cc-use]').addEventListener('click', () => {
+      const t = total();
+      if (target) {
+        target.value = t.toFixed(2);
+        target.dispatchEvent(new Event('input', { bubbles: true }));
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      if (used) used.value = '1';
+      modal.hide();
+    });
+    m.addEventListener('shown.bs.modal', () => { const first = m.querySelector('input[data-cc-den]'); if (first) first.focus(); });
+    const sel = '#' + m.id;
+    document.querySelectorAll('[data-cash-count="' + sel + '"]').forEach((el) => {
+      const open = (e) => { if (e) e.preventDefault(); total(); modal.show(); };
+      el.addEventListener('click', open);
+      if (el.tagName === 'INPUT' && el.readOnly) el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); });
+    });
+    total();
   });
 })();

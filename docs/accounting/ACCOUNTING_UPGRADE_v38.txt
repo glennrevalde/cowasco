@@ -1,0 +1,76 @@
+G-SMaRT Accounting - version 38 (2027-01-14)
+=============================================
+
+This package holds only the files that were added or changed since version 37.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+1. Back up the database.
+2. Run database/migrations/2027_01_14_cash_count_sheet.sql on it (phpMyAdmin:
+   Import; Navicat: Execute SQL File). It works on MySQL 5.5 and can be run a
+   second time. It adds:
+    - the table pos_cash_counts: the bills and coins counted when a shift is
+      closed (empty at first);
+    - the report Point of Sale > Reports > Cash Count Sheet, for the roles that may
+      open the X- and Z-Reading Summary, and for the cashiers (their own shifts).
+   Nothing is deleted and no amount changes. Until it is run, the system stops
+   after log-in with a page that names it.
+3. Press Ctrl+F5 once in the browser (the page script and the style sheet changed).
+
+What is new
+-----------
+1. Add new supplier on Receive Items and Enter Bills
+ - The Vendor box at the top of Receive Items and Enter Bills (and of Receive Items
+   and Enter Bill for Received Items) now ends with "Add new supplier", as on the
+   other transactions. Saving the new supplier opens the page for that supplier.
+   The same rule covers every box on a transaction page that only chooses the
+   supplier or customer to work with.
+
+2. POS Receipts, Returns & Voids
+ - From and To are a date and a time ("From date and time", "To date and time"):
+   a receipt counts by the moment it was rung up. They start on today, 12:00 AM to
+   11:59 PM. An older link with dates only still works.
+ - New Cashier filter. Choosing a cashier sets the dates and times by itself: from
+   the opening of the cashier's first shift on the days chosen to the closing of
+   the last one (now, for a shift still open); without a shift, the first and last
+   receipt of the cashier on those days; else the cashier's latest shift. Only that
+   cashier's receipts are listed.
+ - Totals at the foot: the Total of the receipts (sales less returns, voided ones
+   left out) with the number of receipts, and the Sales and Returns lines when
+   there are returns. The totals count every receipt of the period, even when only
+   the latest 500 are listed.
+ - On a phone each receipt is a card with its total at the right.
+
+3. Gross sales of a shift (Current shift, X- and Z-readings)
+ - An item group sold at its group price: the price variance (group price less
+   the prices of its items) is now part of the Gross sales, so Gross sales less
+   Discounts agrees with Net sales + VAT when there is no VAT. Readings already
+   printed keep their figures; the readings from now on have the corrected gross.
+
+4. General Ledger: Cashier filter
+ - Financial > Reports > General Ledger has a Cashier filter (the users who have
+   entered POS transactions). Choosing one shows only the transactions that
+   cashier entered, and the beginning balance is of that cashier's transactions
+   alone. The heading of the report names the cashier.
+
+5. Cash Count Sheet
+ - Shifts, Cash Drops & Readings > Close register: clicking "Cash counted in
+   drawer" (or the bills button next to it) opens the Cash Count Sheet, headed with
+   the Date cover (shift opened to now) and the Cashier name. Type the quantity of
+   each bill (1,000, 500, 200, 100, 50, 20) and coin (20, 10, 5, 1, 0.25, 0.10,
+   0.05, 0.01); the amounts and the Total cash follow. "Use this count" puts the
+   total in Cash counted in drawer. The quantities are kept with the shift.
+ - Correcting the closing entries of a shift: the bills button next to Cash
+   counted opens the sheet kept, to count again; it then replaces the sheet.
+ - New report Point of Sale > Reports > Cash Count Sheet: one sheet per completed
+   shift (Date cover, Cashier name, terminal, every bill and coin, Total cash,
+   Expected cash in drawer, Over/(short)). Choose a Shift for one sheet, or list
+   every completed shift of the dates with their total. A cashier sees their own
+   shifts. The shift page and the list of recent shifts link to it.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v38.docx) are updated: Point of Sale (Cash Count
+Sheet, POS Receipts, gross sales, the Cash Count Sheet report) and Financial
+(General Ledger).

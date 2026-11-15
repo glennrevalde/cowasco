@@ -215,10 +215,12 @@ return [
 
         // ---------------- Point of Sale
         'pos.register'        => ['pos', 'POS Register', 'transaction', 'Transactions', 'pos/register.php', [], 1],
+        'pos.fb'              => ['pos', 'FB POS', 'transaction', 'Transactions', 'pos/fb.php', [], 1],
         'pos.shifts'          => ['pos', 'Shifts, Cash Drops & Readings', 'transaction', 'Transactions', 'pos/shifts.php', [], 1],
         'pos.receipts'        => ['pos', 'POS Receipts, Returns & Voids', 'transaction', 'Transactions', 'pos/receipts.php', [], 1],
         'pos.approval_codes'  => ['pos', 'Approval Codes', 'transaction', 'Transactions', 'pos/approval_codes.php', [], 1],
         'pos.terminals'       => ['pos', 'POS Terminals', 'setup', 'Setup', 'pos/terminals.php', [], 1],
+        'pos.fb_menu'         => ['pos', 'FB POS Menu & Groups', 'setup', 'Setup', 'pos/fb_menu.php', [], 1],
         'rpt.pos_sales_txn'      => ['pos', 'POS Sales by Transaction No. (detail)', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_sales_txn'], 1],
         'rpt.pos_sales_item'     => ['pos', 'POS Sales by Item', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_sales_item'], 1],
         'rpt.pos_sales_item_group' => ['pos', 'POS Sales by Item Group', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_sales_item_group'], 1],
@@ -232,6 +234,7 @@ return [
         'rpt.pos_discount_log'   => ['pos', 'POS Discount Log', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_discount_log'], 1],
         'rpt.pos_void_log'       => ['pos', 'POS Void and Refund Log', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_void_log'], 1],
         'rpt.pos_ending_inventory' => ['pos', 'Ending Inventory - POS Cashier', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_ending_inventory'], 1],
+        'rpt.pos_cash_count'     => ['pos', 'Cash Count Sheet', 'report', 'Reports', 'reports/run.php', ['report' => 'pos_cash_count'], 1],
 
         // ---------------- Banking
         'bank.write_checks'   => ['bank', 'Write Checks', 'transaction', 'Transactions', 'txn/page.php', ['type' => 'check'], 1],
@@ -434,6 +437,8 @@ return [
         'auth.switch_company'  => 'auth/switch_company.php',
         'api.lookup'           => 'api/lookup.php',
         'file.logo'            => 'files/logo.php',
+        'file.item_image'      => 'files/item_image.php',
+        'file.attachment'      => 'files/attachment.php',
         'api.coop'             => 'coop/api.php',
         'file.member'          => 'coop/member_file.php',
     ],

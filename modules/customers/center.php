@@ -111,6 +111,9 @@ if ($a === 'new' || $a === 'edit') {
         }
         DB::commit();
         flash('success', 'Customer saved.');
+        if (!$c) {
+            QuickAdd::finish('customer', $id);   // v37: added from a drop-down's "Add new": back to the transaction
+        }
         redirect_after_save(url($pageKey, ['a' => 'new']), url($pageKey, ['id' => $id]));
     });
     layout_start($c ? 'Edit customer: ' . $c['name'] : 'New customer or job', ['actions' => btn_link(url($pageKey, $c ? ['id' => $c['id']] : []), 'Cancel')]);
@@ -120,7 +123,7 @@ if ($a === 'new' || $a === 'edit') {
       <?= csrf_field() ?>
       <div class="row g-2">
         <?php if (!$c): ?><?= party_pick_field('customer', gint('party') ?: null) ?><?php else: ?><div class="col-12"><?= party_note($c['party_id'] ? (int)$c['party_id'] : null, 'Customer') ?></div><?php endif; ?>
-        <?= input_field('name', 'Customer / job name', fv('name', $c), ['required' => true]) ?>
+        <?= input_field('name', 'Customer / job name', fv('name', $c, QuickAdd::prefill()), ['required' => true, 'extra' => QuickAdd::popup() ? 'autofocus' : '']) ?>
         <?= select_field('parent_id', 'Job of (leave blank for a customer)', $parents, fv('parent_id', $c, g('parent')), ['blank' => '']) ?>
         <?= input_field('company_name', 'Company name', fv('company_name', $c)) ?>
         <?= input_field('contact_person', 'Contact person', fv('contact_person', $c)) ?>

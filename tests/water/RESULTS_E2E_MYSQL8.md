@@ -1,10 +1,10 @@
 # Water module end-to-end acceptance tests (HTTP)
 
-- **Run:** 2026-11-15 20:18:01 (13 s)
+- **Run:** 2026-11-15 21:21:21 (17.3 s)
 - **Server:** http://127.0.0.1:8098
-- **Database:** coop_e2e59 (fresh install + the former water database migrated with tools/migrate_water.php)
+- **Database:** coop_e2e60 (fresh install + the former water database migrated with tools/migrate_water.php)
 - **Environment:** PHP 8.3.6, 8.0.46-0ubuntu0.24.04.5
-- **Result:** 564 passed, 0 failed, 564 checks
+- **Result:** 594 passed, 0 failed, 594 checks
 
 
 ## 0. Set-up: one login, one session, mapping checks before posting
@@ -97,13 +97,13 @@
 | the receipt and its journal entry carry the class | [1,1] | [1,1] | PASS |
 | partial collection of account A accepted, receipt issued | yes | yes | PASS |
 | the receipt has one payment document in the ledger | yes | yes | PASS |
-| payment number = official receipt number | COL-20261115-201749-0F3D | COL-20261115-201749-0F3D | PASS |
+| payment number = official receipt number | COL-20261115-212105-DE1B | COL-20261115-212105-DE1B | PASS |
 | payment amount | 515.20 | 515.20 | PASS |
 | payment debits the cashier's cash account | 230 | 230 | PASS |
 | invoice A open balance after the partial payment | 515.20 | 515.20 | PASS |
 | water bill A amount_paid | 515.20 | 515.20 | PASS |
 | receipt document balanced | yes | yes | PASS |
-| retry of the same request returns the same receipt | COL-20261115-201749-0F3D | COL-20261115-201749-0F3D | PASS |
+| retry of the same request returns the same receipt | COL-20261115-212105-DE1B | COL-20261115-212105-DE1B | PASS |
 | retry is reported as a duplicate | yes | yes | PASS |
 | retry posts no second payment | 1 | 1 | PASS |
 | two simultaneous collections of the same balance: exactly one accepted | 1 | 1 | PASS |
@@ -407,7 +407,7 @@
 | Address sub-groups: the list | yes | yes | PASS |
 | ...added | yes | yes | PASS |
 | ...the same name again is refused | yes | yes | PASS |
-| ...renamed, on the water-service account that has it | E2E Purok 6a240 B | E2E Purok 6a240 B | PASS |
+| ...renamed, on the water-service account that has it | E2E Purok ce4b5 B | E2E Purok ce4b5 B | PASS |
 | ...deleting it while an account has it is refused | yes | yes | PASS |
 | ...deleted once nothing has it | yes | yes | PASS |
 | ...a change without the security token is refused (403) | 403 | 403 | PASS |
@@ -693,6 +693,41 @@
 | a type of your own named Fixed Asset is refused with the reason | yes | yes | PASS |
 | back to its original name from the page | Fixed Asset | Fixed Asset | PASS |
 | ...Account Types lists it as before | yes | yes | PASS |
+
+## v60 The accounting update (G-SMaRT Accounting versions 35 to 40)
+
+| Check | Expected | Actual | Result |
+|---|---|---|---|
+| a report has Print and Save as PDF, side by side (no "Print / PDF") | yes | yes | PASS |
+| Save as PDF: a PDF file of the report, with its title and totals | yes | yes | PASS |
+| ...recorded in the audit trail | 1 | 1 | PASS |
+| the print page: Print, Save as PDF and Back | yes | yes | PASS |
+| General Ledger: the Cashier filter, the heading naming the cashier | yes | yes | PASS |
+| Write Checks: the page knows what the user may add, the payee box and the Customer / Supplier column have "Add new" | yes | yes | PASS |
+| the customer form in the window: no menu, no top bar, the typed name filled in, Save and Cancel only | yes | yes | PASS |
+| saved in the window: the customer is made and handed back to the transaction (postMessage) | yes | yes | PASS |
+| an account added from a bank account box: the types that behave as Bank only | yes | yes | PASS |
+| an item in the window | yes | yes | PASS |
+| Inventory Center: one New item button with every kind of item | yes | yes | PASS |
+| Make Journal Entries: the form sends files, the Attachments box | yes | yes | PASS |
+| saved with its two files | ["signed JV.pdf","receipt.txt"] | ["signed JV.pdf","receipt.txt"] | PASS |
+| ...the message says so | yes | yes | PASS |
+| the entry's page lists them with View and Download | yes | yes | PASS |
+| Download: the file as it was attached, byte for byte | yes | yes | PASS |
+| the list of journal entries: a paper clip with 2 beside it | yes | yes | PASS |
+| Add files on the saved entry: a program file is refused with the reason | yes | yes | PASS |
+| Remove: one file left, in the audit trail | [1,1] | [1,1] | PASS |
+| Write Checks: the supplier of the expense line on its general ledger line | 24 | 24 | PASS |
+| FB POS Menu & Groups: a group added | yes | yes | PASS |
+| pos.fb opens | yes | yes | PASS |
+| pos.fb_menu opens | yes | yes | PASS |
+| rpt.pos_cash_count opens | yes | yes | PASS |
+| pos.receipts opens | yes | yes | PASS |
+| pos.shifts opens | yes | yes | PASS |
+| POS Receipts: dates with times and the Cashier filter | yes | yes | PASS |
+| Disassemble / Process Items: the 2% rule on the form | yes | yes | PASS |
+| the three settings of the costs | yes | yes | PASS |
+| trial balance: debits = credits | 0.00 | 0.00 | PASS |
 
 ## 7.4c Period close
 

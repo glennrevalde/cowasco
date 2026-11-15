@@ -191,7 +191,9 @@ final class Pos
         $returns = DB::all("SELECT * FROM transactions WHERE pos_shift_id = :s AND txn_type = 'pos_return' AND is_voided = 0", ['s' => $shiftId]);
         [$in, $p] = DB::in('sx', array_column($live, 'id') ?: [0]);
         $lineAgg = DB::row(
-            "SELECT COALESCE(SUM(CASE WHEN i.item_type NOT IN ('discount','payment','subtotal') THEN l.amount + l.discount_amount ELSE 0 END),0) AS gross,
+            // v38: an item group's price variance line (no item: the group price less the prices of its items) is part of
+            // the gross sales, so Gross sales less Discounts agrees with Net sales + VAT
+            "SELECT COALESCE(SUM(CASE WHEN i.item_type NOT IN ('discount','payment','subtotal') OR (l.item_id IS NULL AND l.group_role = 'variance') THEN l.amount + l.discount_amount ELSE 0 END),0) AS gross,
                     COALESCE(SUM(CASE WHEN i.item_type = 'discount' THEN -l.amount ELSE l.discount_amount END),0) AS disc
                FROM transaction_lines l LEFT JOIN items i ON i.id = l.item_id WHERE l.txn_id IN $in",
             $p

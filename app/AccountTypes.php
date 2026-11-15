@@ -212,12 +212,21 @@ final class AccountTypes
         return $out;
     }
 
-    /** The <option>s of a type picker, grouped by category; each option knows its base type and category */
-    public static function optionsHtml(?int $selected, bool $activeOnly = true): string
+    /**
+     * The <option>s of a type picker, grouped by category; each option knows its base type and category. $bases: only
+     * the types that behave as these built-in types (the "Add new" window of a bank account box, v60)
+     */
+    public static function optionsHtml(?int $selected, bool $activeOnly = true, ?array $bases = null): string
     {
         $all = self::all();
         $html = '';
         foreach (self::grouped($activeOnly, $selected) as $label => $types) {
+            if ($bases !== null) {
+                $types = array_filter($types, fn($n, $id) => in_array($all[$id]['base_type'], $bases, true), ARRAY_FILTER_USE_BOTH);
+                if (!$types) {
+                    continue;
+                }
+            }
             $html .= '<optgroup label="' . h($label) . '">';
             foreach ($types as $id => $name) {
                 $t = $all[$id];

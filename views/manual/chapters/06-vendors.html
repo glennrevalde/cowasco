@@ -262,6 +262,7 @@
 <h2 id="pg-vend-bills">Enter Bills<a class="man-hash" href="#pg-vend-bills" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>A bill is a supplier's invoice that you will pay later. Entering it records what you owe (Accounts Payable), the expense or the inventory, and the input VAT. Enter bills for utilities, rent, services and supplies, and for goods that were not ordered on a purchase order.</p>
 <p><strong>Where to find it:</strong> Vendors &gt; Enter Bills. The <strong>Enter Bills</strong> quick action on the Home page opens a new bill, and <strong>Enter bill</strong> in the Vendor Center opens one for the selected vendor.</p>
+<p><strong>Attachments:</strong> the signed copy of the bill and its supporting documents are attached in the <strong>Attachments</strong> box of the form, or later on its page with <strong>Add files</strong>; see <a href="manual.php?c=getting-started#sec-attachments">Attaching files</a>.</p>
 <p>The page opens on the list of bills of the last 90 days and the next 30 days.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_bills__main.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_bills__main.jpg" alt="The list of bills" width="1094" height="851" loading="lazy" decoding="async"></a><figcaption>The list of bills</figcaption></figure>
 <h4 id="s-the-list_1">The list<a class="man-hash" href="#s-the-list_1" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
@@ -372,8 +373,8 @@
 <td>The line description</td>
 </tr>
 <tr>
-<td><strong>Customer:Job</strong> and <strong>Billable</strong></td>
-<td>The customer the cost was for. Tick <strong>Billable</strong> to charge it to the customer later.</td>
+<td><strong>Customer / Supplier</strong> and <strong>Billable</strong></td>
+<td>The customer or job the cost was for, or a supplier, so the line is on that supplier's subsidiary ledger (for example the agency whose fee you pay through another supplier). Type part of the name; the list shows "Customer" or "Supplier" after each name. A cooperative member is on the list as before, by its member type (Santos, Maria (Regular Member)); a member's own supplier record is not listed there. Tick <strong>Billable</strong> to charge a customer's cost to the customer later; it is switched off while a supplier is chosen.</td>
 </tr>
 </tbody>
 </table></div>
@@ -404,7 +405,7 @@
 </tr>
 <tr>
 <td><strong>Customer:Job</strong> and <strong>Billable</strong></td>
-<td>As on the Expenses tab</td>
+<td>The customer the item was for; tick <strong>Billable</strong> to charge it to the customer later. (A supplier can be chosen on the Expenses tab only.)</td>
 </tr>
 </tbody>
 </table></div>
@@ -1045,6 +1046,7 @@
 <h2 id="pg-vend-purchase_orders">Create Purchase Orders<a class="man-hash" href="#pg-vend-purchase_orders" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>A purchase order (PO) records what you ordered from a supplier, at what cost, and when you expect it. It does not post to the books. When the goods arrive you receive them against the PO, which keeps track of what has been received and what is still to come.</p>
 <p><strong>Where to find it:</strong> Vendors &gt; Create Purchase Orders (also under Inventory &gt; Transactions). The <strong>Create Purchase Orders</strong> quick action on the Home page opens a new PO, and <strong>Purchase order</strong> in the Vendor Center opens one for the selected vendor.</p>
+<p><strong>Attachments:</strong> the signed copy of the purchase order and its supporting documents are attached in the <strong>Attachments</strong> box of the form, or later on its page with <strong>Add files</strong>; see <a href="manual.php?c=getting-started#sec-attachments">Attaching files</a>.</p>
 <p>The list works like the list of bills. Its <strong>Status</strong> filter offers <strong>Open</strong>, <strong>Partially filled</strong>, <strong>Closed</strong> and <strong>Void</strong>.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/vend_purchase_orders__main.jpg" title="Click to enlarge"><img src="assets/manual/img/vend_purchase_orders__main.jpg" alt="The list of purchase orders" width="1094" height="289" loading="lazy" decoding="async"></a><figcaption>The list of purchase orders</figcaption></figure>
 <h4 id="s-fields_4">Fields<a class="man-hash" href="#s-fields_4" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
@@ -1508,7 +1510,7 @@
 <li>Messages: "Choose the supplier the advance was paid to.", "Enter the amount paid in advance.", "... of this advance has already been applied to bills, so it cannot be lowered below that. Void the applications first.", "It has been applied to bills (AAP-...). Void the application first."</li>
 </ul>
 <h2 id="s-vendor-and-payables-reports">Vendor and payables reports<a class="man-hash" href="#s-vendor-and-payables-reports" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
-<p>The vendor reports are under <strong>Vendors &gt; Reports</strong> in the sidebar (heading <strong>Vendors and Payables Reports</strong>) and in the Report Center. Their common tools (Refresh, Columns, Print / PDF, Export to spreadsheet, Email link, Modify Report, Memorize, and clicking a figure to see the detail) are explained in <a href="manual.php?c=home-and-reports#sec-reports">Working with reports</a>.</p>
+<p>The vendor reports are under <strong>Vendors &gt; Reports</strong> in the sidebar (heading <strong>Vendors and Payables Reports</strong>) and in the Report Center. Their common tools (Refresh, Columns, Print, Save as PDF, Export to spreadsheet, Email link, Modify Report, Memorize, and clicking a figure to see the detail) are explained in <a href="manual.php?c=home-and-reports#sec-reports">Working with reports</a>.</p>
 <h3 id="pg-rpt-ap_aging_summary">A/P Aging Summary<a class="man-hash" href="#pg-rpt-ap_aging_summary" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>What you owe each vendor, split by how long it is past due. Use it to plan payments and to check that Accounts Payable agrees with the open documents.</p>
 <p><strong>Where to find it:</strong> Vendors &gt; Reports &gt; A/P Aging Summary.</p>

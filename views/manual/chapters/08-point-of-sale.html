@@ -394,6 +394,76 @@
 <li>The date of a sale is the day it is completed, not the business date of the shift.</li>
 <li>The stock shown in the item list and cart is the site's stock when the page was opened.</li>
 </ul>
+<h2 id="pg-pos-fb">FB POS<a class="man-hash" href="#pg-pos-fb" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>The FB POS is a second selling screen, made for a food and beverage counter such as a burger shop. The items are shown as pictures with their name and price, under menu groups (Burgers, Fries &amp; Sides, Drinks, Combo Meals) that you name and put in order yourself. The cashier taps a picture to put the item on the order.</p>
+<p>Only the screen is different. The FB POS sells exactly as the <a href="#pg-pos-register">POS Register</a> does: the same terminals, shifts, cash drops and readings, payment methods, approval codes, receipts, returns and voids, and the same Point of Sale reports. A sale made on the FB POS is a POS sale like any other, with its receipt number from the terminal.</p>
+<p><strong>Where to find it:</strong> Point of Sale &gt; FB POS. Also the <strong>Open the FB POS</strong> button of <a href="#pg-pos-fb_menu">FB POS Menu &amp; Groups</a>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/pos_fb__order.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_fb__order.jpg" alt="The FB POS of Sample Burger House: the menu groups as tabs, the items as pictures with their price, and the order on the right" width="1094" height="800" loading="lazy" decoding="async"></a><figcaption>The FB POS of Sample Burger House: the menu groups as tabs, the items as pictures with their price, and the order on the right</figcaption></figure>
+<p>The roles that may open the POS Register may open the FB POS, with the same rights (the upgrade copies them). Change them in System Administration &gt; Roles &amp; Page Access if a counter should use only one of the two.</p>
+<h4 id="s-fb-the-menu">The menu<a class="man-hash" href="#s-fb-the-menu" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ul>
+<li><strong>Find an item</strong>: type part of the name or code to narrow the pictures. Scanning a barcode, or typing a code and pressing Enter, puts that item on the order at once.</li>
+<li><strong>The tabs</strong>: <strong>All</strong>, then one tab for each menu group that has items, in the order set on the Menu &amp; Groups page, then <strong>Other</strong> for items with no group.</li>
+<li><strong>The pictures</strong>: tap one to add one of the item. The price shown is the price for the customer on the order (it follows the customer's price level). Under it is the stock at the site, for inventory parts and assemblies. A number in the corner shows how many of the item are already on the order. An item without a picture shows the first letters of its name.</li>
+</ul>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/pos_fb__tab.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_fb__tab.jpg" alt="The Burgers tab, with one Bacon Cheese Burger and two Cheese Burgers on the order" width="1094" height="800" loading="lazy" decoding="async"></a><figcaption>The Burgers tab, with one Bacon Cheese Burger and two Cheese Burgers on the order</figcaption></figure>
+<h4 id="s-fb-the-order">The order<a class="man-hash" href="#s-fb-the-order" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Part</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Customer</strong></td>
+<td>Blank is a walk-in. Choose a customer to use the customer's price level, or to charge the sale to an approved account.</td>
+</tr>
+<tr>
+<td><strong>Name on the order</strong></td>
+<td>Optional: a name or table number for a walk-in customer. It is printed on the receipt.</td>
+</tr>
+<tr>
+<td><strong>Class</strong></td>
+<td>The class of the sale, as on the POS Register.</td>
+</tr>
+<tr>
+<td><strong>The lines</strong></td>
+<td>Each item with its price each, the <strong>−</strong> and <strong>+</strong> buttons and the quantity box, the amount, and the <strong>×</strong> that takes it off the order.</td>
+</tr>
+<tr>
+<td><strong>Subtotal, VAT, Total</strong></td>
+<td>Worked out as on the POS Register.</td>
+</tr>
+<tr>
+<td><strong>Payment boxes</strong></td>
+<td>One box for each payment method of the terminal, with the reference or approval number for cards, banks and e-wallets. <strong>Change</strong> and <strong>Balance due</strong> follow what you type.</td>
+</tr>
+<tr>
+<td><strong>Complete sale</strong></td>
+<td>Saves and posts the sale and opens the receipt. Its <strong>New sale</strong> button returns to the FB POS.</td>
+</tr>
+<tr>
+<td><strong>Suspend</strong>, <strong>Charge</strong>, <strong>Clear</strong></td>
+<td>Suspend keeps the order to finish later (it is listed under <strong>Suspended orders</strong> with a <strong>Recall</strong> button); Charge puts the sale on the account of an approved customer; Clear empties the order.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Customer paying an account balance</strong>, under the order, takes a payment on a customer's account, as on the POS Register.</p>
+<p>The FB POS sells at the price shown; there is no discount or price box on it (use the POS Register for a sale that needs one). A sale that takes an item below zero asks the same question, and the same supervisor approval when one is needed, as on the POS Register.</p>
+<h4 id="s-fb-on-a-phone">On a phone or tablet<a class="man-hash" href="#s-fb-on-a-phone" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>On a narrow screen the order moves under the menu. A bar at the bottom of the screen shows how many items are on the order and the total; tap <strong>Order</strong> on it to go to the order and pay.</p>
+<figure class="man-fig man-fig-narrow"><a class="man-zoom" href="assets/manual/img/pos_fb__phone.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_fb__phone.jpg" alt="The FB POS on a phone, with the order bar at the bottom" width="390" height="844" loading="lazy" decoding="async"></a><figcaption>The FB POS on a phone, with the order bar at the bottom</figcaption></figure>
+<h4 id="s-fb-step-by-step">Step by step: sell on the FB POS<a class="man-hash" href="#s-fb-step-by-step" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ol>
+<li>Open a shift on the terminal (Point of Sale &gt; Shifts, Cash Drops &amp; Readings), if none is open.</li>
+<li>Open Point of Sale &gt; FB POS.</li>
+<li>Tap a tab, then tap the pictures of the items the customer orders. Use <strong>+</strong> and <strong>−</strong> to change a quantity.</li>
+<li>Type the cash received, or the amount and reference of another payment method.</li>
+<li>Click <strong>Complete sale</strong>. The receipt opens; print it, then click <strong>New sale</strong>.</li>
+</ol>
+<div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>No item is on the FB POS until it is ticked <strong>Show on the FB POS</strong>, on the item form or on <a href="#pg-pos-fb_menu">FB POS Menu &amp; Groups</a>. The FB POS sells inventory parts, assemblies, non-inventory parts, services, other charges and item groups. An item group is sold at its group price, and its items leave the stock, as on the POS Register.</p></div>
 <h2 id="pg-pos-shifts">Shifts, Cash Drops &amp; Readings<a class="man-hash" href="#pg-pos-shifts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
 <p>This page opens and closes the cashier's shift on the current terminal, records cash taken out of the drawer, and prints the X- and Z-readings.</p>
 <p><strong>Where to find it:</strong> Point of Sale &gt; Shifts, Cash Drops &amp; Readings. Also the <strong>Shift &amp; readings</strong> button of the register, and the Home dashboard <strong>Quick actions</strong>. The Home dashboard also lists the shifts that are open.</p>
@@ -438,7 +508,7 @@
 </tr>
 <tr>
 <td><strong>Gross sales</strong></td>
-<td>The sales before discounts, net of VAT.</td>
+<td>The sales before discounts, net of VAT. An item group counts at its group price: the difference between the group price and the prices of its items (the price variance) is part of the gross sales, so Gross sales less Discounts agrees with the net sales.</td>
 </tr>
 <tr>
 <td><strong>Discounts</strong></td>
@@ -497,12 +567,22 @@
 <h4 id="s-step-by-step-close-the-register">Step by step: close the register<a class="man-hash" href="#s-step-by-step-close-the-register" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <ol>
 <li>Count the cash in the drawer, including the float.</li>
-<li>Type the total in <strong>Cash counted in drawer</strong>.</li>
+<li>Click <strong>Cash counted in drawer</strong>. The <strong>Cash Count Sheet</strong> opens: type how many of each bill and coin are in the drawer, then click <strong>Use this count</strong>. The total goes into the box (see <a href="#sec-cash-count-sheet">The Cash Count Sheet</a>).</li>
 <li>A supervisor types their username and password under it.</li>
 <li>Click <strong>Close register and print Z-reading</strong> and confirm "Close the register now?".</li>
 <li>The message "Register closed. Over/(short): ₱..." appears and the Z-reading opens. Print it and keep it with the cash.</li>
 </ol>
 <figure class="man-fig man-fig-narrow"><a class="man-zoom" href="assets/manual/img/pos_shifts__reading.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_shifts__reading.jpg" alt="The Z-reading #1 of Makati Counter 1 for 09/26/2026, with a shortage of ₱20.00" width="366" height="648" loading="lazy" decoding="async"></a><figcaption>The Z-reading #1 of Makati Counter 1 for 09/26/2026, with a shortage of ₱20.00</figcaption></figure>
+<h4 id="sec-cash-count-sheet">The Cash Count Sheet<a class="man-hash" href="#sec-cash-count-sheet" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Clicking <strong>Cash counted in drawer</strong> (or the bills button next to it) opens the Cash Count Sheet of the shift. Its heading gives the <strong>Date cover</strong> (from the moment the shift was opened to now) and the <strong>Cashier name</strong>.</p>
+<figure class="man-fig man-fig-narrow"><a class="man-zoom" href="assets/manual/img/pos_shifts__cash_count_sheet.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_shifts__cash_count_sheet.jpg" alt="The Cash Count Sheet of Ella Ramos: 2 thousand-peso bills, a 500, a 100, and the coins, for a total cash of 2,614.88" width="460" height="804" loading="lazy" decoding="async"></a><figcaption>The Cash Count Sheet of Ella Ramos: 2 thousand-peso bills, a 500, a 100, and the coins, for a total cash of 2,614.88</figcaption></figure>
+<ul>
+<li><strong>Bills:</strong> 1,000, 500, 200, 100, 50 and 20. <strong>Coins:</strong> 20, 10, 5, 1, 0.25, 0.10, 0.05 and 0.01.</li>
+<li>Type the quantity of each in <strong>Qty.</strong>; the <strong>Amount</strong> of the line and the <strong>Total cash</strong> at the foot follow as you type. Enter moves to the next line.</li>
+<li><strong>Use this count</strong> puts the total cash in <strong>Cash counted in drawer</strong> and closes the sheet; <strong>Clear</strong> empties it. Closing the sheet with the × leaves the box as it was.</li>
+</ul>
+<figure class="man-fig man-fig-narrow"><a class="man-zoom" href="assets/manual/img/pos_shifts__cash_counted.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_shifts__cash_counted.jpg" alt="The total of the sheet in Cash counted in drawer, ready to close the register" width="427" height="456" loading="lazy" decoding="async"></a><figcaption>The total of the sheet in Cash counted in drawer, ready to close the register</figcaption></figure>
+<p>When the register is closed, the quantities are kept with the shift. They are printed on the <a href="#pg-rpt-pos_cash_count">Cash Count Sheet</a> report, and the shift's page and the list of recent shifts have a <strong>Cash count sheet</strong> link (the bills icon). When the closing entries are corrected, the sheet can be filled in again with the bills button next to <strong>Cash counted</strong>; it then replaces the one kept.</p>
 <h4 id="s-the-reading">The reading<a class="man-hash" href="#s-the-reading" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <p>An X-reading or Z-reading shows the company, TIN and terminal; <strong>X-READING</strong> or <strong>Z-READING #n</strong> (Z numbers run per terminal); the <strong>Business date</strong>, when it was <strong>Printed</strong> and <strong>By</strong> whom; <strong>First receipt</strong>, <strong>Last receipt</strong>, <strong>Sales count</strong>, <strong>Gross sales</strong>, <strong>Discounts</strong>, <strong>Returns</strong>, <strong>Voids</strong>, <strong>Net sales (net of VAT)</strong> and <strong>VAT</strong>; <strong>Opening cash float</strong>, the amount of each payment method, <strong>Cash drops</strong> and <strong>Expected cash in drawer</strong>. A Z-reading adds <strong>Counted cash</strong> and <strong>Over / (short)</strong>, and ends with "End of day - counters reset"; an X-reading ends with "Mid-shift reading - register not closed". <strong>Print</strong> prints it and <strong>Back</strong> returns to the shifts page. All readings are listed in the <a href="#pg-rpt-pos_readings">X- and Z-Reading Summary</a>.</p>
 <h4 id="s-recent-shifts-and-earlier-ones">Recent shifts, and earlier ones<a class="man-hash" href="#s-recent-shifts-and-earlier-ones" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
@@ -609,12 +689,16 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>From</strong>, <strong>To</strong></td>
-<td>The dates to list. Both start on today.</td>
+<td><strong>From date and time</strong>, <strong>To date and time</strong></td>
+<td>The period to list, to the minute: a receipt counts by the moment it was rung up. They start on today, 12:00 AM to 11:59 PM.</td>
 </tr>
 <tr>
 <td><strong>Terminal</strong></td>
 <td><strong>All</strong> or one terminal.</td>
+</tr>
+<tr>
+<td><strong>Cashier</strong></td>
+<td><strong>All cashiers</strong> or one. Choosing a cashier sets the dates and times by itself: from the opening of the first shift the cashier worked in on the days chosen to the closing of the last one (to now for a shift still open). Without a shift on those days, it takes the first and last receipt of the cashier on those days, else the cashier's latest shift. The list then shows only that cashier's receipts.</td>
 </tr>
 <tr>
 <td><strong>Time</strong>, <strong>Receipt</strong></td>
@@ -630,7 +714,7 @@
 </tr>
 <tr>
 <td><strong>Total</strong></td>
-<td>The total, negative for returns.</td>
+<td>The total, negative for returns. At the foot: the <strong>Total</strong> of the receipts of the period (sales less returns, voided ones left out), with the number of receipts; with returns, the <strong>Sales</strong> and <strong>Returns</strong> lines above it. The totals count every receipt of the period, even when only the latest 500 are listed.</td>
 </tr>
 <tr>
 <td><strong>Status</strong></td>
@@ -647,6 +731,8 @@
 </tbody>
 </table></div>
 <p>Suspended sales are not listed; they are on the register.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/pos_receipts__cashier.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_receipts__cashier.jpg" alt="POS Receipts for the cashier Ella Ramos: the dates and times set to her shifts, and the total of her receipts" width="1094" height="800" loading="lazy" decoding="async"></a><figcaption>POS Receipts for the cashier Ella Ramos: the dates and times set to her shifts, and the total of her receipts</figcaption></figure>
+<p>On a phone each receipt is a card: the receipt number and total, the time and status, the terminal and cashier, and the Reprint and Return buttons.</p>
 <h4 id="s-the-sale">The sale<a class="man-hash" href="#s-the-sale" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <p>Click a receipt number to open the sale: its date, number, status, class, site and receipt number; the items with quantity, rate, discount, amount, tax and cost; the <strong>Tenders</strong> with their references and the amount tendered and change; and, for users who may view costs, the <strong>General ledger entries created automatically</strong>. The buttons are <strong>Print</strong> (the receipt again), <strong>Void</strong>, <strong>History</strong> and <strong>Back to list</strong>. POS sales cannot be edited or deleted.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/pos_receipts__view.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_receipts__view.jpg" alt="The POS sale POS-000008 with its tender and ledger entries" width="1094" height="826" loading="lazy" decoding="async"></a><figcaption>The POS sale POS-000008 with its tender and ledger entries</figcaption></figure>
@@ -872,8 +958,29 @@
 <li>A user limited to some sites (see <a href="manual.php?c=administration#pg-admin-users">User Accounts</a>) sees only the terminals at those sites.</li>
 <li>Terminals cannot be deleted; untick <strong>Active</strong> instead.</li>
 </ul>
+<h2 id="pg-pos-fb_menu">FB POS Menu &amp; Groups<a class="man-hash" href="#pg-pos-fb_menu" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
+<p>Here you set up what the <a href="#pg-pos-fb">FB POS</a> shows: the menu groups (its tabs) and which items appear, under which group and in which order.</p>
+<p><strong>Where to find it:</strong> Point of Sale &gt; FB POS Menu &amp; Groups (under Setup). Also the <strong>Menu &amp; groups</strong> button of the FB POS and of the FB POS part of the item form. The roles that may open POS Terminals may open it, with the same rights.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/pos_fb_menu__main.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_fb_menu__main.jpg" alt="FB POS Menu &amp; Groups: the four menu groups on the left, and the items with their picture, On FB POS tick, group and order" width="1094" height="950" loading="lazy" decoding="async"></a><figcaption>FB POS Menu &amp; Groups: the four menu groups on the left, and the items with their picture, On FB POS tick, group and order</figcaption></figure>
+<h4 id="s-fbm-groups">Menu groups<a class="man-hash" href="#s-fbm-groups" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Type the <strong>Name</strong> (for example Burgers) and its <strong>Order</strong> (lower numbers come first), keep <strong>Shown on the FB POS</strong> ticked and click <strong>Add group</strong>. <strong>Edit</strong> changes a group; clearing <strong>Shown on the FB POS</strong> hides its tab without changing its items. <strong>Delete</strong> removes the group; its items stay on the FB POS under <strong>Other</strong>. A name can be used by one group only. The <strong>Items</strong> number opens the list of the group's items.</p>
+<h4 id="s-fbm-items">The items<a class="man-hash" href="#s-fbm-items" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p>Use <strong>Find</strong>, <strong>Show</strong> (the items on the FB POS, or all the items that can be) and <strong>Group</strong> to narrow the list, then click <strong>Show</strong>. For each item:</p>
+<ul>
+<li><strong>On FB POS</strong>: ticked, the item is on the FB POS.</li>
+<li><strong>Group</strong>: the tab it is shown under; <strong>Other (no group)</strong> puts it under Other.</li>
+<li><strong>Order</strong>: its place within its group; lower numbers come first, then the name.</li>
+</ul>
+<p>Click <strong>Save the menu</strong>. The change is recorded in the audit trail. The picture of an item is uploaded on the item itself (Inventory &gt; Item List &gt; the item &gt; <strong>FB POS</strong>, see <a href="manual.php?c=inventory#sec-item-fb-pos">The FB POS part of the item form</a>); click the item's name to open it.</p>
+<h4 id="s-fbm-step-by-step">Step by step: set up the FB POS<a class="man-hash" href="#s-fbm-step-by-step" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<ol>
+<li>Add the menu groups, for example Combo Meals (0), Burgers (1), Fries &amp; Sides (2) and Drinks (3).</li>
+<li>Choose <strong>Show: All items that can be</strong>, tick <strong>On FB POS</strong> for the items to sell, choose their group and order, and click <strong>Save the menu</strong>.</li>
+<li>Open each item and upload its picture under <strong>FB POS</strong>.</li>
+<li>Click <strong>Open the FB POS</strong> to check the screen.</li>
+</ol>
 <h2 id="s-point-of-sale-reports">Point of Sale reports<a class="man-hash" href="#s-point-of-sale-reports" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h2>
-<p>The POS reports are under <strong>Point of Sale &gt; Reports</strong>. They use the common report tools (<strong>Refresh</strong>, <strong>Columns</strong>, <strong>Print / PDF</strong>, <strong>Export to spreadsheet</strong>, <strong>Email link</strong>, <strong>Modify Report</strong>, <strong>Memorize</strong>, and clicking a figure to see its detail), explained in <a href="manual.php?c=home-and-reports#sec-reports">Working with reports</a>. Most of them can be narrowed to a <strong>Site</strong>, <strong>Terminal</strong> and <strong>Cashier</strong>. Unless a report says otherwise, voided and suspended sales are left out and returns are deducted. Cost and margin columns are shown only to users who may view costs.</p>
+<p>The POS reports are under <strong>Point of Sale &gt; Reports</strong>. They use the common report tools (<strong>Refresh</strong>, <strong>Columns</strong>, <strong>Print</strong>, <strong>Save as PDF</strong>, <strong>Export to spreadsheet</strong>, <strong>Email link</strong>, <strong>Modify Report</strong>, <strong>Memorize</strong>, and clicking a figure to see its detail), explained in <a href="manual.php?c=home-and-reports#sec-reports">Working with reports</a>. Most of them can be narrowed to a <strong>Site</strong>, <strong>Terminal</strong> and <strong>Cashier</strong>. Unless a report says otherwise, voided and suspended sales are left out and returns are deducted. Cost and margin columns are shown only to users who may view costs.</p>
 <h3 id="pg-rpt-pos_sales_txn">POS Sales by Transaction No. (detail)<a class="man-hash" href="#pg-rpt-pos_sales_txn" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>Every receipt with the items sold on it: one heading line per receipt, then one line per item. Use it to check a day's receipts one by one.</p>
 <p><strong>Where to find it:</strong> Point of Sale &gt; Reports &gt; POS Sales by Transaction No. (detail).</p>
@@ -978,3 +1085,18 @@
 <li>The outgoing cashier and the incoming cashier count the stock against the slip and sign it.</li>
 </ol>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/pos_shifts__shift_endinv.jpg" title="Click to enlarge"><img src="assets/manual/img/pos_shifts__shift_endinv.jpg" alt="The Ending inventory button of a shift" width="1058" height="62" loading="lazy" decoding="async"></a><figcaption>The Ending inventory button of a shift</figcaption></figure>
+<h3 id="pg-rpt-pos_cash_count">Cash Count Sheet<a class="man-hash" href="#pg-rpt-pos_cash_count" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>The bills and coins counted in the drawer when each shift was closed, one sheet per completed shift, with its date cover and cashier.</p>
+<p><strong>Where to find it:</strong> Point of Sale &gt; Reports &gt; Cash Count Sheet, or the <strong>Cash count sheet</strong> button of a closed shift on Shifts, Cash Drops &amp; Readings.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_pos_cash_count__report.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_pos_cash_count__report.jpg" alt="The Cash Count Sheet of the shift of Ella Ramos: the bills and coins, the total cash, the expected cash and the over/(short)" width="1094" height="1090" loading="lazy" decoding="async"></a><figcaption>The Cash Count Sheet of the shift of Ella Ramos: the bills and coins, the total cash, the expected cash and the over/(short)</figcaption></figure>
+<ul>
+<li><strong>Filters:</strong> <strong>Dates</strong>, <strong>From</strong>, <strong>To</strong> (business dates of the shifts, starting on today), <strong>Terminal</strong>, <strong>Cashier</strong> and <strong>Shift</strong> (the completed shifts, newest first; choosing one shows its sheet at once).</li>
+<li><strong>One shift:</strong> its heading line (Date cover, Cashier name, terminal; click it to open the shift), then every bill and coin with its <strong>Qty.</strong> and <strong>Amount</strong>, the <strong>Total cash</strong>, the <strong>Expected cash in drawer</strong> and the <strong>Over / (short)</strong>.</li>
+<li><strong>Without a shift:</strong> every completed shift of the dates, each with the bills and coins counted, and the <strong>TOTAL CASH</strong> of them all.</li>
+<li>A shift closed before version 38, or without the sheet, shows "No Cash Count Sheet was kept for this shift" and its cash counted. A cash counted corrected afterwards without counting the sheet again is shown under the total.</li>
+<li>A cashier without the other POS reports sees only their own shifts; the report opens on their latest completed shift.</li>
+</ul>
+<h4 id="sec-ccs-print">Printing the Cash Count Sheet<a class="man-hash" href="#sec-ccs-print" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
+<p><strong>Print</strong> opens the sheet on a small page, a quarter of a sheet of paper: choose the <strong>Paper</strong>, <strong>1/4 Letter (4.25 x 5.5 in)</strong> or <strong>1/4 Government Legal (4.25 x 6.5 in)</strong>, then click <strong>Print</strong> (set the printer to that paper size, or print on a quarter-cut sheet). <strong>Save as PDF</strong> saves the same sheet as a PDF of that size. Without a Shift chosen, each completed shift of the dates prints on a page of its own.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/rpt_pos_cash_count__print.jpg" title="Click to enlarge"><img src="assets/manual/img/rpt_pos_cash_count__print.jpg" alt="The Cash Count Sheet on a quarter Letter page, with Remitted by (the cashier) and Received by at the foot" width="1094" height="680" loading="lazy" decoding="async"></a><figcaption>The Cash Count Sheet on a quarter Letter page, with Remitted by (the cashier) and Received by at the foot</figcaption></figure>
+<p>Each sheet has the company, <strong>CASH COUNT SHEET</strong>, the <strong>Date cover</strong>, the <strong>Cashier name</strong> and the terminal; every bill and coin with its quantity and amount; the <strong>Total cash</strong>, the <strong>Expected cash in drawer</strong> and the <strong>Over / (short)</strong>; and at the foot <strong>Remitted by:</strong> over the cashier's name (Cashier) and <strong>Received by:</strong>, for the cashier and the person who takes the cash to sign.</p>

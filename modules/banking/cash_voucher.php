@@ -123,7 +123,8 @@ handle_post(function () use ($t, $pageKey, $type) {
         'keep_totals' => true, 'reason' => p('reason') ?: null, 'approved_by' => $approver['username'] ?? null,
     ]);
     $saved = Txn::load($id);
-    flash('success', Txn::ref($saved) . ' saved: ' . money($amount) . ' paid out of ' . account_label($cash) . '.');
+    $files = Attachments::claim($id, $pageKey);
+    flash('success', Txn::ref($saved) . ' saved: ' . money($amount) . ' paid out of ' . account_label($cash) . '.' . ($files !== '' ? ' ' . $files : ''));
     $_SESSION['cav_preview'] = p('show_preview') === '1' ? 1 : 0;
     if (p('show_preview') === '1' && Access::can($pageKey, 'print') && !wants_new()) {
         redirect(url($pageKey, ['a' => 'print', 'id' => $id]));
@@ -160,6 +161,7 @@ $vouchers = DB::all(
       WHERE $where ORDER BY t.txn_date DESC, t.id DESC LIMIT 500",
     $params
 );
+$cavFiles = Attachments::counts(array_column($vouchers, 'id'));
 $listRows = [];
 $listTotal = 0.0;
 // the cash vouchers of loan releases (Loan Release Form) are voided, never edited or deleted here
@@ -206,7 +208,7 @@ $actions = ($t ? btn_link(url($pageKey), 'New voucher', 'btn-primary', 'plus-lg'
 layout_start($t ? 'Edit ' . Txn::ref($t) : 'Cash Voucher', ['actions' => $loadButton . ' ' . $actions]);
 echo memorized_loaded_note($mem);
 ?>
-<form method="post" id="cavForm" autocomplete="off"><?= csrf_field() ?>
+<form method="post" id="cavForm" autocomplete="off"<?= Attachments::enctype($type) ?>><?= csrf_field() ?>
 <fieldset <?= $canSave ? '' : 'disabled' ?>>
 <div class="card mb-3">
   <div class="card-header d-flex justify-content-between align-items-center"><span class="fw-semibold">Cash voucher entry</span>
@@ -230,6 +232,7 @@ echo memorized_loaded_note($mem);
     <p class="small text-muted mb-0 mt-2">Accounts come from the chart of accounts. SL is the subsidiary ledger of the line: an employee, customer, supplier or other name.
       The cash account is credited for the cash amount when the voucher is saved, so debits less credits must equal the cash amount.</p>
   </div>
+  <?= Attachments::formCard($type, $t, true) ?>
   <div class="card-body border-top">
     <div class="row g-2 align-items-end">
       <?= Classes::field(fv('class_id', $rec), 'col-md-3') ?>
@@ -278,7 +281,7 @@ echo memorized_loaded_note($mem);
       <tr class="cav-row <?= $first ? 'cav-first' : '' ?> <?= (int)$v['is_voided'] ? 'text-muted text-decoration-line-through' : '' ?> <?= $t && (int)$t['id'] === (int)$v['id'] ? 'table-active' : '' ?>"
           data-id="<?= (int)$v['id'] ?>" data-no="<?= h($v['txn_no']) ?>" data-void="<?= (int)$v['is_voided'] ?>" data-loan="<?= h((string)($loanOf[(int)$v['id']] ?? '')) ?>">
         <td><?= $first ? h(fdate($v['txn_date'])) : '' ?></td>
-        <td><?= $first ? '<a href="' . h(url($pageKey, ['a' => 'view', 'id' => $v['id']])) . '">' . h($v['txn_no']) . '</a>' : '' ?></td>
+        <td><?= $first ? '<a href="' . h(url($pageKey, ['a' => 'view', 'id' => $v['id']])) . '">' . h($v['txn_no']) . '</a>' . Attachments::clip($cavFiles[(int)$v['id']] ?? 0) : '' ?></td>
         <td class="small"><?= $first ? h(entity_name($v)) . (isset($loanOf[(int)$v['id']]) ? '<div class="text-muted">Loan release ' . h($loanOf[(int)$v['id']]) . '</div>' : '') : '' ?></td>
         <td class="<?= !empty($r['cash']) ? 'text-muted' : '' ?>"><?= h($r['account']) ?></td>
         <td class="small"><?= h($r['sl']) ?></td>

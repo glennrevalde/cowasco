@@ -1,0 +1,57 @@
+G-SMaRT Accounting - version 37 (2027-01-07)
+=============================================
+
+This package holds only the files that were added or changed since version 36.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No database update this time: no new migration, no table or column change, and the
+bundled database files are unchanged.
+
+After copying the files, press Ctrl+F5 once in the browser (the page script and the
+style sheet changed).
+
+What is new
+-----------
+1. "Add new" in the drop-downs of the transactions
+ - The Customer, Vendor, name, Account and Item boxes end their list with an
+   "Add new ..." line. With a name typed it reads, for example,
+   Add "Northwind Packaging" as a new supplier.
+ - Choosing it opens the list's own form in a window over the transaction, with the
+   typed name filled in. Save: the window closes, the new record is chosen in the box
+   and added to the other boxes of the same kind on the page (and to the new lines).
+   Cancel or x: nothing is added. The transaction is never left.
+ - Customers: invoices, estimates, sales orders, sales receipts, statement charges,
+   credit memos, receive payments, the Customer:Job of purchase lines, the POS.
+ - Suppliers: purchase orders, item receipts, bills, supplier debit memos, receive
+   items and enter bills, advances to suppliers.
+ - Customers and suppliers (name boxes): Pay to the order of on checks, Paid to on
+   cash vouchers, Name / SL on journal entries and cash vouchers, Customer /
+   Supplier on the Expenses tab.
+ - Accounts: the Expenses tab, journal entries, cash vouchers, deposits, the bank
+   account of a check, deposit to, transfers, processing costs. A box that holds only
+   some kinds of account (Bank and Credit Card) offers only those kinds.
+ - Items: the item lines of purchase orders, item receipts, bills, checks, supplier
+   debit memos, invoices, estimates, sales orders, sales receipts, credit memos, and
+   the outputs of Disassemble / Process Items. "Add new item" asks for the kind first
+   (Service, Inventory part, Non-inventory part, Inventory assembly, Other charge,
+   and on sales also Subtotal, Group, Discount, Payment); a purchase line offers only
+   what can be bought, a processing output only inventory parts and assemblies. The
+   new item's description, price or cost and tax code fill in on the line.
+ - Who sees it: only users with the Create permission on the Customer Center
+   (customers), the Vendor Center (suppliers), the Chart of Accounts plus the special
+   permission to change the Chart of Accounts (accounts), or the Item List (items).
+   The form in the window checks the same permissions again when it is saved, and the
+   new record is in the audit trail as when it is made on its own page.
+
+2. Inventory Center: one "New item" button with every kind of item (Service,
+   Inventory part, Non-inventory part, Inventory assembly, Other charge, Subtotal,
+   Group, Discount, Payment), as on the Item List. It replaces "New inventory item"
+   and "New assembly".
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v37.docx) are updated: Getting Started (Adding a
+new customer, supplier, account or item from a drop-down) and Inventory (Inventory
+Center).

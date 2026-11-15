@@ -598,7 +598,7 @@
 <tbody>
 <tr>
 <td>Title bar</td>
-<td>The report's name and its buttons: <strong>Print / PDF</strong>, <strong>Export to spreadsheet</strong>, <strong>Email link</strong>, <strong>Modify Report</strong> (or <strong>Layouts</strong>), <strong>Memorize</strong> and <strong>Help</strong>.</td>
+<td>The report's name and its buttons: <strong>Print</strong>, <strong>Save as PDF</strong>, <strong>Export to spreadsheet</strong>, <strong>Email link</strong>, <strong>Modify Report</strong> (or <strong>Layouts</strong>), <strong>Memorize</strong> and <strong>Help</strong>.</td>
 </tr>
 <tr>
 <td>Filter bar</td>
@@ -618,7 +618,7 @@
 </tr>
 </tbody>
 </table></div>
-<p>The buttons appear according to your rights: <strong>Print / PDF</strong>, <strong>Export to spreadsheet</strong> and <strong>Email link</strong> need the <strong>Print/Export</strong> right on the report, <strong>Modify Report</strong> needs the special permission <strong>Can design report layouts</strong>, and <strong>Memorize</strong> needs access to the Memorized Reports page.</p>
+<p>The buttons appear according to your rights: <strong>Print</strong>, <strong>Save as PDF</strong>, <strong>Export to spreadsheet</strong> and <strong>Email link</strong> need the <strong>Print/Export</strong> right on the report, <strong>Modify Report</strong> needs the special permission <strong>Can design report layouts</strong>, and <strong>Memorize</strong> needs access to the Memorized Reports page.</p>
 <h3 id="s-opening-a-report">Opening a report<a class="man-hash" href="#s-opening-a-report" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <ul>
 <li><strong>From the Report Center:</strong> Home &gt; Report Center, then click the report.</li>
@@ -808,15 +808,23 @@
 <h3 id="s-charts">Charts<a class="man-hash" href="#s-charts" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>A few reports draw charts above their table: the <a href="manual.php?c=customers#pg-rpt-ar_graph">Accounts Receivable Graph</a> (receivables by aging period and each customer's share), <a href="manual.php?c=point-of-sale#pg-rpt-pos_sales_hour">POS Sales by Hour</a> (net sales by hour) and the <a href="manual.php?c=inventory#pg-rpt-coproduct_costs">Co-product &amp; By-product Cost Allocation</a> (allocated cost by output item, for users who may view costs). The charts print with the report.</p>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/report__graph.jpg" title="Click to enlarge"><img src="assets/manual/img/report__graph.jpg" alt="The Accounts Receivable Graph with the aging bars, the share of each customer and the table under them" width="1094" height="814" loading="lazy" decoding="async"></a><figcaption>The Accounts Receivable Graph with the aging bars, the share of each customer and the table under them</figcaption></figure>
-<h3 id="s-print-pdf">Print / PDF<a class="man-hash" href="#s-print-pdf" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<h3 id="s-print-pdf">Print and Save as PDF<a class="man-hash" href="#s-print-pdf" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>Every report has two buttons for this, side by side: <strong>Print</strong> and <strong>Save as PDF</strong>.</p>
+<h4 id="s-print-a-report">Print</h4>
 <ol>
 <li>Set the dates and filters, and click <strong>Refresh</strong>.</li>
-<li>Click <strong>Print / PDF</strong>. The report opens on a plain page, without menus or filters, with the buttons <strong>Print / Save as PDF</strong> and <strong>Back</strong> at the top.</li>
-<li>Click <strong>Print / Save as PDF</strong>. The browser's print window opens.</li>
-<li>Choose a printer, or choose to save as PDF.</li>
+<li>Click <strong>Print</strong>. The report opens on a plain page, without menus or filters, with the buttons <strong>Print</strong>, <strong>Save as PDF</strong> and <strong>Back</strong> at the top.</li>
+<li>Click <strong>Print</strong>. The browser's print window opens; choose the printer and click Print.</li>
 <li>Click <strong>Back</strong> to return to the report.</li>
 </ol>
-<p>The printed page follows the <strong>Page</strong> settings of the report's layout: paper size, upright or sideways, margins, page numbers and the title at the top of each page (see "Modifying a report" below). Every printout is recorded in the audit trail.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/report_print_buttons.jpg" title="Click to enlarge"><img src="assets/manual/img/report_print_buttons.jpg" alt="The print page of the Income Statement, with Print, Save as PDF and Back at the top" width="1094" height="640" loading="lazy" decoding="async"></a><figcaption>The print page of the Income Statement, with Print, Save as PDF and Back at the top</figcaption></figure>
+<h4 id="s-save-a-report-as-pdf">Save as PDF</h4>
+<ol>
+<li>Set the dates and filters, and click <strong>Refresh</strong>.</li>
+<li>Click <strong>Save as PDF</strong> (above the report, or on the print page). The report is written to a PDF file, named after the report with the date and time (for example <code>trial_balance_20261113_011530.pdf</code>), and the browser saves it in your downloads; no print window opens.</li>
+</ol>
+<p>The PDF has the report's heading (company, title, heading lines and the basis, as the layout shows them), its columns, rows and totals, and the signature lines when the layout prints them. A report with many columns is laid sideways; the rows run on over as many pages as needed, with the column headings again at the top of each page, and each page says who printed it, when, and its page number. Paper and orientation follow the <strong>Page</strong> settings of the report's layout.</p>
+<p>The printed page follows the <strong>Page</strong> settings of the report's layout: paper size, upright or sideways, margins, page numbers and the title at the top of each page (see "Modifying a report" below). Every printout and every PDF is recorded in the audit trail.</p>
 <div class="man-callout man-tip"><div class="man-callout-t"><i class="bi bi-lightbulb"></i>Tip</div><p>Page numbers ("Page 1 of 3") and the title repeated on every page are printed by the browser in the page margins. Chrome and Edge do this; other browsers leave them off.</p></div>
 <h3 id="s-export-to-spreadsheet">Export to spreadsheet<a class="man-hash" href="#s-export-to-spreadsheet" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <ol>
@@ -1219,7 +1227,7 @@
 </tr>
 </tbody>
 </table></div>
-<p>These settings are for the printed page only. Click <strong>Print / PDF</strong> above the report to see them.</p>
+<p>These settings are for the printed page only. Click <strong>Print</strong> above the report to see them.</p>
 <h4 id="s-the-layouts-tab">The Layouts tab<a class="man-hash" href="#s-the-layouts-tab" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h4>
 <figure class="man-fig"><a class="man-zoom" href="assets/manual/img/design__layouts.jpg" title="Click to enlarge"><img src="assets/manual/img/design__layouts.jpg" alt="The Layouts tab with the Save this layout button and the Every saved layout link" width="1046" height="283" loading="lazy" decoding="async"></a><figcaption>The Layouts tab with the Save this layout button and the Every saved layout link</figcaption></figure>
 <ul>

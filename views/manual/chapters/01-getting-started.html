@@ -288,6 +288,46 @@
 <li>Short lists, such as a status or a yes-or-no choice, stay ordinary drop-downs.</li>
 </ul>
 <div class="man-callout man-example"><div class="man-callout-t"><i class="bi bi-journal-text"></i>Example</div><p>On the invoice, click <strong>Customer:Job</strong> and type <code>abc</code>. The list shrinks to ABC Trading Corp. and its jobs, such as ABC Trading Corp.:Office Renovation Project. Press Enter to take the first one.</p></div>
+<h3 id="sec-quick-add">Adding a new customer, supplier, account or item from a drop-down<a class="man-hash" href="#sec-quick-add" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>When the name you need is not on the list yet, you do not have to leave the transaction. At the foot of the list of a <strong>Customer</strong>, <strong>Vendor</strong> (supplier), <strong>Pay to the order of</strong>, <strong>Paid to</strong>, <strong>Name</strong> or <strong>SL</strong>, <strong>Customer / Supplier</strong>, <strong>Account</strong> or <strong>Item</strong> box there is an <strong>Add new</strong> line. With a name typed in the box it reads, for example, <strong>Add "Northwind Packaging" as a new supplier</strong>.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/quick_add__list.jpg" title="Click to enlarge"><img src="assets/manual/img/quick_add__list.jpg" alt="The Vendor box of Enter Bills with a name that is not on the list: Add "Northwind Packaging" as a new supplier" width="1094" height="360" loading="lazy" decoding="async"></a><figcaption>The Vendor box of Enter Bills with a name that is not on the list: Add "Northwind Packaging" as a new supplier</figcaption></figure>
+<p>Click it (or press the arrow keys to it and press Enter). The form of that list opens in a window over the transaction, with the name you typed already in it. Fill in what you need and click <strong>Save</strong>. The window closes, the new name is chosen in the box, and it is added to the other boxes of the same kind on the page, so the next lines can use it too. A green message at the corner says what was added. <strong>Cancel</strong> or the × closes the window and nothing is added.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/quick_add__window.jpg" title="Click to enlarge"><img src="assets/manual/img/quick_add__window.jpg" alt="The New supplier window over Enter Bills, with the name already typed" width="1094" height="704" loading="lazy" decoding="async"></a><figcaption>The New supplier window over Enter Bills, with the name already typed</figcaption></figure>
+<div class="table-responsive man-table"><table class="table table-sm">
+<thead>
+<tr>
+<th>Box</th>
+<th>What it offers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Customer or Customer:Job (invoices, estimates, sales orders, sales receipts, statement charges, credit memos, receive payments, the lines of purchases, the POS)</td>
+<td><strong>Add new customer</strong>: the Customer Center form, where a job can also be made (Job of).</td>
+</tr>
+<tr>
+<td>Vendor (purchase orders, item receipts, bills, supplier debit memos, receive items and enter bills, advances to suppliers)</td>
+<td><strong>Add new supplier</strong>: the Vendor Center form.</td>
+</tr>
+<tr>
+<td>Pay to the order of (checks), Paid to (cash vouchers), Name or SL (journal entries, cash vouchers), Customer / Supplier (the Expenses tab)</td>
+<td><strong>Add new customer</strong> and <strong>Add new supplier</strong>.</td>
+</tr>
+<tr>
+<td>Account (the Expenses tab, journal entries, cash vouchers, deposits, the bank account of a check, deposit to, processing costs)</td>
+<td><strong>Add new account</strong>: the Chart of Accounts form. A box that holds only some kinds of account (Bank and Credit Card for the account of a check) offers only those kinds.</td>
+</tr>
+<tr>
+<td>Item (the Items tab of purchase orders, item receipts, bills and checks; the lines of invoices, estimates, sales orders, sales receipts and credit memos; the outputs of Disassemble / Process Items)</td>
+<td><strong>Add new item</strong>: first the kind of item (Service, Inventory part, Non-inventory part, Inventory assembly, Other charge, and on sales also Subtotal, Group, Discount and Payment), then the Item List form of that kind. A purchase line offers only what can be bought; a processing output only inventory parts and assemblies.</td>
+</tr>
+</tbody>
+</table></div>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/quick_add__types.jpg" title="Click to enlarge"><img src="assets/manual/img/quick_add__types.jpg" alt="Add new item on a bill: the kinds of item that can be bought" width="1094" height="244" loading="lazy" decoding="async"></a><figcaption>Add new item on a bill: the kinds of item that can be bought</figcaption></figure>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/quick_add__payee.jpg" title="Click to enlarge"><img src="assets/manual/img/quick_add__payee.jpg" alt="Pay to the order of on a check: the new name can be a customer or a supplier" width="1094" height="380" loading="lazy" decoding="async"></a><figcaption>Pay to the order of on a check: the new name can be a customer or a supplier</figcaption></figure>
+<p>The new item's description, price or cost and tax code fill in on the line as soon as it is chosen, as for any other item.</p>
+<div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>Only users who may create that kind of record see its <strong>Add new</strong> line: the Create permission on the Customer Center for customers, on the Vendor Center for suppliers, on the Chart of Accounts (with the special permission to change the Chart of Accounts) for accounts, and on the Item List for items. The form in the window checks the same permission again when it is saved, and the new record is in the audit trail as if it had been made on its own page.</p></div>
+<div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>A cooperative member is never added from a drop-down: members are entered on the <a href="manual.php?c=cooperative#pg-coop-members">Member Center</a> as before, and a member is on the customer and name lists by its member type, as before. The customer or supplier form in the window points out a person already on file and does not make a member a second customer or supplier, as on the Customer Center and the Vendor Center.</p></div>
 <h3 id="s-the-lines-of-a-transaction">The lines of a transaction<a class="man-hash" href="#s-the-lines-of-a-transaction" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>The middle of most forms is a grid of lines, one for each item, service or account.</p>
 <ul>
@@ -301,7 +341,7 @@
 <li>On forms with a site at the top (<strong>Default site for items</strong> on bills, item receipts and purchase orders, <strong>Inventory site</strong> on sales forms), the site chosen there is copied onto every line, including the lines added later, so you do not have to choose it on each line. A line can still be given another site. Changing the site at the top afterwards moves every line that still had the old one, and leaves alone the lines you changed yourself.</li>
 <li>There is no set limit to the number of lines: a bill or an invoice of several hundred lines is saved whole, and editing it later keeps every line. Long forms are sent to the server in one package for this reason.</li>
 </ul>
-<p><img alt="The item lines of a bill: the default site Main Warehouse copied onto every line, five empty lines added with Add 5 lines, and the insert button at the end of each line" src="img/vend_bills__lines_site.jpg" />
+<p><img alt="The item lines of a bill: the default site Main Warehouse copied onto every line, five empty lines added with Add 5 lines, and the insert button at the end of each line" src="assets/manual/img/vend_bills__lines_site.jpg" />
 - The <strong>Subtotal</strong>, <strong>Tax</strong> and <strong>Total</strong> under the grid add up as you type. A negative total is shown in brackets, for example (1,250.00).</p>
 <h3 id="s-saving">Saving<a class="man-hash" href="#s-saving" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>The buttons at the foot of the form stay in view while you scroll:</p>
@@ -312,6 +352,22 @@
 </ul>
 <p>If something is missing or wrong, nothing is saved and a red box above the form tells you what to correct.</p>
 <p>If a very long form shows the message "This form has more fields than the server accepts at once (...), so nothing was saved", the page was opened before the program was updated: press Ctrl+F5 to load it again, enter the lines and save. Nothing was saved by the attempt.</p>
+<h3 id="sec-attachments">Attaching files: signed copies and supporting documents<a class="man-hash" href="#sec-attachments" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
+<p>Make Journal Entries, Write Checks, Cash Voucher, Enter Bills (and the bills of Receive Items and Enter Bills and of Enter Bill for Received Items), Create Purchase Orders, Create Sales Orders and Create Invoices have an <strong>Attachments</strong> box. Use it for the signed copy of the voucher, bill, order or invoice and the documents that go with it: the supplier's receipt, the delivery receipt, a quotation, a schedule. One transaction can have as many files as needed.</p>
+<p>Any file can be attached: PDF, pictures (.jpg, .jpeg, .png and others), Word, Excel and PowerPoint files, web pages (.html), text, e-mails and compressed folders (.zip). Program files (.exe, .bat, .msi and the like) are not accepted. The files are kept in the database, so they go with every backup. The box shows the largest file the server takes; see the note below to raise it.</p>
+<p><strong>On the form:</strong></p>
+<ol>
+<li>Click <strong>Add files</strong> in the Attachments box (or drag the files from a folder and drop them on it) and choose one or more files. Click it again to add more.</li>
+<li>Each file is listed with its size and "attached when you save". <strong>Remove</strong> takes one off before saving.</li>
+<li>Click <strong>Save</strong>. The message says how many files were attached. If the form comes back with a question or something to correct, the files stay listed and are attached with the next Save.</li>
+</ol>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/attachments__form.jpg" title="Click to enlarge"><img src="assets/manual/img/attachments__form.jpg" alt="A bill being entered, with two files ready in the Attachments box" width="1094" height="326" loading="lazy" decoding="async"></a><figcaption>A bill being entered, with two files ready in the Attachments box</figcaption></figure>
+<p><strong>On the page of a saved transaction</strong> (open it from its list, or click its number anywhere): the Attachments box lists its files with <strong>View</strong> (a PDF or a picture opens in a new tab), <strong>Download</strong> and <strong>Remove</strong>. To attach the signed copy after printing, click <strong>Add files</strong>, choose the files and click <strong>Attach</strong>; they are attached at once, without opening the transaction for editing.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/attachments__view.jpg" title="Click to enlarge"><img src="assets/manual/img/attachments__view.jpg" alt="A saved journal entry with its signed copy and a supporting schedule" width="1094" height="640" loading="lazy" decoding="async"></a><figcaption>A saved journal entry with its signed copy and a supporting schedule</figcaption></figure>
+<p>On the edit form the files already attached are listed too: <strong>Remove</strong> marks one to be taken off when the form is saved (<strong>Undo</strong> keeps it). In the lists of journal entries, checks, cash vouchers, bills, purchase orders, sales orders and invoices, a paper clip beside the number shows that the document has files, with their number.</p>
+<figure class="man-fig"><a class="man-zoom" href="assets/manual/img/attachments__list.jpg" title="Click to enlarge"><img src="assets/manual/img/attachments__list.jpg" alt="The list of journal entries: the paper clip beside a number with attached files" width="1094" height="420" loading="lazy" decoding="async"></a><figcaption>The list of journal entries: the paper clip beside a number with attached files</figcaption></figure>
+<p>Who may do what: users who may open the page of the transaction see and download its files; attaching needs the Create or Edit right on the page; removing a file needs the Edit or Delete right. Every file attached or removed is recorded in the audit trail (Attach File, Remove File). Deleting a transaction deletes its files; voiding keeps them.</p>
+<div class="man-callout man-note"><div class="man-callout-t"><i class="bi bi-info-circle"></i>Note</div><p>The largest file the server takes is set in PHP (upload_max_filesize, 2 MB on a new PHP install, and post_max_size, the most one save can carry, 8 MB). An administrator can raise them in php.ini, for example to 25M and 30M, and restart the web server. A save carrying more than post_max_size is refused with a message that says so; nothing is saved.</p></div>
 <h3 id="sec-negative-stock">Stock below zero: the Yes / No question<a class="man-hash" href="#sec-negative-stock" aria-label="Link to this section"><i class="bi bi-link-45deg"></i></a></h3>
 <p>When <strong>Allow selling or moving stock below zero (with warning)</strong> is switched on (see "Stock below zero" in <a href="manual.php?c=inventory">Inventory</a>), saving a sales invoice, a sales receipt, a batch of invoices, a POS sale, an inventory adjustment or an inventory transfer that would leave an item below zero at a site is not done straight away. A window headed <strong>Stock will go below zero</strong> says "Saving the transaction will lead the inventory to a negative balance." It lists each item with its site, the quantity <strong>On hand</strong> and the quantity <strong>After saving</strong>, and asks <strong>Do you want to continue?</strong></p>
 <ul>

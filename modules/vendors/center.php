@@ -86,6 +86,9 @@ if ($a === 'new' || $a === 'edit') {
         }
         DB::commit();
         flash('success', 'Vendor saved.');
+        if (!$v) {
+            QuickAdd::finish('vendor', $id);   // v37: added from a drop-down's "Add new": back to the transaction
+        }
         redirect_after_save(url($pageKey, ['a' => 'new']), url($pageKey, ['id' => $id]));
     });
     layout_start($v ? 'Edit vendor: ' . $v['name'] : 'New vendor', ['actions' => btn_link(url($pageKey, $v ? ['id' => $v['id']] : []), 'Cancel')]);
@@ -93,7 +96,7 @@ if ($a === 'new' || $a === 'edit') {
     <form method="post" class="card"><div class="card-body"><?= csrf_field() ?>
       <div class="row g-2">
         <?php if (!$v): ?><?= party_pick_field('supplier', gint('party') ?: null) ?><?php else: ?><div class="col-12"><?= party_note($v['party_id'] ? (int)$v['party_id'] : null, 'Supplier') ?></div><?php endif; ?>
-        <?= input_field('name', 'Vendor name', fv('name', $v), ['required' => true]) ?>
+        <?= input_field('name', 'Vendor name', fv('name', $v, QuickAdd::prefill()), ['required' => true, 'extra' => QuickAdd::popup() ? 'autofocus' : '']) ?>
         <?= input_field('company_name', 'Company name', fv('company_name', $v)) ?>
         <?= input_field('contact_person', 'Contact person', fv('contact_person', $v)) ?>
         <?= input_field('phone', 'Phone', fv('phone', $v)) ?>

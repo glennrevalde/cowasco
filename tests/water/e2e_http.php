@@ -1899,6 +1899,92 @@ Checks::eq('back to its original name from the page', 'Fixed Asset', (string)$q(
 $admin->get($at59);
 Checks::true('...Account Types lists it as before', str_contains($plain59(), 'Fixed Asset built-in') && !str_contains($plain59(), 'originally Fixed Asset'));
 
+// ======================================================================================== v60
+Checks::section('v60 The accounting update (G-SMaRT Accounting versions 35 to 40)');
+$noErr60 = fn() => !preg_match('/(Fatal error|Warning:|Notice:|Deprecated:|SQLSTATE)/', $admin->body);
+// Print and Save as PDF
+$admin->get('index.php?p=rpt.trial_balance&dates=this_month');
+Checks::true('a report has Print and Save as PDF, side by side (no "Print / PDF")', $admin->status === 200 && str_contains($admin->body, '</i> Print</a>') && str_contains($admin->body, 'Save as PDF</a>')
+    && !str_contains($admin->body, 'Print / PDF') && $noErr60());
+$exp60 = (int)$q("SELECT COUNT(*) FROM audit_trail WHERE action = 'export' AND reason LIKE 'PDF:%'");
+$admin->get('index.php?p=rpt.trial_balance&dates=this_month&pdf=1');
+Checks::true('Save as PDF: a PDF file of the report, with its title and totals', $admin->status === 200 && str_starts_with($admin->body, '%PDF-') && str_contains($admin->body, '%%EOF')
+    && str_contains($admin->body, 'Trial Balance'), substr($admin->body, 0, 40));
+Checks::eq('...recorded in the audit trail', $exp60 + 1, (int)$q("SELECT COUNT(*) FROM audit_trail WHERE action = 'export' AND reason LIKE 'PDF:%'"));
+$admin->get('index.php?p=rpt.general_ledger&dates=this_month&print=1');
+Checks::true('the print page: Print, Save as PDF and Back', str_contains($admin->body, 'onclick="window.print()"') && str_contains($admin->body, 'pdf=1') && str_contains($admin->body, '>Back</a>'));
+// the General Ledger's Cashier filter
+$admin->get('index.php?p=rpt.general_ledger&dates=this_month&user_id=' . $adminId);
+Checks::true('General Ledger: the Cashier filter, the heading naming the cashier', $admin->status === 200 && str_contains($admin->body, 'name="user_id"') && str_contains($admin->body, 'Only the transactions entered by the cashier') && $noErr60());
+// "Add new": the customer form in the window, the record handed back
+$admin->get('index.php?p=bank.write_checks&a=new');
+Checks::true('Write Checks: the page knows what the user may add, the payee box and the Customer / Supplier column have "Add new"', str_contains($admin->body, 'data-quick-add=')
+    && (bool)preg_match('/name="payee"[^>]*data-add="name"/', $admin->body) && str_contains($admin->body, 'Customer / Supplier') && $noErr60());
+$admin->get('index.php?p=cust.center&a=new&popup=1&prefill=' . rawurlencode('V60 Window Customer'));
+Checks::true('the customer form in the window: no menu, no top bar, the typed name filled in, Save and Cancel only', $admin->status === 200 && str_contains($admin->body, 'is-popup')
+    && !str_contains($admin->body, 'app-bar') && str_contains($admin->body, 'value="V60 Window Customer"') && str_contains($admin->body, 'data-popup-close') && !str_contains($admin->body, 'name="save_new"'));
+$admin->post('index.php?p=cust.center&a=new&popup=1', ['_csrf' => $admin->csrf(), 'save' => '1', 'name' => 'V60 Window Customer', 'is_active' => '1', 'distinct_party' => '1']);
+$qaCust = (int)$q("SELECT id FROM customers WHERE name = 'V60 Window Customer'");
+Checks::true('saved in the window: the customer is made and handed back to the transaction (postMessage)', $qaCust > 0 && str_contains($admin->body, 'gsQuickAdd') && str_contains($admin->body, '"id":' . $qaCust)
+    && str_contains($admin->body, 'V60 Window Customer was saved.'), substr(strip_tags($admin->body), 0, 200));
+$admin->get('index.php?p=coa.accounts&a=new&popup=1&types=Bank&prefill=' . rawurlencode('V60 Cash in Bank'));
+Checks::true('an account added from a bank account box: the types that behave as Bank only', str_contains($admin->body, 'data-base="Bank"') && !str_contains($admin->body, 'data-base="Expense"')
+    && str_contains($admin->body, 'value="V60 Cash in Bank"'));
+$admin->get('index.php?p=inv.items&a=new&type=service&popup=1&prefill=V60-SVC');
+Checks::true('an item in the window', $admin->status === 200 && str_contains($admin->body, 'is-popup') && str_contains($admin->body, 'value="V60-SVC"') && $noErr60());
+$admin->get('index.php?p=inv.center');
+Checks::true('Inventory Center: one New item button with every kind of item', str_contains($admin->body, 'New item') && str_contains($admin->body, 'type=other_charge') && str_contains($admin->body, 'type=payment')
+    && !str_contains($admin->body, 'New inventory item'));
+// attachments on a journal entry
+$exp60a = (int)$q("SELECT id FROM accounts WHERE account_type = 'Expense' AND is_active = 1 AND with_sl = 0 AND parent_id IS NULL ORDER BY code LIMIT 1");
+$bank60 = (int)$q("SELECT id FROM accounts WHERE account_type = 'Bank' AND is_active = 1 AND with_sl = 0 ORDER BY code LIMIT 1");
+$f1 = tempnam(sys_get_temp_dir(), 'v60');
+file_put_contents($f1, "%PDF-1.4\n% the signed journal voucher\n" . str_repeat('x', 300000) . "\n%%EOF\n");
+$f2 = tempnam(sys_get_temp_dir(), 'v60');
+file_put_contents($f2, "OR 5543, supporting receipt\n");
+$admin->get('index.php?p=coa.journal&a=new');
+Checks::true('Make Journal Entries: the form sends files, the Attachments box', str_contains($admin->body, 'enctype="multipart/form-data"') && str_contains($admin->body, 'name="att_files[]"'));
+$admin->postMultipart('index.php?p=coa.journal&a=new', ['_csrf' => $admin->csrf(), 'save' => '1', 'txn_date' => $today, 'memo' => 'V60 entry with files',
+    'lines' => [['account_id' => $exp60a, 'debit' => '250.00', 'description' => 'V60'], ['account_id' => $bank60, 'credit' => '250.00', 'description' => 'V60']]],
+    ['att_files[]' => [[$f1, 'signed JV.pdf', 'application/pdf'], [$f2, 'receipt.txt', 'text/plain']]]);
+$je60 = (int)$q("SELECT id FROM transactions WHERE memo = 'V60 entry with files' ORDER BY id DESC LIMIT 1");
+$att60 = DB::all('SELECT * FROM txn_attachments WHERE transaction_id = :t ORDER BY id', ['t' => $je60]);
+Checks::eq('saved with its two files', ['signed JV.pdf', 'receipt.txt'], array_column($att60, 'file_name'));
+Checks::true('...the message says so', str_contains($admin->body, '2 files attached.'));
+Checks::true('the entry\'s page lists them with View and Download', str_contains($admin->body, 'signed JV.pdf') && str_contains($admin->body, 'p=file.attachment&amp;id=' . ($att60[0]['id'] ?? 0) . '&amp;view=1'));
+$admin->get('index.php?p=file.attachment&id=' . ($att60[0]['id'] ?? 0));
+Checks::true('Download: the file as it was attached, byte for byte', $admin->status === 200 && $admin->body === file_get_contents($f1));
+$admin->get('index.php?p=coa.journal');
+Checks::true('the list of journal entries: a paper clip with 2 beside it', (bool)preg_match('/bi-paperclip[^<]*<\/i>\s*2/', $admin->body) || str_contains($admin->body, 'att-clip'));
+file_put_contents($f2, 'MZ');
+$admin->postMultipart('index.php?p=file.attachment&a=add&txn=' . $je60, ['_csrf' => $admin->csrf()], ['att_files[]' => [[$f2, 'tool.exe', 'application/octet-stream']]]);
+Checks::true('Add files on the saved entry: a program file is refused with the reason', str_contains(html_entity_decode($admin->body), 'program files cannot be attached') && count(DB::all('SELECT id FROM txn_attachments WHERE transaction_id = :t', ['t' => $je60])) === 2);
+$admin->post('index.php?p=file.attachment&a=remove&id=' . ($att60[1]['id'] ?? 0), ['_csrf' => $admin->csrf()]);
+Checks::eq('Remove: one file left, in the audit trail', [1, 1], [count(DB::all('SELECT id FROM txn_attachments WHERE transaction_id = :t', ['t' => $je60])),
+    (int)$q("SELECT COUNT(*) FROM audit_trail WHERE action = 'remove_file' AND record_id = :t", ['t' => $je60])]);
+@unlink($f1);
+@unlink($f2);
+// the supplier on an expense line of a check
+$sup60 = (int)DB::insert('vendors', ['name' => 'V60 Expense Supplier', 'is_active' => 1]);
+$admin->post('index.php?p=bank.write_checks&a=new', ['_csrf' => $admin->csrf(), 'save' => '1', 'txn_date' => $today, 'account_id' => $bank60, 'payee' => 'v' . $sup60,
+    'expenses' => [['account_id' => $exp60a, 'amount' => '75.00', 'description' => 'V60 hardware', 'name' => 'v' . $sup60]]]);
+$chk60 = (int)$q("SELECT t.id FROM transactions t JOIN transaction_lines l ON l.txn_id = t.id WHERE t.txn_type = 'check' AND l.description = 'V60 hardware' ORDER BY t.id DESC LIMIT 1");
+Checks::eq('Write Checks: the supplier of the expense line on its general ledger line', $sup60, (int)$q('SELECT vendor_id FROM journal_lines WHERE txn_id = :t AND account_id = :a', ['t' => $chk60, 'a' => $exp60a]));
+// the FB POS and its menu, the Cash Count Sheet, the POS receipts, processing orders, the settings
+$admin->post('index.php?p=pos.fb_menu', ['_csrf' => $admin->csrf(), 'do' => 'group_save', 'name' => 'V60 Drinks', 'sort_order' => '1', 'is_active' => '1']);
+Checks::true('FB POS Menu & Groups: a group added', (bool)$q("SELECT COUNT(*) FROM fb_pos_groups WHERE name = 'V60 Drinks'") && str_contains($admin->body, 'Group V60 Drinks added.'));
+foreach (['pos.fb' => 'FB POS', 'pos.fb_menu' => 'FB POS Menu &amp; Groups', 'rpt.pos_cash_count' => 'Cash Count Sheet', 'pos.receipts' => 'POS Receipts', 'pos.shifts' => 'Shifts'] as $pk => $title) {
+    $admin->get('index.php?p=' . $pk);
+    Checks::true($pk . ' opens', $admin->status === 200 && str_contains($admin->body, $title) && $noErr60(), substr(strip_tags($admin->body), 0, 120));
+}
+$admin->get('index.php?p=pos.receipts&from=' . $today . 'T00:00&to=' . $today . 'T23:59');
+Checks::true('POS Receipts: dates with times and the Cashier filter', str_contains($admin->body, 'type="datetime-local"') && str_contains($admin->body, 'name="cashier_id"'));
+$admin->get('index.php?p=inv.process&a=new');
+Checks::true('Disassemble / Process Items: the 2% rule on the form', str_contains($admin->body, 'data-tol="2"') && str_contains($admin->body, 'id="outAllocWarn"') && $noErr60());
+$admin->get('index.php?p=admin.settings');
+Checks::true('the three settings of the costs', str_contains($admin->body, 'name="processing_cost_tolerance"') && str_contains($admin->body, 'name="auto_recost_scope"') && str_contains($admin->body, 'name="auto_recost_limit"'));
+Checks::eq('trial balance: debits = credits', 0.0, $tbDiff());
+
 // ======================================================================================== period close
 Checks::section('7.4c Period close');
 $admin->post('water/process/editBillPeriod.php', ['csrf_token' => $admin->csrf(), 'period_id' => $pid, 'action' => 'close', 'status' => 'closed']);

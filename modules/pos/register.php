@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 require_once APP_ROOT . '/modules/txn/_common.php';
 
-$pageKey = 'pos.register';
+// v35: the FB POS (modules/pos/fb.php) is this register with a food and beverage screen: same selling, shifts,
+// payment methods, receipts and reports. Approvals stay those of the POS Register (its approval codes too).
+$fbMode = ($POS_MODE ?? '') === 'fb' && FbPos::ready();
+$pageKey = $fbMode ? 'pos.fb' : 'pos.register';
 $a = g('a');
 
 if ($tid = gint('terminal')) {
@@ -206,7 +209,7 @@ if (is_post()) {
         }
         unset($l);
         $need = price_checks($lines, $customerId, BusinessUnits::defaultFor('pos_sale'));
-        $approver = Approval::check($pageKey, $need !== '', $need);
+        $approver = Approval::check('pos.register', $need !== '', $need);
         if ($need !== '' && $approver) {
             foreach ($lines as $l) {
                 if ((float)$l['discount_pct'] > 0) {
@@ -337,11 +340,12 @@ $siteBox = count($posSites) > 1
         . '<select class="form-select form-select-sm" id="posSite" name="site" data-autosubmit title="The site this counter sells from">'
         . options($posSites, $terminal['site_id'] ?? null) . '</select></form>'
     : ($terminal ? '<span class="pos-site-name" title="The site this counter sells from">Site: <strong>' . h($terminal['site_name']) . '</strong></span>' : '');
-layout_start('POS Register', ['actions' => $siteBox
+layout_start($fbMode ? 'FB POS' : 'POS Register', ['actions' => $siteBox
     . ' ' . ($terminals ? '<form method="get" class="d-flex gap-1"><input type="hidden" name="p" value="' . h($pageKey) . '"><select class="form-select form-select-sm" name="terminal" data-autosubmit>'
     . options(array_map(fn($t) => $t['code'] . ' - ' . $t['name'], $terminals), $terminal['id'] ?? null) . '</select></form>' : '')
     . ' ' . page_link('pos.shifts', [], 'Shift & readings', 'btn-outline-secondary', 'clock')
-    . ' ' . page_link('pos.receipts', [], 'Receipts / returns', 'btn-outline-secondary', 'receipt')]);
+    . ' ' . page_link('pos.receipts', [], 'Receipts / returns', 'btn-outline-secondary', 'receipt')
+    . ($fbMode ? ' ' . page_link('pos.fb_menu', [], 'Menu & groups', 'btn-outline-secondary', 'grid-3x3-gap') : '')]);
 
 if (!$terminal) {
     echo '<div class="alert alert-warning">No POS terminal is assigned to you. Ask an administrator to set up a terminal and assign it to your account.</div>';
@@ -355,18 +359,41 @@ if (!$shift) {
 }
 
 $siteId = (int)$terminal['site_id'];
+// v35: the FB POS lists the items ticked for it (and any item already on a recalled or re-shown sale)
+$fbWhere = '';
+$fbParams = [];
+if ($fbMode) {
+    $keepIds = [];
+    $cartSrc = is_post() ? (json_decode((string)p('cart', '[]'), true) ?: []) : [];
+    foreach ($cartSrc as $c) {
+        $keepIds[] = (int)($c['item_id'] ?? 0);
+    }
+    if (($rid = gint('recall') ?: pint('recall_id'))) {
+        $keepIds = array_merge($keepIds, array_map('intval', DB::column('SELECT item_id FROM transaction_lines WHERE txn_id = :t AND item_id IS NOT NULL', ['t' => $rid])));
+    }
+    [$kin, $fbParams] = DB::in('fbk', array_values(array_unique(array_filter($keepIds))) ?: [0]);
+    $fbWhere = " AND (i.fb_pos = 1 OR i.id IN $kin)";
+}
 $items = DB::all("SELECT i.id, i.code, i.barcode, i.name, i.sales_price, i.item_type, i.tax_code_id, COALESCE(t.rate,0) AS tax_rate,
-                         COALESCE(s.qty_on_hand,0) AS on_hand
+                         COALESCE(s.qty_on_hand,0) AS on_hand" . ($fbMode ? ', i.fb_pos, i.fb_group_id, i.fb_sort, i.image_file' : '') . "
                     FROM items i LEFT JOIN tax_codes t ON t.id = i.tax_code_id
                     LEFT JOIN item_site_stock s ON s.item_id = i.id AND s.site_id = :s
-                   WHERE i.is_active = 1 AND i.item_type IN ('inventory','assembly','non_inventory','service','other_charge'" . (ItemGroups::ready() ? ",'group'" : '') . ") ORDER BY i.code", ['s' => $siteId]);
+                   WHERE i.is_active = 1 AND i.item_type IN ('inventory','assembly','non_inventory','service','other_charge'" . (ItemGroups::ready() ? ",'group'" : '') . ")$fbWhere
+                   ORDER BY " . ($fbMode ? 'i.fb_sort, i.name' : 'i.code'), ['s' => $siteId] + $fbParams);
 $itemUnits = Uom::unitsByItem(array_map(fn($r) => (int)$r['id'], $items));
 $taxRates = Lookup::taxRates();
 $adoptGroup = ItemGroups::adopt();
-$itemsJs = array_map(function ($r) use ($itemUnits, $taxRates, $adoptGroup) {
+$itemsJs = array_map(function ($r) use ($itemUnits, $taxRates, $adoptGroup, $fbMode) {
     $row = ['id' => (int)$r['id'], 'code' => $r['code'], 'barcode' => $r['barcode'], 'name' => $r['name'], 'label' => item_label($r['code'], $r['name']), 'price' => (float)$r['sales_price'],
         'tax' => (float)$r['tax_rate'], 'stock' => in_array($r['item_type'], ['inventory', 'assembly'], true) ? (float)$r['on_hand'] : null,
         'units' => count($itemUnits[(int)$r['id']] ?? []) > 1 ? $itemUnits[(int)$r['id']] : []];
+    if ($fbMode) {
+        // the FB POS: its menu group, its place in the group, its picture
+        $row['fb'] = (int)$r['fb_pos'] === 1;
+        $row['grp'] = (int)($r['fb_group_id'] ?? 0);
+        $row['img'] = FbPos::imageUrl($r);
+        $row['ini'] = FbPos::initials((string)$r['name']);
+    }
     if ($r['item_type'] === 'group') {
         // an item group: sold at its group price (or, with "Adopt the Group Price" off or no group price, at the prices of its items)
         $row['group'] = true;
@@ -466,6 +493,12 @@ if (is_post()) {
 $negativeAllowed = Settings::get('allow_negative_stock') === '1';
 $accountCustomers = DB::pairs('SELECT id, name FROM customers WHERE is_active = 1 AND allow_pos_charge = 1 ORDER BY name');
 $maxDisc = Access::limit('max_discount_pct');
+if ($fbMode) {
+    // v35: the FB POS screen (same form fields, same actions as below)
+    require __DIR__ . '/_fb_screen.php';
+    layout_end();
+    return;
+}
 ?>
 <div class="row g-3">
   <div class="col-xl-8">
@@ -504,7 +537,7 @@ $maxDisc = Access::limit('max_discount_pct');
       <div class="card-body">
         <?php if ($recallId): ?><div class="alert alert-info py-1 small">Recalled suspended sale #<?= (int)$recallId ?></div><?php endif; ?>
         <label class="form-label">Customer</label>
-        <select class="form-select form-select-sm" name="customer_id" id="posCustomer"><?= options(Lookup::customerOptions(false), $initialCustomer ?? p('customer_id'), 'Walk-in customer') ?></select>
+        <select class="form-select form-select-sm" name="customer_id" id="posCustomer"<?= QuickAdd::attr('customer') ?>><?= options(Lookup::customerOptions(false), $initialCustomer ?? p('customer_id'), 'Walk-in customer') ?></select>
         <div class="small text-muted mt-1 mb-2" id="posLevel"></div>
         <div id="walkinBox" class="mb-2"><input class="form-control form-control-sm" name="walkin_name" maxlength="120" value="<?= h(is_post() ? p('walkin_name') : ($initialWalkin ?? '')) ?>" placeholder="Customer name on the receipt (optional)"></div>
         <?php if (Classes::ready()): ?>

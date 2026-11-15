@@ -1,0 +1,51 @@
+G-SMaRT Accounting - version 39 (2027-01-21)
+=============================================
+
+This package holds only the files that were added or changed since version 38.
+Copy the accounting-system folder over your installation, keeping the folder
+structure. config/config.php is not included and is never changed.
+
+Database
+--------
+No database change: there is no migration to run in this version.
+Press Ctrl+F5 once in the browser (the style sheet changed).
+
+What is new
+-----------
+1. Print and Save as PDF are two buttons
+ - Every report now has a Print button and a Save as PDF button, side by side,
+   in place of the single "Print / PDF".
+ - Print opens the print page (the report without menus or filters), with the
+   buttons Print, Save as PDF and Back at the top. Print there opens the
+   browser's print window.
+ - Save as PDF makes a PDF file of the report and the browser saves it in the
+   downloads, without the print window. The file is named after the report with
+   the date and time (for example trial_balance_20270121_093015.pdf). It has the
+   company, the title, the heading lines and the basis of the report, its columns,
+   rows and totals, and the signature lines when the layout prints them. The paper
+   and orientation follow Modify Report > Page; a report with many columns is laid
+   sideways. The column headings repeat at the top of every page, and each page
+   shows who printed it, when, and the page number. Each PDF is recorded in the
+   audit trail, as printing is. It needs the same print right as Print.
+ - BIR Form 2307 keeps its own print page, which is laid out like the official
+   form, and is printed (or saved as PDF) through the browser as before.
+
+2. Cash Count Sheet: quarter-page printing
+ - Point of Sale > Reports > Cash Count Sheet: Print opens the sheet on a quarter
+   page. Choose the Paper at the top: 1/4 Letter (4.25 x 5.5 in) or
+   1/4 Government Legal (4.25 x 6.5 in); the page size given to the printer
+   follows. Set the printer to that paper size, or print on a quarter-cut sheet.
+ - Save as PDF (on the report or the print page) saves the same sheet as a PDF of
+   the paper chosen.
+ - Each sheet: the company, CASH COUNT SHEET, Date cover, Cashier name and
+   terminal; every bill and coin with its quantity and amount; Total cash,
+   Expected cash in drawer and Over/(short).
+ - At the foot of every sheet: "Remitted by: ____________" with the cashier's name
+   and "Cashier" under the line, and "Received by: ____________".
+ - Without a Shift chosen, each completed shift of the dates prints on a page of
+   its own.
+
+The user's manual (Help button, Home > User's Manual) and the Word edition
+(GSMaRT_Accounting_Users_Manual_v39.docx) are updated: Home and Reports (Print and
+Save as PDF), Point of Sale (printing the Cash Count Sheet) and the report tools
+named in every chapter.

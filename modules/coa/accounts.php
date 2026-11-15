@@ -98,9 +98,18 @@ if ($a === 'new' || $a === 'edit') {
     if (!$canChange) {
         Access::denyPage($pageKey, 'change the Chart of Accounts');
     }
-    handle_post(function () use ($acc, $catOf, $pageKey) {
+    // v37 (accounting): opened from a bank account box (or another narrowed one) by "Add new", the window offers only
+    // the types that box holds: the account types whose built-in type is one of them
+    $bases = !$acc && QuickAdd::popup() ? QuickAdd::accountTypesWanted(array_keys(AccountTypes::BASE)) : null;
+    if ($bases !== null && count($bases) === count(AccountTypes::BASE)) {
+        $bases = null;
+    }
+    handle_post(function () use ($acc, $catOf, $pageKey, $bases) {
         // the type chosen (an id of Account Types); a form of before posts the built-in type's name
         $t = pint('type_id') ? AccountTypes::get((int)pint('type_id')) : (isset($catOf[(string)p('account_type')]) ? AccountTypes::system((string)p('account_type')) : null);
+        if ($t && $bases !== null && !in_array($t['base_type'], $bases, true)) {
+            $t = null;
+        }
         if (!$t || (!(int)$t['is_active'] && (!$acc || (int)AccountTypes::forAccount($acc)['id'] !== (int)$t['id']))) {
             fail('Choose the account type.');
         }
@@ -155,9 +164,13 @@ if ($a === 'new' || $a === 'edit') {
         }
         Accts::reset();
         flash('success', 'Account saved.');
+        if (!$acc) {
+            QuickAdd::finish('account', $id);   // v37: added from a drop-down's "Add new": back to the transaction
+        }
         redirect_after_save(url($pageKey, ['a' => 'new']), url($pageKey));
     });
-    $curType = is_post() && pint('type_id') ? (int)pint('type_id') : ($acc ? (int)AccountTypes::forAccount($acc)['id'] : (int)AccountTypes::system('Expense')['id']);
+    $curType = is_post() && pint('type_id') ? (int)pint('type_id') : ($acc ? (int)AccountTypes::forAccount($acc)['id']
+        : (int)AccountTypes::system($bases !== null && !in_array('Expense', $bases, true) ? $bases[0] : 'Expense')['id']);
     $parents = DB::all('SELECT * FROM accounts WHERE parent_id IS NULL AND id <> :id ORDER BY code', ['id' => $acc['id'] ?? 0]);
     $parentSel = (string)fv('parent_id', $acc);
     layout_start($acc ? 'Edit account ' . $acc['code'] : 'New account', ['actions' => page_link('coa.account_types', [], 'Account types', 'btn-outline-secondary', 'tags') . ' ' . btn_link(url($pageKey), 'Cancel')]);
@@ -165,9 +178,9 @@ if ($a === 'new' || $a === 'edit') {
     <form method="post" class="card acct-form" style="max-width:860px"><div class="card-body row g-2">
       <?= csrf_field() ?>
       <div class="col-md-4"><label class="form-label" for="acType">Account type</label>
-        <select class="form-select form-select-sm" name="type_id" id="acType" required data-no-combo><?= AccountTypes::optionsHtml($curType) ?></select></div>
-      <?= input_field('code', 'Code', fv('code', $acc), ['class' => 'col-md-2', 'required' => true]) ?>
-      <?= input_field('name', 'Name', fv('name', $acc), ['class' => 'col-md-6', 'required' => true]) ?>
+        <select class="form-select form-select-sm" name="type_id" id="acType" required data-no-combo><?= AccountTypes::optionsHtml($curType, true, $bases) ?></select></div>
+      <?= input_field('code', 'Code', fv('code', $acc), ['class' => 'col-md-2', 'required' => true, 'extra' => QuickAdd::popup() ? 'autofocus' : '']) ?>
+      <?= input_field('name', 'Name', fv('name', $acc, QuickAdd::prefill()), ['class' => 'col-md-6', 'required' => true]) ?>
       <div class="col-12"><div class="acct-type-note" id="acTypeNote" aria-live="polite"></div></div>
       <div class="col-md-6"><label class="form-label" for="acParent">Sub-account of</label>
         <select class="form-select form-select-sm" name="parent_id" id="acParent" data-no-combo><option value=""></option>

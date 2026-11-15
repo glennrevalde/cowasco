@@ -1,0 +1,111 @@
+G-SMaRT Integrated Cooperative System - version 60 (2026-11-15)
+=================================================================
+
+The accounting update: the accounting side of the program brought up to G-SMaRT Accounting
+version 40 (its versions 35 to 40), from accounting-system (2).zip. Only the accounting features
+are taken. The links of the cooperative members to the documents (invoices, sales receipts, cash
+vouchers, check vouchers, journal entries and the others) and to water billing are left exactly as
+they are: no member is added to a document, a list or a drop-down by this update. See
+docs/ACCOUNTING_UPDATE_V40_CHECKLIST.md.
+
+This package holds only the files changed or added since version 59. Copy the folder over your
+installation, keeping the folder structure. config/config.php is not included and is never
+changed. Works on MySQL 5.5 and MySQL 8 as before.
+
+What to run on the database (once)
+----------------------------------
+  database/migrations/2027_05_09_accounting_update_v40.sql
+
+  phpMyAdmin: click the database > Import > choose the file > Go
+  or:         mysql -u root -p your_database < database/migrations/2027_05_09_accounting_update_v40.sql
+
+Back up the database first. The script is safe to run more than once. Until it is run the
+program stops with "Database update needed" and names this file. On the platform (several
+companies), Super Admin > Database updates runs it on every company.
+
+It adds: four columns on items for the FB POS (shown on it, its menu group, its order, its
+picture) and the table fb_pos_groups; the table pos_cash_counts (the bills and coins counted when
+a shift is closed); the tables txn_attachments and txn_attachment_chunks (the files attached to
+transactions, kept in the database in pieces of 256 KB, so a file of any size is saved under
+MySQL 5.5's default 1 MB packet limit); and three pages with their page access: Point of Sale >
+FB POS (for the roles that open the POS Register), FB POS Menu & Groups (for the roles that open
+POS Terminals) and Reports > Cash Count Sheet (for the roles that open the X- and Z-Reading
+Summary, and for the cashiers). Nothing is deleted and no amount changes.
+
+After copying the files and running the script:
+  1. Press Ctrl+F5 once in the browser (the page script and the style sheet changed).
+  2. Run System Administration > Utilities: Verify & Rebuild Data > Rebuild data once, so the
+     average costs follow the dates (see "Inventory" below).
+  3. The item pictures of the FB POS are saved in storage/items (storage/companies/cNNN/items for
+     the other companies): the web server must be able to write in the storage folder, as it
+     already must for backups and the company logo.
+
+PHP upload size (recommended)
+-----------------------------
+A new PHP install takes files of up to 2 MB (upload_max_filesize) and 8 MB in one save
+(post_max_size). The Attachments box shows the limit in force. For scanned copies raise them in
+php.ini, for example upload_max_filesize = 25M and post_max_size = 30M (XAMPP: xampp\php\php.ini),
+and restart Apache. A save carrying more than post_max_size is refused with a message that says so.
+
+What is new (the details are in docs/accounting/ACCOUNTING_UPGRADE_v35.txt ... v40.txt and in
+the manual)
+----------------------------------------------------------------------------------------------
+Inventory: Disassemble / Process Items and the average cost
+- A processing order is not saved when the cost of its outputs differs by more than 2% from the
+  cost of its inputs plus labor and other costs; the form shows the difference and its percentage
+  under the outputs as you type, with a red warning beyond 2%. Bills, item receipts, checks, cash
+  vouchers and the other transactions are never checked against it.
+- A back-dated, edited, voided or deleted processing order has the later inventory transactions
+  costed again in date order (as Rebuild data does), so the averages and the cost of sales follow
+  the dates; a blue message says how many, and the audit trail records it.
+- System Administration > Company, Security & Closing Date > Inventory and POS: the difference
+  allowed (2%), what starts the costing again (Disassemble / Process Items only, every inventory
+  transaction, or never) and the most transactions costed again at once (2,000).
+- The water bills and the cooperative documents that move stock are costed again with the others,
+  their entries unchanged.
+- Inventory Center: one "New item" button with every kind of item.
+
+Vendors and Banking
+- Write Checks, Enter Bills, supplier credits, Enter Bill for Received Items: the Customer:Job
+  column of the Expenses tab is "Customer / Supplier". A supplier chosen on a line goes with the
+  line into the general ledger (its subsidiary ledger, Expenses by Vendor), even when the check is
+  made out to someone else; Billable is for customers only. The customers of the list are those of
+  Customer:Job as before (a member by its member type); a member's own supplier record is not
+  added to the list.
+
+"Add new" in the drop-downs
+- The Customer, Vendor, name, Account and Item boxes of the transactions end their list with
+  "Add new ..." (Add "Northwind Packaging" as a new supplier, with a name typed). The list's own
+  form opens in a window over the transaction with the name filled in; saved, the new record is
+  chosen in the box. For the users who may create that kind of record. A cooperative member is
+  never added from a drop-down: members are entered on the Member Center as before.
+
+Point of Sale
+- FB POS: a second selling screen for a food and beverage counter, the items as pictures under
+  menu groups; it sells exactly as the POS Register does (the same terminals, shifts, payment
+  methods, price levels, receipts and reports). FB POS Menu & Groups; Item List > the item > FB POS
+  (the picture, shown on the FB POS, the menu group and the order).
+- Cash Count Sheet: Shifts, Cash Drops & Readings > Close register > "Cash counted in drawer" opens
+  the sheet of bills and coins; the quantities are kept with the shift. New report Point of Sale >
+  Reports > Cash Count Sheet, printed on a quarter page (1/4 Letter or 1/4 Government Legal) with
+  "Remitted by" and "Received by".
+- POS Receipts, Returns & Voids: From and To with a time, a Cashier filter, and the totals at the
+  foot.
+- Gross sales of a shift: an item group's price variance is part of the gross sales.
+
+Financial reports
+- General Ledger: a Cashier filter (only the transactions that cashier entered, the beginning
+  balance too).
+- Every report has Print and Save as PDF, side by side: Save as PDF makes the PDF file of the report
+  (title, headings, columns, rows, totals, signature lines; the paper and orientation of Modify
+  Report > Page; each page with who printed it, when and the page number) and records it in the
+  audit trail.
+
+Attachments
+- Make Journal Entries, Write Checks, Cash Voucher, Enter Bills (also Receive Items and Enter Bills,
+  and Enter Bill for Received Items), Create Purchase Orders, Create Sales Orders and Create Invoices
+  have an Attachments box: add files (or drop them on the box), saved with the transaction; the page
+  of a saved one lists them with View, Download and Remove, and Add files attaches more later. The
+  lists show a paper clip with the number of files. Program files (.exe, .bat ...) are refused. The
+  files go with every backup (written as hex, under 1 MB a statement). A change to a saved journal
+  entry that waits for approval attaches its files at once (they change no amount).

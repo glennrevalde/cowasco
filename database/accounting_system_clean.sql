@@ -1,8 +1,8 @@
 -- =====================================================================
 --  G-SMaRT Integrated Cooperative System - clean database (set-up lists and users, no transactions)
---  Generated 2026-11-08 23:54:47 +08:00
---  240 tables (152 cooperative, 88 water billing) and 2 views,
---  2,939 rows (0 ledger documents, 0 water-service accounts)
+--  Generated 2026-11-15 21:19:18 +08:00
+--  244 tables (156 cooperative, 88 water billing) and 2 views,
+--  2,951 rows (0 ledger documents, 0 water-service accounts)
 --
 --  Import:  phpMyAdmin > Import > choose this file > Go
 --      or:  mysql -u root -p < accounting_system_clean.sql
@@ -563,11 +563,16 @@ CREATE TABLE items (
   max_stock            DECIMAL(15,4) NOT NULL DEFAULT 0,
   build_point          DECIMAL(15,4) NOT NULL DEFAULT 0,
   is_active            TINYINT(1)   NOT NULL DEFAULT 1,
+  fb_pos               TINYINT(1)   NOT NULL DEFAULT 0,    -- v35: shown on the FB POS
+  fb_group_id          INT UNSIGNED NULL,                  -- v35: its FB POS menu group (fb_pos_groups)
+  fb_sort              INT          NOT NULL DEFAULT 0,    -- v35: its order in the group
+  image_file           VARCHAR(120) NULL,                  -- v35: its picture (storage/items)
   created_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at           DATETIME     NULL,                  -- set by the application (DB::update)
   patronage_eligible   TINYINT(1)   NOT NULL DEFAULT 0,    -- member purchases or deliveries of it count for patronage refund
   UNIQUE KEY uq_items_code (code),
   KEY ix_items_barcode (barcode),
+  KEY ix_items_fb (fb_pos, fb_group_id),
   CONSTRAINT fk_items_cat    FOREIGN KEY (category_id) REFERENCES item_categories(id),
   CONSTRAINT fk_items_inc    FOREIGN KEY (income_account_id) REFERENCES accounts(id),
   CONSTRAINT fk_items_cogs   FOREIGN KEY (cogs_account_id) REFERENCES accounts(id),
@@ -925,6 +930,17 @@ CREATE TABLE clearing_settlements (
   KEY ix_cs_receipt_txn (receipt_txn_id),
   CONSTRAINT fk_cs_deposit FOREIGN KEY (deposit_txn_id) REFERENCES transactions(id) ON DELETE CASCADE,
   CONSTRAINT fk_cs_receipt FOREIGN KEY (receipt_txn_id) REFERENCES transactions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- FB POS menu groups (v35, Point of Sale > FB POS Menu & Groups)
+DROP TABLE IF EXISTS fb_pos_groups;
+CREATE TABLE fb_pos_groups (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(60)  NOT NULL,
+  sort_order  INT          NOT NULL DEFAULT 0,
+  is_active   TINYINT(1)   NOT NULL DEFAULT 1,
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_fb_group_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- General ledger (generated automatically by the posting engine)
@@ -1345,6 +1361,20 @@ CREATE TABLE pos_cash_drops (
   approved_by INT UNSIGNED NULL,
   created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_cd_shift FOREIGN KEY (shift_id) REFERENCES pos_shifts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS pos_cash_counts;
+CREATE TABLE pos_cash_counts (
+  id            INT UNSIGNED  NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  shift_id      INT UNSIGNED  NOT NULL,
+  kind          VARCHAR(5)    NOT NULL DEFAULT 'bill',   -- bill or coin
+  denomination  DECIMAL(10,2) NOT NULL,
+  qty           INT           NOT NULL DEFAULT 0,
+  amount        DECIMAL(15,2) NOT NULL DEFAULT 0,
+  counted_by    INT UNSIGNED  NULL,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY ix_pcc_shift (shift_id),
+  CONSTRAINT fk_pcc_shift FOREIGN KEY (shift_id) REFERENCES pos_shifts(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS pos_readings;
@@ -3156,6 +3186,33 @@ CREATE TABLE coop_import_lines (
   KEY ix_cil_no (batch_id, kind, key_no),
   KEY ix_cil_person (batch_id, key_person),
   KEY ix_cil_water (batch_id, key_water)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Files attached to transactions (accounting version 40): the files and their content in 256 KB pieces
+DROP TABLE IF EXISTS txn_attachment_chunks;
+DROP TABLE IF EXISTS txn_attachments;
+CREATE TABLE txn_attachments (
+  id              INT UNSIGNED    NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  transaction_id  BIGINT UNSIGNED NULL,                 -- empty while the form is not saved yet
+  stage_key       VARCHAR(40)     NULL,                 -- the form session of a file not saved yet
+  file_name       VARCHAR(255)    NOT NULL,
+  mime_type       VARCHAR(150)    NOT NULL DEFAULT 'application/octet-stream',
+  file_size       BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  sha1            CHAR(40)        NULL,
+  chunks          INT UNSIGNED    NOT NULL DEFAULT 0,
+  uploaded_by     INT UNSIGNED    NULL,
+  uploaded_at     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY ix_ta_txn (transaction_id),
+  KEY ix_ta_stage (stage_key),
+  CONSTRAINT fk_ta_txn FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE txn_attachment_chunks (
+  attachment_id  INT UNSIGNED NOT NULL,
+  seq            INT UNSIGNED NOT NULL,
+  data           MEDIUMBLOB   NOT NULL,
+  PRIMARY KEY (attachment_id, seq),
+  CONSTRAINT fk_tac_att FOREIGN KEY (attachment_id) REFERENCES txn_attachments(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
@@ -5146,7 +5203,7 @@ INSERT INTO `modules` (`id`,`code`,`name`,`icon`,`sort_order`) VALUES
 (18,'cda','CDA Compliance','clipboard2-check',18),
 (19,'water','Water Billing','droplet-half',7);
 
--- pages (378 rows)
+-- pages (381 rows)
 INSERT INTO `pages` (`id`,`page_key`,`module_id`,`name`,`page_type`,`menu_group`,`sort_order`,`show_in_menu`,`description`) VALUES
 (1,'home.dashboard',1,'Home Dashboard','center','Home',10,1,NULL),
 (2,'home.reports',1,'Report Center','center','Home',20,1,NULL),
@@ -5528,9 +5585,12 @@ INSERT INTO `pages` (`id`,`page_key`,`module_id`,`name`,`page_type`,`menu_group`
 (375,'rpt.sales_customer_type_detail',4,'Sales by Customer Detail Group by Customer/Member Type','report','Sales Reports',755,1,NULL),
 (376,'water.bill_balance_upload',19,'Upload Bill Balances','transaction','Billing',3197,1,'Upload the open balances of the recurring, installment, one-time and fixed share capital bills from a file, reviewed line by line before they are recorded.'),
 (377,'coop.consolidated_import',13,'Consolidated Import','transaction','Transactions',1982,1,'One file for the members with their savings, loans, water-service account and bill balances, reviewed and corrected before it is saved.'),
-(378,'bill.accounts',19,'Bill Accounts Center','center','Billing',3061,1,'Every bill of the members and customers, open or fully paid, with its amount, what was paid and its balance; filtered, exported, printed.');
+(378,'bill.accounts',19,'Bill Accounts Center','center','Billing',3061,1,'Every bill of the members and customers, open or fully paid, with its amount, what was paid and its balance; filtered, exported, printed.'),
+(379,'pos.fb',7,'FB POS','transaction','Transactions',1405,1,NULL),
+(380,'pos.fb_menu',7,'FB POS Menu & Groups','setup','Setup',1445,1,NULL),
+(381,'rpt.pos_cash_count',7,'Cash Count Sheet','report','Reports',1542,1,NULL);
 
--- role_page_access (1464 rows)
+-- role_page_access (1472 rows)
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (2,1,1,0,0,0,1,0),
 (2,2,1,0,0,0,1,0),
@@ -5829,12 +5889,13 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (2,376,1,0,0,0,1,0),
 (2,377,1,0,0,0,1,0),
 (2,378,1,0,0,0,1,0),
+(2,381,1,0,0,0,1,0),
 (3,1,1,0,0,0,1,0),
 (3,2,1,0,0,0,1,0),
 (3,3,1,0,0,0,1,0),
-(3,4,1,0,0,0,1,0),
-(3,5,1,0,0,0,1,0);
+(3,4,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(3,5,1,0,0,0,1,0),
 (3,6,1,0,0,0,1,0),
 (3,7,1,0,0,0,1,0),
 (3,49,1,1,1,0,1,0),
@@ -5933,9 +5994,9 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (5,131,1,0,0,0,1,0),
 (5,133,1,0,0,0,1,0),
 (5,134,1,0,0,0,1,0),
-(5,135,1,0,0,0,1,0),
-(5,137,1,0,0,0,1,0);
+(5,135,1,0,0,0,1,0);
 INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(5,137,1,0,0,0,1,0),
 (5,138,1,0,0,0,1,0),
 (5,139,1,0,0,0,1,0),
 (6,1,1,0,0,0,1,0),
@@ -5986,6 +6047,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (7,359,1,1,1,0,1,0),
 (7,361,1,0,0,0,1,0),
 (7,378,1,0,0,0,1,0),
+(7,379,1,1,0,0,1,0),
+(7,381,1,0,0,0,1,0),
 (8,1,1,0,0,0,0,0),
 (8,2,1,0,0,0,0,0),
 (8,140,1,1,1,1,1,1),
@@ -6005,6 +6068,9 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (8,154,1,0,0,0,1,0),
 (8,361,1,0,0,0,1,0),
 (8,363,1,0,0,0,1,0),
+(8,379,1,1,1,1,1,1),
+(8,380,1,0,0,0,1,0),
+(8,381,1,0,0,0,1,0),
 (9,1,1,0,0,0,1,0),
 (9,2,1,0,0,0,1,0),
 (9,3,1,0,0,0,1,0),
@@ -6029,14 +6095,14 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,22,1,0,0,0,1,0),
 (9,23,1,0,0,0,1,0),
 (9,24,1,0,0,0,1,0),
-(9,25,1,0,0,0,1,0),
+(9,25,1,0,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (9,26,1,0,0,0,1,0),
 (9,27,1,0,0,0,1,0),
 (9,28,1,0,0,0,1,0),
 (9,29,1,0,0,0,1,0),
 (9,30,1,0,0,0,1,0),
-(9,31,1,0,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,31,1,0,0,0,1,0),
 (9,32,1,0,0,0,1,0),
 (9,33,1,0,0,0,1,0),
 (9,34,1,0,0,0,1,0),
@@ -6130,14 +6196,14 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,122,1,0,0,0,1,0),
 (9,123,1,0,0,0,1,0),
 (9,124,1,0,0,0,1,0),
-(9,125,1,0,0,0,1,0),
+(9,125,1,0,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (9,126,1,0,0,0,1,0),
 (9,127,1,0,0,0,1,0),
 (9,128,1,0,0,0,1,0),
 (9,129,1,0,0,0,1,0),
 (9,130,1,0,0,0,1,0),
-(9,131,1,0,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,131,1,0,0,0,1,0),
 (9,132,1,0,0,0,1,0),
 (9,133,1,0,0,0,1,0),
 (9,134,1,0,0,0,1,0),
@@ -6231,14 +6297,14 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,236,1,0,0,0,1,0),
 (9,237,1,0,0,0,1,0),
 (9,238,1,0,0,0,1,0),
-(9,239,1,0,0,0,1,0),
+(9,239,1,0,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (9,240,1,0,0,0,1,0),
 (9,241,1,0,0,0,1,0),
 (9,242,1,0,0,0,1,0),
 (9,243,1,0,0,0,1,0),
 (9,244,1,0,0,0,1,0),
-(9,245,1,0,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,245,1,0,0,0,1,0),
 (9,246,1,0,0,0,1,0),
 (9,247,1,0,0,0,1,0),
 (9,248,1,0,0,0,1,0),
@@ -6332,14 +6398,14 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,339,1,0,0,0,1,0),
 (9,340,1,0,0,0,1,0),
 (9,341,1,0,0,0,1,0),
-(9,342,1,0,0,0,1,0),
+(9,342,1,0,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (9,343,1,0,0,0,1,0),
 (9,344,1,0,0,0,1,0),
 (9,345,1,0,0,0,1,0),
 (9,346,1,0,0,0,1,0),
 (9,347,1,0,0,0,1,0),
-(9,348,1,0,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(9,348,1,0,0,0,1,0),
 (9,349,1,0,0,0,1,0),
 (9,350,1,0,0,0,1,0),
 (9,351,1,0,0,0,1,0),
@@ -6370,6 +6436,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (9,376,1,0,0,0,1,0),
 (9,377,1,0,0,0,1,0),
 (9,378,1,0,0,0,1,0),
+(9,380,1,0,0,0,1,0),
+(9,381,1,0,0,0,1,0),
 (10,1,1,1,1,1,1,1),
 (10,2,1,1,1,1,1,1),
 (10,3,1,1,1,1,1,1),
@@ -6431,7 +6499,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,231,1,1,1,1,1,1),
 (10,232,1,1,1,1,1,1),
 (10,233,1,1,1,1,1,1),
-(10,234,1,1,1,1,1,1),
+(10,234,1,1,1,1,1,1);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (10,235,1,1,1,1,1,1),
 (10,236,1,1,1,1,1,1),
 (10,237,1,1,1,1,1,1),
@@ -6439,8 +6508,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,239,1,1,1,1,1,1),
 (10,240,1,1,1,1,1,1),
 (10,241,1,1,1,1,1,1),
-(10,242,1,1,1,1,1,1);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(10,242,1,1,1,1,1,1),
 (10,243,1,1,1,1,1,1),
 (10,244,1,1,1,1,1,1),
 (10,245,1,1,1,1,1,1),
@@ -6532,7 +6600,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,331,1,1,1,1,1,1),
 (10,332,1,1,1,1,1,1),
 (10,333,1,1,1,1,1,1),
-(10,334,1,1,1,1,1,1),
+(10,334,1,1,1,1,1,1);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (10,335,1,1,1,1,1,1),
 (10,336,1,1,1,1,1,1),
 (10,337,1,1,1,1,1,1),
@@ -6540,8 +6609,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (10,339,1,1,1,1,1,1),
 (10,340,1,1,1,1,1,1),
 (10,341,1,1,1,1,1,1),
-(10,342,1,1,1,1,1,1);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(10,342,1,1,1,1,1,1),
 (10,343,1,1,1,1,1,1),
 (10,344,1,1,1,1,1,1),
 (10,345,1,1,1,1,1,1),
@@ -6633,7 +6701,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,237,1,0,0,0,1,0),
 (11,238,1,0,0,0,1,0),
 (11,239,1,0,0,0,1,0),
-(11,240,1,0,0,0,1,0),
+(11,240,1,0,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (11,241,1,0,0,0,1,0),
 (11,242,1,0,0,0,1,0),
 (11,243,1,0,0,0,1,0),
@@ -6641,8 +6710,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,245,1,1,1,0,1,0),
 (11,246,1,1,1,0,1,0),
 (11,247,1,1,1,0,1,0),
-(11,248,1,1,1,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(11,248,1,1,1,0,1,0),
 (11,249,1,1,1,0,1,0),
 (11,250,1,1,1,0,1,0),
 (11,251,1,1,1,0,1,0),
@@ -6734,7 +6802,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,350,1,0,0,0,1,0),
 (11,351,1,0,0,0,1,0),
 (11,352,1,0,0,0,1,0),
-(11,353,1,0,0,0,1,0),
+(11,353,1,0,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (11,354,1,1,1,0,1,0),
 (11,355,1,1,1,0,1,0),
 (11,356,1,0,0,0,1,0),
@@ -6742,8 +6811,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (11,358,1,0,0,0,1,0),
 (11,359,1,0,0,0,1,0),
 (11,360,1,0,0,0,1,0),
-(11,364,1,0,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(11,364,1,0,0,0,1,0),
 (11,365,1,0,0,0,1,0),
 (11,366,1,0,0,0,1,0),
 (11,367,1,0,0,0,1,0),
@@ -6835,7 +6903,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (14,223,1,1,0,0,1,0),
 (14,224,1,1,0,0,1,0),
 (14,225,1,1,0,0,1,0),
-(14,228,1,1,0,0,1,0),
+(14,228,1,1,0,0,1,0);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (14,229,1,1,0,0,1,0),
 (14,231,1,1,0,0,1,0),
 (14,243,1,1,0,0,1,0),
@@ -6843,8 +6912,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (14,275,1,1,0,0,1,0),
 (14,276,1,1,0,0,1,0),
 (14,277,1,1,0,0,1,0),
-(14,278,1,1,0,0,1,0);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(14,278,1,1,0,0,1,0),
 (14,279,1,1,0,0,1,0),
 (14,280,1,1,0,0,1,0),
 (14,282,1,1,0,0,1,0),
@@ -6936,7 +7004,8 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (17,217,1,1,1,0,1,1),
 (17,218,1,1,1,0,1,1),
 (17,219,1,1,1,0,1,1),
-(17,220,1,1,1,0,1,1),
+(17,220,1,1,1,0,1,1);
+INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
 (17,221,1,1,1,0,1,1),
 (17,222,1,1,1,0,1,1),
 (17,223,1,1,1,1,1,1),
@@ -6944,8 +7013,7 @@ INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_
 (17,225,1,1,1,1,1,1),
 (17,226,1,1,1,1,1,1),
 (17,227,1,1,1,1,1,1),
-(17,228,1,1,1,1,1,1);
-INSERT INTO `role_page_access` (`role_id`,`page_id`,`allowed`,`can_create`,`can_edit`,`can_delete`,`can_print`,`can_approve`) VALUES
+(17,228,1,1,1,1,1,1),
 (17,229,1,1,1,1,1,1),
 (17,230,1,1,1,1,1,1),
 (17,231,1,1,1,1,1,1),
@@ -7089,14 +7157,15 @@ INSERT INTO `role_special_permissions` (`role_id`,`perm_key`,`perm_value`) VALUE
 (17,'max_amount',''),
 (17,'party_merge','1');
 
--- audit_trail (6 rows)
+-- audit_trail (7 rows)
 INSERT INTO `audit_trail` (`id`,`created_at`,`user_id`,`username`,`user_roles`,`ip_address`,`workstation`,`site_id`,`terminal_id`,`module`,`page_key`,`action`,`record_type`,`record_id`,`record_ref`,`amount`,`changes`,`snapshot`,`reason`,`approved_by`) VALUES
 (1,'2026-10-19 00:49:43',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Cooperative Management modules',NULL,NULL,NULL,'Migration 2026_11_01: Cooperative, Savings & Deposits, Loans, Teller, Year-end Distribution and CDA Compliance modules added with their tables, accounts, roles and settings',NULL),
 (2,'2026-11-07 21:26:48',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Accounting update (version 53)',NULL,NULL,NULL,'Migration 2027_04_04: item groups, Receive Items lists, settle ticks, average cost on the books; 14 reports (POS ending inventory, item group sales, comparative statements, average cost changes, class reports)',NULL),
 (3,'2026-11-07 23:37:21',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Sales by Customer Detail Group by Customer/Member Type',NULL,NULL,NULL,'Migration 2027_04_11: the report page, given to the roles that open Sales by Customer Detail',NULL),
 (4,'2026-11-08 19:44:11',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Upload Bill Balances',NULL,NULL,NULL,'Migration 2027_04_18: the uploads of bill balances and the page, given to the roles that have One-Time Billing',NULL),
 (5,'2026-11-08 21:17:31',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Consolidated Import',NULL,NULL,NULL,'Migration 2027_04_25: the consolidated import of members, savings, loans and bill balances, given to the roles that have Member Center',NULL),
-(6,'2026-11-08 23:54:46',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Bill Accounts Center',NULL,NULL,NULL,'Migration 2027_05_02: the Bill Accounts Center of Water Billing, given to the roles that have Billing List, Generate SOA / Post Billing or Collections (Cashier)',NULL);
+(6,'2026-11-08 23:54:46',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'Bill Accounts Center',NULL,NULL,NULL,'Migration 2027_05_02: the Bill Accounts Center of Water Billing, given to the roles that have Billing List, Generate SOA / Post Billing or Collections (Cashier)',NULL),
+(7,'2026-11-15 21:19:18',NULL,'system','Database migration','127.0.0.1','SQL migration',NULL,NULL,'admin','admin.page_access','access_change','page',NULL,'FB POS; FB POS Menu & Groups; Cash Count Sheet; Attachments',NULL,NULL,NULL,'Migration 2027_05_09 (version 60, the accounting update to G-SMaRT Accounting version 40): FB POS columns on items, tables fb_pos_groups, pos_cash_counts, txn_attachments and txn_attachment_chunks; pages FB POS, FB POS Menu & Groups and Cash Count Sheet',NULL);
 
 -- sequences (43 rows)
 INSERT INTO `sequences` (`seq_key`,`prefix`,`next_no`,`pad`) VALUES
@@ -7487,37 +7556,37 @@ INSERT INTO `uom_units` (`id`,`set_id`,`code`,`name`,`factor`,`is_base`,`is_sale
 (16,5,'wk','Week (40 hours)','40.000000',0,0,0,2);
 
 -- items (30 rows)
-INSERT INTO `items` (`id`,`item_type`,`code`,`barcode`,`name`,`description`,`purchase_description`,`category_id`,`unit`,`uom_set_id`,`sales_uom_id`,`purchase_uom_id`,`cost`,`avg_cost`,`sales_price`,`discount_pct`,`income_account_id`,`cogs_account_id`,`asset_account_id`,`expense_account_id`,`tax_code_id`,`group_variance_account_id`,`preferred_vendor_id`,`reorder_point`,`max_stock`,`build_point`,`is_active`,`created_at`,`updated_at`,`patronage_eligible`) VALUES
-(1,'inventory','LAP-001','4800000000011','Laptop 14-inch i5 16GB','Laptop 14-inch i5 16GB','Laptop 14-inch i5 16GB',1,'pc',1,NULL,NULL,'32000.0000','0.0000','39990.0000','0.00',44,53,13,NULL,1,NULL,1,'5.0000','20.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(2,'inventory','MON-024','4800000000028','Monitor 24-inch IPS','Monitor 24-inch IPS','Monitor 24-inch IPS',1,'pc',1,NULL,NULL,'6500.0000','0.0000','8990.0000','0.00',44,53,13,NULL,1,NULL,1,'5.0000','30.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(3,'inventory','KEY-001','4800000000035','Keyboard USB','Keyboard USB','Keyboard USB',2,'pc',1,NULL,NULL,'650.0000','0.0000','999.0000','0.00',44,53,13,NULL,1,NULL,1,'10.0000','50.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(4,'inventory','MOU-001','4800000000042','Wireless Mouse','Wireless Mouse','Wireless Mouse',2,'pc',1,NULL,NULL,'350.0000','0.0000','599.0000','0.00',44,53,13,NULL,1,NULL,1,'15.0000','80.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(5,'inventory','USB-032','4800000000059','USB Flash Drive 32GB','USB Flash Drive 32GB','USB Flash Drive 32GB',2,'pc',1,NULL,NULL,'180.0000','0.0000','350.0000','0.00',44,53,13,NULL,1,NULL,1,'20.0000','100.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(6,'inventory','BAG-001','4800000000066','Laptop Backpack','Laptop Backpack','Laptop Backpack',2,'pc',1,NULL,NULL,'500.0000','0.0000','899.0000','0.00',44,53,13,NULL,1,NULL,1,'10.0000','40.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(7,'inventory','CAB-HDMI','4800000000073','HDMI Cable 1.5m','HDMI Cable 1.5m','HDMI Cable 1.5m',2,'pc',1,NULL,NULL,'90.0000','0.0000','199.0000','0.00',44,53,13,NULL,1,NULL,1,'20.0000','100.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(8,'inventory','RAM-8GB','4800000000080','RAM 8GB DDR4','RAM 8GB DDR4','RAM 8GB DDR4',2,'pc',1,NULL,NULL,'1100.0000','0.0000','1690.0000','0.00',44,53,13,NULL,1,NULL,1,'10.0000','40.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(9,'inventory','SSD-512','4800000000097','SSD 512GB NVMe','SSD 512GB NVMe','SSD 512GB NVMe',2,'pc',1,NULL,NULL,'2200.0000','0.0000','3290.0000','0.00',44,53,13,NULL,1,NULL,1,'10.0000','40.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(10,'service','LAB-ASM',NULL,'Assembly Labor (per set)','Assembly labor',NULL,3,'hr',5,NULL,NULL,'150.0000','0.0000','0.0000','0.00',45,56,NULL,56,4,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(11,'assembly','SET-OFFICE','4800000000103','Office Monitor Set','Monitor + keyboard + mouse + HDMI cable, assembled',NULL,4,'pc',1,NULL,NULL,'0.0000','0.0000','12990.0000','0.00',44,53,13,NULL,1,NULL,NULL,'3.0000','15.0000','3.0000',1,'2026-10-19 00:49:43',NULL,0),
-(12,'service','SRV-INSTALL',NULL,'Installation and Setup','On-site installation and setup',NULL,3,'hr',5,NULL,NULL,'0.0000','0.0000','1500.0000','0.00',45,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(13,'service','SRV-REPAIR',NULL,'Repair Service (per hour)','Repair service',NULL,3,'hr',5,NULL,NULL,'0.0000','0.0000','800.0000','0.00',45,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(14,'service','SRV-MAINT',NULL,'Monthly IT Maintenance','Monthly IT maintenance contract',NULL,3,'hr',5,NULL,NULL,'0.0000','0.0000','5000.0000','0.00',45,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(15,'non_inventory','NI-TONER',NULL,'Toner Cartridge (special order)','Toner cartridge - special order',NULL,5,'pc',1,NULL,NULL,'2500.0000','0.0000','3200.0000','0.00',44,53,NULL,53,1,NULL,2,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(16,'other_charge','DEL-FEE',NULL,'Delivery Fee','Delivery fee',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','250.0000','0.00',46,53,NULL,67,1,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(17,'other_charge','REIMB',NULL,'Reimbursable Expense','Reimbursable expense',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','0.00',49,53,NULL,70,4,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(18,'other_charge','LATE-FEE',NULL,'Late Payment Fee','Late payment fee',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','200.0000','0.00',50,53,NULL,NULL,4,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(19,'discount','DISC-10',NULL,'10% Discount','10% discount',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','10.00',48,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(20,'discount','DISC-AMT',NULL,'Fixed Discount','Discount',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','100.0000','0.00',48,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(21,'subtotal','SUBTOTAL',NULL,'Subtotal','Subtotal',NULL,NULL,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','0.00',44,53,NULL,NULL,NULL,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(22,'group','GRP-WFH',NULL,'Work-from-Home Bundle','Laptop + mouse + backpack',NULL,4,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','0.00',44,53,NULL,NULL,NULL,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(23,'payment','DOWNPMT',NULL,'Down Payment Received','Less: down payment received',NULL,NULL,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','0.00',44,53,NULL,NULL,NULL,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(24,'inventory','USB-032-BX50','4800000000110','USB Flash Drive 32GB (Box of 50)','USB Flash Drive 32GB, box of 50','USB Flash Drive 32GB, box of 50',2,'box',NULL,NULL,NULL,'8500.0000','0.0000','16500.0000','0.00',44,53,13,NULL,1,NULL,1,'1.0000','5.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(25,'inventory','TRD-PC',NULL,'Trade-in Desktop PC (used)','Used desktop PC taken in for parts / refurbishing','Trade-in desktop PC',1,'pc',1,NULL,NULL,'3000.0000','0.0000','0.0000','0.00',44,53,13,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(26,'inventory','REF-PC',NULL,'Refurbished Desktop PC','Refurbished desktop PC with new SSD, 90-day warranty',NULL,1,'pc',1,NULL,NULL,'0.0000','0.0000','14990.0000','0.00',44,53,13,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(27,'inventory','SCRAP-KG',NULL,'Scrap Metal and Plastic','Scrap metal and plastic (sold by the kilo)',NULL,5,'kg',2,NULL,NULL,'15.0000','0.0000','25.0000','0.00',44,53,13,NULL,3,NULL,NULL,'0.0000','0.0000','0.0000',1,'2026-10-19 00:49:43',NULL,0),
-(28,'inventory','WM-050',NULL,'Water Meter 1/2 inch','Water Meter 1/2 inch','Water Meter 1/2 inch',7,'pc',NULL,NULL,NULL,'750.0000','0.0000','1200.0000','0.00',141,53,13,NULL,NULL,NULL,NULL,'10.0000','0.0000','0.0000',1,'2026-10-19 00:49:44',NULL,0),
-(29,'inventory','PVC-050',NULL,'PVC Pipe 1/2 inch x 3 m','PVC Pipe 1/2 inch x 3 m','PVC Pipe 1/2 inch x 3 m',7,'length',NULL,NULL,NULL,'85.0000','0.0000','120.0000','0.00',141,53,13,NULL,NULL,NULL,NULL,'30.0000','0.0000','0.0000',1,'2026-10-19 00:49:44',NULL,0),
-(30,'inventory','WFS-STD',NULL,'Service Connection Fittings Set','Service Connection Fittings Set','Service Connection Fittings Set',7,'set',NULL,NULL,NULL,'260.0000','0.0000','380.0000','0.00',141,53,13,NULL,NULL,NULL,NULL,'10.0000','0.0000','0.0000',1,'2026-10-19 00:49:44',NULL,0);
+INSERT INTO `items` (`id`,`item_type`,`code`,`barcode`,`name`,`description`,`purchase_description`,`category_id`,`unit`,`uom_set_id`,`sales_uom_id`,`purchase_uom_id`,`cost`,`avg_cost`,`sales_price`,`discount_pct`,`income_account_id`,`cogs_account_id`,`asset_account_id`,`expense_account_id`,`tax_code_id`,`group_variance_account_id`,`preferred_vendor_id`,`reorder_point`,`max_stock`,`build_point`,`is_active`,`fb_pos`,`fb_group_id`,`fb_sort`,`image_file`,`created_at`,`updated_at`,`patronage_eligible`) VALUES
+(1,'inventory','LAP-001','4800000000011','Laptop 14-inch i5 16GB','Laptop 14-inch i5 16GB','Laptop 14-inch i5 16GB',1,'pc',1,NULL,NULL,'32000.0000','0.0000','39990.0000','0.00',44,53,13,NULL,1,NULL,1,'5.0000','20.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(2,'inventory','MON-024','4800000000028','Monitor 24-inch IPS','Monitor 24-inch IPS','Monitor 24-inch IPS',1,'pc',1,NULL,NULL,'6500.0000','0.0000','8990.0000','0.00',44,53,13,NULL,1,NULL,1,'5.0000','30.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(3,'inventory','KEY-001','4800000000035','Keyboard USB','Keyboard USB','Keyboard USB',2,'pc',1,NULL,NULL,'650.0000','0.0000','999.0000','0.00',44,53,13,NULL,1,NULL,1,'10.0000','50.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(4,'inventory','MOU-001','4800000000042','Wireless Mouse','Wireless Mouse','Wireless Mouse',2,'pc',1,NULL,NULL,'350.0000','0.0000','599.0000','0.00',44,53,13,NULL,1,NULL,1,'15.0000','80.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(5,'inventory','USB-032','4800000000059','USB Flash Drive 32GB','USB Flash Drive 32GB','USB Flash Drive 32GB',2,'pc',1,NULL,NULL,'180.0000','0.0000','350.0000','0.00',44,53,13,NULL,1,NULL,1,'20.0000','100.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(6,'inventory','BAG-001','4800000000066','Laptop Backpack','Laptop Backpack','Laptop Backpack',2,'pc',1,NULL,NULL,'500.0000','0.0000','899.0000','0.00',44,53,13,NULL,1,NULL,1,'10.0000','40.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(7,'inventory','CAB-HDMI','4800000000073','HDMI Cable 1.5m','HDMI Cable 1.5m','HDMI Cable 1.5m',2,'pc',1,NULL,NULL,'90.0000','0.0000','199.0000','0.00',44,53,13,NULL,1,NULL,1,'20.0000','100.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(8,'inventory','RAM-8GB','4800000000080','RAM 8GB DDR4','RAM 8GB DDR4','RAM 8GB DDR4',2,'pc',1,NULL,NULL,'1100.0000','0.0000','1690.0000','0.00',44,53,13,NULL,1,NULL,1,'10.0000','40.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(9,'inventory','SSD-512','4800000000097','SSD 512GB NVMe','SSD 512GB NVMe','SSD 512GB NVMe',2,'pc',1,NULL,NULL,'2200.0000','0.0000','3290.0000','0.00',44,53,13,NULL,1,NULL,1,'10.0000','40.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(10,'service','LAB-ASM',NULL,'Assembly Labor (per set)','Assembly labor',NULL,3,'hr',5,NULL,NULL,'150.0000','0.0000','0.0000','0.00',45,56,NULL,56,4,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(11,'assembly','SET-OFFICE','4800000000103','Office Monitor Set','Monitor + keyboard + mouse + HDMI cable, assembled',NULL,4,'pc',1,NULL,NULL,'0.0000','0.0000','12990.0000','0.00',44,53,13,NULL,1,NULL,NULL,'3.0000','15.0000','3.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(12,'service','SRV-INSTALL',NULL,'Installation and Setup','On-site installation and setup',NULL,3,'hr',5,NULL,NULL,'0.0000','0.0000','1500.0000','0.00',45,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(13,'service','SRV-REPAIR',NULL,'Repair Service (per hour)','Repair service',NULL,3,'hr',5,NULL,NULL,'0.0000','0.0000','800.0000','0.00',45,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(14,'service','SRV-MAINT',NULL,'Monthly IT Maintenance','Monthly IT maintenance contract',NULL,3,'hr',5,NULL,NULL,'0.0000','0.0000','5000.0000','0.00',45,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(15,'non_inventory','NI-TONER',NULL,'Toner Cartridge (special order)','Toner cartridge - special order',NULL,5,'pc',1,NULL,NULL,'2500.0000','0.0000','3200.0000','0.00',44,53,NULL,53,1,NULL,2,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(16,'other_charge','DEL-FEE',NULL,'Delivery Fee','Delivery fee',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','250.0000','0.00',46,53,NULL,67,1,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(17,'other_charge','REIMB',NULL,'Reimbursable Expense','Reimbursable expense',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','0.00',49,53,NULL,70,4,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(18,'other_charge','LATE-FEE',NULL,'Late Payment Fee','Late payment fee',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','200.0000','0.00',50,53,NULL,NULL,4,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(19,'discount','DISC-10',NULL,'10% Discount','10% discount',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','10.00',48,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(20,'discount','DISC-AMT',NULL,'Fixed Discount','Discount',NULL,6,'pc',1,NULL,NULL,'0.0000','0.0000','100.0000','0.00',48,53,NULL,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(21,'subtotal','SUBTOTAL',NULL,'Subtotal','Subtotal',NULL,NULL,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','0.00',44,53,NULL,NULL,NULL,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(22,'group','GRP-WFH',NULL,'Work-from-Home Bundle','Laptop + mouse + backpack',NULL,4,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','0.00',44,53,NULL,NULL,NULL,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(23,'payment','DOWNPMT',NULL,'Down Payment Received','Less: down payment received',NULL,NULL,'pc',1,NULL,NULL,'0.0000','0.0000','0.0000','0.00',44,53,NULL,NULL,NULL,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(24,'inventory','USB-032-BX50','4800000000110','USB Flash Drive 32GB (Box of 50)','USB Flash Drive 32GB, box of 50','USB Flash Drive 32GB, box of 50',2,'box',NULL,NULL,NULL,'8500.0000','0.0000','16500.0000','0.00',44,53,13,NULL,1,NULL,1,'1.0000','5.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(25,'inventory','TRD-PC',NULL,'Trade-in Desktop PC (used)','Used desktop PC taken in for parts / refurbishing','Trade-in desktop PC',1,'pc',1,NULL,NULL,'3000.0000','0.0000','0.0000','0.00',44,53,13,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(26,'inventory','REF-PC',NULL,'Refurbished Desktop PC','Refurbished desktop PC with new SSD, 90-day warranty',NULL,1,'pc',1,NULL,NULL,'0.0000','0.0000','14990.0000','0.00',44,53,13,NULL,1,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(27,'inventory','SCRAP-KG',NULL,'Scrap Metal and Plastic','Scrap metal and plastic (sold by the kilo)',NULL,5,'kg',2,NULL,NULL,'15.0000','0.0000','25.0000','0.00',44,53,13,NULL,3,NULL,NULL,'0.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:43',NULL,0),
+(28,'inventory','WM-050',NULL,'Water Meter 1/2 inch','Water Meter 1/2 inch','Water Meter 1/2 inch',7,'pc',NULL,NULL,NULL,'750.0000','0.0000','1200.0000','0.00',141,53,13,NULL,NULL,NULL,NULL,'10.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:44',NULL,0),
+(29,'inventory','PVC-050',NULL,'PVC Pipe 1/2 inch x 3 m','PVC Pipe 1/2 inch x 3 m','PVC Pipe 1/2 inch x 3 m',7,'length',NULL,NULL,NULL,'85.0000','0.0000','120.0000','0.00',141,53,13,NULL,NULL,NULL,NULL,'30.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:44',NULL,0),
+(30,'inventory','WFS-STD',NULL,'Service Connection Fittings Set','Service Connection Fittings Set','Service Connection Fittings Set',7,'set',NULL,NULL,NULL,'260.0000','0.0000','380.0000','0.00',141,53,13,NULL,NULL,NULL,NULL,'10.0000','0.0000','0.0000',1,0,NULL,0,NULL,'2026-10-19 00:49:44',NULL,0);
 
 -- item_components (8 rows)
 INSERT INTO `item_components` (`parent_item_id`,`component_item_id`,`qty`) VALUES

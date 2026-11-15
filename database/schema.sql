@@ -534,11 +534,16 @@ CREATE TABLE items (
   max_stock            DECIMAL(15,4) NOT NULL DEFAULT 0,
   build_point          DECIMAL(15,4) NOT NULL DEFAULT 0,
   is_active            TINYINT(1)   NOT NULL DEFAULT 1,
+  fb_pos               TINYINT(1)   NOT NULL DEFAULT 0,    -- v35: shown on the FB POS
+  fb_group_id          INT UNSIGNED NULL,                  -- v35: its FB POS menu group (fb_pos_groups)
+  fb_sort              INT          NOT NULL DEFAULT 0,    -- v35: its order in the group
+  image_file           VARCHAR(120) NULL,                  -- v35: its picture (storage/items)
   created_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at           DATETIME     NULL,                  -- set by the application (DB::update)
   patronage_eligible   TINYINT(1)   NOT NULL DEFAULT 0,    -- member purchases or deliveries of it count for patronage refund
   UNIQUE KEY uq_items_code (code),
   KEY ix_items_barcode (barcode),
+  KEY ix_items_fb (fb_pos, fb_group_id),
   CONSTRAINT fk_items_cat    FOREIGN KEY (category_id) REFERENCES item_categories(id),
   CONSTRAINT fk_items_inc    FOREIGN KEY (income_account_id) REFERENCES accounts(id),
   CONSTRAINT fk_items_cogs   FOREIGN KEY (cogs_account_id) REFERENCES accounts(id),
@@ -896,6 +901,17 @@ CREATE TABLE clearing_settlements (
   KEY ix_cs_receipt_txn (receipt_txn_id),
   CONSTRAINT fk_cs_deposit FOREIGN KEY (deposit_txn_id) REFERENCES transactions(id) ON DELETE CASCADE,
   CONSTRAINT fk_cs_receipt FOREIGN KEY (receipt_txn_id) REFERENCES transactions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- FB POS menu groups (v35, Point of Sale > FB POS Menu & Groups)
+DROP TABLE IF EXISTS fb_pos_groups;
+CREATE TABLE fb_pos_groups (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(60)  NOT NULL,
+  sort_order  INT          NOT NULL DEFAULT 0,
+  is_active   TINYINT(1)   NOT NULL DEFAULT 1,
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_fb_group_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- General ledger (generated automatically by the posting engine)
@@ -1316,6 +1332,20 @@ CREATE TABLE pos_cash_drops (
   approved_by INT UNSIGNED NULL,
   created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_cd_shift FOREIGN KEY (shift_id) REFERENCES pos_shifts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS pos_cash_counts;
+CREATE TABLE pos_cash_counts (
+  id            INT UNSIGNED  NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  shift_id      INT UNSIGNED  NOT NULL,
+  kind          VARCHAR(5)    NOT NULL DEFAULT 'bill',   -- bill or coin
+  denomination  DECIMAL(10,2) NOT NULL,
+  qty           INT           NOT NULL DEFAULT 0,
+  amount        DECIMAL(15,2) NOT NULL DEFAULT 0,
+  counted_by    INT UNSIGNED  NULL,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY ix_pcc_shift (shift_id),
+  CONSTRAINT fk_pcc_shift FOREIGN KEY (shift_id) REFERENCES pos_shifts(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS pos_readings;
@@ -3127,6 +3157,33 @@ CREATE TABLE coop_import_lines (
   KEY ix_cil_no (batch_id, kind, key_no),
   KEY ix_cil_person (batch_id, key_person),
   KEY ix_cil_water (batch_id, key_water)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Files attached to transactions (accounting version 40): the files and their content in 256 KB pieces
+DROP TABLE IF EXISTS txn_attachment_chunks;
+DROP TABLE IF EXISTS txn_attachments;
+CREATE TABLE txn_attachments (
+  id              INT UNSIGNED    NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  transaction_id  BIGINT UNSIGNED NULL,                 -- empty while the form is not saved yet
+  stage_key       VARCHAR(40)     NULL,                 -- the form session of a file not saved yet
+  file_name       VARCHAR(255)    NOT NULL,
+  mime_type       VARCHAR(150)    NOT NULL DEFAULT 'application/octet-stream',
+  file_size       BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  sha1            CHAR(40)        NULL,
+  chunks          INT UNSIGNED    NOT NULL DEFAULT 0,
+  uploaded_by     INT UNSIGNED    NULL,
+  uploaded_at     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY ix_ta_txn (transaction_id),
+  KEY ix_ta_stage (stage_key),
+  CONSTRAINT fk_ta_txn FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE txn_attachment_chunks (
+  attachment_id  INT UNSIGNED NOT NULL,
+  seq            INT UNSIGNED NOT NULL,
+  data           MEDIUMBLOB   NOT NULL,
+  PRIMARY KEY (attachment_id, seq),
+  CONSTRAINT fk_tac_att FOREIGN KEY (attachment_id) REFERENCES txn_attachments(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -24,8 +24,16 @@ $selId = gint('id') ?? ($items[0]['id'] ?? null);
 $sel = $selId ? DB::row('SELECT i.*, v.name AS vendor FROM items i LEFT JOIN vendors v ON v.id = i.preferred_vendor_id WHERE i.id = :id', ['id' => $selId]) : null;
 $siteName = $siteId ? (string)DB::value('SELECT name FROM sites WHERE id = :id', ['id' => $siteId]) : '';
 
-layout_start('Inventory Center', ['actions' => page_link('inv.items', ['a' => 'new', 'type' => 'inventory'], 'New inventory item', 'btn-primary', 'plus-lg', 'create')
-    . ' ' . page_link('inv.items', ['a' => 'new', 'type' => 'assembly'], 'New assembly', 'btn-outline-primary', 'plus-lg', 'create')]);
+// v37: one "New item" button with every type of item, as on the Item List
+$newMenu = '';
+if (Access::can('inv.items', 'create')) {
+    $newMenu = '<div class="dropdown d-inline"><button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-plus-lg"></i> New item</button><ul class="dropdown-menu dropdown-menu-end">';
+    foreach (QuickAdd::ITEM_TYPES as $k => $lbl) {
+        $newMenu .= '<li><a class="dropdown-item" href="' . h(url('inv.items', ['a' => 'new', 'type' => $k])) . '">' . h($lbl) . '</a></li>';
+    }
+    $newMenu .= '</ul></div>';
+}
+layout_start('Inventory Center', ['actions' => $newMenu]);
 ?>
 <?php if ($siteId): ?>
 <div class="site-strip mb-3"><i class="bi bi-geo-alt"></i><span>Showing <strong><?= h($siteName) ?></strong> only: the quantities, open orders and transaction history below are this site's. </span><a href="<?= h(url($pageKey, ['id' => $selId, 'q' => $q])) ?>">Show all sites</a></div>

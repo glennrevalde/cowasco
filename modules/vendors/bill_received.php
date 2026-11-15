@@ -54,7 +54,8 @@ handle_post(function () use ($receipt, $pageKey) {
         'reason' => 'Item receipt ' . $receipt['txn_no'] . ' converted to a bill',
         'ledger_change_ok' => true,   // the receipt becomes the bill: the accrued payable moves to Accounts Payable
     ]);
-    flash('success', 'Bill entered. Inventory value and the payable were adjusted to the billed cost.');
+    $files = Attachments::claim($id, $pageKey);
+    flash('success', 'Bill entered. Inventory value and the payable were adjusted to the billed cost.' . ($files !== '' ? ' ' . $files : ''));
     redirect_after_save(url($pageKey), url('vend.bills', ['a' => 'view', 'id' => $id]));
 });
 
@@ -80,7 +81,7 @@ layout_start('Enter Bill for Received Items');
   </form>
 </div></div>
 <?php if ($receipt): ?>
-<form method="post">
+<form method="post"<?= Attachments::enctype('bill') ?>>
 <?= csrf_field() ?>
 <div class="card mb-3"><div class="card-body row g-2">
   <div class="col-md-3 small">Received <?= h(fdate($receipt['txn_date'])) ?> at cost <?= money($receipt['total']) ?></div>
@@ -94,11 +95,11 @@ layout_start('Enter Bill for Received Items');
 <ul class="nav nav-tabs"><li class="nav-item"><button type="button" class="nav-link active" data-bs-toggle="tab" data-bs-target="#bi">Items (update billed costs)</button></li>
   <li class="nav-item"><button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#be">Other charges (freight, etc.)</button></li></ul>
 <div class="tab-content card card-body mb-3 border-top-0">
-  <div class="tab-pane fade show active" id="bi"><?= item_grid(is_post() ? grid_rows('lines') : $lines, ['mode' => 'purchase', 'show_site' => false, 'show_job' => true, 'min_rows' => 0]) ?>
+  <div class="tab-pane fade show active" id="bi"><?= item_grid(is_post() ? grid_rows('lines') : $lines, ['quick_add' => false, 'mode' => 'purchase', 'show_site' => false, 'show_job' => true, 'min_rows' => 0]) ?>
     <p class="small text-muted mb-0">Quantities are fixed to what was received. Change the cost if the vendor billed a different price; the inventory value is adjusted.</p></div>
   <div class="tab-pane fade" id="be"><?= expense_grid(is_post() ? grid_rows('expenses') : [], ['min_rows' => 1]) ?></div>
 </div>
-<div class="row"><div class="col-md-6"></div><div class="col-md-6"><?= totals_box() ?></div></div>
+<div class="row"><div class="col-md-6"><?= Attachments::formCard('bill', null) ?></div><div class="col-md-6"><?= totals_box() ?></div></div>
 <div class="mt-2"><?= save_buttons('Enter bill', url($pageKey), Access::can($pageKey, 'create')) ?></div>
 </form>
 <?php endif; ?>

@@ -61,6 +61,45 @@ final class Processing
         return self::ROLES[(string)$r] ?? self::ROLES['co_product'];
     }
 
+    /** v35: the largest difference allowed between the outputs and the cost of the inputs and labor, in % */
+    public static function tolerance(): float
+    {
+        return max(0.0, (float)Settings::get('processing_cost_tolerance', '2'));
+    }
+
+    /**
+     * v35: the outputs' cost against the cost of the inputs (inventory plus labor and other costs): the difference, its
+     * percentage of the input cost, and whether it is within the tolerance. [diff, pct, ok]
+     */
+    public static function reconcile(float $pool, float $outputs): array
+    {
+        $diff = r2($outputs - $pool);
+        if (abs($diff) < 0.005) {
+            return [0.0, 0.0, true];
+        }
+        $pct = $pool > 0.004 ? $diff / $pool * 100 : ($outputs > 0 ? 100.0 : 0.0);
+        return [$diff, round($pct, 2), abs($pct) <= self::tolerance() + 0.000001];
+    }
+
+    /**
+     * v35: refuses a processing order whose outputs cost more or less than its inputs and labor beyond the tolerance (2%),
+     * asking for the output costs to be revised. Allocation methods that share out the input cost always reconcile; the
+     * "Current average cost" and "Manual amounts" methods value the outputs themselves and can be far off.
+     */
+    public static function assertReconciled(float $pool, float $outputs, float $materials, float $extra): void
+    {
+        [$diff, $pct, $ok] = self::reconcile($pool, $outputs);
+        if ($ok) {
+            return;
+        }
+        fail(sprintf(
+            'The outputs are costed at %s, but the inputs cost %s (inventory %s plus labor and other costs %s): a difference of %s (%s%%). '
+            . 'The outputs may differ from the input cost by at most %s%%. Revise the Allocated cost or Unit cost of the outputs (or their Basis) '
+            . 'so they add up to the input cost, or choose an allocation method that shares out the input cost, such as Relative sales value, Weight / measure or Fixed percentages.',
+            money($outputs), money($pool), money($materials), money($extra), money($diff), number_format($pct, 2), rtrim(rtrim(number_format(self::tolerance(), 2), '0'), '.')
+        ));
+    }
+
     public static function isValueMethod(?string $m): bool
     {
         return (self::METHODS[(string)$m][2] ?? '') === 'value';
